@@ -1,0 +1,15 @@
+---
+status: accepted
+---
+
+# Allow breaking Core v1 changes for the pre-launch IAM rebuild
+
+ANI is still pre-launch and the IAM rebuild exists partly to remove and replace conflicting tenant, user, authorization, and ownership contracts. For this rebuild, deleting or replacing affected protected Core v1 operations is an explicit target rather than a compatibility defect; the selected `main` commit will be pinned as the CP0 compatibility oracle, while the destructive target-contract cutover remains outside CP0 and requires its own controlled release checkpoint.
+
+The current environment contains test data and no real users. Before destructive replacement it takes a recoverable snapshot, then rebuilds the target IAM data and reseeds an explicitly approved set of test Principals, Tenants, Memberships, and Role Bindings instead of building a record-by-record migration program. No rollback rehearsal is required for the September test delivery, so rollback remains `not_verified`; failure may delay the test delivery or require manual snapshot restoration and reseeding.
+
+At the future destructive P2 cutover, all old Sessions, Refresh Tokens, blocklist entries, and API Keys become invalid, the target IAM generates a new JWT signing key, and only explicitly listed test or service credentials are reissued. CP0 and P1 continue to preserve the pinned old signing-key, Redis, token, and non-rotating Refresh semantics as compatibility evidence. The P2 target then switches to atomic single-use Refresh Token rotation with token families: reuse revokes the whole family, ordinary logout revokes the current session, and an explicit operation revokes all sessions. P2 service-token issuance accepts only mTLS or SPIFFE workload identity constrained by audience and permission allowlists and removes shared mint secrets.
+
+CP0 and P1 retain the pinned bcrypt behavior as compatibility evidence. After the destructive rebuild, P2 stores newly set passwords with Argon2id using 64 MiB memory, three iterations, four lanes, a random sixteen-byte salt, and a thirty-two-byte tag, and stores the algorithm and parameters with each hash. The first functional implementation must verify the hash format, parameters, vectors, error behavior, and sensitive-data handling, but its latency, memory, and verifier-concurrency benchmark is explicitly deferred by the later Q286 decision recorded in ADR-0021. Until that benchmark and concurrency bound exist, the result remains `not_verified` and cannot support a production-readiness claim. P2 does not keep bcrypt as a normal target format; an explicitly imported bcrypt credential is the only exception and is rehashed to Argon2id after the next successful login.
+
+Test-data reseeding never writes a plaintext default password to source code, fixtures, logs, task evidence, or deployment configuration. It creates the approved identities and authorization relationships, then delivers a one-time password-setting action or invitation through a secret manager or another approved out-of-band channel.
