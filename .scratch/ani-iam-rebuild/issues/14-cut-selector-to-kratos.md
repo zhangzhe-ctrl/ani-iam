@@ -4,7 +4,9 @@
 
 **Blocked by:** 13 / 运行隔离 Kratos Canary
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-14；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。不切入旧语义 Kratos runtime。
 
 **Plan mapping:** P1-5
 

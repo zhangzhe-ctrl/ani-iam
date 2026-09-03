@@ -4,7 +4,9 @@
 
 **Blocked by:** 11 / 补齐完整旧 Auth Runtime
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-14、DP2-18；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。稳定地址与 selector 改在目标演练和最终切换中处理。
 
 **Plan mapping:** P1-4
 

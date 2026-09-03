@@ -4,7 +4,9 @@
 
 **Blocked by:** 17 / 冻结 IAM 与 Core 集成契约；18 / 建立无 RLS 持久化基础；19 / 交付 Tenant Access Bootstrap 纵向链路
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-12；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-5
 

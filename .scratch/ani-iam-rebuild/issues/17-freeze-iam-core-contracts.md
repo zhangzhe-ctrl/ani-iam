@@ -4,7 +4,9 @@
 
 **Blocked by:** 15 / 观察并下线旧 Auth Runtime
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-03；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。需求继续存在，旧执行切片不再领取。
 
 **Plan mapping:** P2-0
 

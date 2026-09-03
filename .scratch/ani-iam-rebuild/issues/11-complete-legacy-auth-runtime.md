@@ -4,7 +4,9 @@
 
 **Blocked by:** 10 / 将 Spike 晋升为受支持的 iam-service
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-06–DP2-13；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。不再实现旧 Auth 14 RPC 的同构 runtime。
 
 **Plan mapping:** P1-1、P1-2
 

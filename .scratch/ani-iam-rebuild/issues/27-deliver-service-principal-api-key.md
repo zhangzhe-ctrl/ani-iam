@@ -4,7 +4,9 @@
 
 **Blocked by:** 18 / 建立无 RLS 持久化基础；21 / 交付 Role、Binding 与 Membership 管理
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-10；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-4
 

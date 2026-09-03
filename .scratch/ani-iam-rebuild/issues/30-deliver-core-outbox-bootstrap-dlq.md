@@ -4,7 +4,9 @@
 
 **Blocked by:** 17 / 冻结 IAM 与 Core 集成契约；19 / 交付 Tenant Access Bootstrap 纵向链路；29 / 交付 Lifecycle Projection 与修复；外部依赖为 Core Control canonical contract 和独立工作
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-12；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-5
 

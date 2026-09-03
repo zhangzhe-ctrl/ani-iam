@@ -1,14 +1,18 @@
 # ANI IAM 重构规格
 
-Status: ready-for-agent
+Status: superseded
 
-本规格综合完整 Q1–Q300 grilling 对话、当前核心计划、领域词汇、accepted ADR，以及 ANI `main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be` 的代码事实。若这些材料发生冲突，以用户在完整对话中的明确选择和本规格中记录的最新调整为准。
+> 2026-09-03：本文件作为 CP0/P1 路线及转向决定的历史快照保留。当前执行规格是 `../ani-iam-p2-direct/spec.md`；其 ticket plan 已获人工接受并发布，但 DP2-01 尚未领取或启动。
+
+本规格综合完整 Q1–Q300 grilling 对话、当前核心计划、领域词汇、accepted ADR，以及 ANI 来源候选 Git object `0cedae825a489d936cf41815dc27f278f6d3213c` 的代码事实。该对象在 2026-09-03 已与远端 `main` 对齐；动态 `main`、当前分支和工作树内容不进入基线。若这些材料发生冲突，以用户在完整对话中的明确选择和本规格中记录的最新调整为准。
 
 ## Problem Statement
 
 ANI 当前的 Auth、Tenant 管理、授权、Gateway、Quota 与调用方契约存在职责重叠和历史兼容路径：旧 Auth Service 同时承担登录、Token、API Key 和两代授权 RPC；Gateway 同时保留 legacy 与 generated policy；Tenant Lifecycle、Tenant Access、Membership、Role、Tenant Admin 和 Quota Assignment 的所有权分散且部分重叠；PostgreSQL RLS、应用作用域和跨服务调用之间缺少一套清晰一致的目标边界。
 
-项目尚未上线且没有真实用户，因此这次工作的目标不是长期维持旧实现，而是在保留可验证兼容基线的前提下，分阶段建立独立、可测试、可删除旧实现的 IAM，并最终执行一次受控的破坏性目标切换。项目必须避免把 Kratos 框架验证、目标领域重构和生产就绪声明混成同一个不可验证的大批次。
+项目尚未上线且没有真实用户。CP0 已验证 Kratos 外壳和旧 Auth transport，但事项04证明冻结旧 migration 的 Auth RLS 对受限 runtime role 为 deny-all，负向结果为 `FAIL / BLOCKED`。用户决定停止继续投入 CP0/P1 兼容路线，改为重排 Direct P2；旧兼容证据保留，但不得冒充 Go，也不再作为目标实现的运行前置。
+
+Direct P2 的首要风险不是代码总量，而是直到末期才发现目标 IAM、Gateway 和调用方无法整组切换。因此执行顺序必须把目标纵向链路和切换关键功能演练前置；两道早期 Go/No-Go 通过前，不投入完整 Platform Admin、Recovery、Audit 查询和全部新增 UI。
 
 本项目使用本地 Markdown 规格与事项、单一 `claimed` 状态变更事项和高风险人工确认的轻量流程，让实施约束可以直接从当前产物读取和维护。
 
@@ -16,24 +20,26 @@ ANI 当前的 Auth、Tenant 管理、授权、Gateway、Quota 与调用方契约
 
 建立独立的 `iam-service` 项目，以 go-kratos 作为外层运行框架，以框架无关的业务层承载 ANI 身份、Credential、Session、Tenant Access、Membership、Role、Invitation、Service Principal、API Key、授权与安全审计规则。
 
-交付分为三个严格区分的阶段：
+CP0/P1 路线作为已停止的历史路线保留；当前 Direct P2 分为五个严格区分的阶段：
 
-1. CP0 只验证 Kratos 是否能够在真实 PostgreSQL/RLS、Redis、Dex 和三个真实调用方下复现固定旧 Auth 的 14 RPC 外部行为与持久化副作用，不改变目标数据模型，不切流。
-2. P1 在 CP0 Go 后完成旧 Auth runtime 的同构替换，仍保持冻结的旧 wire、数据库和安全语义；调用方切换必须可独立回滚。
-3. P2 才引入目标 IAM 契约、Core Control 生命周期所有权、独立数据库、无 RLS 数据模型、Session Grant、旋转 Refresh Token、生成式 Permission、单一 Gateway 授权决策以及旧契约和旧运行时删除。
+1. **DP2-0 来源与契约：** 固定 ANI 来源对象、公开 OpenAPI/operation registry、IAM Proto、Core Lifecycle/Bootstrap/Snapshot 契约和删除清单。
+2. **DP2-1 目标纵向证明：** 建立无 RLS 新库和受限 runtime role，跑通 `Password Login → Session → CheckPermission → 目标版 Gateway → 一个受保护 API`。这是 Go/No-Go ①，只证明架构闭环，不宣称可以整体切换。
+3. **DP2-2 切换关键功能：** 完成现有调用面需要的 Password/OIDC/Refresh/API Key/Service Token、Membership/Authorization、Core Lifecycle/NATS，以及 Gateway、Envoy、Inference、Console、BOSS 功能对等；在隔离测试轨道执行整组切入和回退。它是 Go/No-Go ②。
+4. **DP2-3 完整目标能力：** 只有 Go/No-Go ②通过后，才补齐 Invitation、完整 Role/Platform Admin、Recovery、Audit 查询、全局 Idempotency 和全部新增 UI/E2E。
+5. **DP2-4 最终重建与删除：** 经单独人工确认后重建测试数据、使旧 Credential 失效、整组切换、删除旧 Auth/Proto/compat/重叠能力并完成功能验收。
 
 执行工作使用 `.scratch` 中的本地事项：每个事项必须声明范围、依赖、外部行为验收、禁止事项、真实依赖和人工检查点；同一时间只允许一个会改变代码、数据、契约或外部状态的事项处于 `claimed`。解释、评审和只读调查不占用该执行槽位。任何破坏性契约变更、数据库重建、Credential 失效、调用方切流、旧实现删除和真实环境写操作都必须在执行前获得用户针对具体事项的明确确认。
 
 ## User Stories
 
-1. 作为平台负责人，我希望先用 CP0 判断 Kratos 能否保持冻结的 Auth 安全语义，以便在投入全面重构前快速证伪框架路线。
-2. 作为项目负责人，我希望 CP0、P1 和 P2 不自动互相解锁，以便每个阶段都能根据真实证据决定继续或停止。
+1. 作为平台负责人，我希望在第一周用目标纵向链路判断 Direct P2 的架构能否闭环，以便失败时停止而不是投入完整功能。
+2. 作为项目负责人，我希望在完成完整目标功能前先执行一次切换关键功能的整组切入和回退，以便最迟在中段暴露无法替换旧 Auth 的风险。
 3. 作为项目负责人，我希望执行流程只使用本地规格、编号事项和人工检查点，以便在有限时间内保持实施范围和风险可见。
 4. 作为开发者，我希望每次只实现一个边界明确的事项，以便控制跨仓、契约、数据和安全改动的风险。
-5. 作为审查者，我希望所有兼容结论绑定精确 ANI Commit、migration head、Proto descriptor 和依赖状态，以便当前 HEAD 或 mock 不能冒充兼容基线。
-6. 作为 Gateway 调用方，我希望新实现对冻结 Auth 契约产生与旧实现相同的 gRPC 状态、公开错误、Claim 和副作用，以便 CP0 差分结果可信。
-7. 作为 Envoy Adapter 调用方，我希望 ValidateToken 的 allow、deny、无效凭据和依赖不可用行为被独立验证，以便 Gateway 通过不能替代 Envoy 证据。
-8. 作为 Inference Service 调用方，我希望 Service Token 签发和 Core service-only 调用链被独立验证，以便内部工作负载身份不会退化为共享 Secret。
+5. 作为审查者，我希望所有来源和目标结论绑定精确 Git Commit、契约摘要、migration head 和依赖状态，以便动态 HEAD 或 mock 不能冒充基线。
+6. 作为 Gateway 调用方，我希望目标实现先在隔离轨道证明一次 IAM 决策、公开错误和可信上下文，再进入完整路由迁移。
+7. 作为 Envoy Adapter 调用方，我希望目标 Credential 的 allow、deny、无效凭据和依赖不可用行为被独立验证，以便 Gateway 通过不能替代 Envoy 证据。
+8. 作为 Inference Service 调用方，我希望目标 mTLS/SPIFFE Service Token 和 Core service-only 调用链被独立验证，以便内部工作负载身份不会退化为共享 Secret。
 9. 作为 Human Principal，我希望一个全局身份可以拥有多个 Tenant Membership 和可选 Platform Membership，以便无需为每个 Tenant 创建用户副本。
 10. 作为 Human Principal，我希望多个登录 Identity 只能显式关联，并且相同邮箱不会自动合并账号，以便避免错误的身份接管。
 11. 作为受邀用户，我希望 Invitation 在验证邮箱和身份前不创建 Membership 或授予权限，以便持有邀请 Token 不能等同于已认证身份。
@@ -77,19 +83,20 @@ ANI 当前的 Auth、Tenant 管理、授权、Gateway、Quota 与调用方契约
 
 - 本规格是当前唯一执行规格；完整 grilling 对话用于解释决定来源，核心计划和 ADR 用于交叉检查，不得覆盖本规格中的最新决定。
 - 使用本地 Markdown 事项；状态至少包含 `ready-for-agent`、`claimed`、`resolved`。同一时间只推进一个改变代码、数据、契约或外部状态的事项。
-- CP0 只改变框架和运行外壳；P1 只做旧语义同构替换；P2 才执行目标契约、目标数据和破坏性删除。
+- 事项01–04及其证据是历史输入；事项04以 `FAIL / BLOCKED` 负向结果结束。Direct P2 不把 CP0/P1 标记为通过，也不继续实现旧 RLS 兼容 runtime。
+- Direct P2 的 Go/No-Go ①只判断目标纵向链路；Go/No-Go ②必须包含切换关键功能的五类调用方、整组切入和回退。两者都不自动授权最终数据重建、Credential 失效或旧资产删除。
 - 任一阶段发现需要修改相邻阶段语义、扩大事项范围或执行高风险外部写入时停止，并请求针对具体变化的新确认。
-- ANI 基线 Commit 已确认存在并位于当前 main；Compatibility Oracle 仍需采集真实 Proto、数据库/RLS、Redis、Dex 和三个调用方证据。
+- ANI 来源候选对象固定为 `0cedae825a489d936cf41815dc27f278f6d3213c`。它的旧 Auth RLS deny-all、migration checksum 不完整和 OpenAPI 漂移是已知来源缺陷；Direct P2 只继承经契约事项明确接受的外部行为，不把该对象宣称为可运行的兼容 Oracle。
 
 ### 项目与框架边界
 
 - IAM 为独立项目和独立发布单元，可共享 PostgreSQL、Redis、Dex、NATS、Secret Manager、镜像和观测基础设施，但不 import ANI internal package，也不复制 ANI 大型 bootstrap。
-- 使用 Kratos v3，并在 CP0 固定精确 patch 和依赖校验和；禁止跟随 `latest`。
+- 使用事项02已经固定和验证的 Kratos v3 scaffold、精确依赖和生成器证据作为目标外壳起点；Direct P2 不重新跟随 `latest`。
 - 使用 Kratos 标准顶层分层：biz 承载实体、用例和消费端 port；data 承载数据库、Redis、NATS 和外部 adapter；service 只做协议与 biz 映射；server 负责 transport 和内部管理 listener；composition root 使用显式构造函数。
 - biz 不依赖 Kratos、Proto、数据库 driver、transport error 或 adapter 类型；标准 `context.Context` 可以贯穿 port。
 - Use Case 通过 Unit of Work 拥有事务；Repository 不自行提交跨对象事务；transport handler 不控制数据库事务。
 - 单进程注册 Authentication、Authorization 和 IAM Admin 三个内部 gRPC Service；不提供公共 IAM HTTP 业务服务，健康、就绪和指标使用独立内部 listener。
-- CP0/P1 兼容代码隔离在 compat 边界；目标 biz 不 import 兼容 Proto；P2 删除整个兼容边界。
+- 已有 compat 代码只作为停止的 CP0 现场保留；Direct P2 的目标 biz 不 import 兼容 Proto，最终删除整个兼容边界。
 
 ### 契约与 Gateway
 
@@ -183,11 +190,10 @@ ANI 当前的 Auth、Tenant 管理、授权、Gateway、Quota 与调用方契约
 ## Testing Decisions
 
 - 统一最高测试缝是“真实调用方进入 IAM 外部契约，再观察公开结果和持久化副作用”。Gateway、Envoy 和 Inference 是同一验收缝的三个独立入口，任一入口通过都不能替代另外两个。
-- CP0 使用冻结旧 Auth 作为 oracle，对新旧实现执行相同输入并比较 gRPC status、公开错误、Claims、PostgreSQL/RLS 状态、Redis 状态和外部副作用。
-- 差分测试只归一化随机 ID、时间和 Token/Secret；预期差异必须进入具名 allowlist，不能只比较成功或失败。
-- CP0 必须使用真实但隔离的 PostgreSQL/RLS、Redis 和 Dex；fake/unit 只提供开发反馈，不构成 Go/No-Go 证据。
-- CP0 固定验证十四个旧 Auth RPC，并覆盖 Password、OIDC、Refresh、Revoke、Validate、两代 Permission、Service Token 和 API Key。
-- P1 对每个调用方验证 selector/DNS/env 切换和回滚，不允许新旧 runtime 长期双写。
+- 历史 CP0 证据继续区分 `pass`、`fail`、`not_verified`；Direct P2 不重写或删除这些证据，也不从旧 RLS 失败推导目标无 RLS实现通过。
+- Go/No-Go ①必须使用真实无 RLS PostgreSQL、受限 runtime role 和目标 Gateway 隔离入口，覆盖成功、401、403、503、504、两 Tenant 负向、Audit 同事务和空库 replay；fake/unit 只提供反馈。
+- Go/No-Go ②必须按冻结的当前调用图覆盖 Gateway、Envoy、Inference、Console、BOSS；测试轨道切入期间不得由代码 fallback 到旧 Auth，回退通过部署/配置整组恢复。
+- 第一次切换演练不删除旧资产、不使旧 Credential 失效，也不代表全部新增 IAM 管理能力完成。
 - P2 在新无 RLS 数据库中从空库回放迁移，使用受限 runtime role，执行双 Tenant 负向、跨 Tenant 关系约束和 query mutation 测试。
 - Adapter Integration 默认使用固定镜像摘要的 testcontainers-go；完整调用拓扑使用隔离 Compose 或 CI 环境。
 - 共享测试基础设施只有在每轮拥有独立 PostgreSQL database/role、Redis namespace、NATS Account 或完整隔离名称、Dex client/identity 和 Credential 时才可作为证据。
@@ -203,7 +209,7 @@ ANI 当前的 Auth、Tenant 管理、授权、Gateway、Quota 与调用方契约
 ## Out of Scope
 
 - 当前不建立正式生产环境，也不声明 Production Ready。
-- 不在 CP0 中引入 P2 Proto、目标 Schema、Argon2 migration、NATS Lifecycle、Core Control 拆分或旧代码删除。
+- 不继续实现剩余 CP0/P1 兼容范围，也不修复旧 Auth RLS 作为 Direct P2 前置。
 - 不在本规格基础版本中实现 Tenant/Principal Purge。
 - 不实现 member_count Quota/TCC。
 - 不实现 delegated Role administration。
@@ -220,5 +226,5 @@ ANI 当前的 Auth、Tenant 管理、授权、Gateway、Quota 与调用方契约
 - 完整 grilling 对话包含 Q1–Q300 的问题正文、选项、用户回答和后续修订，是解释历史决定的完整证据。新规格综合有效决定，不要求执行者重读全部对话。
 - 当前无版本号计划提供 grilling 后的详细技术设计，并与本规格共同维护。
 - 现有 CONTEXT 与 ADR 继续提供领域术语和取舍背景；与本规格冲突时应提出修订或删除，不得从已删除材料补入默认规则。
-- ANI 基线 Git 身份已确认；完整 Compatibility Oracle 仍需在第一个 baseline 事项中采集和保存。
+- ANI 来源候选 Git object 已确认；Direct P2 事项 DP2-01 仍需冻结最终来源摘要、接受已知漂移，并明确它不是可运行兼容 Oracle。
 - `ready-for-agent` 表示规格已足够拆分事项，不表示任何代码、数据库、外部系统或破坏性操作已经获得执行授权。

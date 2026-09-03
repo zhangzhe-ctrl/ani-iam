@@ -4,7 +4,9 @@
 
 **Blocked by:** 04 / 接通真实旧 PG/RLS 与 Redis；05 / 验证 Password、Refresh 与 Revoke
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-05、DP2-09；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。本状态只关闭旧授权兼容切片。
 
 **Plan mapping:** CP0-4
 

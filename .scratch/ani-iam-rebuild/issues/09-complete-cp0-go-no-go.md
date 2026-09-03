@@ -4,7 +4,9 @@
 
 **Blocked by:** 05 / 验证 Password、Refresh 与 Revoke；06 / 验证 OIDC 与 Dex 登录；07 / 验证 API Key 与 Service Token；08 / 验证 Principal 与 Permission 决策
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-05、DP2-13、DP2-14；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。CP0 因事项04负向结果停止，不生成兼容 Go。
 
 **Plan mapping:** CP0-5
 

@@ -4,7 +4,9 @@
 
 **Blocked by:** 19 / 交付 Tenant Access Bootstrap 纵向链路；20 / 交付 Invitation 到 Human Membership；21 / 交付 Role、Binding 与 Membership 管理；24 / 交付 Session Grant 与旋转 Refresh；31 / 交付 Platform Role、Invitation 与 Membership 管理
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-15；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-4
 

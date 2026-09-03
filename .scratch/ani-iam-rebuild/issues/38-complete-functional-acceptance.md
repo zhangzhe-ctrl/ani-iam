@@ -4,7 +4,9 @@
 
 **Blocked by:** 37 / 删除旧契约、Runtime 与重叠入口
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-20；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-9
 

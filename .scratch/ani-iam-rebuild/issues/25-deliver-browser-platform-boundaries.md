@@ -4,7 +4,9 @@
 
 **Blocked by:** 24 / 交付 Session Grant 与旋转 Refresh
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-08、DP2-15、DP2-17；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-2、P2-4
 

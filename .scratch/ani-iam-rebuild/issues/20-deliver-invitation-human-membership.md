@@ -4,7 +4,9 @@
 
 **Blocked by:** 19 / 交付 Tenant Access Bootstrap 纵向链路
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-15；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-4
 

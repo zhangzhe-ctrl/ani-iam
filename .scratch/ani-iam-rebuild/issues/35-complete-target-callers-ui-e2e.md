@@ -4,7 +4,9 @@
 
 **Blocked by:** 25 / 交付浏览器与 Platform/BOSS 边界；26 / 交付 Permission 与单次 Gateway 授权；27 / 交付 Service Principal 与 API Key；28 / 交付 Workload Service Token；30 / 交付 Core Outbox、Bootstrap 与 DLQ；31 / 交付 Platform Role、Invitation 与 Membership 管理；32 / 交付高风险 Tenant Admin 恢复；33 / 交付 Audit 查询与 180 天语义；34 / 实现并聚合验证全局 Mutation 幂等
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-13、DP2-17；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-6
 

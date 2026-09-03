@@ -2,19 +2,23 @@
 
 ## 仓库定位与当前状态
 
-这是独立的 ANI IAM 重构项目。仓库当前承载由完整 Q1–Q300 grilling 结论综合出的规格、计划、领域词汇和架构决策；运行时仅完成事项02的隔离骨架，兼容业务尚未开始。
+这是独立的 ANI IAM 重构项目。仓库当前承载由完整 Q1–Q300 grilling 结论综合出的规格、计划、领域词汇和架构决策。历史事项01–03已完成固定基线、隔离 Kratos 骨架和旧 Auth transport；事项04以 `FAIL / BLOCKED` 关闭真实旧存储调查，CP0/P1 已停止。
 
-ANI 兼容性基线固定为 `main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`。该 Git 身份已验证，但 Proto、PostgreSQL/RLS、Redis、Dex、Gateway、Envoy 和 Inference 的兼容性证据仍需在首个基线事项中采集。禁止用动态 `HEAD`、`main`、`latest` 或另一个提交替代。
+当前 Direct P2 的 ANI 来源候选固定为 Git object `0cedae825a489d936cf41815dc27f278f6d3213c`。动态 `HEAD`、`main`、`latest`、当前分支和工作树都不能替代该对象。它不是可运行兼容 Oracle：旧 Auth RLS 对受限 runtime role 的正向访问已失败。
+
+Direct P2 规格和 ticket graph 已于 2026-09-03 获得人工接受，DP2-01–20 已发布为 `ready-for-agent`。用户随后精确授权一次性前置事项 DP2-00：先归档事项03/04实验，再让 Direct P2 非文档实现回到事项02的固定 Kratos 骨架。DP2-00 当前是唯一 `claimed` 事项，DP2-01 尚未启动。该授权不包含契约 breaking、外部写入、切流、数据重建、Credential 失效或旧部署资产删除。
 
 ## 必读顺序
 
-1. `.scratch/ani-iam-rebuild/spec.md`：当前完整规格和用户故事。
-2. `docs/plans/plan-iam-service-refactor.md`：目标系统、不变量、契约和验收。
-3. `docs/plans/plan-iam-kratos-phased.md`：阶段边界、入口/出口条件和删除顺序。
-4. `docs/plans/plan-iam-decision-traceability.md`：Q1–Q300 覆盖与限定。
-5. `CONTEXT.md`：领域术语。
-6. 与当前改动相关的 `docs/adr/`。
-7. 若开始实施，读取 `.scratch/ani-iam-rebuild/issues/` 中当前 `claimed` 事项。
+1. `.scratch/ani-iam-p2-direct/spec.md`：当前已接受规格、早期 Go/No-Go 和授权边界。
+2. `.scratch/ani-iam-p2-direct/ticket-plan.md`：已接受并发布的纵向拆票与依赖图。
+3. `docs/plans/plan-iam-service-refactor.md`：目标系统、不变量、契约和验收。
+4. `docs/plans/plan-iam-kratos-phased.md`：阶段边界、入口/出口条件和删除顺序。
+5. `docs/plans/plan-iam-decision-traceability.md`：Q1–Q300 覆盖与限定。
+6. `CONTEXT.md`：领域术语。
+7. 与当前改动相关的 `docs/adr/`。
+8. `.scratch/ani-iam-rebuild/spec.md` 和事项01–39：历史路线、负向证据与重排审计链。
+9. 若开始实施，先读取 `.scratch/ani-iam-p2-direct/issues/` 中用户指定的事项并确认其依赖，再将唯一事项设为 `claimed`。
 
 ## 权威顺序
 

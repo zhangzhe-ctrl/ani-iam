@@ -1,28 +1,32 @@
 # ANI IAM Kratos 分阶段替换方案
 
-> 状态：**Accepted / 当前阶段依据；实施未开始**
+> 状态：**Replanned / Direct P2 已接受并发布；DP2-00 基线清理执行中**
 >
 > 编制日期：2026-09-01
 >
 > 目标设计：`plan-iam-service-refactor.md`
 >
-> 当前规格：`../../.scratch/ani-iam-rebuild/spec.md`
+> 当前规格：`../../.scratch/ani-iam-p2-direct/spec.md`（已接受）
 >
-> 用户指定基线：ANI `main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`，Git 身份已验证；真实兼容性证据仍待采集
+> Ticket graph：`../../.scratch/ani-iam-p2-direct/ticket-plan.md`（已接受；DP2-00 执行中，DP2-01–20 已发布）
+>
+> ANI 来源候选：Git object `0cedae825a489d936cf41815dc27f278f6d3213c`；不得使用动态 `main`、当前分支或工作树
 
 ## 1. 阶段原则
 
-这不是一个持续兼容计划，而是把风险拆成可证伪阶段后完成删除和替换：
+原计划通过兼容阶段拆分风险；事项04已经给出真实旧 RLS 的负向结果。当前重排不把失败改成通过，而是停止 CP0/P1 并把 Direct P2 的可切换性验证前置：
 
 ```text
-基线准备     固定身份并采集兼容性证据，不写运行时
-CP0         只验证 Kratos 能否承载旧 Auth oracle
-P1          用 Kratos iam-service 同构替换旧 Auth runtime
-P2          破坏性重建目标 IAM/Core 契约、数据和授权边界
-PR0         未来 Production Readiness，不属于当前功能交付
+历史 01-04    固定旧 Oracle、Kratos scaffold、旧 transport、真实 RLS 负向结论
+DP2-0         固定来源、公开契约和 IAM/Core 契约
+DP2-1         目标无 RLS 持久化与最小纵向链路；Go/No-Go A
+DP2-2         切换关键功能与五类调用方整组演练；Go/No-Go B
+DP2-3         完整 IAM 管理、恢复、审计、幂等和 UI
+DP2-4         最终测试数据重建、切换、删除和功能验收
+PR0           未来 Production Readiness，不属于当前功能交付
 ```
 
-CP0/P1 的兼容代码是实验和过渡资产，P2 必须删除。每个阶段都有独立入口、出口、停止条件和人工解锁；不能因为前一阶段“看起来没问题”自动进入下一阶段。
+现有 CP0/P1 代码和证据是历史资产；DP2-00 先归档并从 Direct P2 实现树移除未投入使用的 compat/RLS 调查代码，历史证据继续保留。旧 ANI/Auth 部署资产仍只能在 DP2-19 经独立确认后删除。每个阶段都有独立入口、出口、停止条件和人工解锁；Go/No-Go A 不自动解锁 Go/No-Go B，Go/No-Go B 也不自动授权最终切流和删除。
 
 基线准备、CP0、P1 和 P2 都拆成有界本地事项。任何时刻只允许一个会改变状态的事项处于 `claimed`；数据重建、Credential 全失效、切流和旧资产删除还需要在执行前获得针对精确目标和动作的人工确认。不同仓库同时存在事项不代表可以并行改变共享状态。
 
@@ -30,19 +34,19 @@ CP0/P1 的兼容代码是实验和过渡资产，P2 必须删除。每个阶段�
 
 ### 2.1 基线身份
 
-唯一候选基线是：
+旧 CP0 Oracle 保留为历史证据；Direct P2 的来源候选是：
 
 ```text
 repository: ANI
-branch intent: main
-commit: 963bc88836c54a1b09cf100b37eb2f2cb2a5a4be
-source: user supplied and locally verified
-compatibility evidence: pending
+branch intent at verification time: main
+commit: 0cedae825a489d936cf41815dc27f278f6d3213c
+source: remote main identity locally verified on 2026-09-03
+runtime compatibility: known-failing legacy Auth RLS; not a Go oracle
 ```
 
-该对象已确认存在并对应 `main`，但不得改用动态 `HEAD`。首个基线事项必须记录 `git cat-file`、`git show`、branch/ref、clean runtime scope 和 migration/schema/Proto/Redis oracle；任一证据无法验证时停止。
+该对象已确认存在且验证时对应远端 `main`，但后续分支和工作树已经漂移，因此只能从 Git object 读取。Direct P2 DP2-01 必须固定最终来源摘要，记录 Auth 14 RPC/调用方保持项、OpenAPI 已批准差异、旧 RLS deny-all 和旧 migration checksum 不完整；不得把“最新”或脏工作树当成 Oracle。
 
-规划文件是基线之上的设计覆盖，不进入“旧 Auth 行为 oracle”。
+Direct P2 从目标契约和新空数据库建立可运行基线。旧来源缺陷只用于解释替换范围，不进入目标通过证据。
 
 ### 2.2 有问题的旧门禁
 
@@ -80,7 +84,7 @@ Replacement gate 被接受后，旧脚本可继续红而不阻塞 CP0；禁止�
 
 只有基线事项的证据得到人工明确接受，才可把 CP0-0 事项设为 `claimed`。文档生成本身不是该批准。
 
-## 4. CP0：隔离 Kratos Compatibility Spike
+## 4. CP0：隔离 Kratos Compatibility Spike（历史停止路线）
 
 ### 4.1 唯一问题
 
@@ -123,13 +127,13 @@ CP0 使用独立临时项目/目录和隔离配置，不改旧 Auth 唯一写路
 
 ### 4.5 Go/No-Go
 
-Go 只证明 Kratos 可承载兼容 runtime，不批准 P2 设计。No-Go 时保留 evidence，停止独立 runtime 晋升，不以修改目标领域设计掩盖 framework failure。
+Go 只证明 Kratos 可承载兼容 runtime，不批准 P2 设计。事项04已因真实旧 Auth RLS deny-all 得出 `FAIL / BLOCKED`；用户于 2026-09-03 指示关闭负向调查并重排计划。事项01–04证据保留，事项05–09不再执行。
 
-## 5. P1：同构替换旧 Auth Runtime
+## 5. P1：同构替换旧 Auth Runtime（已跳过）
 
 ### 5.1 目标
 
-把 CP0 中通过的 Kratos runtime 扩展到完整旧 14 RPC，并将运行组件和配置命名统一为 `iam-service`，但继续使用旧 wire、bcrypt、RLS、Redis 和数据语义。P1 不开始目标领域重建。
+原目标是把 CP0 中通过的 Kratos runtime 扩展到完整旧 14 RPC。由于 CP0 未 Go 且项目没有生产环境，当前 Direct P2 重排明确不继续 P1；事项10–15不再执行，也不得把它们标记为通过。
 
 兼容代码仅位于 `internal/compat/authv1` 和 differential harness；`biz` 不 import compat Proto。可复用 Credential/Token/OIDC/Session 能力通过 framework-independent ports 暴露。
 
@@ -159,40 +163,42 @@ P1 不要求 7-14 日生产 soak；测试环境观察时长在任务卡中明确
 
 稳定 Service 不得同时选择 legacy/kratos。P1 不双写、不迁移旧表，rollback 用 selector、固定镜像和 P1 数据 snapshot。
 
-## 6. P2：目标 IAM/Core 破坏性重建
+## 6. Direct P2：先证明可切换，再完成目标 IAM/Core
 
 ### 6.1 入口
 
-P2 需要单独人工批准，并满足：
+Direct P2 实施仍需要单独人工批准，并满足：
 
-- CP0/P1 evidence 已接受或用户明确决定跳过 P1 并记录风险；
+- 事项04负向证据已关闭，草案 DP2-01 明确记录跳过剩余 CP0/P1 的范围和风险；
 - `plan-iam-service-refactor.md`、目标 OpenAPI/Proto 和删除清单冻结；
 - Core Control 工作已另行启动并提供 canonical Tenant Lifecycle/Bootstrap/Snapshot 契约；
 - 目标 IAM/Core 独立数据库、测试 NATS identity/ACL 和测试切换窗口可用；
 - 明确 test seed、Credential 失效和 snapshot 范围。
 
-### 6.2 实施事项
+### 6.2 实施事项与风险门
 
-| 事项 | Ticket | 内容 | 主要出口 |
+| 阶段 | Ticket | 内容 | 主要出口 |
 | --- | --- | --- | --- |
-| P2-0 | 16、17 | 冻结 OpenAPI、三 IAM Proto、Core integration contracts、registry、errors、deletion manifest | one operation/handler/owner；Buf/OpenAPI gates |
-| P2-1 | 18 | Atlas target schema、sqlc/pgx repos、runtime role；无 RLS/无 deleted_at | empty DB replay；两 Tenant negative/query mutation |
-| P2-2 | 22、23、24、25、28 | Principal/Identity/Password/OIDC/Session Grant/Refresh/Service Token、浏览器会话边界 | auth integration；strict rotation；Cookie/CSRF；Audit tx |
-| P2-3 | 21、26 | CheckPermission、Permission catalog、TenantScope/Platform repos、Gateway one-call | policy digest、obligation、401/403/503/504 |
-| P2-4 | 19、20、21、25、27、31、32、33、34 | Tenant Access、Membership、Role、Invitation、Service Principal/API Key、Platform、Recovery、Audit、Idempotency | last-admin、Role-in-use、Invitation race、API key lifecycle、Platform 浏览器边界、全局 mutation gate |
-| P2-5 | 29、30 | Core Tenant Lifecycle/Quota + outbox/NATS + IAM projection/bootstrap | gap/heartbeat/rebuild/DLQ/at-least-once |
-| P2-6 | 35 | Gateway、Envoy、Inference 切 iam/v1；Console/BOSS 接目标 API | 三 caller 独立 E2E；页面同源 |
-| P2-7 | 36 | 测试数据 snapshot、目标 migration/seed、整组破坏性切换 | target smoke；旧 Credential 全失效 |
-| P2-8 | 37 | 删除 compat/authv1、旧 Proto/client/runtime、双轨 authz、旧 schema、tenant-service 重叠能力 | zero-reference/delete manifest |
-| P2-9 | 38 | 功能矩阵、空环境安装、测试观察、文档和 evidence 收口 | IAM 重构功能完成；Production Ready 仍否 |
+| Preflight | DP2-00 | 归档事项03/04实验并恢复 Kratos 固定实现树 | archive 可恢复；非文档树与 `05ba302...` 一致 |
+| DP2-0 | DP2-01 | 冻结来源、当前调用面与已知缺陷 | 精确 commit/digest；风险与非继承项 |
+| DP2-0 | DP2-02、03 | 冻结 OpenAPI/registry、IAM/Core contracts、errors、deletion manifest | one operation/handler/owner；Buf/OpenAPI gates |
+| DP2-1 | DP2-04 | Atlas/sqlc/pgx 目标无 RLS 基础、受限 role | empty DB replay；两 Tenant/query mutation |
+| **Go/No-Go A** | **DP2-05** | Password→Session→CheckPermission→目标 Gateway→一个受保护 API | 真实依赖、401/403/503/504、Audit tx；失败即停止 |
+| DP2-2 | DP2-06–12 | Password、OIDC、Session/浏览器、授权、API Key、Service Token、Core Lifecycle/NATS | 切换关键功能完整 |
+| DP2-2 | DP2-13 | Gateway、Envoy、Inference、Console、BOSS 当前调用面对等 | 五类独立 E2E |
+| **Go/No-Go B** | **DP2-14** | 隔离测试轨道整组切入新 IAM 并回退 | 无代码 fallback；固定镜像/config/evidence；失败即停止 |
+| DP2-3 | DP2-15–17 | Invitation/Role/Platform/Recovery、Audit/Idempotency、完整 UI/E2E | 全部目标功能完整 |
+| DP2-4 | DP2-18 | 最终测试数据 snapshot/seed、整组破坏性切换 | target smoke；旧 Credential 全失效 |
+| DP2-4 | DP2-19 | 删除旧 runtime/Proto/compat/schema/重叠能力 | zero-reference/delete manifest |
+| DP2-4 | DP2-20 | 空环境安装、功能矩阵和证据收口 | 功能完成；Production Ready 仍否 |
 
-P2-0 至 P2-6 可在隔离集成环境逐包合并，但不能单独发布破坏 wire 的中间状态。P2-7 是 IAM/Core/三个 caller/数据库/manifest 的一个测试环境发布单元。
+DP2-01–13 可以在隔离集成轨道逐包合并，但不能把目标 Gateway 的单一路由验证描述为全局切换。DP2-14 首次证明“切换关键功能可以整组进入新 IAM并通过部署配置回退”，不删除旧资产、不使旧 Credential 失效，也不代表 DP2-15–17 的新增能力完成。只有 DP2-14 证据被人工接受，才继续完整目标功能。
 
 ### 6.3 P2 固定删除
 
 - `auth-service` Deployment/Service/ServiceAccount/build；
 - `AUTH_SERVICE_*`、旧 `AUTH_JWT_*`、旧 `AUTH_OIDC_*`；
-- `auth.v1.AuthService`、generated pb/client/mock、`internal/compat/authv1`；
+- 旧 ANI/Auth 中的 `auth.v1.AuthService`、generated pb/client/mock；`ani-iam` 的未投入使用 `internal/compat/authv1` 实验已由 DP2-00 提前归档移除；
 - `ValidateToken`、旧 `CheckPermission`/`CheckPermissionV2` 和 Gateway mode/fallback；
 - JWT Blocklist、旧 refresh semantics、old Role/permission projection；
 - RLS policies、通用 IAM `deleted_at`、旧 User/single-role/polymorphic Binding 表；
@@ -204,7 +210,7 @@ P2-0 至 P2-6 可在隔离集成环境逐包合并，但不能单独发布破坏
 
 ### 6.4 切换与恢复
 
-当前只有测试环境，无 production rollback rehearsal 硬门。切换仍必须保存明确 snapshot、固定镜像和 seed manifest；失败可人工恢复 snapshot 或重建测试环境，结果如实记 `not_verified`。不得为了“好回滚”让旧、新 schema 长期双写。
+DP2-14 是隔离测试轨道的早期整组演练：旧 Auth 保留为部署级回退目标，但目标代码不得 fallback。DP2-18 才是最终测试环境切换，必须另行确认 snapshot、seed、Credential 全失效和精确 manifest。当前没有 production rollback rehearsal 硬门；不得为了“好回滚”让旧、新 schema 长期双写。
 
 ## 7. PR0：未来 Production Readiness
 
@@ -221,13 +227,14 @@ PR0 不属于当前重构功能完成。创建正式环境或声称 Production R
 
 任一条件发生即停止当前 WP，不自动扩大范围：
 
-- baseline SHA 不能验证或 oracle 无法重现；
+- 来源或目标 Artifact SHA/digest 不能验证；
 - 所需真实依赖缺失且共享环境也不能隔离；
-- 为通过 CP0 必须同时改 wire/schema/security；
+- Go/No-Go A 无法用真实无 RLS 数据库和受限 role 跑通目标纵向链路；
 - contract digest、operation owner 或 obligation 不唯一；
 - 两 Tenant 负向测试发现跨 Tenant 访问；
 - Audit 与 mutation 无法同事务；
 - caller gate 缺失或被另一个 caller 代替；
+- Go/No-Go B 仍需要代码 fallback、未覆盖当前调用面或无法完成整组部署回退；
 - Core canonical contract 未产生却要求实现真实 P2 projection；
 - Agent 需要超出任务卡 allow paths 或执行破坏性操作；
 - 人工 checkpoint 未批准。
@@ -236,9 +243,9 @@ PR0 不属于当前重构功能完成。创建正式环境或声称 Production R
 
 | 声明 | 最低阶段 | 不包含的声明 |
 | --- | --- | --- |
-| Kratos compatibility feasible | CP0 Go | 没有替换 runtime |
-| legacy runtime replaced | P1 完成 | 目标数据/契约尚未完成 |
-| IAM refactor functionally complete | P2-9 完成 | 不是 Production Ready |
+| 目标架构纵向可行 | DP2-05 Go | 不能整体切换 |
+| 切换关键功能可替换旧 Auth | DP2-14 Go | 新增管理能力尚未完整、旧资产未删除 |
+| IAM refactor functionally complete | DP2-20 完成 | 不是 Production Ready |
 | Production Ready | PR0 全部门禁完成 | 不能由测试环境成功推断 |
 
 每个阶段事项必须声明前置证据、目标、允许和禁止范围、验收、测试、停止条件与恢复方法；改变状态的事项保持单一 `claimed`，高风险动作另行取得精确人工确认。

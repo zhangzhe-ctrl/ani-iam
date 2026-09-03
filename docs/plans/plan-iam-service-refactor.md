@@ -1,16 +1,16 @@
 # ANI IAM Service 重构方案
 
-> 状态：**Accepted / 当前设计依据；实施未开始**
+> 状态：**Accepted target design / Direct P2 计划已接受并发布；DP2-00 基线清理执行中**
 >
 > 编制日期：2026-09-01
 >
 > 适用环境：项目未上线、没有真实用户、当前只有测试和演示环境
 >
-> 用户指定 ANI `main` 基线：`963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`
+> Direct P2 ANI 来源候选：Git object `0cedae825a489d936cf41815dc27f278f6d3213c`
 >
-> 基线验证状态：**Git identity verified / compatibility evidence pending**。该 SHA 已确认存在并对应 `main`；真实 Proto、PostgreSQL/RLS、Redis、Dex 和三个调用方证据仍需由首个基线事项采集。禁止用动态 `HEAD`、`main` 或其他提交替代。
+> 来源验证状态：**Git identity verified / Direct P2 contract inventory pending**。该对象已确认存在且验证时对应远端 `main`；动态 `HEAD`、`main`、当前分支和工作树不得替代。事项04已证明旧 Auth RLS 对受限 runtime role 的正向访问失败，因此该对象不是可运行兼容 Oracle。
 >
-> 配套文档：`plan-iam-kratos-phased.md`、`../../.scratch/ani-iam-rebuild/spec.md`
+> 配套文档：`plan-iam-kratos-phased.md`、`../../.scratch/ani-iam-p2-direct/spec.md`、`../../.scratch/ani-iam-p2-direct/ticket-plan.md`
 >
 > 决策索引：`plan-iam-decision-traceability.md`
 
@@ -28,7 +28,7 @@
 
 本方案即使单独阅读，也足以判断目标边界、契约、数据、迁移、安全、验证和延期范围。若实现与本文冲突，必须记录并解决差异，不得从已删除材料补入默认规则。
 
-批准本文不等于批准实现。任何改变代码、数据、契约或外部状态的工作都必须由一个状态为 `claimed` 的本地事项承载；删除、Credential 失效、数据重建和切流还需在执行前获得针对精确目标和动作的人工确认。CP0、P1、P2、Core 拆分、NATS 基础设施、数据库迁移和部署均未因本文生成而自动获得授权。
+批准本文不等于批准实现。任何改变代码、数据、契约或外部状态的工作都必须由一个状态为 `claimed` 的本地事项承载；删除、Credential 失效、数据重建和切流还需在执行前获得针对精确目标和动作的人工确认。CP0/P1 已停止；Direct P2 ticket plan、Core 拆分、NATS 基础设施、数据库迁移和部署均未因本文生成而自动获得授权。
 
 ## 2. 目标、动机与非目标
 
@@ -106,7 +106,7 @@ Gateway 不连接业务数据库，不执行 Tenant/Quota Saga，也不本地验
 
 ### 3.3 独立 IAM 项目
 
-IAM 新建独立 Git 项目，从 scaffold、契约 fixture、ADR 和 CP0 harness 开始干净历史。它可以复用 PostgreSQL、Redis、Dex、NATS、Secret Manager、镜像仓库和观测基础设施，但不得复制或 import ANI 内部 Port、Adapter、Bootstrap 或 Go package。
+IAM 使用当前独立 Git 项目和事项02已验证的 scaffold；事项03/04的 compat transport/storage 只作为历史调查资产，不是 Direct P2 runtime。它可以复用 PostgreSQL、Redis、Dex、NATS、Secret Manager、镜像仓库和观测基础设施，但不得复制或 import ANI 内部 Port、Adapter、Bootstrap 或 Go package。
 
 跨项目只通过以下版本化契约协作：
 
@@ -138,7 +138,7 @@ internal/data/              sqlc/pgx, Redis, NATS, external adapters
 internal/service/           Proto <-> biz thin mapping
 internal/server/            Kratos gRPC and internal admin listener
 internal/conf/              typed validated config
-internal/compat/authv1/     CP0/P1 only; P2 deletes
+internal/compat/authv1/     CP0/P1 historical experiment; DP2-00 removes from target tree
 api/iam/v1/                 target internal Proto
 migrations/                 Atlas versioned migration directory
 ```
@@ -149,7 +149,7 @@ migrations/                 Atlas versioned migration directory
 
 ### 4.3 固定工具链
 
-- go-kratos v3：在 CP0 选择并锁定精确 patch；
+- go-kratos v3：使用事项02已验证并锁定的精确 patch；
 - PostgreSQL：sqlc + pgx/v5；显式 SQL 是安全评审源；
 - Migration：Atlas versioned migrations + `atlas.sum`；
 - JOSE/JWT/JWK：稳定版 `lestrrat-go/jwx` adapter；
@@ -164,7 +164,7 @@ migrations/                 Atlas versioned migration directory
 
 GORM 不作为目标 ORM。移除 RLS 后，`tenant_id`、状态、版本和锁条件必须直接出现在可评审 SQL 中；目标还依赖复合 Tenant 键、部分唯一索引、`FOR UPDATE`、`RETURNING` 和无通用软删除。sqlc 生成窄类型方法和扫描代码，pgx 明确承载事务和 PostgreSQL 语义，避免 Scope、Hook、隐式关联和自动 `deleted_at` 隐藏安全条件。
 
-CP0 只改变 Kratos transport/runtime。`sa-token-go` 不进入 CP0，也不是目标方案的必选依赖；若未来评估，必须作为单独 POC，不得泄漏类型到 biz 或契约。
+历史 CP0 只改变 Kratos transport/runtime，现已因事项04负向结果停止。`sa-token-go` 不是目标方案的必选依赖；若未来评估，必须作为单独 POC，不得泄漏类型到 biz 或契约。
 
 ## 5. 公网契约、内部契约与 Gateway
 
@@ -291,7 +291,7 @@ Platform Repository 独立，要求 Platform Capability、专用身份、reason 
 
 ### 7.1 Password 与 OIDC
 
-CP0/P1 保留基线 bcrypt 行为。P2 新密码使用 Argon2id：64 MiB、t=3、p=4、16-byte salt、32-byte tag，并保存算法和参数。只有显式导入 bcrypt 可在成功登录后 rehash；seed 不保存明文默认密码，只产生一次性 30 分钟设置动作。
+历史 CP0/P1 原计划保留基线 bcrypt 行为，但该路线已停止。Direct P2 新密码使用 Argon2id：64 MiB、t=3、p=4、16-byte salt、32-byte tag，并保存算法和参数。只有显式导入 bcrypt 可在成功登录后 rehash；seed 不保存明文默认密码，只产生一次性 30 分钟设置动作。
 
 Password 登录按 normalized account 和 IP 限流，连续 5 次失败锁定 15 分钟，响应不枚举账号。
 
@@ -359,7 +359,7 @@ API Key 是 Service Principal Credential：
 
 - IAM entity 使用 UUIDv7；Core Tenant ID 为 Core 生成 UUID，IAM 只验证和保存；
 - Migration owner 与 runtime DML role 分离；runtime 非 owner、非 superuser；
-- P2 不使用 PostgreSQL RLS；CP0/P1 必须仍验证旧 RLS oracle；
+- Direct P2 不使用 PostgreSQL RLS；事项04的旧 RLS 失败只作为历史负向证据保留；
 - 普通事务 `READ COMMITTED` + row lock/version；Tenant invariant 使用 guard lock 或窄 serializable；
 - mutable aggregate 有 `version bigint`，时间为 UTC `timestamptz`；
 - status 使用 constrained text + generated constants，不使用 PG ENUM；
@@ -441,13 +441,13 @@ Purge 不在当前范围，禁止为未设计的物理删除加入广泛 cascade
 
 1. Unit + Proto/OpenAPI contract；
 2. 真实依赖 Adapter Integration；
-3. CP0 与旧 oracle 的 differential；
+3. 历史 CP0 证据与旧 oracle 的 differential（不得替代 Direct P2 门禁）；
 4. Gateway、Envoy、Inference 三调用方独立 E2E；
 5. lint/staticcheck、`govulncheck`、Buf lint/breaking、sqlc clean diff、Atlas empty-DB replay/checksum、SBOM、License inventory。
 
 本地资源不足时可用共享测试基础设施，但状态必须隔离：独立 PostgreSQL DB/role、Redis namespace、NATS Account 或完整隔离 subject/Stream/Consumer、Dex Client/identity 和测试 Credential。不能共享 mutable fixture、全局 flush 或依赖残留数据；无法隔离即 `not_verified`。
 
-CP0/P1 使用真实旧 PostgreSQL role/RLS、Redis、Dex 和签名/Token 语义。P2 使用无 RLS 新库、两 Tenant 负向测试、复合约束和 query mutation。两类证据不能互换。
+历史 CP0/P1 使用真实旧 PostgreSQL role/RLS、Redis、Dex 和签名/Token 语义；事项04已记录旧 RLS 失败。Direct P2 使用无 RLS 新库、两 Tenant 负向测试、复合约束和 query mutation。两类证据不能互换。
 
 Differential 只归一化随机 ID、时间、Token/Secret；必须比较 gRPC/public error、Claim、PostgreSQL/Redis state 和 side effect，预期差异进入显式 allowlist。
 
@@ -459,7 +459,7 @@ Argon2 latency/memory、CheckPermission load、`go test -race`、Fuzz 和专项�
 
 ### 12.3 旧问题门禁
 
-现有 Gateway authz drift 和受保护 Core path 检查被用户判定为门禁本身有问题，因此不再以“旧脚本必须变绿”阻塞 CP0，也不能被记作已通过。首个基线事项必须逐项记录旧 assertion、失效理由、对应目标契约和可复现的新检查；审查接受后才可进入 CP0。
+现有 Gateway authz drift 和受保护 Core path 检查被用户判定为门禁本身有问题，因此不再要求“旧脚本必须变绿”，也不能被记作已通过。Direct P2 的 DP2-01/02 草案必须逐项记录旧 assertion、失效理由、对应目标契约和可复现的新检查；人工接受并发布事项后才能开始实现。
 
 ## 13. P2 数据重建与破坏性切换
 

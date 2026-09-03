@@ -4,7 +4,9 @@
 
 **Blocked by:** 16 / 冻结公开 OpenAPI 与 Operation Registry；19 / 交付 Tenant Access Bootstrap 纵向链路；20 / 交付 Invitation 到 Human Membership；21 / 交付 Role、Binding 与 Membership 管理；22 / 交付 Password 身份认证；23 / 交付 OIDC 登录与 Identity Link；24 / 交付 Session Grant 与旋转 Refresh；25 / 交付浏览器与 Platform/BOSS 边界；27 / 交付 Service Principal 与 API Key；31 / 交付 Platform Role、Invitation 与 Membership 管理；32 / 交付高风险 Tenant Admin 恢复
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-16；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-4
 

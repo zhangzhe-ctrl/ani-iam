@@ -4,7 +4,9 @@
 
 **Blocked by:** 16 / 冻结公开 OpenAPI 与 Operation Registry；19 / 交付 Tenant Access Bootstrap 纵向链路；21 / 交付 Role、Binding 与 Membership 管理；24 / 交付 Session Grant 与旋转 Refresh
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-05、DP2-09；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-3
 

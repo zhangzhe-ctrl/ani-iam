@@ -4,7 +4,9 @@
 
 **Blocked by:** 17 / 冻结 IAM 与 Core 集成契约
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-04；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。需求继续存在并被前置。
 
 **Plan mapping:** P2-1
 

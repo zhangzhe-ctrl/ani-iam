@@ -7,11 +7,11 @@
 - 每个功能一个目录：`.scratch/<feature-slug>/`
 - 规格文件：`.scratch/<feature-slug>/spec.md`
 - 实施事项：`.scratch/<feature-slug>/issues/<NN>-<slug>.md`
-- 每个事项单独一个文件，按依赖顺序从 `01` 编号；禁止生成单一汇总事项文件
+- 每个事项单独一个文件，按依赖顺序通常从 `01` 编号；经精确人工接受的一次性前置整理事项可以使用 `00`，禁止生成单一汇总事项文件
 - Triage 状态记录在事项文件顶部附近的 `Status:` 行中，角色字符串见 `triage-labels.md`
 - 评论与对话历史追加在文件底部的 `## Comments` 标题下
 
-当前 IAM 重构功能目录是 `.scratch/ani-iam-rebuild/`。
+当前 IAM Direct P2 功能目录是 `.scratch/ani-iam-p2-direct/`。`.scratch/ani-iam-rebuild/` 保留历史 CP0/P1 路线、事项01–39和重排证据，不再产生新的实现事项。
 
 ## 当技能要求“发布到 Issue Tracker”时
 

@@ -4,7 +4,9 @@
 
 **Blocked by:** 16 / 冻结公开 OpenAPI 与 Operation Registry；20 / 交付 Invitation 到 Human Membership
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-09、DP2-15；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-3、P2-4
 

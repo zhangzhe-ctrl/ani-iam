@@ -4,7 +4,9 @@
 
 **Blocked by:** 11 / 补齐完整旧 Auth Runtime；12 / 建立稳定 IAM 服务地址
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-13、DP2-14；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。不运行 compat canary，改验证目标调用面和整组回退。
 
 **Plan mapping:** P1-3
 

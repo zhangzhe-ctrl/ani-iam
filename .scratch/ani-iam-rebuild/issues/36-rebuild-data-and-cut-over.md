@@ -4,7 +4,9 @@
 
 **Blocked by:** 35 / 完成目标调用方与 UI E2E
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-14、DP2-18；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。本状态不授权任何切流、重建或 Credential 失效。
 
 **Plan mapping:** P2-7
 

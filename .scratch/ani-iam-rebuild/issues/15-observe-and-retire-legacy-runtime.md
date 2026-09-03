@@ -4,7 +4,9 @@
 
 **Blocked by:** 14 / 切换 Selector 并验证回滚
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-14、DP2-18、DP2-19；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。旧 runtime 只在目标最终切换后单独删除。
 
 **Plan mapping:** P1-6
 

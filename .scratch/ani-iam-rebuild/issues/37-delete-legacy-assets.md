@@ -4,7 +4,9 @@
 
 **Blocked by:** 36 / 执行测试环境数据重建与整组切换
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-19；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。本状态不授权删除任何文件、契约、数据或部署资产。
 
 **Plan mapping:** P2-8
 

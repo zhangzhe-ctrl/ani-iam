@@ -4,7 +4,9 @@
 
 **Blocked by:** 09 / 完成三调用方门禁与 CP0 判定
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-05、DP2-20；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。旧 compat runtime 不晋升为目标 runtime。
 
 **Plan mapping:** P1-0
 

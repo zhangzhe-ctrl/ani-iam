@@ -4,7 +4,9 @@
 
 **Blocked by:** 16 / 冻结公开 OpenAPI 与 Operation Registry；18 / 建立无 RLS 持久化基础；20 / 交付 Invitation 到 Human Membership；21 / 交付 Role、Binding 与 Membership 管理；25 / 交付浏览器与 Platform/BOSS 边界
 
-**Status:** ready-for-agent
+**Status:** wontfix
+
+**Superseded by:** Direct P2 DP2-15；见 `../evidence/39-replan-direct-p2/ticket-mapping.md`。
 
 **Plan mapping:** P2-4
 
