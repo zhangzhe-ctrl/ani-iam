@@ -63,3 +63,7 @@ git diff --cached --check
 - 没有 push、tag、merge、切流或启动 DP2-01。
 - 清理提交可以普通 `git revert` 恢复；完整清理前现场也可从 `codex/cp0-archive` 读取。
 - 本事项移除的是独立 IAM 仓库中未投入使用的实验代码，不代表 DP2-19 的旧部署资产删除已经执行或获批。
+
+## 脚手架入口规则补充
+
+用户随后要求把固定 Kratos 脚手架生成的 Agent/Claude 仓库规则追加到两个现有入口文件。来源、逐行一致性、hash、仓库适配和复验结果见 [kratos-agent-guidelines.md](kratos-agent-guidelines.md)。该补充只改变文档规则，不改变已验证的实现树。
