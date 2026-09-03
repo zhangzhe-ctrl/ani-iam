@@ -144,7 +144,7 @@ func TestBizLayerHasNoFrameworkOrAdapterImports(t *testing.T) {
 		t.Fatal("cannot resolve test path")
 	}
 	bizRoot := filepath.Clean(filepath.Join(filepath.Dir(filename), "..", "..", "internal", "biz"))
-	forbidden := []string{"go-kratos", "protobuf", "grpc", "internal/compat", "internal/data", "database/sql", "pgx", "redis"}
+	forbidden := []string{"go-kratos", "protobuf", "grpc", "internal/data", "database/sql", "pgx", "redis"}
 	err := filepath.WalkDir(bizRoot, func(path string, entry os.DirEntry, err error) error {
 		if err != nil || entry.IsDir() || !strings.HasSuffix(path, ".go") {
 			return err

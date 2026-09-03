@@ -2,7 +2,7 @@
 
 Status: accepted / published
 
-用户于 2026-09-03 接受本拆分、依赖边和交付行为。DP2-01–DP2-20 已发布到 `.scratch/ani-iam-p2-direct/issues/` 并设为 `ready-for-agent`；随后用户精确授权 DP2-00 先归档并移除未投入使用的事项03/04实验代码。发布不等于领取后续事项，当前只有 DP2-00 被领取。
+用户于 2026-09-03 接受本拆分、依赖边和交付行为。DP2-01–DP2-20 已发布到 `.scratch/ani-iam-p2-direct/issues/` 并设为 `ready-for-agent`；随后用户精确授权并完成 DP2-00，归档并移除未投入使用的事项03/04实验代码。发布和前置清理不等于领取后续事项，DP2-01 仍未启动。
 
 ## Proposed Tickets
 
@@ -39,7 +39,7 @@ Status: accepted / published
 
 ## Dependency Audit
 
-依赖只指向更小 ID，因此已发布图无环。用户新增的唯一前置 frontier 是 DP2-00；它解决后 DP2-01 才进入 frontier。`ready-for-agent` 只表示规格完整；执行器仍必须检查 `Blocked by`，且每次只能领取一个事项。
+依赖只指向更小 ID，因此已发布图无环。一次性 DP2-00 已解决，当前唯一 frontier 是 DP2-01。`ready-for-agent` 只表示规格完整；执行器仍必须检查 `Blocked by`，且每次只能领取一个事项。
 
 ## Accepted Delivery Behavior
 

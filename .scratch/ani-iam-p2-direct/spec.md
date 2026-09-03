@@ -86,7 +86,7 @@ ANI 来源候选固定为 Git object `0cedae825a489d936cf41815dc27f278f6d3213c`�
 
 ## Human Checkpoints
 
-- 当前规格和 ticket graph 已由用户接受并发布为 `ready-for-agent`；用户随后于 2026-09-03 精确接受 DP2-00 的本地归档与实现基线清理，DP2-01 仍未领取。
+- 当前规格和 ticket graph 已由用户接受并发布为 `ready-for-agent`；用户随后于 2026-09-03 精确接受并完成 DP2-00 的本地归档与实现基线清理，DP2-01 仍未领取。
 - Go/No-Go A 和 B 的证据分别需要人工接受；前一个通过不自动授权后一个阶段。
 - 任何契约 breaking 发布、真实 Core/NATS 写入、测试轨道切入、数据重建、Credential 失效、最终切流和旧资产删除，都需要针对精确事项、环境和动作的单独确认。
 - 同一时间只允许一个会改变代码、数据、契约或外部状态的事项为 `claimed`。
@@ -101,4 +101,4 @@ ANI 来源候选固定为 Git object `0cedae825a489d936cf41815dc27f278f6d3213c`�
 
 ## Ticket Publication
 
-已接受的纵向拆分、依赖边和交付行为位于 `ticket-plan.md`。DP2-01–20 已发布到 `.scratch/ani-iam-p2-direct/issues/`；用户随后增加并领取一次性前置事项 DP2-00。DP2-00 解决前，DP2-01 不得领取；该清理不自动启动任何 Direct P2 功能事项。
+已接受的纵向拆分、依赖边和交付行为位于 `ticket-plan.md`。DP2-01–20 已发布到 `.scratch/ani-iam-p2-direct/issues/`；一次性前置事项 DP2-00 已解决。当前唯一 frontier 是 DP2-01，但它尚未被领取或启动。

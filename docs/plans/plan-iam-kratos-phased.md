@@ -1,6 +1,6 @@
 # ANI IAM Kratos 分阶段替换方案
 
-> 状态：**Replanned / Direct P2 已接受并发布；DP2-00 基线清理执行中**
+> 状态：**Replanned / Direct P2 已接受并发布；DP2-00 已解决，DP2-01 未启动**
 >
 > 编制日期：2026-09-01
 >
@@ -8,7 +8,7 @@
 >
 > 当前规格：`../../.scratch/ani-iam-p2-direct/spec.md`（已接受）
 >
-> Ticket graph：`../../.scratch/ani-iam-p2-direct/ticket-plan.md`（已接受；DP2-00 执行中，DP2-01–20 已发布）
+> Ticket graph：`../../.scratch/ani-iam-p2-direct/ticket-plan.md`（已接受；DP2-00 已解决，DP2-01–20 已发布）
 >
 > ANI 来源候选：Git object `0cedae825a489d936cf41815dc27f278f6d3213c`；不得使用动态 `main`、当前分支或工作树
 

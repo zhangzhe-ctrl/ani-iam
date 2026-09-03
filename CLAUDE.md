@@ -6,7 +6,7 @@
 
 当前 Direct P2 的 ANI 来源候选固定为 Git object `0cedae825a489d936cf41815dc27f278f6d3213c`。动态 `HEAD`、`main`、`latest`、当前分支和工作树都不能替代该对象。它不是可运行兼容 Oracle：旧 Auth RLS 对受限 runtime role 的正向访问已失败。
 
-Direct P2 规格和 ticket graph 已于 2026-09-03 获得人工接受，DP2-01–20 已发布为 `ready-for-agent`。用户随后精确授权一次性前置事项 DP2-00：先归档事项03/04实验，再让 Direct P2 非文档实现回到事项02的固定 Kratos 骨架。DP2-00 当前是唯一 `claimed` 事项，DP2-01 尚未启动。该授权不包含契约 breaking、外部写入、切流、数据重建、Credential 失效或旧部署资产删除。
+Direct P2 规格和 ticket graph 已于 2026-09-03 获得人工接受，DP2-01–20 已发布为 `ready-for-agent`。一次性前置事项 DP2-00 已归档事项03/04实验，并让 Direct P2 非文档实现回到事项02的固定 Kratos 骨架。当前没有 `claimed` 事项；唯一 frontier 是尚未启动的 DP2-01。该结果不授权契约 breaking、外部写入、切流、数据重建、Credential 失效或旧部署资产删除。
 
 ## 必读顺序
 

@@ -1,6 +1,6 @@
 # ANI IAM Service 重构方案
 
-> 状态：**Accepted target design / Direct P2 计划已接受并发布；DP2-00 基线清理执行中**
+> 状态：**Accepted target design / Direct P2 计划已接受并发布；DP2-00 已解决，DP2-01 未启动**
 >
 > 编制日期：2026-09-01
 >
