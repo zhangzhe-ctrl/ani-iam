@@ -12,9 +12,9 @@
 
 **Baseline:** ani-iam `05ba302661d593b608df070dd51cc063fc9f8023` 加当前未提交的事项03/04与 Direct P2 重排现场；ANI 不在本事项范围内。
 
-**Scope:** 分别归档事项03、事项04和 Direct P2 重排材料；建立本地 archive 引用；在 `codex/direct-p2-01-05` 上把非文档实现恢复到固定 Kratos 骨架；保留规格、事项、证据、计划和入口文档；记录旧 RLS 调查与未验证补偿边界；把固定 Kratos 模板生成的 Agent/Claude 仓库规则追加到两个现有入口文件，并显式记录本仓库已接受的适配。
+**Scope:** 分别归档事项03、事项04和 Direct P2 重排材料；建立本地 archive 引用；在 `codex/direct-p2-01-05` 上把非文档实现恢复到固定 Kratos 骨架；保留规格、事项、证据、计划和入口文档；记录旧 RLS 调查与未验证补偿边界；把固定 Kratos 模板生成的 Agent/Claude 仓库规则追加到两个现有入口文件，并显式记录本仓库已接受的适配；在远端 `main` 身份仍等于固定预期时，把本地 `main` fast-forward 到已验证的 Direct P2 提交并推送 `origin/main`。
 
-**Out of scope:** DP2-01及后续实现；修改 ANI；修复旧 RLS 或旧 compatibility；部署、切流、Credential 失效、数据重建、旧部署资产删除、push、tag 或远端发布。
+**Out of scope:** DP2-01及后续实现；修改 ANI；修复旧 RLS 或旧 compatibility；部署、切流、Credential 失效、数据重建、旧部署资产删除、tag、修改 remote 或推送 `origin/main` 之外的 ref。
 
 **Allowed paths:** `AGENTS.md`、`CLAUDE.md`、`docs/**`、`.scratch/ani-iam-rebuild/**`、`.scratch/ani-iam-p2-direct/**`、`go.mod`、`go.sum`、`internal/compat/**`、`internal/data/**`、`internal/server/grpc.go`、`internal/service/legacy_auth.go`、`tests/cp0/**`。
 
@@ -30,6 +30,8 @@
 - [x] 完整 Go 测试、`git diff --check` 和干净工作树检查通过。
 - [x] `AGENTS.md` 与 `CLAUDE.md` 的追加内容来自固定模板 `59ad406328acba9a70c9e7f426720a75a89a6b9f`，来源和 hash 可复现。
 - [x] 两个入口文件都包含完整脚手架规则，并明确 Wire、Makefile/AIP CRUD 和 biz 错误依赖的仓库适配。
+- [x] 远端 `main` 在发布前仍为 `05ba302661d593b608df070dd51cc063fc9f8023`，本地 `main` 只通过 fast-forward 前进。
+- [x] `origin/main` 包含 Direct P2 基线与脚手架规则，推送后本地/远端身份一致。
 
 **Verification:** 精确 staged-path 审计；历史提交逐个构建/测试；`git diff --exit-code` 对比固定骨架的非文档路径；`go test ./...`；`git diff --check`；最终 `git status --short`。
 
@@ -41,16 +43,18 @@
 
 ## Result
 
-`PASS / RESOLVED`。基线恢复证据位于 `.scratch/ani-iam-p2-direct/evidence/00-restore-clean-kratos-baseline/index.md`，脚手架入口规则证据位于同目录的 `kratos-agent-guidelines.md`。
+`PASS / RESOLVED`。基线恢复证据位于 `.scratch/ani-iam-p2-direct/evidence/00-restore-clean-kratos-baseline/index.md`，脚手架入口规则证据位于同目录的 `kratos-agent-guidelines.md`，`main` 发布证据位于 `main-publication.md`。
 
 - 事项03、事项04和 Direct P2 重排分别形成可定位的本地归档提交；`codex/cp0-archive` 固定清理前完整现场。
 - 事项04继续保持 `FAIL / BLOCKED`，双重补偿失败组合被更正为 `not_verified`。
 - `codex/direct-p2-01-05` 的 `go.mod`、`go.sum`、`api`、`cmd`、`configs`、`internal` 和 `tests` 与固定 Kratos 骨架 `05ba302...` 无差异。
 - 全量 Go test、vet、build、module verify 和 diff check 通过。
 - 固定 Kratos 模板的完整仓库规则已追加到 `AGENTS.md` 与 `CLAUDE.md`；两个追加段逐行一致，标题归一化后与上游固定正文一致。本仓库对 Wire、Makefile/AIP CRUD、biz 错误边界和 sqlc/pgx 的已接受适配置于上游通用规则之前。
-- 没有修改 ANI、外部依赖、部署或数据；没有 push、tag、切流或启动 DP2-01。
+- 本地 `main` 以 fast-forward 合入全部 Direct P2 分支成果，远端 `origin/main` 已通过普通非强制 push 更新；发布记录提交后再次验证远端与本地 `HEAD` 一致。
+- 没有修改 ANI、外部依赖、部署或数据；没有 tag、force push、切流或启动 DP2-01。
 
 ## Comments
 
 - 2026-09-03：用户确认直接进入 P2，并精确同意先归档后移除未投入使用的事项03/04 compatibility/RLS 调查代码，回到 Kratos 骨架状态。本事项只清理独立 IAM 工作树，不删除旧部署资产。
 - 2026-09-03：用户要求把 Kratos 脚手架生成的 `CLAUDE.md`、`AGENTS.md` 内容追加到现有对应文件并直接提交，以确保后续实现遵循 Kratos 分层和生成纪律；本事项重新领取，只允许入口规则与证据变更。
+- 2026-09-03：用户明确要求把全部本地分支成果合入 `main` 并推送远端。发布前现场确认远端 `main` 为 `05ba302...`，本地 Direct P2 分支线性领先且可以 fast-forward；本轮只授权 `origin/main`。
