@@ -1,0 +1,15 @@
+ordinal	rpc	request	response	full_method
+1	Login	LoginRequest	TokenPair	/auth.v1.AuthService/Login
+2	PlatformPasswordLogin	PlatformPasswordLoginRequest	TokenPair	/auth.v1.AuthService/PlatformPasswordLogin
+3	BeginOIDCLogin	BeginOIDCLoginRequest	BeginOIDCLoginResponse	/auth.v1.AuthService/BeginOIDCLogin
+4	CompleteOIDCLogin	CompleteOIDCLoginRequest	TokenPair	/auth.v1.AuthService/CompleteOIDCLogin
+5	RefreshToken	RefreshTokenRequest	AccessToken	/auth.v1.AuthService/RefreshToken
+6	RevokeToken	RevokeTokenRequest	google.protobuf.Empty	/auth.v1.AuthService/RevokeToken
+7	ValidateToken	ValidateTokenRequest	common.v1.TenantContext	/auth.v1.AuthService/ValidateToken
+8	ValidatePrincipal	ValidatePrincipalRequest	PrincipalContext	/auth.v1.AuthService/ValidatePrincipal
+9	IssueServiceToken	IssueServiceTokenRequest	AccessToken	/auth.v1.AuthService/IssueServiceToken
+10	CheckPermission	CheckPermissionRequest	CheckPermissionResponse	/auth.v1.AuthService/CheckPermission
+11	CheckPermissionV2	AuthorizationRequest	AuthorizationDecision	/auth.v1.AuthService/CheckPermissionV2
+12	CreateAPIKey	CreateAPIKeyRequest	CreateAPIKeyResponse	/auth.v1.AuthService/CreateAPIKey
+13	ListAPIKeys	ListAPIKeysRequest	ListAPIKeysResponse	/auth.v1.AuthService/ListAPIKeys
+14	RevokeAPIKey	RevokeAPIKeyRequest	google.protobuf.Empty	/auth.v1.AuthService/RevokeAPIKey
