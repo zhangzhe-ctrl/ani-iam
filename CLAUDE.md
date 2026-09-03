@@ -2,7 +2,7 @@
 
 ## 仓库定位与当前状态
 
-这是独立的 ANI IAM 重构项目。仓库当前承载由完整 Q1–Q300 grilling 结论综合出的规格、计划、领域词汇和架构决策；运行时实现尚未开始。
+这是独立的 ANI IAM 重构项目。仓库当前承载由完整 Q1–Q300 grilling 结论综合出的规格、计划、领域词汇和架构决策；运行时仅完成事项02的隔离骨架，兼容业务尚未开始。
 
 ANI 兼容性基线固定为 `main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`。该 Git 身份已验证，但 Proto、PostgreSQL/RLS、Redis、Dex、Gateway、Envoy 和 Inference 的兼容性证据仍需在首个基线事项中采集。禁止用动态 `HEAD`、`main`、`latest` 或另一个提交替代。
 
@@ -53,6 +53,8 @@ ANI 兼容性基线固定为 `main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`。�
 
 ## 实现纪律
 
+- 官方生成器能初始化的 scaffold、契约或客户端必须先固定版本并生成基线，禁止手工仿制；按 ADR 裁剪时记录生成来源与 `保留/删除/替换` 差异，缺少这些证据不得关闭事项。详见 `docs/agents/scaffolding-and-codegen.md`。
+- Kratos core/contrib 已提供的 lifecycle、config、logging、transport、middleware、health 或 observability 能力必须直接采用；运行时事项必须列明采用项、未采用项及理由，自实现只限领域规则或经证实的框架缺口。
 - 目标实现遵循 Kratos `api`、`service`、`biz`、`data`、`server`、`conf` 分层；业务规则保持框架无关。
 - P2 目标数据库不使用 PostgreSQL RLS，但 Tenant-owned 表必须通过 `tenant_id`、复合唯一键/外键、显式事务上下文和负向测试保证隔离。
 - 权限检查保持 `{resource, actions, scope}` 语义；所有状态变更必须定义幂等、审计、失败和重试行为。
@@ -76,3 +78,7 @@ ANI 兼容性基线固定为 `main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`。�
 ### Domain docs
 
 本仓库使用 single-context 领域文档布局：根目录 `CONTEXT.md` 与 `docs/adr/`。参见 `docs/agents/domain.md`。
+
+### Scaffolding and codegen
+
+框架初始化与代码生成遵循 generator-first 流程。参见 `docs/agents/scaffolding-and-codegen.md`。

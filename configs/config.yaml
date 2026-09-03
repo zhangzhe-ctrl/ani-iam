@@ -1,0 +1,11 @@
+profile: cp0-isolated
+server:
+  grpc:
+    network: tcp
+    addr: 127.0.0.1:19090
+    timeout: 1s
+  admin:
+    network: tcp
+    addr: 127.0.0.1:19091
+    timeout: 1s
+  shutdown_timeout: 5s
