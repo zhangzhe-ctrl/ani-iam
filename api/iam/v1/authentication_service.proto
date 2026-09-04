@@ -1,0 +1,232 @@
+syntax = "proto3";
+
+package iam.v1;
+
+import "contract.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
+
+// AuthenticationService authenticates credentials and owns Session/Grant token continuity.
+service AuthenticationService {
+  rpc PasswordLogin(PasswordLoginRequest) returns (PasswordLoginResponse);
+  rpc BeginOIDCLogin(BeginOIDCLoginRequest) returns (BeginOIDCLoginResponse);
+  rpc CompleteOIDCLogin(CompleteOIDCLoginRequest) returns (CompleteOIDCLoginResponse);
+  rpc BeginOIDCIdentityLink(BeginOIDCIdentityLinkRequest) returns (BeginOIDCIdentityLinkResponse);
+  rpc CompleteOIDCIdentityLink(CompleteOIDCIdentityLinkRequest) returns (CompleteOIDCIdentityLinkResponse);
+  rpc RequestPasswordAction(RequestPasswordActionRequest) returns (RequestPasswordActionResponse);
+  rpc CompletePasswordAction(CompletePasswordActionRequest) returns (CompletePasswordActionResponse);
+  rpc RefreshSession(RefreshSessionRequest) returns (RefreshSessionResponse);
+  rpc LogoutSession(LogoutSessionRequest) returns (LogoutSessionResponse);
+  rpc SwitchTenant(SwitchTenantRequest) returns (SwitchTenantResponse);
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
+  rpc ValidatePrincipal(ValidatePrincipalRequest) returns (ValidatePrincipalResponse);
+  rpc IssueServiceToken(IssueServiceTokenRequest) returns (IssueServiceTokenResponse);
+}
+
+// PasswordLoginRequest starts a Console or BOSS human session.
+message PasswordLoginRequest {
+  string account = 1;
+  string password = 2;
+  Audience audience = 3;
+  Boundary boundary = 4;
+  string device_name = 5;
+  string idempotency_key = 6;
+}
+
+// PasswordLoginResponse returns an internal refresh secret for Gateway cookie delivery.
+message PasswordLoginResponse {
+  string access_token = 1;
+  uint32 expires_in_seconds = 2;
+  PrincipalContext principal = 3;
+  SessionSummary session = 4;
+  SessionGrantSummary grant = 5;
+  string refresh_token = 6;
+  google.protobuf.Timestamp refresh_expires_at = 7;
+}
+
+// BeginOIDCLoginRequest creates a single-use state/nonce/PKCE operation.
+message BeginOIDCLoginRequest {
+  Audience audience = 1;
+  Boundary boundary = 2;
+  string redirect_uri = 3;
+  string idempotency_key = 4;
+}
+
+// BeginOIDCLoginResponse returns only the authorization URL and opaque state.
+message BeginOIDCLoginResponse {
+  string authorization_url = 1;
+  string state = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+// CompleteOIDCLoginRequest completes one exact redirect URI and single-use state.
+message CompleteOIDCLoginRequest {
+  string code = 1;
+  string state = 2;
+  string redirect_uri = 3;
+  string device_name = 4;
+}
+
+// CompleteOIDCLoginResponse returns the same session result as password login.
+message CompleteOIDCLoginResponse {
+  PasswordLoginResponse login = 1;
+}
+
+// BeginOIDCIdentityLinkRequest starts an authenticated identity-link operation.
+message BeginOIDCIdentityLinkRequest {
+  BearerCredential credential = 1;
+  string provider = 2;
+  string redirect_uri = 3;
+  string idempotency_key = 4;
+}
+
+// BeginOIDCIdentityLinkResponse returns a single-use authorization operation.
+message BeginOIDCIdentityLinkResponse {
+  string authorization_url = 1;
+  string state = 2;
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+// CompleteOIDCIdentityLinkRequest completes a recently reauthenticated link operation.
+message CompleteOIDCIdentityLinkRequest {
+  BearerCredential credential = 1;
+  string code = 2;
+  string state = 3;
+  string redirect_uri = 4;
+}
+
+// CompleteOIDCIdentityLinkResponse identifies the linked identity without account merging.
+message CompleteOIDCIdentityLinkResponse {
+  string identity_id = 1;
+  string principal_id = 2;
+}
+
+// RequestPasswordActionRequest creates a non-enumerating password setup/reset operation.
+message RequestPasswordActionRequest {
+  string account = 1;
+  Audience audience = 2;
+  string idempotency_key = 3;
+}
+
+// RequestPasswordActionResponse returns only the opaque operation identity.
+message RequestPasswordActionResponse {
+  string operation_id = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+// CompletePasswordActionRequest consumes a single-use action token.
+message CompletePasswordActionRequest {
+  string action_token = 1;
+  string new_password = 2;
+  string idempotency_key = 3;
+}
+
+// CompletePasswordActionResponse reports the durable principal mutation.
+message CompletePasswordActionResponse {
+  MutationResult result = 1;
+}
+
+// RefreshSessionRequest rotates a cookie credential within its fixed boundary.
+message RefreshSessionRequest {
+  string refresh_token = 1;
+  string csrf_token = 2;
+  string origin = 3;
+  string idempotency_key = 4;
+}
+
+// RefreshSessionResponse returns a new access token and internal replacement refresh secret.
+message RefreshSessionResponse {
+  PasswordLoginResponse login = 1;
+}
+
+// LogoutSessionRequest revokes the current session even after access-token expiry.
+message LogoutSessionRequest {
+  string refresh_token = 1;
+  string csrf_token = 2;
+  string origin = 3;
+  string idempotency_key = 4;
+}
+
+// LogoutSessionResponse is idempotent and does not disclose prior existence.
+message LogoutSessionResponse {
+  MutationResult result = 1;
+}
+
+// SwitchTenantRequest establishes a separately authorized Tenant boundary grant.
+message SwitchTenantRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string idempotency_key = 3;
+}
+
+// SwitchTenantResponse returns a token and refresh secret for the selected boundary.
+message SwitchTenantResponse {
+  PasswordLoginResponse login = 1;
+}
+
+// ListSessionsRequest lists sessions owned by the authenticated Human Principal.
+message ListSessionsRequest {
+  BearerCredential credential = 1;
+  CursorPageRequest page = 2;
+}
+
+// ListSessionsResponse returns a cursor page without credential secrets.
+message ListSessionsResponse {
+  repeated SessionSummary sessions = 1;
+  string next_cursor = 2;
+}
+
+// RevokeSessionRequest revokes one owned device session.
+message RevokeSessionRequest {
+  BearerCredential credential = 1;
+  string session_id = 2;
+  string idempotency_key = 3;
+}
+
+// RevokeSessionResponse reports the idempotent revocation result.
+message RevokeSessionResponse {
+  MutationResult result = 1;
+}
+
+// RevokeAllSessionsRequest revokes every Human Session after explicit authorization.
+message RevokeAllSessionsRequest {
+  BearerCredential credential = 1;
+  string idempotency_key = 2;
+}
+
+// RevokeAllSessionsResponse reports the principal-wide revocation version.
+message RevokeAllSessionsResponse {
+  MutationResult result = 1;
+}
+
+// ValidatePrincipalRequest validates one raw bearer credential and policy revision.
+message ValidatePrincipalRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+  string policy_revision = 3;
+}
+
+// ValidatePrincipalResponse carries the minimal trusted principal context.
+message ValidatePrincipalResponse {
+  PrincipalContext principal = 1;
+  string decision_id = 2;
+  string policy_revision = 3;
+}
+
+// IssueServiceTokenRequest requests a short audience-bound subset for the mTLS workload.
+message IssueServiceTokenRequest {
+  string audience = 1;
+  repeated string operation_ids = 2;
+  string tenant_id = 3;
+  string idempotency_key = 4;
+}
+
+// IssueServiceTokenResponse returns a non-refreshable token of at most five minutes.
+message IssueServiceTokenResponse {
+  string service_token = 1;
+  google.protobuf.Timestamp expires_at = 2;
+  string principal_id = 3;
+}

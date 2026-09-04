@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package iam.v1;
+
+import "contract.proto";
+
+option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
+
+// AuthorizationService makes the single fail-closed decision for an authorized operation.
+service AuthorizationService {
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+}
+
+// CheckPermissionRequest carries the raw credential and immutable operation-policy identity.
+message CheckPermissionRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+  string policy_revision = 3;
+  AuthorizationTarget target = 4;
+}
+
+// AuthorizationDecision is explicit: the zero value cannot encode allow.
+message AuthorizationDecision {
+  bool allowed = 1;
+  string reason = 2;
+  string decision_id = 3;
+  PrincipalContext principal = 4;
+  repeated AuthorizationObligation obligations = 5;
+  string policy_revision = 6;
+}
+
+// CheckPermissionResponse contains exactly one authorization decision.
+message CheckPermissionResponse {
+  AuthorizationDecision decision = 1;
+}

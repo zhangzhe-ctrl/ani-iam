@@ -1,0 +1,206 @@
+syntax = "proto3";
+
+// Package iam.v1 is the immutable major-version contract for the target IAM.
+// Changes within v1 are additive and backward compatible. A breaking change
+// requires a new versioned package and an explicit dual-consume retirement gate.
+package iam.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/rpc/error_details.proto";
+
+option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
+
+// Audience identifies the isolated browser or internal token audience.
+enum Audience {
+  AUDIENCE_UNSPECIFIED = 0;
+  AUDIENCE_CONSOLE = 1;
+  AUDIENCE_BOSS = 2;
+  AUDIENCE_INTERNAL = 3;
+}
+
+// PrincipalType distinguishes humans from single-Tenant service principals.
+enum PrincipalType {
+  PRINCIPAL_TYPE_UNSPECIFIED = 0;
+  PRINCIPAL_TYPE_HUMAN = 1;
+  PRINCIPAL_TYPE_SERVICE = 2;
+  PRINCIPAL_TYPE_WORKLOAD = 3;
+}
+
+// PrincipalStatus is the explicit lifecycle of an IAM principal.
+enum PrincipalStatus {
+  PRINCIPAL_STATUS_UNSPECIFIED = 0;
+  PRINCIPAL_STATUS_ACTIVE = 1;
+  PRINCIPAL_STATUS_DISABLED = 2;
+}
+
+// AuthnMethod identifies how the principal proved its identity.
+enum AuthnMethod {
+  AUTHN_METHOD_UNSPECIFIED = 0;
+  AUTHN_METHOD_PASSWORD = 1;
+  AUTHN_METHOD_OIDC = 2;
+  AUTHN_METHOD_API_KEY = 3;
+  AUTHN_METHOD_SERVICE_TOKEN = 4;
+}
+
+// SessionStatus is the explicit state of a human session.
+enum SessionStatus {
+  SESSION_STATUS_UNSPECIFIED = 0;
+  SESSION_STATUS_ACTIVE = 1;
+  SESSION_STATUS_REVOKED = 2;
+  SESSION_STATUS_EXPIRED = 3;
+}
+
+// GrantStatus is the explicit state of one boundary-scoped session grant.
+enum GrantStatus {
+  GRANT_STATUS_UNSPECIFIED = 0;
+  GRANT_STATUS_ACTIVE = 1;
+  GRANT_STATUS_REVOKED = 2;
+  GRANT_STATUS_EXPIRED = 3;
+}
+
+// TenantAccessStatus is the IAM-owned gate for an entire Tenant boundary.
+enum TenantAccessStatus {
+  TENANT_ACCESS_STATUS_UNSPECIFIED = 0;
+  TENANT_ACCESS_STATUS_BOOTSTRAP_PENDING = 1;
+  TENANT_ACCESS_STATUS_ACTIVE = 2;
+  TENANT_ACCESS_STATUS_SUSPENDED = 3;
+}
+
+// MembershipStatus is the explicit lifecycle of a Tenant or Platform membership.
+enum MembershipStatus {
+  MEMBERSHIP_STATUS_UNSPECIFIED = 0;
+  MEMBERSHIP_STATUS_ACTIVE = 1;
+  MEMBERSHIP_STATUS_SUSPENDED = 2;
+  MEMBERSHIP_STATUS_REMOVED = 3;
+}
+
+// InvitationStatus is the explicit lifecycle of an invitation intent.
+enum InvitationStatus {
+  INVITATION_STATUS_UNSPECIFIED = 0;
+  INVITATION_STATUS_PENDING = 1;
+  INVITATION_STATUS_ACCEPTED = 2;
+  INVITATION_STATUS_CANCELLED = 3;
+  INVITATION_STATUS_EXPIRED = 4;
+}
+
+// APIKeyStatus is the explicit lifecycle of an API Key credential.
+enum APIKeyStatus {
+  API_KEY_STATUS_UNSPECIFIED = 0;
+  API_KEY_STATUS_ACTIVE = 1;
+  API_KEY_STATUS_REVOKED = 2;
+  API_KEY_STATUS_EXPIRED = 3;
+}
+
+// AuthorizationObligationType names an owning-handler check that IAM cannot perform.
+enum AuthorizationObligationType {
+  AUTHORIZATION_OBLIGATION_TYPE_UNSPECIFIED = 0;
+  AUTHORIZATION_OBLIGATION_TYPE_RESOURCE_TENANT_MATCH = 1;
+}
+
+// IAMErrorReason is the stable reason carried in google.rpc.ErrorInfo.reason.
+enum IAMErrorReason {
+  IAM_ERROR_REASON_UNSPECIFIED = 0;
+  IAM_ERROR_REASON_INVALID_ARGUMENT = 1;
+  IAM_ERROR_REASON_NOT_FOUND = 2;
+  IAM_ERROR_REASON_CREDENTIAL_INVALID = 3;
+  IAM_ERROR_REASON_PERMISSION_DENIED = 4;
+  IAM_ERROR_REASON_AUTH_RATE_LIMITED = 5;
+  IAM_ERROR_REASON_AUTHZ_OPERATION_UNREGISTERED = 6;
+  IAM_ERROR_REASON_AUTHZ_POLICY_MISMATCH = 7;
+  IAM_ERROR_REASON_IAM_UNAVAILABLE = 8;
+  IAM_ERROR_REASON_IAM_TIMEOUT = 9;
+  IAM_ERROR_REASON_TENANT_IAM_NOT_READY = 10;
+  IAM_ERROR_REASON_TENANT_LIFECYCLE_STALE = 11;
+  IAM_ERROR_REASON_IDEMPOTENCY_CONFLICT = 12;
+  IAM_ERROR_REASON_IDEMPOTENCY_KEY_EXPIRED = 13;
+  IAM_ERROR_REASON_ROLE_IN_USE = 14;
+  IAM_ERROR_REASON_VERSION_CONFLICT = 15;
+  IAM_ERROR_REASON_SESSION_REVOKED = 16;
+  IAM_ERROR_REASON_GRANT_VERSION_MISMATCH = 17;
+  IAM_ERROR_REASON_BOOTSTRAP_FINGERPRINT_CONFLICT = 18;
+  IAM_ERROR_REASON_SCHEMA_MAJOR_UNSUPPORTED = 19;
+}
+
+// TenantBoundary identifies one non-empty Core-owned Tenant boundary.
+message TenantBoundary {
+  string tenant_id = 1;
+}
+
+// PlatformBoundary is distinct from a nullable or magic Tenant identifier.
+message PlatformBoundary {}
+
+// Boundary carries exactly one Tenant or Platform boundary.
+message Boundary {
+  oneof boundary {
+    TenantBoundary tenant = 1;
+    PlatformBoundary platform = 2;
+  }
+}
+
+// BearerCredential is raw credential material and must never be logged or persisted verbatim.
+message BearerCredential {
+  string value = 1;
+}
+
+// PrincipalContext is the minimal trusted context returned after an IAM decision.
+message PrincipalContext {
+  string principal_id = 1;
+  PrincipalType principal_type = 2;
+  PrincipalStatus principal_status = 3;
+  Boundary boundary = 4;
+  string session_id = 5;
+  string grant_id = 6;
+  repeated AuthnMethod authn_methods = 7;
+}
+
+// SessionGrantSummary describes one current boundary grant.
+message SessionGrantSummary {
+  string grant_id = 1;
+  Boundary boundary = 2;
+  uint64 version = 3;
+  GrantStatus status = 4;
+}
+
+// SessionSummary describes a human session without exposing credential material.
+message SessionSummary {
+  string session_id = 1;
+  SessionStatus status = 2;
+  repeated SessionGrantSummary grants = 3;
+  repeated AuthnMethod authn_methods = 4;
+  string device_name = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp idle_expires_at = 7;
+  google.protobuf.Timestamp absolute_expires_at = 8;
+}
+
+// CursorPageRequest carries an opaque cursor and bounded page size.
+message CursorPageRequest {
+  string cursor = 1;
+  uint32 page_size = 2;
+}
+
+// MutationResult identifies the durable result of an idempotent mutation.
+message MutationResult {
+  string resource_id = 1;
+  uint64 version = 2;
+}
+
+// AuthorizationTarget carries request attributes, never authoritative resource ownership.
+message AuthorizationTarget {
+  string tenant_id = 1;
+  string resource_id = 2;
+  map<string, string> attributes = 3;
+}
+
+// AuthorizationObligation requires a named owning handler to load authoritative state.
+message AuthorizationObligation {
+  AuthorizationObligationType type = 1;
+  string handler = 2;
+  string resource_id = 3;
+  string expected_tenant_id = 4;
+}
+
+// IAMErrorDetails pins the use of google.rpc.ErrorInfo for all stable failures.
+message IAMErrorDetails {
+  google.rpc.ErrorInfo error_info = 1;
+}

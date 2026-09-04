@@ -1,0 +1,800 @@
+syntax = "proto3";
+
+package iam.v1;
+
+import "contract.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
+
+// IAMAdminService owns IAM administration. It never owns or mutates Core Tenant Lifecycle.
+service IAMAdminService {
+  rpc AcceptPlatformInvitation(AcceptPlatformInvitationRequest) returns (AcceptPlatformInvitationResponse);
+  rpc AcceptTenantInvitation(AcceptTenantInvitationRequest) returns (AcceptTenantInvitationResponse);
+  rpc ApproveRecoveryBootstrap(ApproveRecoveryBootstrapRequest) returns (ApproveRecoveryBootstrapResponse);
+  rpc ApproveRestoreTenantAdmin(ApproveRestoreTenantAdminRequest) returns (ApproveRestoreTenantAdminResponse);
+  rpc BindPlatformRole(BindPlatformRoleRequest) returns (BindPlatformRoleResponse);
+  rpc BindTenantRole(BindTenantRoleRequest) returns (BindTenantRoleResponse);
+  rpc CancelPlatformInvitation(CancelPlatformInvitationRequest) returns (CancelPlatformInvitationResponse);
+  rpc CancelTenantInvitation(CancelTenantInvitationRequest) returns (CancelTenantInvitationResponse);
+  rpc CreateAPIKey(CreateAPIKeyRequest) returns (CreateAPIKeyResponse);
+  rpc CreatePlatformInvitation(CreatePlatformInvitationRequest) returns (CreatePlatformInvitationResponse);
+  rpc CreatePlatformRole(CreatePlatformRoleRequest) returns (CreatePlatformRoleResponse);
+  rpc CreateServicePrincipal(CreateServicePrincipalRequest) returns (CreateServicePrincipalResponse);
+  rpc CreateTenantInvitation(CreateTenantInvitationRequest) returns (CreateTenantInvitationResponse);
+  rpc CreateTenantRole(CreateTenantRoleRequest) returns (CreateTenantRoleResponse);
+  rpc DeletePlatformRole(DeletePlatformRoleRequest) returns (DeletePlatformRoleResponse);
+  rpc DeleteTenantRole(DeleteTenantRoleRequest) returns (DeleteTenantRoleResponse);
+  rpc ExecuteRecoveryBootstrap(ExecuteRecoveryBootstrapRequest) returns (ExecuteRecoveryBootstrapResponse);
+  rpc ExecuteRestoreTenantAdmin(ExecuteRestoreTenantAdminRequest) returns (ExecuteRestoreTenantAdminResponse);
+  rpc GetAuditEvent(GetAuditEventRequest) returns (GetAuditEventResponse);
+  rpc GetPlatformAuditEvent(GetPlatformAuditEventRequest) returns (GetPlatformAuditEventResponse);
+  rpc GetPlatformInvitation(GetPlatformInvitationRequest) returns (GetPlatformInvitationResponse);
+  rpc GetPlatformMembership(GetPlatformMembershipRequest) returns (GetPlatformMembershipResponse);
+  rpc GetPlatformRole(GetPlatformRoleRequest) returns (GetPlatformRoleResponse);
+  rpc GetServicePrincipal(GetServicePrincipalRequest) returns (GetServicePrincipalResponse);
+  rpc GetTenantAccess(GetTenantAccessRequest) returns (GetTenantAccessResponse);
+  rpc GetTenantInvitation(GetTenantInvitationRequest) returns (GetTenantInvitationResponse);
+  rpc GetTenantMembership(GetTenantMembershipRequest) returns (GetTenantMembershipResponse);
+  rpc GetTenantRole(GetTenantRoleRequest) returns (GetTenantRoleResponse);
+  rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse);
+  rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse);
+  rpc ListPlatformAuditEvents(ListPlatformAuditEventsRequest) returns (ListPlatformAuditEventsResponse);
+  rpc ListPlatformInvitations(ListPlatformInvitationsRequest) returns (ListPlatformInvitationsResponse);
+  rpc ListPlatformMemberships(ListPlatformMembershipsRequest) returns (ListPlatformMembershipsResponse);
+  rpc ListPlatformRoles(ListPlatformRolesRequest) returns (ListPlatformRolesResponse);
+  rpc ListServicePrincipals(ListServicePrincipalsRequest) returns (ListServicePrincipalsResponse);
+  rpc ListTenantInvitations(ListTenantInvitationsRequest) returns (ListTenantInvitationsResponse);
+  rpc ListTenantMemberships(ListTenantMembershipsRequest) returns (ListTenantMembershipsResponse);
+  rpc ListTenantRoles(ListTenantRolesRequest) returns (ListTenantRolesResponse);
+  rpc RemovePlatformMembership(RemovePlatformMembershipRequest) returns (RemovePlatformMembershipResponse);
+  rpc RemoveTenantMembership(RemoveTenantMembershipRequest) returns (RemoveTenantMembershipResponse);
+  rpc RequestRecoveryBootstrap(RequestRecoveryBootstrapRequest) returns (RequestRecoveryBootstrapResponse);
+  rpc RequestRestoreTenantAdmin(RequestRestoreTenantAdminRequest) returns (RequestRestoreTenantAdminResponse);
+  rpc ResendPlatformInvitation(ResendPlatformInvitationRequest) returns (ResendPlatformInvitationResponse);
+  rpc ResendTenantInvitation(ResendTenantInvitationRequest) returns (ResendTenantInvitationResponse);
+  rpc RevokeAPIKey(RevokeAPIKeyRequest) returns (RevokeAPIKeyResponse);
+  rpc UnbindPlatformRole(UnbindPlatformRoleRequest) returns (UnbindPlatformRoleResponse);
+  rpc UnbindTenantRole(UnbindTenantRoleRequest) returns (UnbindTenantRoleResponse);
+  rpc UpdatePlatformMembership(UpdatePlatformMembershipRequest) returns (UpdatePlatformMembershipResponse);
+  rpc UpdatePlatformRole(UpdatePlatformRoleRequest) returns (UpdatePlatformRoleResponse);
+  rpc UpdateServicePrincipal(UpdateServicePrincipalRequest) returns (UpdateServicePrincipalResponse);
+  rpc UpdateTenantAccess(UpdateTenantAccessRequest) returns (UpdateTenantAccessResponse);
+  rpc UpdateTenantMembership(UpdateTenantMembershipRequest) returns (UpdateTenantMembershipResponse);
+  rpc UpdateTenantRole(UpdateTenantRoleRequest) returns (UpdateTenantRoleResponse);
+}
+
+// RecoveryOperationStatus is the explicit lifecycle for dual-control recovery.
+enum RecoveryOperationStatus {
+  RECOVERY_OPERATION_STATUS_UNSPECIFIED = 0;
+  RECOVERY_OPERATION_STATUS_PENDING_APPROVAL = 1;
+  RECOVERY_OPERATION_STATUS_APPROVED = 2;
+  RECOVERY_OPERATION_STATUS_EXECUTED = 3;
+  RECOVERY_OPERATION_STATUS_EXPIRED = 4;
+  RECOVERY_OPERATION_STATUS_REJECTED = 5;
+}
+
+// TenantAccess is IAM-owned and distinct from Core-owned Tenant Lifecycle.
+message TenantAccess {
+  string tenant_id = 1;
+  TenantAccessStatus status = 2;
+  uint64 version = 3;
+}
+
+// Membership is an established relation. A pending Invitation is not a Membership.
+message Membership {
+  string membership_id = 1;
+  string principal_id = 2;
+  PrincipalType principal_type = 3;
+  Boundary boundary = 4;
+  MembershipStatus status = 5;
+  repeated string role_ids = 6;
+  uint64 version = 7;
+}
+
+// Role contains only catalogued permissions for exactly one boundary.
+message Role {
+  string role_id = 1;
+  Boundary boundary = 2;
+  string code = 3;
+  string display_name = 4;
+  bool system = 5;
+  uint64 system_definition_version = 6;
+  repeated string permissions = 7;
+  uint64 version = 8;
+}
+
+// Invitation is a time-bound intent and contains no active authority.
+message Invitation {
+  string invitation_id = 1;
+  Boundary boundary = 2;
+  string normalized_email = 3;
+  repeated string role_ids = 4;
+  InvitationStatus status = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  uint64 version = 7;
+  string bootstrap_operation_id = 8;
+}
+
+// ServicePrincipal is fixed to one Core-owned Tenant ID.
+message ServicePrincipal {
+  string principal_id = 1;
+  string tenant_id = 2;
+  string name = 3;
+  PrincipalStatus status = 4;
+  string membership_id = 5;
+  uint64 version = 6;
+}
+
+// APIKey describes a credential without its one-time secret.
+message APIKey {
+  string key_id = 1;
+  string principal_id = 2;
+  APIKeyStatus status = 3;
+  string display_prefix = 4;
+  bool never_expires = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp last_used_at = 8;
+}
+
+// AuditEvent is an allowlisted, append-only IAM security fact.
+message AuditEvent {
+  string event_id = 1;
+  google.protobuf.Timestamp occurred_at = 2;
+  string actor_principal_id = 3;
+  repeated AuthnMethod authn_methods = 4;
+  Boundary boundary = 5;
+  string action = 6;
+  string target_type = 7;
+  string target_id = 8;
+  string result = 9;
+  string reason = 10;
+  string request_id = 11;
+  string correlation_id = 12;
+  string decision_id = 13;
+  uint64 target_version = 14;
+  map<string, string> details = 15;
+}
+
+// RecoveryOperation records a dual-control request bound to an immutable payload hash.
+message RecoveryOperation {
+  string operation_id = 1;
+  string tenant_id = 2;
+  string intended_principal_id = 3;
+  string requester_principal_id = 4;
+  string approver_principal_id = 5;
+  string approval_reference = 6;
+  string reason = 7;
+  string payload_fingerprint = 8;
+  RecoveryOperationStatus status = 9;
+  google.protobuf.Timestamp approval_expires_at = 10;
+  uint64 version = 11;
+}
+
+message AcceptPlatformInvitationRequest {
+  BearerCredential credential = 1;
+  string invitation_id = 2;
+  string invitation_token = 3;
+  string idempotency_key = 4;
+}
+
+message AcceptPlatformInvitationResponse {
+  Membership membership = 1;
+}
+
+message AcceptTenantInvitationRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string invitation_id = 3;
+  string invitation_token = 4;
+  string idempotency_key = 5;
+}
+
+message AcceptTenantInvitationResponse {
+  Membership membership = 1;
+}
+
+message ApproveRecoveryBootstrapRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+  string approval_reference = 3;
+  string reason = 4;
+  string payload_fingerprint = 5;
+  google.protobuf.Timestamp reauthenticated_at = 6;
+  string idempotency_key = 7;
+}
+
+message ApproveRecoveryBootstrapResponse {
+  RecoveryOperation operation = 1;
+}
+
+message ApproveRestoreTenantAdminRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+  string approval_reference = 3;
+  string reason = 4;
+  string payload_fingerprint = 5;
+  google.protobuf.Timestamp reauthenticated_at = 6;
+  string idempotency_key = 7;
+}
+
+message ApproveRestoreTenantAdminResponse {
+  RecoveryOperation operation = 1;
+}
+
+message BindPlatformRoleRequest {
+  BearerCredential credential = 1;
+  string membership_id = 2;
+  string role_id = 3;
+  uint64 expected_membership_version = 4;
+  string idempotency_key = 5;
+}
+
+message BindPlatformRoleResponse {
+  Membership membership = 1;
+}
+
+message BindTenantRoleRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string membership_id = 3;
+  string role_id = 4;
+  uint64 expected_membership_version = 5;
+  string idempotency_key = 6;
+}
+
+message BindTenantRoleResponse {
+  Membership membership = 1;
+}
+
+message CancelPlatformInvitationRequest {
+  BearerCredential credential = 1;
+  string invitation_id = 2;
+  uint64 expected_version = 3;
+  string idempotency_key = 4;
+}
+
+message CancelPlatformInvitationResponse {
+  Invitation invitation = 1;
+}
+
+message CancelTenantInvitationRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string invitation_id = 3;
+  uint64 expected_version = 4;
+  string idempotency_key = 5;
+}
+
+message CancelTenantInvitationResponse {
+  Invitation invitation = 1;
+}
+
+message CreateAPIKeyRequest {
+  BearerCredential credential = 1;
+  string principal_id = 2;
+  bool never_expires = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  string idempotency_key = 5;
+}
+
+message CreateAPIKeyResponse {
+  APIKey api_key = 1;
+  string api_key_secret = 2;
+}
+
+message CreatePlatformInvitationRequest {
+  BearerCredential credential = 1;
+  string normalized_email = 2;
+  repeated string role_ids = 3;
+  string locale = 4;
+  string idempotency_key = 5;
+}
+
+message CreatePlatformInvitationResponse {
+  Invitation invitation = 1;
+  string invitation_token = 2;
+}
+
+message CreatePlatformRoleRequest {
+  BearerCredential credential = 1;
+  string code = 2;
+  string display_name = 3;
+  repeated string permissions = 4;
+  string idempotency_key = 5;
+}
+
+message CreatePlatformRoleResponse {
+  Role role = 1;
+}
+
+message CreateServicePrincipalRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string name = 3;
+  repeated string role_ids = 4;
+  string idempotency_key = 5;
+}
+
+message CreateServicePrincipalResponse {
+  ServicePrincipal principal = 1;
+  Membership membership = 2;
+}
+
+message CreateTenantInvitationRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string normalized_email = 3;
+  repeated string role_ids = 4;
+  string locale = 5;
+  string idempotency_key = 6;
+}
+
+message CreateTenantInvitationResponse {
+  Invitation invitation = 1;
+  string invitation_token = 2;
+}
+
+message CreateTenantRoleRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string code = 3;
+  string display_name = 4;
+  repeated string permissions = 5;
+  string idempotency_key = 6;
+}
+
+message CreateTenantRoleResponse {
+  Role role = 1;
+}
+
+message DeletePlatformRoleRequest {
+  BearerCredential credential = 1;
+  string role_id = 2;
+  uint64 expected_version = 3;
+  string idempotency_key = 4;
+}
+
+message DeletePlatformRoleResponse {
+  MutationResult result = 1;
+}
+
+message DeleteTenantRoleRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string role_id = 3;
+  uint64 expected_version = 4;
+  string idempotency_key = 5;
+}
+
+message DeleteTenantRoleResponse {
+  MutationResult result = 1;
+}
+
+message ExecuteRecoveryBootstrapRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+  string approval_reference = 3;
+  string payload_fingerprint = 4;
+  google.protobuf.Timestamp reauthenticated_at = 5;
+  string idempotency_key = 6;
+}
+
+message ExecuteRecoveryBootstrapResponse {
+  RecoveryOperation operation = 1;
+  TenantAccess tenant_access = 2;
+}
+
+message ExecuteRestoreTenantAdminRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+  string approval_reference = 3;
+  string payload_fingerprint = 4;
+  google.protobuf.Timestamp reauthenticated_at = 5;
+  string idempotency_key = 6;
+}
+
+message ExecuteRestoreTenantAdminResponse {
+  RecoveryOperation operation = 1;
+  Membership membership = 2;
+}
+
+message GetAuditEventRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string event_id = 3;
+}
+
+message GetAuditEventResponse {
+  AuditEvent event = 1;
+}
+
+message GetPlatformAuditEventRequest {
+  BearerCredential credential = 1;
+  string event_id = 2;
+}
+
+message GetPlatformAuditEventResponse {
+  AuditEvent event = 1;
+}
+
+message GetPlatformInvitationRequest {
+  BearerCredential credential = 1;
+  string invitation_id = 2;
+}
+
+message GetPlatformInvitationResponse {
+  Invitation invitation = 1;
+}
+
+message GetPlatformMembershipRequest {
+  BearerCredential credential = 1;
+  string membership_id = 2;
+}
+
+message GetPlatformMembershipResponse {
+  Membership membership = 1;
+}
+
+message GetPlatformRoleRequest {
+  BearerCredential credential = 1;
+  string role_id = 2;
+}
+
+message GetPlatformRoleResponse {
+  Role role = 1;
+}
+
+message GetServicePrincipalRequest {
+  BearerCredential credential = 1;
+  string principal_id = 2;
+}
+
+message GetServicePrincipalResponse {
+  ServicePrincipal principal = 1;
+}
+
+message GetTenantAccessRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+}
+
+message GetTenantAccessResponse {
+  TenantAccess tenant_access = 1;
+}
+
+message GetTenantInvitationRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string invitation_id = 3;
+}
+
+message GetTenantInvitationResponse {
+  Invitation invitation = 1;
+}
+
+message GetTenantMembershipRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string membership_id = 3;
+}
+
+message GetTenantMembershipResponse {
+  Membership membership = 1;
+}
+
+message GetTenantRoleRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string role_id = 3;
+}
+
+message GetTenantRoleResponse {
+  Role role = 1;
+}
+
+message ListAPIKeysRequest {
+  BearerCredential credential = 1;
+  string principal_id = 2;
+  CursorPageRequest page = 3;
+}
+
+message ListAPIKeysResponse {
+  repeated APIKey api_keys = 1;
+  string next_cursor = 2;
+}
+
+message ListAuditEventsRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string action = 3;
+  string result = 4;
+  CursorPageRequest page = 5;
+}
+
+message ListAuditEventsResponse {
+  repeated AuditEvent events = 1;
+  string next_cursor = 2;
+}
+
+message ListPlatformAuditEventsRequest {
+  BearerCredential credential = 1;
+  string action = 2;
+  string result = 3;
+  CursorPageRequest page = 4;
+}
+
+message ListPlatformAuditEventsResponse {
+  repeated AuditEvent events = 1;
+  string next_cursor = 2;
+}
+
+message ListPlatformInvitationsRequest {
+  BearerCredential credential = 1;
+  InvitationStatus status = 2;
+  CursorPageRequest page = 3;
+}
+
+message ListPlatformInvitationsResponse {
+  repeated Invitation invitations = 1;
+  string next_cursor = 2;
+}
+
+message ListPlatformMembershipsRequest {
+  BearerCredential credential = 1;
+  MembershipStatus status = 2;
+  CursorPageRequest page = 3;
+}
+
+message ListPlatformMembershipsResponse {
+  repeated Membership memberships = 1;
+  string next_cursor = 2;
+}
+
+message ListPlatformRolesRequest {
+  BearerCredential credential = 1;
+  CursorPageRequest page = 2;
+}
+
+message ListPlatformRolesResponse {
+  repeated Role roles = 1;
+  string next_cursor = 2;
+}
+
+message ListServicePrincipalsRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  PrincipalStatus status = 3;
+  CursorPageRequest page = 4;
+}
+
+message ListServicePrincipalsResponse {
+  repeated ServicePrincipal principals = 1;
+  string next_cursor = 2;
+}
+
+message ListTenantInvitationsRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  InvitationStatus status = 3;
+  CursorPageRequest page = 4;
+}
+
+message ListTenantInvitationsResponse {
+  repeated Invitation invitations = 1;
+  string next_cursor = 2;
+}
+
+message ListTenantMembershipsRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  MembershipStatus status = 3;
+  CursorPageRequest page = 4;
+}
+
+message ListTenantMembershipsResponse {
+  repeated Membership memberships = 1;
+  string next_cursor = 2;
+}
+
+message ListTenantRolesRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  CursorPageRequest page = 3;
+}
+
+message ListTenantRolesResponse {
+  repeated Role roles = 1;
+  string next_cursor = 2;
+}
+
+message RemovePlatformMembershipRequest {
+  BearerCredential credential = 1;
+  string membership_id = 2;
+  uint64 expected_version = 3;
+  string idempotency_key = 4;
+}
+
+message RemovePlatformMembershipResponse {
+  Membership membership = 1;
+}
+
+message RemoveTenantMembershipRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string membership_id = 3;
+  uint64 expected_version = 4;
+  string idempotency_key = 5;
+}
+
+message RemoveTenantMembershipResponse {
+  Membership membership = 1;
+}
+
+message RequestRecoveryBootstrapRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string intended_principal_id = 3;
+  string reason = 4;
+  string approval_reference = 5;
+  string payload_fingerprint = 6;
+  google.protobuf.Timestamp reauthenticated_at = 7;
+  string idempotency_key = 8;
+}
+
+message RequestRecoveryBootstrapResponse {
+  RecoveryOperation operation = 1;
+}
+
+message RequestRestoreTenantAdminRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string intended_principal_id = 3;
+  string reason = 4;
+  string approval_reference = 5;
+  string payload_fingerprint = 6;
+  google.protobuf.Timestamp reauthenticated_at = 7;
+  string idempotency_key = 8;
+}
+
+message RequestRestoreTenantAdminResponse {
+  RecoveryOperation operation = 1;
+}
+
+message ResendPlatformInvitationRequest {
+  BearerCredential credential = 1;
+  string invitation_id = 2;
+  uint64 expected_version = 3;
+  string idempotency_key = 4;
+}
+
+message ResendPlatformInvitationResponse {
+  Invitation invitation = 1;
+  string invitation_token = 2;
+}
+
+message ResendTenantInvitationRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string invitation_id = 3;
+  uint64 expected_version = 4;
+  string idempotency_key = 5;
+}
+
+message ResendTenantInvitationResponse {
+  Invitation invitation = 1;
+  string invitation_token = 2;
+}
+
+message RevokeAPIKeyRequest {
+  BearerCredential credential = 1;
+  string key_id = 2;
+  string idempotency_key = 3;
+}
+
+message RevokeAPIKeyResponse {
+  APIKey api_key = 1;
+}
+
+message UnbindPlatformRoleRequest {
+  BearerCredential credential = 1;
+  string membership_id = 2;
+  string role_id = 3;
+  uint64 expected_membership_version = 4;
+  string idempotency_key = 5;
+}
+
+message UnbindPlatformRoleResponse {
+  Membership membership = 1;
+}
+
+message UnbindTenantRoleRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string membership_id = 3;
+  string role_id = 4;
+  uint64 expected_membership_version = 5;
+  string idempotency_key = 6;
+}
+
+message UnbindTenantRoleResponse {
+  Membership membership = 1;
+}
+
+message UpdatePlatformMembershipRequest {
+  BearerCredential credential = 1;
+  string membership_id = 2;
+  MembershipStatus status = 3;
+  uint64 expected_version = 4;
+  string idempotency_key = 5;
+}
+
+message UpdatePlatformMembershipResponse {
+  Membership membership = 1;
+}
+
+message UpdatePlatformRoleRequest {
+  BearerCredential credential = 1;
+  string role_id = 2;
+  string display_name = 3;
+  repeated string permissions = 4;
+  uint64 expected_version = 5;
+  string idempotency_key = 6;
+}
+
+message UpdatePlatformRoleResponse {
+  Role role = 1;
+}
+
+message UpdateServicePrincipalRequest {
+  BearerCredential credential = 1;
+  string principal_id = 2;
+  string name = 3;
+  PrincipalStatus status = 4;
+  uint64 expected_version = 5;
+  string idempotency_key = 6;
+}
+
+message UpdateServicePrincipalResponse {
+  ServicePrincipal principal = 1;
+}
+
+message UpdateTenantAccessRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  TenantAccessStatus status = 3;
+  uint64 expected_version = 4;
+  string idempotency_key = 5;
+}
+
+message UpdateTenantAccessResponse {
+  TenantAccess tenant_access = 1;
+}
+
+message UpdateTenantMembershipRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string membership_id = 3;
+  MembershipStatus status = 4;
+  uint64 expected_version = 5;
+  string idempotency_key = 6;
+}
+
+message UpdateTenantMembershipResponse {
+  Membership membership = 1;
+}
+
+message UpdateTenantRoleRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  string role_id = 3;
+  string display_name = 4;
+  repeated string permissions = 5;
+  uint64 expected_version = 6;
+  string idempotency_key = 7;
+}
+
+message UpdateTenantRoleResponse {
+  Role role = 1;
+}

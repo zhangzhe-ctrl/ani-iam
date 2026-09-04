@@ -1,0 +1,16 @@
+version: v2
+modules:
+  - path: .
+    name: buf.build/kubercloud/ani-iam
+deps:
+  - buf.build/googleapis/googleapis
+lint:
+  use:
+    - STANDARD
+  except:
+    # The config stays inside the ticket-owned api/iam/v1 subtree; the package
+    # already matches the repository-relative api/iam/v1 layout.
+    - PACKAGE_DIRECTORY_MATCH
+breaking:
+  use:
+    - FILE
