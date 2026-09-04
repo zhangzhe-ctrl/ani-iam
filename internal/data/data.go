@@ -1,3 +1,14 @@
-// Package data contains infrastructure adapters. CP0-0 deliberately wires no
-// database, Redis, Dex, or legacy Auth adapter.
+// Package data contains infrastructure adapters.
 package data
+
+import "github.com/jackc/pgx/v5/pgxpool"
+
+// Data owns long-lived infrastructure clients shared by repository adapters.
+// It contains no transaction-scoped state.
+type Data struct {
+	pool *pgxpool.Pool
+}
+
+func NewData(pool *pgxpool.Pool) *Data {
+	return &Data{pool: pool}
+}
