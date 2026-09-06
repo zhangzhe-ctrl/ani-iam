@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 / 冻结公开 OpenAPI 与 Operation Registry；03 / 冻结 IAM 与 Core 集成契约；04 / 建立无 RLS 持久化基础
 
-**Status:** claimed
+**Status:** resolved
 
 **Type:** enhancement
 
@@ -74,3 +74,13 @@ The Goal pre-agrees the target IAM gRPC services, framework-independent biz use 
 ## Recovery plan
 
 Before the Go/No-Go checkpoint, keep both repositories as explicit uncommitted/staged Allowed-path diffs. Every PostgreSQL/Redis dependency uses a task-owned disposable container, database/role or namespace and is removed after the run. Recovery removes only the isolated fixtures and reverts the two local diffs; it does not touch the existing ANI checkout, shared databases, legacy Auth, deployment, traffic, credentials or remote Git. After an accepted Go and local commits, recovery uses new revert commits against the exact DP2-05 IAM and ANI SHAs; never reset, stash, amend, force, push or deploy.
+
+## Resolution record
+
+- Go/No-Go A: human accepted `Go` on `2026-09-06`; result `pass`. This proves only the isolated target minimum vertical architecture, not deployment, cutover or production readiness.
+- IAM implementation commit: `a7620cef9c4374e665ce2aae2015af2e514fbd28` (`feat(dp2-05): prove target iam vertical slice`).
+- ANI Gateway commit: `f09a436c6edbd752271d1e4502bbdfd1f1b9e690` (`feat(dp2-05): connect target gateway vertical slice`).
+- The two implementation commits were created locally after the human checkpoint. Neither was pushed, deployed, merged to main or used for traffic cutover.
+- Post-commit final regression: IAM unit/vet and full real PostgreSQL/Redis/Gateway integration `pass` (55.268s); Gateway unit/vet, replacement registry 20/20, breaking 4/4 and both module-integrity checks `pass`. Every task-owned dependency container was terminated.
+- BOSS/Platform caller E2E and the unified 24-hour Idempotency Ledger remain `not_verified` within the recorded scope; DP2-06 was not claimed or started.
+- Recovery after these commits uses new revert commits against the two exact SHAs above; no reset, stash, amend, rebase, force or overwrite.

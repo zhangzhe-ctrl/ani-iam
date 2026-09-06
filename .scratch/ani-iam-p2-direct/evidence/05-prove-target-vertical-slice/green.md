@@ -1,7 +1,11 @@
-# DP2-05 partial GREEN evidence
+# DP2-05 GREEN evidence
 
-This file records only gates that have actually run. The overall ticket is not
-yet complete and no Go/No-Go A conclusion is recorded here.
+This file records only gates that actually ran. Go/No-Go A was explicitly
+accepted as Go by the human checkpoint on 2026-09-06; the engineering and
+human conclusion results are `pass`. The local implementation commits are IAM
+`a7620cef9c4374e665ce2aae2015af2e514fbd28` and ANI Gateway
+`f09a436c6edbd752271d1e4502bbdfd1f1b9e690`. This is not deployment, cutover
+or production-readiness evidence.
 
 ## Gateway target IAM consumer generation
 
