@@ -3,14 +3,24 @@ package cp0_test
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"go/parser"
+	"go/token"
 	"io"
 	"log/slog"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -22,7 +32,7 @@ import (
 	"github.com/go-kratos/kratos/v3/config/file"
 	kratoslog "github.com/go-kratos/kratos/v3/log"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/protobuf/types/known/durationpb"
 
@@ -40,7 +50,11 @@ func TestIsolatedRuntimeLifecycle(t *testing.T) {
 		t.Fatalf("NewObservability() error = %v", err)
 	}
 	middlewares := observability.ServerMiddleware(logger)
-	grpcServer := serverpkg.NewGRPCServer(cfg.Server.Grpc, middlewares...)
+	serverTLS, clientTLS := newCP0MutualTLSConfigs(t)
+	grpcServer, err := serverpkg.NewGRPCServer(cfg.Server.Grpc, serverTLS, middlewares...)
+	if err != nil {
+		t.Fatalf("NewGRPCServer() error = %v", err)
+	}
 	adminServer := serverpkg.NewAdminServer(cfg.Server.Admin, readiness, observability.Gatherer(), middlewares...)
 	grpcEndpoint, err := grpcServer.Endpoint()
 	if err != nil {
@@ -68,7 +82,7 @@ func TestIsolatedRuntimeLifecycle(t *testing.T) {
 	assertAdminEndpoint(t, adminEndpoint.Host, "/readyz", http.StatusOK, `"status":"ready"`)
 	assertAdminEndpoint(t, adminEndpoint.Host, "/metrics", http.StatusOK, "ani_iam_runtime_ready 1")
 	assertAdminEndpoint(t, adminEndpoint.Host, "/metrics", http.StatusOK, "server_requests_code_total")
-	assertGRPCHealth(t, grpcEndpoint.Host)
+	assertGRPCHealth(t, grpcEndpoint.Host, clientTLS)
 
 	if err := app.Stop(); err != nil {
 		t.Fatalf("Stop() error = %v", err)
@@ -145,17 +159,24 @@ func TestBizLayerHasNoFrameworkOrAdapterImports(t *testing.T) {
 	}
 	bizRoot := filepath.Clean(filepath.Join(filepath.Dir(filename), "..", "..", "internal", "biz"))
 	forbidden := []string{"go-kratos", "protobuf", "grpc", "internal/data", "database/sql", "pgx", "redis"}
+	fileSet := token.NewFileSet()
 	err := filepath.WalkDir(bizRoot, func(path string, entry os.DirEntry, err error) error {
 		if err != nil || entry.IsDir() || !strings.HasSuffix(path, ".go") {
 			return err
 		}
-		contents, err := os.ReadFile(path)
+		parsed, err := parser.ParseFile(fileSet, path, nil, parser.ImportsOnly)
 		if err != nil {
 			return err
 		}
-		for _, needle := range forbidden {
-			if strings.Contains(string(contents), `"`+needle) {
-				t.Errorf("%s imports forbidden dependency containing %q", path, needle)
+		for _, importSpec := range parsed.Imports {
+			importPath, err := strconv.Unquote(importSpec.Path.Value)
+			if err != nil {
+				return err
+			}
+			for _, needle := range forbidden {
+				if strings.Contains(importPath, needle) {
+					t.Errorf("%s imports forbidden dependency containing %q", path, needle)
+				}
 			}
 		}
 		return nil
@@ -205,11 +226,11 @@ func assertAdminEndpoint(t *testing.T, addr, path string, status int, bodyContai
 	}
 }
 
-func assertGRPCHealth(t *testing.T, addr string) {
+func assertGRPCHealth(t *testing.T, addr string, clientTLS *tls.Config) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(credentials.NewTLS(clientTLS)))
 	if err != nil {
 		t.Fatalf("dial gRPC: %v", err)
 	}
@@ -221,6 +242,80 @@ func assertGRPCHealth(t *testing.T, addr string) {
 	if response.Status != grpc_health_v1.HealthCheckResponse_SERVING {
 		t.Fatalf("gRPC health = %s", response.Status)
 	}
+}
+
+func newCP0MutualTLSConfigs(t *testing.T) (*tls.Config, *tls.Config) {
+	t.Helper()
+	caPublic, caPrivate, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now()
+	caTemplate := &x509.Certificate{
+		SerialNumber:          big.NewInt(1),
+		Subject:               pkix.Name{CommonName: "ani-iam CP0 test CA"},
+		NotBefore:             now.Add(-time.Minute),
+		NotAfter:              now.Add(time.Hour),
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature,
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+	}
+	caDER, err := x509.CreateCertificate(rand.Reader, caTemplate, caTemplate, caPublic, caPrivate)
+	if err != nil {
+		t.Fatal(err)
+	}
+	caCertificate, err := x509.ParseCertificate(caDER)
+	if err != nil {
+		t.Fatal(err)
+	}
+	serverCertificate := newCP0LeafCertificate(t, big.NewInt(2), "ani-iam-cp0-test", x509.ExtKeyUsageServerAuth, caCertificate, caPrivate)
+	clientCertificate := newCP0LeafCertificate(t, big.NewInt(3), "ani-gateway-cp0-test", x509.ExtKeyUsageClientAuth, caCertificate, caPrivate)
+	pool := x509.NewCertPool()
+	pool.AddCert(caCertificate)
+	return &tls.Config{
+			MinVersion:   tls.VersionTLS13,
+			Certificates: []tls.Certificate{serverCertificate},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    pool,
+		}, &tls.Config{
+			MinVersion:   tls.VersionTLS13,
+			ServerName:   "ani-iam-cp0-test",
+			RootCAs:      pool,
+			Certificates: []tls.Certificate{clientCertificate},
+		}
+}
+
+func newCP0LeafCertificate(t *testing.T, serial *big.Int, commonName string, usage x509.ExtKeyUsage, ca *x509.Certificate, caKey ed25519.PrivateKey) tls.Certificate {
+	t.Helper()
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	template := &x509.Certificate{
+		SerialNumber: serial,
+		Subject:      pkix.Name{CommonName: commonName},
+		DNSNames:     []string{commonName},
+		NotBefore:    time.Now().Add(-time.Minute),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{usage},
+	}
+	certificateDER, err := x509.CreateCertificate(rand.Reader, template, ca, publicKey, caKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	privateKeyDER, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certificate, err := tls.X509KeyPair(
+		pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certificateDER}),
+		pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateKeyDER}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return certificate
 }
 
 func newTestLogger(writer io.Writer) *slog.Logger {

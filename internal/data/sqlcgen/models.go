@@ -29,6 +29,30 @@ type IamAuditEvent struct {
 	RecordedAt           pgtype.Timestamptz
 }
 
+type Identity struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	Provider    string
+	Issuer      string
+	Subject     string
+	Status      string
+	Version     int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type PasswordCredential struct {
+	PrincipalID    uuid.UUID
+	IdentityID     uuid.UUID
+	PasswordHash   string
+	Algorithm      string
+	FailedAttempts int32
+	LockedUntil    pgtype.Timestamptz
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
 type Principal struct {
 	ID            uuid.UUID
 	PrincipalType string
@@ -38,12 +62,66 @@ type Principal struct {
 	UpdatedAt     pgtype.Timestamptz
 }
 
+type RefreshToken struct {
+	TenantID   uuid.UUID
+	ID         uuid.UUID
+	FamilyID   uuid.UUID
+	Digest     []byte
+	Status     string
+	IssuedAt   pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	ConsumedAt pgtype.Timestamptz
+}
+
+type RefreshTokenFamily struct {
+	TenantID  uuid.UUID
+	ID        uuid.UUID
+	GrantID   uuid.UUID
+	Status    string
+	Version   int64
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type Session struct {
+	ID                uuid.UUID
+	PrincipalID       uuid.UUID
+	Audience          string
+	Status            string
+	DeviceName        string
+	IdleExpiresAt     pgtype.Timestamptz
+	AbsoluteExpiresAt pgtype.Timestamptz
+	Version           int64
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+}
+
+type SessionGrant struct {
+	TenantID     uuid.UUID
+	ID           uuid.UUID
+	SessionID    uuid.UUID
+	MembershipID uuid.UUID
+	Status       string
+	Version      int64
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
 type TenantAccess struct {
 	TenantID  uuid.UUID
 	Status    string
 	Version   int64
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
+}
+
+type TenantLifecycleProjection struct {
+	TenantID         uuid.UUID
+	Status           string
+	LifecycleVersion int64
+	EffectiveAt      pgtype.Timestamptz
+	ObservedAt       pgtype.Timestamptz
+	FreshUntil       pgtype.Timestamptz
 }
 
 type TenantMembership struct {
@@ -75,4 +153,20 @@ type TenantRoleBinding struct {
 	Version      int64
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
+}
+
+type TenantRolePermission struct {
+	TenantID  uuid.UUID
+	RoleID    uuid.UUID
+	Resource  string
+	Action    string
+	CreatedAt pgtype.Timestamptz
+}
+
+type VerifiedEmail struct {
+	PrincipalID     uuid.UUID
+	NormalizedEmail string
+	VerifiedAt      pgtype.Timestamptz
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
 }

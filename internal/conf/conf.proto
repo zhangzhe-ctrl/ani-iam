@@ -9,13 +9,22 @@ import "google/protobuf/duration.proto";
 message Bootstrap {
   string profile = 1;
   Server server = 2;
+  Runtime runtime = 3;
 }
 
 message Server {
   message GRPC {
+    message TLS {
+      string certificate_file = 1;
+      string private_key_file = 2;
+      string client_ca_file = 3;
+      string gateway_client_dns_name = 4;
+    }
+
     string network = 1;
     string addr = 2;
     google.protobuf.Duration timeout = 3;
+    TLS tls = 4;
   }
 
   message Admin {
@@ -27,4 +36,34 @@ message Server {
   GRPC grpc = 1;
   Admin admin = 2;
   google.protobuf.Duration shutdown_timeout = 3;
+}
+
+message Runtime {
+  PostgreSQL postgresql = 1;
+  Redis redis = 2;
+  AccessToken access_token = 3;
+  string policy_revision = 4;
+}
+
+message PostgreSQL {
+  string dsn = 1;
+}
+
+message Redis {
+  string addr = 1;
+  string username = 2;
+  string password = 3;
+  int32 database = 4;
+  string namespace = 5;
+  uint32 login_limit = 6;
+  google.protobuf.Duration login_window = 7;
+  google.protobuf.Duration dial_timeout = 8;
+  google.protobuf.Duration read_timeout = 9;
+  google.protobuf.Duration write_timeout = 10;
+}
+
+message AccessToken {
+  string issuer = 1;
+  string active_key_id = 2;
+  string private_key_file = 3;
 }

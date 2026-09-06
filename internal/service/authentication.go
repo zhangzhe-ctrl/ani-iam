@@ -1,0 +1,293 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
+	iamv1 "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1"
+	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
+)
+
+type authenticationUsecase interface {
+	PasswordLogin(context.Context, biz.PasswordLoginCommand) (biz.PasswordLoginResult, error)
+}
+
+type AuthenticationService struct {
+	iamv1.UnimplementedAuthenticationServiceServer
+	authentication authenticationUsecase
+}
+
+func NewAuthenticationService(authentication authenticationUsecase) *AuthenticationService {
+	return &AuthenticationService{authentication: authentication}
+}
+
+func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv1.PasswordLoginRequest) (*iamv1.PasswordLoginResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "password login request is required")
+	}
+	audience, err := audienceFromProto(request.GetAudience())
+	if err != nil {
+		return nil, err
+	}
+	if audience == biz.AudienceBoss {
+		if request.GetBoundary() == nil || request.GetBoundary().GetPlatform() == nil {
+			return nil, invalidArgumentStatus("boundary", "BOSS audience requires a platform boundary")
+		}
+		return nil, newIAMStatus(codes.Unavailable, "IAM_UNAVAILABLE", "BOSS authentication is unavailable", map[string]string{
+			"dependency": "platform_authentication",
+		})
+	}
+	tenantID, err := tenantIDFromBoundary(request.GetBoundary())
+	if err != nil {
+		return nil, err
+	}
+	result, err := s.authentication.PasswordLogin(ctx, biz.PasswordLoginCommand{
+		Account:        request.GetAccount(),
+		Password:       request.GetPassword(),
+		Audience:       audience,
+		TenantID:       tenantID,
+		DeviceName:     request.GetDeviceName(),
+		IdempotencyKey: request.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID:    "passwordLogin",
+			TenantID:       tenantID.String(),
+			CredentialKind: "password",
+			Dependency:     "authentication",
+		})
+	}
+	return passwordLoginResponse(result, tenantID), nil
+}
+
+func passwordLoginResponse(result biz.PasswordLoginResult, tenantID uuid.UUID) *iamv1.PasswordLoginResponse {
+	boundary := tenantBoundary(tenantID)
+	authnMethods := []iamv1.AuthnMethod{iamv1.AuthnMethod_AUTHN_METHOD_PASSWORD}
+	grant := &iamv1.SessionGrantSummary{
+		GrantId:  result.Grant.ID.String(),
+		Boundary: boundary,
+		Version:  uint64(result.Grant.Version),
+		Status:   grantStatusToProto(result.Grant.Status),
+	}
+	expiresIn := result.AccessTokenExpiresAt.Sub(result.Session.CreatedAt)
+	if expiresIn < 0 {
+		expiresIn = 0
+	}
+	return &iamv1.PasswordLoginResponse{
+		AccessToken:      result.AccessToken,
+		ExpiresInSeconds: uint32(expiresIn / time.Second),
+		Principal: &iamv1.PrincipalContext{
+			PrincipalId:     result.Principal.ID.String(),
+			PrincipalType:   iamv1.PrincipalType_PRINCIPAL_TYPE_HUMAN,
+			PrincipalStatus: principalStatusToProto(result.Principal.Status),
+			Boundary:        boundary,
+			SessionId:       result.Session.ID.String(),
+			GrantId:         result.Grant.ID.String(),
+			AuthnMethods:    authnMethods,
+		},
+		Session: &iamv1.SessionSummary{
+			SessionId:         result.Session.ID.String(),
+			Status:            sessionStatusToProto(result.Session.Status),
+			Grants:            []*iamv1.SessionGrantSummary{grant},
+			AuthnMethods:      authnMethods,
+			DeviceName:        result.Session.DeviceName,
+			CreatedAt:         timestamppb.New(result.Session.CreatedAt),
+			IdleExpiresAt:     timestamppb.New(result.Session.IdleExpiresAt),
+			AbsoluteExpiresAt: timestamppb.New(result.Session.AbsoluteExpiry),
+		},
+		Grant:            grant,
+		RefreshToken:     result.RefreshToken,
+		RefreshExpiresAt: timestamppb.New(result.Session.AbsoluteExpiry),
+	}
+}
+
+func tenantIDFromBoundary(boundary *iamv1.Boundary) (uuid.UUID, error) {
+	if boundary == nil || boundary.GetTenant() == nil {
+		return uuid.Nil, invalidArgumentStatus("boundary", "tenant boundary is required")
+	}
+	tenantID, err := uuid.Parse(boundary.GetTenant().GetTenantId())
+	if err != nil || tenantID == uuid.Nil {
+		return uuid.Nil, invalidArgumentStatus("boundary", "tenant boundary is invalid")
+	}
+	return tenantID, nil
+}
+
+func tenantBoundary(tenantID uuid.UUID) *iamv1.Boundary {
+	return &iamv1.Boundary{Boundary: &iamv1.Boundary_Tenant{Tenant: &iamv1.TenantBoundary{TenantId: tenantID.String()}}}
+}
+
+func audienceFromProto(audience iamv1.Audience) (biz.Audience, error) {
+	switch audience {
+	case iamv1.Audience_AUDIENCE_CONSOLE:
+		return biz.AudienceConsole, nil
+	case iamv1.Audience_AUDIENCE_BOSS:
+		return biz.AudienceBoss, nil
+	default:
+		return "", invalidArgumentStatus("audience", "audience is invalid")
+	}
+}
+
+func principalStatusToProto(value biz.PrincipalStatus) iamv1.PrincipalStatus {
+	if value == biz.PrincipalStatusActive {
+		return iamv1.PrincipalStatus_PRINCIPAL_STATUS_ACTIVE
+	}
+	return iamv1.PrincipalStatus_PRINCIPAL_STATUS_DISABLED
+}
+
+func sessionStatusToProto(value biz.SessionStatus) iamv1.SessionStatus {
+	if value == biz.SessionStatusActive {
+		return iamv1.SessionStatus_SESSION_STATUS_ACTIVE
+	}
+	return iamv1.SessionStatus_SESSION_STATUS_REVOKED
+}
+
+func grantStatusToProto(value biz.GrantStatus) iamv1.GrantStatus {
+	if value == biz.GrantStatusActive {
+		return iamv1.GrantStatus_GRANT_STATUS_ACTIVE
+	}
+	return iamv1.GrantStatus_GRANT_STATUS_REVOKED
+}
+
+type errorContext struct {
+	OperationID            string
+	TenantID               string
+	CredentialKind         string
+	Dependency             string
+	DecisionID             string
+	ExpectedPolicyRevision string
+	ActualPolicyRevision   string
+}
+
+func mapIAMError(err error, details errorContext) error {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return newIAMStatus(codes.DeadlineExceeded, "IAM_TIMEOUT", "IAM operation timed out", map[string]string{
+			"operation_id": details.OperationID,
+		})
+	}
+	if errors.Is(err, biz.ErrAuthenticationRateLimited) {
+		limitScope := "password_account"
+		retryAfterSeconds := int64(1)
+		var rateLimit *biz.AuthenticationRateLimitError
+		if errors.As(err, &rateLimit) {
+			if value := strings.TrimSpace(rateLimit.LimitScope); value != "" {
+				limitScope = value
+			}
+			if seconds := int64(rateLimit.RetryAfter / time.Second); seconds > 0 {
+				retryAfterSeconds = seconds
+			}
+		}
+		return newIAMStatus(codes.ResourceExhausted, "AUTH_RATE_LIMITED", "authentication rate limit exceeded", map[string]string{
+			"limit_scope":         limitScope,
+			"retry_after_seconds": strconv.FormatInt(retryAfterSeconds, 10),
+		})
+	}
+	if field := invalidArgumentField(err); field != "" {
+		return invalidArgumentStatus(field, "IAM request is invalid")
+	}
+	if errors.Is(err, biz.ErrInvalidCredential) || errors.Is(err, biz.ErrAuthorizationCredentialInvalid) || errors.Is(err, biz.ErrAuthorizationCredentialRequired) {
+		credentialKind := details.CredentialKind
+		if credentialKind == "" {
+			credentialKind = "bearer"
+		}
+		return newIAMStatus(codes.Unauthenticated, "CREDENTIAL_INVALID", "credential is invalid", map[string]string{
+			"credential_kind": credentialKind,
+		})
+	}
+	if errors.Is(err, biz.ErrAuthorizationOperationUnregistered) {
+		return newIAMStatus(codes.Unavailable, "AUTHZ_OPERATION_UNREGISTERED", "authorization operation is not registered", map[string]string{
+			"operation_id":    details.OperationID,
+			"policy_revision": details.ActualPolicyRevision,
+		})
+	}
+	var policyMismatch *biz.AuthorizationPolicyMismatchError
+	if errors.As(err, &policyMismatch) {
+		return newIAMStatus(codes.Unavailable, "AUTHZ_POLICY_MISMATCH", "authorization policy revision mismatch", map[string]string{
+			"expected_policy_revision": policyMismatch.Expected,
+			"actual_policy_revision":   policyMismatch.Actual,
+		})
+	}
+	if errors.Is(err, biz.ErrTenantLifecycleStale) {
+		return newIAMStatus(codes.Unavailable, "TENANT_LIFECYCLE_STALE", "tenant lifecycle projection is stale", map[string]string{
+			"tenant_id":        details.TenantID,
+			"expected_version": "not_available",
+			"observed_version": "not_available",
+		})
+	}
+	if errors.Is(err, biz.ErrPrincipalInactive) || errors.Is(err, biz.ErrMembershipInactive) || errors.Is(err, biz.ErrTenantAccessInactive) || errors.Is(err, biz.ErrTenantLifecycleBlocked) {
+		decisionID := details.DecisionID
+		if decisionID == "" {
+			decisionID = "not-issued"
+		}
+		return newIAMStatus(codes.PermissionDenied, "PERMISSION_DENIED", "access is denied", map[string]string{
+			"operation_id": details.OperationID,
+			"decision_id":  decisionID,
+		})
+	}
+	if errors.Is(err, biz.ErrAuthenticationDependency) || errors.Is(err, biz.ErrAuthorizationDependency) || errors.Is(err, biz.ErrPersistenceUnavailable) {
+		dependency := details.Dependency
+		if dependency == "" {
+			dependency = "iam"
+		}
+		return newIAMStatus(codes.Unavailable, "IAM_UNAVAILABLE", "IAM dependency is unavailable", map[string]string{
+			"dependency": dependency,
+		})
+	}
+	dependency := details.Dependency
+	if dependency == "" {
+		dependency = "iam"
+	}
+	return newIAMStatus(codes.Unavailable, "IAM_UNAVAILABLE", "IAM dependency is unavailable", map[string]string{
+		"dependency": dependency,
+	})
+}
+
+func invalidArgumentField(err error) string {
+	switch {
+	case errors.Is(err, biz.ErrAccountRequired):
+		return "account"
+	case errors.Is(err, biz.ErrPasswordRequired):
+		return "password"
+	case errors.Is(err, biz.ErrAudienceRequired):
+		return "audience"
+	case errors.Is(err, biz.ErrIdempotencyKeyRequired):
+		return "idempotency_key"
+	case errors.Is(err, biz.ErrTenantScopeRequired):
+		return "boundary"
+	case errors.Is(err, biz.ErrAuthorizationOperationRequired):
+		return "operation_id"
+	case errors.Is(err, biz.ErrAuthorizationPolicyRevisionRequired):
+		return "policy_revision"
+	default:
+		return ""
+	}
+}
+
+func invalidArgumentStatus(field, message string) error {
+	return newIAMStatus(codes.InvalidArgument, "INVALID_ARGUMENT", message, map[string]string{
+		"field": field,
+	})
+}
+
+func newIAMStatus(code codes.Code, reason, message string, metadata map[string]string) error {
+	grpcStatus := status.New(code, message)
+	withDetails, err := grpcStatus.WithDetails(&errdetails.ErrorInfo{
+		Reason:   reason,
+		Domain:   "iam.ani.internal",
+		Metadata: metadata,
+	})
+	if err != nil {
+		return grpcStatus.Err()
+	}
+	return withDetails.Err()
+}
+
+var _ iamv1.AuthenticationServiceServer = (*AuthenticationService)(nil)

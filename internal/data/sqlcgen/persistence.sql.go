@@ -95,6 +95,140 @@ func (q *Queries) AppendSecurityAuditEvent(ctx context.Context, arg AppendSecuri
 	return err
 }
 
+const createRefreshToken = `-- name: CreateRefreshToken :exec
+INSERT INTO refresh_tokens (
+    tenant_id, id, family_id, digest, status, issued_at, expires_at
+) VALUES (
+    $1, $2, $3, $4,
+    'active', $5, $6
+)
+`
+
+type CreateRefreshTokenParams struct {
+	TenantID  uuid.UUID
+	ID        uuid.UUID
+	FamilyID  uuid.UUID
+	Digest    []byte
+	IssuedAt  pgtype.Timestamptz
+	ExpiresAt pgtype.Timestamptz
+}
+
+func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error {
+	_, err := q.db.Exec(ctx, createRefreshToken,
+		arg.TenantID,
+		arg.ID,
+		arg.FamilyID,
+		arg.Digest,
+		arg.IssuedAt,
+		arg.ExpiresAt,
+	)
+	return err
+}
+
+const createRefreshTokenFamily = `-- name: CreateRefreshTokenFamily :exec
+INSERT INTO refresh_token_families (
+    tenant_id, id, grant_id, status, version, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4,
+    1, $5, $6
+)
+`
+
+type CreateRefreshTokenFamilyParams struct {
+	TenantID  uuid.UUID
+	ID        uuid.UUID
+	GrantID   uuid.UUID
+	Status    string
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) CreateRefreshTokenFamily(ctx context.Context, arg CreateRefreshTokenFamilyParams) error {
+	_, err := q.db.Exec(ctx, createRefreshTokenFamily,
+		arg.TenantID,
+		arg.ID,
+		arg.GrantID,
+		arg.Status,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
+const createSession = `-- name: CreateSession :exec
+INSERT INTO sessions (
+    id, principal_id, audience, status, device_name, idle_expires_at,
+    absolute_expires_at, version, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4,
+    $5, $6,
+    $7, 1, $8, $9
+)
+`
+
+type CreateSessionParams struct {
+	ID                uuid.UUID
+	PrincipalID       uuid.UUID
+	Audience          string
+	Status            string
+	DeviceName        string
+	IdleExpiresAt     pgtype.Timestamptz
+	AbsoluteExpiresAt pgtype.Timestamptz
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+}
+
+func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
+	_, err := q.db.Exec(ctx, createSession,
+		arg.ID,
+		arg.PrincipalID,
+		arg.Audience,
+		arg.Status,
+		arg.DeviceName,
+		arg.IdleExpiresAt,
+		arg.AbsoluteExpiresAt,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
+const createSessionGrant = `-- name: CreateSessionGrant :exec
+INSERT INTO session_grants (
+    tenant_id, id, session_id, membership_id, status, version, created_at,
+    updated_at
+) VALUES (
+    $1, $2, $3,
+    $4, $5, $6,
+    $7, $8
+)
+`
+
+type CreateSessionGrantParams struct {
+	TenantID     uuid.UUID
+	ID           uuid.UUID
+	SessionID    uuid.UUID
+	MembershipID uuid.UUID
+	Status       string
+	Version      int64
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) CreateSessionGrant(ctx context.Context, arg CreateSessionGrantParams) error {
+	_, err := q.db.Exec(ctx, createSessionGrant,
+		arg.TenantID,
+		arg.ID,
+		arg.SessionID,
+		arg.MembershipID,
+		arg.Status,
+		arg.Version,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
 const createTenantMembership = `-- name: CreateTenantMembership :exec
 INSERT INTO tenant_memberships (
     tenant_id,
@@ -169,6 +303,157 @@ func (q *Queries) GetTenantMembership(ctx context.Context, arg GetTenantMembersh
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const lookupAuthorization = `-- name: LookupAuthorization :one
+SELECT
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    session.status AS session_status,
+    session_grant.status AS grant_status,
+    session_grant.version AS grant_version,
+    NOT EXISTS (
+        SELECT 1
+        FROM unnest($1::text[]) AS required_action(action)
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM tenant_role_bindings AS binding
+            JOIN tenant_role_permissions AS permission
+              ON permission.tenant_id = binding.tenant_id
+             AND permission.role_id = binding.role_id
+            WHERE binding.tenant_id = $2
+              AND binding.membership_id = membership.id
+              AND permission.resource = $3
+              AND permission.action = required_action.action
+        )
+    ) AS permission_allowed
+FROM principals AS principal
+JOIN sessions AS session
+  ON session.id = $4
+ AND session.principal_id = principal.id
+JOIN session_grants AS session_grant
+  ON session_grant.tenant_id = $2
+ AND session_grant.id = $5
+ AND session_grant.session_id = session.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = session_grant.tenant_id
+ AND membership.id = session_grant.membership_id
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE principal.id = $6
+`
+
+type LookupAuthorizationParams struct {
+	Actions     []string
+	TenantID    uuid.UUID
+	Resource    string
+	SessionID   uuid.UUID
+	GrantID     uuid.UUID
+	PrincipalID uuid.UUID
+}
+
+type LookupAuthorizationRow struct {
+	PrincipalStatus    string
+	MembershipStatus   string
+	TenantAccessStatus string
+	LifecycleStatus    string
+	LifecycleFresh     bool
+	SessionStatus      string
+	GrantStatus        string
+	GrantVersion       int64
+	PermissionAllowed  bool
+}
+
+func (q *Queries) LookupAuthorization(ctx context.Context, arg LookupAuthorizationParams) (LookupAuthorizationRow, error) {
+	row := q.db.QueryRow(ctx, lookupAuthorization,
+		arg.Actions,
+		arg.TenantID,
+		arg.Resource,
+		arg.SessionID,
+		arg.GrantID,
+		arg.PrincipalID,
+	)
+	var i LookupAuthorizationRow
+	err := row.Scan(
+		&i.PrincipalStatus,
+		&i.MembershipStatus,
+		&i.TenantAccessStatus,
+		&i.LifecycleStatus,
+		&i.LifecycleFresh,
+		&i.SessionStatus,
+		&i.GrantStatus,
+		&i.GrantVersion,
+		&i.PermissionAllowed,
+	)
+	return i, err
+}
+
+const lookupPasswordLogin = `-- name: LookupPasswordLogin :one
+SELECT
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    membership.id AS membership_id,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    credential.password_hash
+FROM verified_emails AS email
+JOIN principals AS principal
+  ON principal.id = email.principal_id
+JOIN identities AS identity
+  ON identity.principal_id = principal.id
+ AND identity.provider = 'password'
+ AND identity.status = 'active'
+JOIN password_credentials AS credential
+  ON credential.principal_id = principal.id
+ AND credential.identity_id = identity.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = $1
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE email.normalized_email = $2
+`
+
+type LookupPasswordLoginParams struct {
+	TenantID          uuid.UUID
+	NormalizedAccount string
+}
+
+type LookupPasswordLoginRow struct {
+	PrincipalID        uuid.UUID
+	PrincipalStatus    string
+	MembershipID       uuid.UUID
+	MembershipStatus   string
+	TenantAccessStatus string
+	LifecycleStatus    string
+	LifecycleFresh     bool
+	PasswordHash       string
+}
+
+func (q *Queries) LookupPasswordLogin(ctx context.Context, arg LookupPasswordLoginParams) (LookupPasswordLoginRow, error) {
+	row := q.db.QueryRow(ctx, lookupPasswordLogin, arg.TenantID, arg.NormalizedAccount)
+	var i LookupPasswordLoginRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.MembershipID,
+		&i.MembershipStatus,
+		&i.TenantAccessStatus,
+		&i.LifecycleStatus,
+		&i.LifecycleFresh,
+		&i.PasswordHash,
 	)
 	return i, err
 }

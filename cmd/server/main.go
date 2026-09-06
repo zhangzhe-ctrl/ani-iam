@@ -20,8 +20,8 @@ import (
 
 // These values can be overridden with -ldflags at build time.
 var (
-	Name     = "ani-iam-cp0"
-	Version  = "cp0.0"
+	Name     = "ani-iam-service"
+	Version  = "dp2-05"
 	flagconf string
 	id, _    = os.Hostname()
 )
@@ -76,8 +76,12 @@ func newRuntimeLogger(writer io.Writer) *slog.Logger {
 			"authorization",
 			"cookie",
 			"credential",
+			"dsn",
 			"password",
+			"postgresql.dsn",
 			"private_key",
+			"private_key_file",
+			"redis.password",
 			"set-cookie",
 			"token",
 		)),

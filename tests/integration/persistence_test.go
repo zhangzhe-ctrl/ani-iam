@@ -166,6 +166,17 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 		for _, privilege := range []string{"INSERT", "SELECT"} {
 			expectedGrants["iam_audit_events/"+privilege] = struct{}{}
 		}
+		for _, tableName := range []string{
+			"verified_emails", "identities", "password_credentials",
+			"tenant_lifecycle_projections", "tenant_role_permissions",
+		} {
+			expectedGrants[tableName+"/SELECT"] = struct{}{}
+		}
+		for _, tableName := range []string{"sessions", "session_grants", "refresh_token_families", "refresh_tokens"} {
+			for _, privilege := range []string{"INSERT", "SELECT"} {
+				expectedGrants[tableName+"/"+privilege] = struct{}{}
+			}
+		}
 		if len(grants) != len(expectedGrants) {
 			t.Fatalf("runtime grant count = %d, want %d: %#v", len(grants), len(expectedGrants), grants)
 		}

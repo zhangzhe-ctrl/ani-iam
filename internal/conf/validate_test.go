@@ -12,9 +12,38 @@ func validConfig() *Bootstrap {
 	return &Bootstrap{
 		Profile: IsolatedProfile,
 		Server: &Server{
-			Grpc:            &Server_GRPC{Network: "tcp", Addr: "127.0.0.1:0", Timeout: durationpb.New(time.Second)},
+			Grpc: &Server_GRPC{
+				Network: "tcp",
+				Addr:    "127.0.0.1:0",
+				Timeout: durationpb.New(time.Second),
+				Tls: &Server_GRPC_TLS{
+					CertificateFile:      "/run/secrets/ani-iam-grpc.crt",
+					PrivateKeyFile:       "/run/secrets/ani-iam-grpc.key",
+					ClientCaFile:         "/run/secrets/ani-iam-client-ca.crt",
+					GatewayClientDnsName: "ani-gateway",
+				},
+			},
 			Admin:           &Server_Admin{Network: "tcp", Addr: "127.0.0.1:0", Timeout: durationpb.New(time.Second)},
 			ShutdownTimeout: durationpb.New(5 * time.Second),
+		},
+		Runtime: &Runtime{
+			Postgresql: &PostgreSQL{Dsn: "postgresql://ani_iam_runtime@127.0.0.1:5432/ani_iam?sslmode=disable"},
+			Redis: &Redis{
+				Addr:         "127.0.0.1:6379",
+				Database:     0,
+				Namespace:    "ani-iam:dp2-05",
+				LoginLimit:   5,
+				LoginWindow:  durationpb.New(15 * time.Minute),
+				DialTimeout:  durationpb.New(500 * time.Millisecond),
+				ReadTimeout:  durationpb.New(500 * time.Millisecond),
+				WriteTimeout: durationpb.New(500 * time.Millisecond),
+			},
+			AccessToken: &AccessToken{
+				Issuer:         "ani-iam",
+				ActiveKeyId:    "dp2-05-ed25519-1",
+				PrivateKeyFile: "/run/secrets/ani-iam-access-token-ed25519.pem",
+			},
+			PolicyRevision: "sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa",
 		},
 	}
 }
@@ -28,8 +57,29 @@ func TestBootstrapValidate(t *testing.T) {
 		{name: "isolated loopback", ok: true},
 		{name: "wrong profile", mutate: func(c *Bootstrap) { c.Profile = "legacy-auth" }},
 		{name: "externally reachable grpc", mutate: func(c *Bootstrap) { c.Server.Grpc.Addr = "0.0.0.0:19090" }},
+		{name: "missing grpc mutual TLS", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls = nil }},
+		{name: "grpc certificate path is relative", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls.CertificateFile = "server.crt" }},
+		{name: "grpc private-key path is relative", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls.PrivateKeyFile = "server.key" }},
+		{name: "grpc client CA path is relative", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls.ClientCaFile = "client-ca.crt" }},
+		{name: "gateway workload identity missing", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls.GatewayClientDnsName = "" }},
 		{name: "hostname is not a literal boundary", mutate: func(c *Bootstrap) { c.Server.Admin.Addr = "localhost:19091" }},
 		{name: "missing shutdown timeout", mutate: func(c *Bootstrap) { c.Server.ShutdownTimeout = nil }},
+		{name: "missing runtime", mutate: func(c *Bootstrap) { c.Runtime = nil }},
+		{name: "database DSN missing", mutate: func(c *Bootstrap) { c.Runtime.Postgresql.Dsn = "" }},
+		{name: "database user is not the restricted runtime role", mutate: func(c *Bootstrap) {
+			c.Runtime.Postgresql.Dsn = "postgresql://iam_runtime@127.0.0.1:5432/ani_iam?sslmode=disable"
+		}},
+		{name: "database host is not isolated", mutate: func(c *Bootstrap) {
+			c.Runtime.Postgresql.Dsn = "postgresql://ani_iam_runtime@database.internal/ani_iam"
+		}},
+		{name: "Redis host is not isolated", mutate: func(c *Bootstrap) { c.Runtime.Redis.Addr = "redis.internal:6379" }},
+		{name: "Redis namespace missing", mutate: func(c *Bootstrap) { c.Runtime.Redis.Namespace = "" }},
+		{name: "Redis login limit invalid", mutate: func(c *Bootstrap) { c.Runtime.Redis.LoginLimit = 0 }},
+		{name: "Redis login window missing", mutate: func(c *Bootstrap) { c.Runtime.Redis.LoginWindow = nil }},
+		{name: "access-token issuer missing", mutate: func(c *Bootstrap) { c.Runtime.AccessToken.Issuer = "" }},
+		{name: "access-token active key missing", mutate: func(c *Bootstrap) { c.Runtime.AccessToken.ActiveKeyId = "" }},
+		{name: "access-token private-key path missing", mutate: func(c *Bootstrap) { c.Runtime.AccessToken.PrivateKeyFile = "" }},
+		{name: "policy revision malformed", mutate: func(c *Bootstrap) { c.Runtime.PolicyRevision = "main" }},
 	}
 
 	for _, tt := range tests {

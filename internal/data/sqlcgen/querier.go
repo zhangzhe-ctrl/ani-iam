@@ -10,8 +10,14 @@ import (
 
 type Querier interface {
 	AppendSecurityAuditEvent(ctx context.Context, arg AppendSecurityAuditEventParams) error
+	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
+	CreateRefreshTokenFamily(ctx context.Context, arg CreateRefreshTokenFamilyParams) error
+	CreateSession(ctx context.Context, arg CreateSessionParams) error
+	CreateSessionGrant(ctx context.Context, arg CreateSessionGrantParams) error
 	CreateTenantMembership(ctx context.Context, arg CreateTenantMembershipParams) error
 	GetTenantMembership(ctx context.Context, arg GetTenantMembershipParams) (GetTenantMembershipRow, error)
+	LookupAuthorization(ctx context.Context, arg LookupAuthorizationParams) (LookupAuthorizationRow, error)
+	LookupPasswordLogin(ctx context.Context, arg LookupPasswordLoginParams) (LookupPasswordLoginRow, error)
 	UpdateTenantMembershipStatus(ctx context.Context, arg UpdateTenantMembershipStatusParams) (UpdateTenantMembershipStatusRow, error)
 }
 

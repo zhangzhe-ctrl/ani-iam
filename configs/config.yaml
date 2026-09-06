@@ -1,11 +1,33 @@
-profile: cp0-isolated
+profile: direct-p2-isolated
 server:
   grpc:
     network: tcp
     addr: 127.0.0.1:19090
     timeout: 1s
+    tls:
+      certificate_file: /run/secrets/ani-iam-grpc.crt
+      private_key_file: /run/secrets/ani-iam-grpc.key
+      client_ca_file: /run/secrets/ani-iam-gateway-client-ca.crt
+      gateway_client_dns_name: ani-gateway
   admin:
     network: tcp
     addr: 127.0.0.1:19091
     timeout: 1s
   shutdown_timeout: 5s
+runtime:
+  postgresql:
+    dsn: postgresql://ani_iam_runtime@127.0.0.1:5432/ani_iam?sslmode=disable
+  redis:
+    addr: 127.0.0.1:6379
+    database: 0
+    namespace: ani-iam:dp2-05
+    login_limit: 5
+    login_window: 900s
+    dial_timeout: 0.5s
+    read_timeout: 0.5s
+    write_timeout: 0.5s
+  access_token:
+    issuer: ani-iam
+    active_key_id: dp2-05-ed25519-1
+    private_key_file: /run/secrets/ani-iam-access-token-ed25519.pem
+  policy_revision: sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa
