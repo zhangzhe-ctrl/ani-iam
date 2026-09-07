@@ -4,7 +4,7 @@
 
 **Blocked by:** 05 / 证明目标最小纵向链路（Go/No-Go A 已人工接受）
 
-**Status:** claimed
+**Status:** resolved
 
 **Type:** enhancement
 
@@ -74,4 +74,4 @@ Before commit, retain only allowed DP2-07 diffs and terminate task-owned Postgre
 - `pass`: vet, module verify/tidy, frozen contracts, fixed Buf/config/API generation, fixed sqlc, Atlas validate/hash, deterministic SBOM, new-dependency license review, affected-code vulnerability scan, current-tree Secret assessment, exact path audit, and Docker resource cleanup passed.
 - `pass`: independent Standards and Spec reviewers report no remaining finding after all corrections.
 - `not_verified`: BOSS/Platform OIDC, real ANI Gateway/browser callback integration, production Dex/Kubernetes/deployment/traffic, Secret rotation and Production Readiness remain outside this ticket. DP2-13 must stop for an Owner decision because the plan requires BOSS OIDC before Go/No-Go B while DP2-15 owns the absent Platform model and the active Goal forbids starting DP2-15.
-- Pre-commit status remains `claimed`. Resolution and the exact feature commit SHA are recorded only after the reviewed feature payload is committed; no push or deployment is authorized.
+- `resolved`: the independently reviewed feature payload is commit `33097ae02985ed569eba0f8176f184ce9f6ff849`. This docs-only closure records the already-created immutable SHA; no push or deployment occurred.

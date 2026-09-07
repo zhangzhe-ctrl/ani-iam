@@ -3,6 +3,9 @@
 Fixed baseline:
 `b52907dc4cb919dbbbe68768734e0a453b36b954`.
 
+The exact feature payload below is commit
+`33097ae02985ed569eba0f8176f184ce9f6ff849`.
+
 Ticket-native allowed roots are `internal/biz/**`, `internal/data/**`,
 `internal/service/**`, `migrations/**`, `configs/**`, `tests/**`, this ticket,
 and this evidence directory. The Owner additionally approved exactly:
