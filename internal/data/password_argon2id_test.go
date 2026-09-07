@@ -48,6 +48,25 @@ func TestArgon2idPasswordHasherUsesFrozenPHCParameters(t *testing.T) {
 	}
 }
 
+func TestArgon2idPasswordHasherVerifiesIndependentLibargon2Vector(t *testing.T) {
+	// This target-profile PHC was computed independently with
+	// libargon2-20190702 argon2id_hash_raw using salt bytes 0x00..0x0f.
+	const (
+		password = "test-only independent vector"
+		encoded  = "$argon2id$v=19$m=65536,t=3,p=4$AAECAwQFBgcICQoLDA0ODw$cNy7mCAohaj6I3AmqAm/tSgkpnJhiOzLOI9NA4CR/os"
+	)
+	hasher := NewArgon2idPasswordHasher()
+
+	valid, err := hasher.Verify(encoded, password)
+	if err != nil || !valid {
+		t.Fatalf("Verify(independent vector) = %v, %v", valid, err)
+	}
+	valid, err = hasher.Verify(encoded, "wrong independent vector password")
+	if err != nil || valid {
+		t.Fatalf("Verify(wrong independent vector password) = %v, %v", valid, err)
+	}
+}
+
 func TestArgon2idPasswordHasherRejectsMalformedPHC(t *testing.T) {
 	hasher := NewArgon2idPasswordHasher()
 

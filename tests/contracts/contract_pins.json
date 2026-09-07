@@ -3,13 +3,22 @@
   "iam_start_commit": "5ff9f3cfe083b3b911bb076450abbbb967e82a37",
   "ani_start_commit": "a221a7b50c2cfdb13f04c13f154338d836a48af3",
   "policy_revision": "sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa",
+  "notification": {
+    "repository": "github.com/zhangzhe-ctrl/ani-notification-service",
+    "commit": "0e3f0a2b47fcc1fa96fa926cae2b9ab55bd25d84",
+    "runtime_commit": "a477a38280c8626b0fdf6664e7afb049d22c2a58",
+    "module_version": "v0.0.0-20260907002920-0e3f0a2b47fc",
+    "module_sum": "h1:i0sqGu+qg4M18cdGJ00sQgp8Pd+jx8JmVn9s+OmoNJ8=",
+    "proto_sha256": "af226602b76ddd7b0cb312456f1845f67d1968eb0228da64fc1cced13a2671b5",
+    "descriptor_sha256": "7be0a2fa062229717a311af952fc8b3bb7f58c1ef21cde2de741bcbbb4dfc195"
+  },
   "toolchain": {
     "buf": {"version": "1.72.0", "sha256": "8720830e26a733da55bb89bcd3cb44849c0965fc0c44fb5d691cccdc64dca5af"},
     "protoc-gen-go": {"version": "v1.36.12", "sha256": "7475078ca943fa552b4755a0b5dd84f4387905a08cb09a47696fd3683cc1c010"},
     "protoc-gen-go-grpc": {"version": "1.6.2", "sha256": "aa1fabbfc27b12d81182864a3f90b47aee907bced808e17e275c5b18c9602b08"}
   },
   "artifacts": {
-    "iam_descriptor": "df863beb3b095d1f01350c5334d80daf10cdf48083ce0e5663781171aa99a001",
+    "iam_descriptor": "66552fe0a53a1c4956f6ee7943498af1b5309602fec28eb47c1b51f4276f5d9a",
     "core_descriptor": "7dd40f9053b7c1c0c8905decab0f81b07173d0b25651113147bde9a5370d352a"
   },
   "fixtures": {
@@ -20,6 +29,6 @@
     "core_tenant_lifecycle_snapshot_page.v1.json": "539a59fcc0691bbdefa13ec5c85081738436b118f6221edd9f026cc816903546",
     "iam_check_permission.v1.json": "92c1d517ff3c49532ca08e0f6b24eace2569a8fdb702af8d1d134bc7e846c4c2",
     "iam_error_contract.v1.json": "c7a488d5ce5d409d1de25845dd3dc3af7a32c1ce853f81c490d541b8a4448e3c",
-    "iam_password_login.v1.json": "116532e03642ae266287256f4c1c8f7acd28b24a09851f21ad4cc4fce4d94c67"
+    "iam_password_login.v1.json": "cb4df637172faae8551d42abd55b9167195d9a21693080a06e713ae9c6483cc4"
   }
 }

@@ -43,6 +43,17 @@ func validConfig() *Bootstrap {
 				ActiveKeyId:    "dp2-05-ed25519-1",
 				PrivateKeyFile: "/run/secrets/ani-iam-access-token-ed25519.pem",
 			},
+			Notification: &Notification{
+				Address:              "127.0.0.1:29090",
+				CertificateFile:      "/run/secrets/ani-iam-notification-client.crt",
+				PrivateKeyFile:       "/run/secrets/ani-iam-notification-client.key",
+				ServerCaFile:         "/run/secrets/ani-notification-server-ca.crt",
+				ServerDnsName:        "ani-notification",
+				ConsoleActionUrlBase: "https://console.example.test/password-action",
+				Locale:               "en-US",
+				DispatchInterval:     durationpb.New(250 * time.Millisecond),
+				SubmissionTimeout:    durationpb.New(5 * time.Second),
+			},
 			PolicyRevision: "sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa",
 		},
 	}
@@ -79,6 +90,19 @@ func TestBootstrapValidate(t *testing.T) {
 		{name: "access-token issuer missing", mutate: func(c *Bootstrap) { c.Runtime.AccessToken.Issuer = "" }},
 		{name: "access-token active key missing", mutate: func(c *Bootstrap) { c.Runtime.AccessToken.ActiveKeyId = "" }},
 		{name: "access-token private-key path missing", mutate: func(c *Bootstrap) { c.Runtime.AccessToken.PrivateKeyFile = "" }},
+		{name: "notification config missing", mutate: func(c *Bootstrap) { c.Runtime.Notification = nil }},
+		{name: "notification address is not isolated", mutate: func(c *Bootstrap) { c.Runtime.Notification.Address = "notification.internal:443" }},
+		{name: "notification certificate path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.CertificateFile = "client.crt" }},
+		{name: "notification private-key path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.PrivateKeyFile = "client.key" }},
+		{name: "notification server CA path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.ServerCaFile = "server-ca.crt" }},
+		{name: "notification server identity differs", mutate: func(c *Bootstrap) { c.Runtime.Notification.ServerDnsName = "notification.internal" }},
+		{name: "notification action URL is HTTP", mutate: func(c *Bootstrap) {
+			c.Runtime.Notification.ConsoleActionUrlBase = "http://console.example.test/password-action"
+		}},
+		{name: "notification action URL has query", mutate: func(c *Bootstrap) { c.Runtime.Notification.ConsoleActionUrlBase += "?token=preconfigured" }},
+		{name: "notification locale unsupported", mutate: func(c *Bootstrap) { c.Runtime.Notification.Locale = "en-GB" }},
+		{name: "notification dispatch interval missing", mutate: func(c *Bootstrap) { c.Runtime.Notification.DispatchInterval = nil }},
+		{name: "notification submission timeout missing", mutate: func(c *Bootstrap) { c.Runtime.Notification.SubmissionTimeout = nil }},
 		{name: "policy revision malformed", mutate: func(c *Bootstrap) { c.Runtime.PolicyRevision = "main" }},
 	}
 

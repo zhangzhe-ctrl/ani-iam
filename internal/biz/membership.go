@@ -44,6 +44,8 @@ type AuditResult string
 
 const AuditResultSucceeded AuditResult = "succeeded"
 
+const AuditResultFailed AuditResult = "failed"
+
 type AuditAuthenticationMethod string
 
 const (

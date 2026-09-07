@@ -29,6 +29,10 @@ const (
 
 	accessTokenPrincipalTypeHuman = "human"
 	accessTokenBoundaryTypeTenant = "tenant"
+
+	passwordActionAudience     = "ani-iam-password-action"
+	passwordActionPurposeClaim = "password_action_purpose"
+	passwordActionTokenType    = "ANI-PASSWORD-ACTION+JWT"
 )
 
 var ErrInvalidAccessTokenConfiguration = errors.New("invalid access-token configuration")
@@ -122,6 +126,39 @@ func (c *JWXAccessTokenCodec) Issue(ctx context.Context, claims biz.AccessTokenC
 	return string(signed), nil
 }
 
+func (c *JWXAccessTokenCodec) IssuePasswordAction(ctx context.Context, claims biz.PasswordActionTokenClaims) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	if err := c.validatePasswordActionClaims(claims); err != nil {
+		return "", err
+	}
+	token, err := jwt.NewBuilder().
+		Issuer(claims.Issuer).
+		Subject(claims.PrincipalID.String()).
+		Audience([]string{passwordActionAudience}).
+		JwtID(claims.OperationID.String()).
+		IssuedAt(claims.IssuedAt.UTC()).
+		Expiration(claims.ExpiresAt.UTC()).
+		Claim(passwordActionPurposeClaim, string(claims.Purpose)).
+		Build()
+	if err != nil {
+		return "", fmt.Errorf("build password-action token: %w", err)
+	}
+	headers := jws.NewHeaders()
+	if err := headers.Set(jws.KeyIDKey, c.activeKeyID); err != nil {
+		return "", fmt.Errorf("set password-action key ID: %w", err)
+	}
+	if err := headers.Set(jws.TypeKey, passwordActionTokenType); err != nil {
+		return "", fmt.Errorf("set password-action token type: %w", err)
+	}
+	signed, err := jwt.Sign(token, jwt.WithKey(jwa.EdDSA(), c.privateKey, jws.WithProtectedHeaders(headers)))
+	if err != nil {
+		return "", fmt.Errorf("sign password-action token: %w", err)
+	}
+	return string(signed), nil
+}
+
 func (c *JWXAccessTokenCodec) Verify(ctx context.Context, rawCredential string) (biz.AccessTokenClaims, error) {
 	if err := ctx.Err(); err != nil {
 		return biz.AccessTokenClaims{}, err
@@ -179,6 +216,111 @@ func (c *JWXAccessTokenCodec) Verify(ctx context.Context, rawCredential string) 
 		return biz.AccessTokenClaims{}, err
 	}
 	return claims, nil
+}
+
+func (c *JWXAccessTokenCodec) VerifyPasswordAction(ctx context.Context, rawCredential string) (biz.PasswordActionTokenClaims, error) {
+	if err := ctx.Err(); err != nil {
+		return biz.PasswordActionTokenClaims{}, err
+	}
+	message, err := jws.Parse([]byte(rawCredential), jws.WithCompact())
+	if err != nil {
+		return biz.PasswordActionTokenClaims{}, fmt.Errorf("parse password-action JWS: %w", err)
+	}
+	if len(message.Signatures()) != 1 {
+		return biz.PasswordActionTokenClaims{}, errors.New("password-action token must contain exactly one signature")
+	}
+	headers := message.Signatures()[0].ProtectedHeaders()
+	algorithm, ok := headers.Algorithm()
+	if !ok || algorithm != jwa.EdDSA() {
+		return biz.PasswordActionTokenClaims{}, errors.New("password-action token must use EdDSA")
+	}
+	keyID, ok := headers.KeyID()
+	if !ok {
+		return biz.PasswordActionTokenClaims{}, errors.New("password-action token key ID is required")
+	}
+	publicKey, ok := c.verificationKey[keyID]
+	if !ok {
+		return biz.PasswordActionTokenClaims{}, errors.New("password-action token key ID is not recognized")
+	}
+	tokenType, ok := headers.Type()
+	if !ok || tokenType != passwordActionTokenType {
+		return biz.PasswordActionTokenClaims{}, errors.New("password-action token type is invalid")
+	}
+	token, err := jwt.Parse(
+		[]byte(rawCredential),
+		jwt.WithKey(jwa.EdDSA(), publicKey),
+		jwt.WithClock(jwt.ClockFunc(c.clock.Now)),
+		jwt.WithIssuer(c.issuer),
+		jwt.WithAudience(passwordActionAudience),
+		jwt.WithRequiredClaim(jwt.SubjectKey),
+		jwt.WithRequiredClaim(jwt.AudienceKey),
+		jwt.WithRequiredClaim(jwt.JwtIDKey),
+		jwt.WithRequiredClaim(jwt.IssuedAtKey),
+		jwt.WithRequiredClaim(jwt.ExpirationKey),
+		jwt.WithRequiredClaim(passwordActionPurposeClaim),
+	)
+	if err != nil {
+		return biz.PasswordActionTokenClaims{}, fmt.Errorf("verify password-action token: %w", err)
+	}
+	subject, _ := token.Subject()
+	audiences, _ := token.Audience()
+	operationID, _ := token.JwtID()
+	issuedAt, _ := token.IssuedAt()
+	expiresAt, _ := token.Expiration()
+	if len(audiences) != 1 || audiences[0] != passwordActionAudience {
+		return biz.PasswordActionTokenClaims{}, errors.New("password-action token audience is invalid")
+	}
+	var purpose string
+	if err := token.Get(passwordActionPurposeClaim, &purpose); err != nil {
+		return biz.PasswordActionTokenClaims{}, fmt.Errorf("read password-action purpose: %w", err)
+	}
+	parsedPrincipalID, err := uuid.Parse(subject)
+	if err != nil {
+		return biz.PasswordActionTokenClaims{}, fmt.Errorf("parse password-action principal ID: %w", err)
+	}
+	parsedOperationID, err := uuid.Parse(operationID)
+	if err != nil {
+		return biz.PasswordActionTokenClaims{}, fmt.Errorf("parse password-action operation ID: %w", err)
+	}
+	claims := biz.PasswordActionTokenClaims{
+		Issuer:      c.issuer,
+		PrincipalID: parsedPrincipalID,
+		OperationID: parsedOperationID,
+		Purpose:     biz.PasswordActionPurpose(purpose),
+		IssuedAt:    issuedAt.UTC(),
+		ExpiresAt:   expiresAt.UTC(),
+	}
+	if err := c.validatePasswordActionClaims(claims); err != nil {
+		return biz.PasswordActionTokenClaims{}, err
+	}
+	return claims, nil
+}
+
+func (c *JWXAccessTokenCodec) validatePasswordActionClaims(claims biz.PasswordActionTokenClaims) error {
+	if claims.Issuer != c.issuer {
+		return errors.New("password-action token issuer is invalid")
+	}
+	for name, id := range map[string]uuid.UUID{
+		"principal_id": claims.PrincipalID,
+		"operation_id": claims.OperationID,
+	} {
+		if id == uuid.Nil || id.Version() != 7 {
+			return fmt.Errorf("password-action token %s is invalid", name)
+		}
+	}
+	if claims.Purpose != biz.PasswordActionPurposeSetup && claims.Purpose != biz.PasswordActionPurposeReset {
+		return errors.New("password-action token purpose is invalid")
+	}
+	now := c.clock.Now().UTC()
+	issuedAt := claims.IssuedAt.UTC()
+	expiresAt := claims.ExpiresAt.UTC()
+	if issuedAt.IsZero() || expiresAt.IsZero() || issuedAt.After(now) || !expiresAt.After(now) || !expiresAt.After(issuedAt) {
+		return errors.New("password-action token lifetime is invalid")
+	}
+	if expiresAt.Sub(issuedAt) > 30*time.Minute {
+		return errors.New("password-action token lifetime exceeds maximum")
+	}
+	return nil
 }
 
 func (c *JWXAccessTokenCodec) validateClaims(claims biz.AccessTokenClaims) error {
@@ -309,6 +451,6 @@ func accessTokenClaims(token jwt.Token) (biz.AccessTokenClaims, error) {
 }
 
 var (
-	_ biz.AccessTokenIssuer        = (*JWXAccessTokenCodec)(nil)
+	_ biz.AuthenticationTokenCodec = (*JWXAccessTokenCodec)(nil)
 	_ biz.AccessCredentialVerifier = (*JWXAccessTokenCodec)(nil)
 )

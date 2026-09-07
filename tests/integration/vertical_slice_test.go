@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"errors"
+	"net/netip"
 	"testing"
 	"time"
 
@@ -73,6 +74,7 @@ func TestPostgresFailureMapsToStableIAMUnavailable(t *testing.T) {
 		Password:       "correct-password",
 		Audience:       iamv1.Audience_AUDIENCE_CONSOLE,
 		Boundary:       &iamv1.Boundary{Boundary: &iamv1.Boundary_Tenant{Tenant: &iamv1.TenantBoundary{TenantId: tenantID.String()}}},
+		SourceIp:       "203.0.113.10",
 		IdempotencyKey: "login-postgres-down",
 	})
 	grpcStatus := status.Convert(err)
@@ -111,11 +113,13 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 		Namespace: "ani-iam:dp2-05:vertical-slice",
 		Limit:     5,
 		Window:    15 * time.Minute,
+		BaseDelay: 10 * time.Millisecond,
 	})
 	if err != nil {
 		t.Fatalf("NewRedisLoginThrottle() error = %v", err)
 	}
 
+	authenticationIDs := append([]uuid.UUID{fixture.failureAuditID}, fixture.loginIDs...)
 	authentication := biz.NewAuthenticationUsecase(
 		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
 		passwordHasher,
@@ -123,7 +127,7 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
 		tokenCodec,
 		staticIntegrationSecretGenerator{secret: "opaque-refresh-secret"},
-		&fixedIDGenerator{ids: fixture.loginIDs},
+		&fixedIDGenerator{ids: authenticationIDs},
 		fixedClock{now: now},
 	)
 	_, err = authentication.PasswordLogin(ctx, biz.PasswordLoginCommand{
@@ -131,6 +135,7 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 		Password:       "wrong-password",
 		Audience:       biz.AudienceConsole,
 		TenantID:       tenantA,
+		SourceIP:       netip.MustParseAddr("203.0.113.10"),
 		DeviceName:     "integration-browser",
 		IdempotencyKey: "login-postgres-invalid",
 	})
@@ -144,16 +149,31 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 	if preLoginSessionCount != 0 {
 		t.Fatalf("sessions after invalid credential = %d, want 0", preLoginSessionCount)
 	}
-	login, err := authentication.PasswordLogin(ctx, biz.PasswordLoginCommand{
+	loginCommand := biz.PasswordLoginCommand{
 		Account:        " User@Example.COM ",
 		Password:       "correct-password",
 		Audience:       biz.AudienceConsole,
 		TenantID:       tenantA,
+		SourceIP:       netip.MustParseAddr("203.0.113.10"),
 		DeviceName:     "integration-browser",
 		IdempotencyKey: "login-postgres-1",
-	})
+	}
+	_, err = authentication.PasswordLogin(ctx, loginCommand)
+	var rateLimit *biz.AuthenticationRateLimitError
+	if !errors.Is(err, biz.ErrAuthenticationRateLimited) || !errors.As(err, &rateLimit) ||
+		rateLimit.LimitScope != "password_account" || rateLimit.RetryAfter <= 0 || rateLimit.RetryAfter > 60*time.Millisecond {
+		t.Fatalf("PasswordLogin() during increasing cooldown error = %#v, want account retry in (0, 60ms]", err)
+	}
+	timer := time.NewTimer(rateLimit.RetryAfter + 10*time.Millisecond)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		t.Fatalf("wait for login cooldown: %v", ctx.Err())
+	case <-timer.C:
+	}
+	login, err := authentication.PasswordLogin(ctx, loginCommand)
 	if err != nil {
-		t.Fatalf("PasswordLogin() through runtime role: %v", err)
+		t.Fatalf("PasswordLogin() through runtime role after cooldown: %v", err)
 	}
 	if login.Session.ID != fixture.loginIDs[0] || login.Grant.ID != fixture.loginIDs[1] {
 		t.Fatalf("login session/grant = %s/%s", login.Session.ID, login.Grant.ID)
@@ -252,6 +272,7 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 			Password:       "correct-password",
 			Audience:       biz.AudienceConsole,
 			TenantID:       tenantA,
+			SourceIP:       netip.MustParseAddr("203.0.113.10"),
 			IdempotencyKey: "login-postgres-audit-rollback",
 		})
 		if !errors.Is(err, biz.ErrAuditConflict) {
@@ -305,6 +326,7 @@ const testIntegrationPolicyRevision = "sha256:f222e2c6d3cd6442449cd722389d3d4fbf
 
 type targetLoginFixture struct {
 	membershipID     uuid.UUID
+	failureAuditID   uuid.UUID
 	loginIDs         []uuid.UUID
 	decisionID       uuid.UUID
 	deniedDecisionID uuid.UUID
@@ -315,7 +337,8 @@ func seedTargetLoginFixture(t *testing.T, ctx context.Context, environment *post
 	seedPool := mustPool(t, environment.migrationDSN(primaryDB))
 	defer seedPool.Close()
 	fixture := targetLoginFixture{
-		membershipID: uuid.MustParse("0198f062-b76d-704f-ac04-ab231ee78f01"),
+		membershipID:   uuid.MustParse("0198f062-b76d-704f-ac04-ab231ee78f01"),
+		failureAuditID: uuid.MustParse("0198f062-b76d-7101-9000-000000000009"),
 		loginIDs: []uuid.UUID{
 			uuid.MustParse("0198f062-b76d-7101-9000-000000000001"),
 			uuid.MustParse("0198f062-b76d-7101-9000-000000000002"),
@@ -358,11 +381,22 @@ func seedTargetLoginFixture(t *testing.T, ctx context.Context, environment *post
 type acceptingIntegrationPasswordVerifier struct{}
 
 func (acceptingIntegrationPasswordVerifier) Verify(string, string) (bool, error) { return true, nil }
+func (acceptingIntegrationPasswordVerifier) VerifyUnknown(string) error          { return nil }
+func (acceptingIntegrationPasswordVerifier) Hash(string) (string, error) {
+	return "test-password-hash", nil
+}
 
 type allowingIntegrationLoginThrottle struct{}
 
-func (allowingIntegrationLoginThrottle) Allow(context.Context, string) error { return nil }
-func (allowingIntegrationLoginThrottle) Reset(context.Context, string) error { return nil }
+func (allowingIntegrationLoginThrottle) Check(context.Context, biz.LoginThrottleAttempt) error {
+	return nil
+}
+func (allowingIntegrationLoginThrottle) RecordFailure(context.Context, biz.LoginThrottleAttempt) error {
+	return nil
+}
+func (allowingIntegrationLoginThrottle) Reset(context.Context, biz.LoginThrottleAttempt) error {
+	return nil
+}
 
 type recordingAccessTokenIssuer struct {
 	token  string
@@ -372,6 +406,12 @@ type recordingAccessTokenIssuer struct {
 func (i *recordingAccessTokenIssuer) Issue(_ context.Context, claims biz.AccessTokenClaims) (string, error) {
 	i.claims = claims
 	return i.token, nil
+}
+func (*recordingAccessTokenIssuer) IssuePasswordAction(context.Context, biz.PasswordActionTokenClaims) (string, error) {
+	return "test-password-action-token", nil
+}
+func (*recordingAccessTokenIssuer) VerifyPasswordAction(context.Context, string) (biz.PasswordActionTokenClaims, error) {
+	return biz.PasswordActionTokenClaims{}, biz.ErrPasswordActionInvalid
 }
 
 type staticIntegrationSecretGenerator struct{ secret string }

@@ -153,9 +153,9 @@ func (r securityAuditRepository) Append(ctx context.Context, scope biz.TenantSco
 		return err
 	}
 	err = r.queries.AppendSecurityAuditEvent(ctx, sqlcgen.AppendSecurityAuditEventParams{
-		TenantID:             tenantID,
+		TenantID:             requiredPGUUID(tenantID),
 		EventID:              event.ID,
-		ActorID:              event.ActorID,
+		ActorID:              requiredPGUUID(event.ActorID),
 		AuthenticationMethod: string(event.AuthenticationMethod),
 		Boundary:             string(event.Boundary),
 		Action:               string(event.Action),

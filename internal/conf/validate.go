@@ -102,8 +102,8 @@ func validateDuration(name string, value *durationpb.Duration, maximum time.Dura
 }
 
 func validateRuntime(runtime *Runtime) error {
-	if runtime == nil || runtime.Postgresql == nil || runtime.Redis == nil || runtime.AccessToken == nil {
-		return fmt.Errorf("PostgreSQL, Redis, and access-token runtime config are required")
+	if runtime == nil || runtime.Postgresql == nil || runtime.Redis == nil || runtime.AccessToken == nil || runtime.Notification == nil {
+		return fmt.Errorf("PostgreSQL, Redis, access-token, and Notification runtime config are required")
 	}
 	if err := validatePostgreSQL(runtime.Postgresql); err != nil {
 		return err
@@ -112,6 +112,9 @@ func validateRuntime(runtime *Runtime) error {
 		return err
 	}
 	if err := validateAccessToken(runtime.AccessToken); err != nil {
+		return err
+	}
+	if err := validateNotification(runtime.Notification); err != nil {
 		return err
 	}
 	revision := strings.TrimSpace(runtime.PolicyRevision)
@@ -180,4 +183,35 @@ func validateAccessToken(accessToken *AccessToken) error {
 		return fmt.Errorf("access-token private-key file must be an absolute path")
 	}
 	return nil
+}
+
+func validateNotification(notification *Notification) error {
+	if err := validateLoopbackEndpoint("Notification", notification.Address); err != nil {
+		return err
+	}
+	for name, path := range map[string]string{
+		"certificate": notification.CertificateFile,
+		"private key": notification.PrivateKeyFile,
+		"server CA":   notification.ServerCaFile,
+	} {
+		if strings.TrimSpace(path) == "" || !filepath.IsAbs(path) {
+			return fmt.Errorf("Notification %s file must be an absolute path", name)
+		}
+	}
+	if notification.ServerDnsName != "ani-notification" {
+		return fmt.Errorf("Notification server DNS name must be ani-notification")
+	}
+	actionURL, err := url.Parse(notification.ConsoleActionUrlBase)
+	if err != nil || actionURL.Scheme != "https" || actionURL.Host == "" || !actionURL.IsAbs() ||
+		actionURL.User != nil || actionURL.RawQuery != "" || actionURL.Fragment != "" ||
+		strings.ToLower(actionURL.Host) != actionURL.Host {
+		return fmt.Errorf("Notification console action URL must be a canonical HTTPS base without userinfo, query, or fragment")
+	}
+	if notification.Locale != "en-US" && notification.Locale != "zh-CN" {
+		return fmt.Errorf("Notification locale must be en-US or zh-CN")
+	}
+	if err := validateDuration("Notification dispatch interval", notification.DispatchInterval, time.Minute); err != nil {
+		return err
+	}
+	return validateDuration("Notification submission", notification.SubmissionTimeout, 30*time.Second)
 }

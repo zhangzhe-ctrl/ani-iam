@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ var (
 	ErrAccountRequired           = errors.New("account is required")
 	ErrPasswordRequired          = errors.New("password is required")
 	ErrAudienceRequired          = errors.New("audience is required")
+	ErrSourceIPRequired          = errors.New("source IP is required")
 	ErrIdempotencyKeyRequired    = errors.New("idempotency key is required")
 	ErrInvalidCredential         = errors.New("invalid credential")
 	ErrPrincipalInactive         = errors.New("principal is inactive")
@@ -83,8 +85,11 @@ const (
 
 const (
 	AuditActionPasswordLoginSucceeded AuditAction     = "iam.password.login.succeeded"
+	AuditActionPasswordLoginFailed    AuditAction     = "iam.password.login.failed"
 	AuditTargetTypeSession            AuditTargetType = "session"
+	AuditTargetTypePasswordCredential AuditTargetType = "password_credential"
 	AuditReasonPasswordLogin          AuditReason     = "PASSWORD_LOGIN"
+	AuditReasonInvalidCredential      AuditReason     = "INVALID_CREDENTIAL"
 )
 
 type Principal struct {
@@ -93,14 +98,17 @@ type Principal struct {
 }
 
 type PasswordLoginState struct {
-	PrincipalID      uuid.UUID
-	PrincipalStatus  PrincipalStatus
-	MembershipID     uuid.UUID
-	MembershipStatus MembershipStatus
-	TenantAccess     TenantAccessStatus
-	Lifecycle        TenantLifecycleStatus
-	LifecycleFresh   bool
-	PasswordHash     string
+	PrincipalID       uuid.UUID
+	PrincipalStatus   PrincipalStatus
+	MembershipID      uuid.UUID
+	MembershipStatus  MembershipStatus
+	TenantAccess      TenantAccessStatus
+	Lifecycle         TenantLifecycleStatus
+	LifecycleFresh    bool
+	PasswordHash      string
+	FailedAttempts    int
+	LockedUntil       time.Time
+	CredentialVersion int64
 }
 
 type Session struct {
@@ -155,11 +163,30 @@ type AccessTokenClaims struct {
 	AuthnMethods []AuditAuthenticationMethod
 }
 
+type PasswordActionPurpose string
+
+const (
+	PasswordActionPurposeSetup PasswordActionPurpose = "setup"
+	PasswordActionPurposeReset PasswordActionPurpose = "reset"
+)
+
+// PasswordActionTokenClaims is the complete signed capability used to consume
+// one password action. It contains no password or recipient address.
+type PasswordActionTokenClaims struct {
+	Issuer      string
+	PrincipalID uuid.UUID
+	OperationID uuid.UUID
+	Purpose     PasswordActionPurpose
+	IssuedAt    time.Time
+	ExpiresAt   time.Time
+}
+
 type PasswordLoginCommand struct {
 	Account        string
 	Password       string
 	Audience       Audience
 	TenantID       uuid.UUID
+	SourceIP       netip.Addr
 	DeviceName     string
 	IdempotencyKey string
 }
@@ -173,13 +200,28 @@ type PasswordLoginResult struct {
 	AccessTokenExpiresAt time.Time
 }
 
+// LoginThrottleAttempt is the normalized, non-secret abuse-control input. The
+// adapter hashes both values before constructing storage keys.
+type LoginThrottleAttempt struct {
+	NormalizedAccount string
+	SourceIP          netip.Addr
+}
+
 type LoginMutation struct {
 	NormalizedAccount string
+	CredentialVersion int64
 	Session           Session
 	Grant             SessionGrant
 	RefreshFamily     RefreshTokenFamily
 	RefreshToken      RefreshToken
 	Audit             SecurityAuditEvent
+}
+
+type LoginFailureMutation struct {
+	PrincipalID uuid.UUID
+	FailedAt    time.Time
+	LockUntil   time.Time
+	Audit       SecurityAuditEvent
 }
 
 type PasswordLoginReader interface {
@@ -188,15 +230,18 @@ type PasswordLoginReader interface {
 
 type PasswordVerifier interface {
 	Verify(encodedHash string, password string) (bool, error)
+	VerifyUnknown(password string) error
 }
 
 type LoginThrottle interface {
-	Allow(context.Context, string) error
-	Reset(context.Context, string) error
+	Check(context.Context, LoginThrottleAttempt) error
+	RecordFailure(context.Context, LoginThrottleAttempt) error
+	Reset(context.Context, LoginThrottleAttempt) error
 }
 
 type LoginUnitOfWork interface {
 	CommitLogin(context.Context, TenantScope, LoginMutation) error
+	RecordLoginFailure(context.Context, TenantScope, LoginFailureMutation) error
 }
 
 type AccessTokenIssuer interface {
@@ -208,22 +253,22 @@ type SecretGenerator interface {
 }
 
 type AuthenticationUsecase struct {
-	reader   PasswordLoginReader
-	password PasswordVerifier
+	reader   AuthenticationReader
+	password AuthenticationPassword
 	throttle LoginThrottle
-	uow      LoginUnitOfWork
-	tokens   AccessTokenIssuer
+	uow      AuthenticationUnitOfWork
+	tokens   AuthenticationTokenCodec
 	secrets  SecretGenerator
 	ids      IDGenerator
 	clock    Clock
 }
 
 func NewAuthenticationUsecase(
-	reader PasswordLoginReader,
-	password PasswordVerifier,
+	reader AuthenticationReader,
+	password AuthenticationPassword,
 	throttle LoginThrottle,
-	uow LoginUnitOfWork,
-	tokens AccessTokenIssuer,
+	uow AuthenticationUnitOfWork,
+	tokens AuthenticationTokenCodec,
 	secrets SecretGenerator,
 	ids IDGenerator,
 	clock Clock,
@@ -251,6 +296,9 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 	if command.Audience == "" {
 		return PasswordLoginResult{}, ErrAudienceRequired
 	}
+	if !command.SourceIP.IsValid() {
+		return PasswordLoginResult{}, ErrSourceIPRequired
+	}
 	if command.IdempotencyKey == "" {
 		return PasswordLoginResult{}, ErrIdempotencyKeyRequired
 	}
@@ -258,25 +306,39 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 	if err != nil {
 		return PasswordLoginResult{}, err
 	}
-	if err := u.throttle.Allow(ctx, normalizedAccount); err != nil {
+	attempt := LoginThrottleAttempt{
+		NormalizedAccount: normalizedAccount,
+		SourceIP:          command.SourceIP.Unmap(),
+	}
+	if err := u.throttle.Check(ctx, attempt); err != nil {
 		if errors.Is(err, ErrAuthenticationRateLimited) {
 			return PasswordLoginResult{}, err
 		}
-		return PasswordLoginResult{}, fmt.Errorf("login throttle: %w", errors.Join(ErrAuthenticationDependency, err))
+		return PasswordLoginResult{}, fmt.Errorf("check login throttle: %w", errors.Join(ErrAuthenticationDependency, err))
 	}
+	now := u.clock.Now().UTC()
 	state, err := u.reader.LookupPasswordLogin(ctx, scope, normalizedAccount)
 	if err != nil {
 		if errors.Is(err, ErrInvalidCredential) {
-			return PasswordLoginResult{}, ErrInvalidCredential
+			if err := u.password.VerifyUnknown(command.Password); err != nil {
+				return PasswordLoginResult{}, fmt.Errorf("dummy password verification: %w", errors.Join(ErrAuthenticationDependency, err))
+			}
+			return u.recordAnonymousInvalidCredential(ctx, scope, attempt, command.IdempotencyKey, now)
 		}
 		return PasswordLoginResult{}, fmt.Errorf("lookup password login: %w", errors.Join(ErrAuthenticationDependency, err))
+	}
+	if state.LockedUntil.After(now) {
+		if err := u.password.VerifyUnknown(command.Password); err != nil {
+			return PasswordLoginResult{}, fmt.Errorf("dummy locked-password verification: %w", errors.Join(ErrAuthenticationDependency, err))
+		}
+		return u.recordAnonymousInvalidCredential(ctx, scope, attempt, command.IdempotencyKey, now)
 	}
 	valid, err := u.password.Verify(state.PasswordHash, command.Password)
 	if err != nil {
 		return PasswordLoginResult{}, fmt.Errorf("password verifier: %w", err)
 	}
 	if !valid {
-		return PasswordLoginResult{}, ErrInvalidCredential
+		return u.recordKnownInvalidCredential(ctx, scope, attempt, state, command.IdempotencyKey, now)
 	}
 	if state.PrincipalStatus != PrincipalStatusActive {
 		return PasswordLoginResult{}, ErrPrincipalInactive
@@ -293,15 +355,10 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 	if state.Lifecycle != TenantLifecycleStatusActive {
 		return PasswordLoginResult{}, ErrTenantLifecycleBlocked
 	}
-	if err := u.throttle.Reset(ctx, normalizedAccount); err != nil {
-		return PasswordLoginResult{}, fmt.Errorf("reset login throttle: %w", errors.Join(ErrAuthenticationDependency, err))
-	}
-
 	ids, err := u.newIDs(6)
 	if err != nil {
 		return PasswordLoginResult{}, err
 	}
-	now := u.clock.Now().UTC()
 	accessExpiresAt, idleExpiresAt, absoluteExpiresAt := loginDeadlines(command.Audience, now)
 	session := Session{
 		ID:             ids[0],
@@ -378,6 +435,7 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 	}
 	mutation := LoginMutation{
 		NormalizedAccount: normalizedAccount,
+		CredentialVersion: state.CredentialVersion,
 		Session:           session,
 		Grant:             grant,
 		RefreshFamily:     family,
@@ -387,6 +445,12 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 	if err := u.uow.CommitLogin(ctx, scope, mutation); err != nil {
 		return PasswordLoginResult{}, fmt.Errorf("commit password login: %w", errors.Join(ErrAuthenticationDependency, err))
 	}
+	// PostgreSQL owns the durable login decision. Resetting the transient account
+	// bucket only after that commit prevents a failed login transaction from
+	// weakening abuse-control state. A reset outage leaves the old bucket in
+	// place (the fail-closed direction) and must not turn the committed login
+	// into an error that a caller could retry into a second Session.
+	_ = u.throttle.Reset(ctx, attempt)
 	return PasswordLoginResult{
 		Principal:            Principal{ID: state.PrincipalID, Status: state.PrincipalStatus},
 		Session:              session,
@@ -395,6 +459,93 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 		RefreshToken:         refreshSecret,
 		AccessTokenExpiresAt: accessExpiresAt,
 	}, nil
+}
+
+func (u *AuthenticationUsecase) recordInvalidCredential(ctx context.Context, attempt LoginThrottleAttempt) (PasswordLoginResult, error) {
+	if err := u.throttle.RecordFailure(ctx, attempt); err != nil {
+		return PasswordLoginResult{}, fmt.Errorf("record login throttle failure: %w", errors.Join(ErrAuthenticationDependency, err))
+	}
+	return PasswordLoginResult{}, ErrInvalidCredential
+}
+
+func (u *AuthenticationUsecase) recordKnownInvalidCredential(
+	ctx context.Context,
+	scope TenantScope,
+	attempt LoginThrottleAttempt,
+	state PasswordLoginState,
+	requestID string,
+	failedAt time.Time,
+) (PasswordLoginResult, error) {
+	ids, err := u.newIDs(1)
+	if err != nil {
+		return PasswordLoginResult{}, err
+	}
+	mutation := LoginFailureMutation{
+		PrincipalID: state.PrincipalID,
+		FailedAt:    failedAt,
+		LockUntil:   failedAt.Add(15 * time.Minute),
+		Audit: SecurityAuditEvent{
+			ID:                   ids[0],
+			ActorID:              uuid.Nil,
+			AuthenticationMethod: AuditAuthenticationMethodAnonymous,
+			Boundary:             AuditBoundaryTenant,
+			Action:               AuditActionPasswordLoginFailed,
+			TargetType:           AuditTargetTypePasswordCredential,
+			TargetID:             state.PrincipalID,
+			TargetVersion:        state.CredentialVersion + 1,
+			Result:               AuditResultFailed,
+			Reason:               AuditReasonInvalidCredential,
+			RequestID:            requestID,
+			CorrelationID:        requestID,
+			DecisionID:           ids[0].String(),
+			SourceService:        AuditSourceServiceIAM,
+			OccurredAt:           failedAt,
+			RecordedAt:           failedAt,
+		},
+	}
+	if err := u.uow.RecordLoginFailure(ctx, scope, mutation); err != nil {
+		return PasswordLoginResult{}, fmt.Errorf("record password login failure: %w", errors.Join(ErrAuthenticationDependency, err))
+	}
+	return u.recordInvalidCredential(ctx, attempt)
+}
+
+func (u *AuthenticationUsecase) recordAnonymousInvalidCredential(
+	ctx context.Context,
+	scope TenantScope,
+	attempt LoginThrottleAttempt,
+	requestID string,
+	failedAt time.Time,
+) (PasswordLoginResult, error) {
+	ids, err := u.newIDs(1)
+	if err != nil {
+		return PasswordLoginResult{}, err
+	}
+	mutation := LoginFailureMutation{
+		FailedAt:  failedAt,
+		LockUntil: failedAt.Add(15 * time.Minute),
+		Audit: SecurityAuditEvent{
+			ID:                   ids[0],
+			ActorID:              uuid.Nil,
+			AuthenticationMethod: AuditAuthenticationMethodAnonymous,
+			Boundary:             AuditBoundaryPrincipal,
+			Action:               AuditActionPasswordLoginFailed,
+			TargetType:           AuditTargetTypePasswordCredential,
+			TargetID:             ids[0],
+			TargetVersion:        1,
+			Result:               AuditResultFailed,
+			Reason:               AuditReasonInvalidCredential,
+			RequestID:            requestID,
+			CorrelationID:        requestID,
+			DecisionID:           ids[0].String(),
+			SourceService:        AuditSourceServiceIAM,
+			OccurredAt:           failedAt,
+			RecordedAt:           failedAt,
+		},
+	}
+	if err := u.uow.RecordLoginFailure(ctx, scope, mutation); err != nil {
+		return PasswordLoginResult{}, fmt.Errorf("record redacted password login failure: %w", errors.Join(ErrAuthenticationDependency, err))
+	}
+	return u.recordInvalidCredential(ctx, attempt)
 }
 
 func (u *AuthenticationUsecase) newIDs(count int) ([]uuid.UUID, error) {

@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
+	"errors"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	kratos "github.com/go-kratos/kratos/v3"
@@ -21,6 +23,151 @@ import (
 )
 
 const startupDependencyTimeout = 5 * time.Second
+
+type passwordActionNotificationDispatcher interface {
+	DispatchNext(context.Context) (bool, error)
+}
+
+type passwordActionNotificationWorker struct {
+	dispatcher        passwordActionNotificationDispatcher
+	dispatchInterval  time.Duration
+	submissionTimeout time.Duration
+	logger            *slog.Logger
+	context           context.Context
+	cancel            context.CancelFunc
+	done              chan struct{}
+	mu                sync.Mutex
+	started           bool
+}
+
+func newPasswordActionNotificationWorker(
+	dispatcher passwordActionNotificationDispatcher,
+	dispatchInterval time.Duration,
+	submissionTimeout time.Duration,
+	logger *slog.Logger,
+) (*passwordActionNotificationWorker, error) {
+	if dispatcher == nil || dispatchInterval <= 0 || submissionTimeout <= 0 || logger == nil {
+		return nil, errors.New("password-action notification worker configuration is required")
+	}
+	workerContext, cancel := context.WithCancel(context.Background())
+	return &passwordActionNotificationWorker{
+		dispatcher:        dispatcher,
+		dispatchInterval:  dispatchInterval,
+		submissionTimeout: submissionTimeout,
+		logger:            logger,
+		context:           workerContext,
+		cancel:            cancel,
+		done:              make(chan struct{}),
+	}, nil
+}
+
+func (w *passwordActionNotificationWorker) Start(context.Context) error {
+	w.mu.Lock()
+	if w.started {
+		w.mu.Unlock()
+		return errors.New("password-action notification worker already started")
+	}
+	w.started = true
+	w.mu.Unlock()
+	defer close(w.done)
+
+	for {
+		select {
+		case <-w.context.Done():
+			return nil
+		default:
+		}
+		dispatchContext, cancel := context.WithTimeout(w.context, w.submissionTimeout)
+		processed, err := w.dispatcher.DispatchNext(dispatchContext)
+		cancel()
+		if err != nil && !errors.Is(err, context.Canceled) {
+			w.logger.Warn(
+				"password-action notification dispatch failed",
+				"retryable", errors.Is(err, biz.ErrPasswordActionNotificationRetryable),
+			)
+		}
+		if processed && err == nil {
+			continue
+		}
+		timer := time.NewTimer(w.dispatchInterval)
+		select {
+		case <-w.context.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return nil
+		case <-timer.C:
+		}
+	}
+}
+
+func (w *passwordActionNotificationWorker) Stop(ctx context.Context) error {
+	w.cancel()
+	w.mu.Lock()
+	started := w.started
+	w.mu.Unlock()
+	if !started {
+		return nil
+	}
+	select {
+	case <-w.done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func newPasswordActionNotificationRuntime(
+	config *conf.Notification,
+	outbox biz.PasswordActionNotificationOutbox,
+	tokens biz.PasswordActionTokenCodec,
+	clock biz.Clock,
+	logger *slog.Logger,
+) (*passwordActionNotificationWorker, *data.NotificationGRPCClient, error) {
+	if config == nil {
+		return nil, nil, errors.New("Notification runtime configuration is required")
+	}
+	client, err := data.NewNotificationGRPCClient(data.NotificationGRPCClientConfig{
+		Address:         config.Address,
+		CertificateFile: config.CertificateFile,
+		PrivateKeyFile:  config.PrivateKeyFile,
+		ServerCAFile:    config.ServerCaFile,
+		ServerDNSName:   config.ServerDnsName,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("configure Notification gRPC client: %w", err)
+	}
+	closeClient := func() {
+		_ = client.Close()
+	}
+	submitter, err := data.NewGRPCPasswordActionNotificationSubmitter(
+		client,
+		data.PasswordActionNotificationSubmitterConfig{
+			ConsoleActionURLBase: config.ConsoleActionUrlBase,
+			Locale:               config.Locale,
+		},
+	)
+	if err != nil {
+		closeClient()
+		return nil, nil, fmt.Errorf("configure password-action Notification submitter: %w", err)
+	}
+	dispatcher, err := biz.NewPasswordActionNotificationDispatcher(outbox, tokens, submitter, clock)
+	if err != nil {
+		closeClient()
+		return nil, nil, fmt.Errorf("configure password-action Notification dispatcher: %w", err)
+	}
+	worker, err := newPasswordActionNotificationWorker(
+		dispatcher,
+		config.DispatchInterval.AsDuration(),
+		config.SubmissionTimeout.AsDuration(),
+		logger,
+	)
+	if err != nil {
+		closeClient()
+		return nil, nil, fmt.Errorf("configure password-action Notification worker: %w", err)
+	}
+	return worker, client, nil
+}
 
 func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	if err := bc.Validate(); err != nil {
@@ -92,6 +239,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		Namespace: runtime.Redis.Namespace,
 		Limit:     int64(runtime.Redis.LoginLimit),
 		Window:    runtime.Redis.LoginWindow.AsDuration(),
+		BaseDelay: time.Second,
 	})
 	if err != nil {
 		_ = closeRuntime(context.Background())
@@ -116,6 +264,20 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		ids,
 		clock,
 	)
+	notificationWorker, notificationClient, err := newPasswordActionNotificationRuntime(
+		runtime.Notification,
+		data.NewPostgresPasswordActionNotificationOutbox(postgresData),
+		tokenCodec,
+		clock,
+		logger,
+	)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
+	closeNotification := func(context.Context) error {
+		return notificationClient.Close()
+	}
 	authenticationService := service.NewAuthenticationService(authentication)
 	authorizationService := service.NewAuthorizationService(authorization)
 	adminService := service.NewIAMAdminService()
@@ -123,11 +285,13 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	readiness := server.NewReadiness()
 	observability, err := server.NewObservability(Name, Version, readiness)
 	if err != nil {
+		_ = closeNotification(context.Background())
 		_ = closeRuntime(context.Background())
 		return nil, err
 	}
 	workloadIdentity, err := server.NewGatewayWorkloadIdentityMiddleware(bc.Server.Grpc.Tls.GatewayClientDnsName)
 	if err != nil {
+		_ = closeNotification(context.Background())
 		_ = closeRuntime(context.Background())
 		return nil, fmt.Errorf("configure Gateway workload identity: %w", err)
 	}
@@ -141,6 +305,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		middlewares...,
 	)
 	if err != nil {
+		_ = closeNotification(context.Background())
 		_ = closeRuntime(context.Background())
 		return nil, err
 	}
@@ -151,6 +316,8 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		adminServer,
 		readiness,
 		observability,
+		notificationWorker,
+		closeNotification,
 		closeRuntime,
 		bc.Server.ShutdownTimeout.AsDuration(),
 	), nil
@@ -162,6 +329,8 @@ func newApp(
 	adminServer *kratoshttp.Server,
 	readiness *server.Readiness,
 	observability *server.Observability,
+	notificationWorker *passwordActionNotificationWorker,
+	closeNotification func(context.Context) error,
 	closeRuntime func(context.Context) error,
 	stopTimeout time.Duration,
 ) *kratos.App {
@@ -171,7 +340,7 @@ func newApp(
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{"runtime.profile": conf.IsolatedProfile}),
 		kratos.Logger(logger),
-		kratos.Server(grpcServer, adminServer),
+		kratos.Server(grpcServer, adminServer, notificationWorker),
 		kratos.AfterStart(func(context.Context) error {
 			readiness.Set(true)
 			return nil
@@ -180,6 +349,7 @@ func newApp(
 			readiness.Set(false)
 			return nil
 		}),
+		kratos.AfterStop(closeNotification),
 		kratos.AfterStop(closeRuntime),
 		kratos.AfterStop(observability.Shutdown),
 		kratos.StopTimeout(stopTimeout),

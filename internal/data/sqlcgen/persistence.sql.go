@@ -12,6 +12,160 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const appendAnonymousPrincipalSecurityAuditEvent = `-- name: AppendAnonymousPrincipalSecurityAuditEvent :exec
+INSERT INTO iam_audit_events (
+    tenant_id, event_id, actor_id, authentication_method, boundary,
+    action, target_type, target_id, target_version, result, reason,
+    request_id, correlation_id, decision_id, source_service,
+    occurred_at, recorded_at
+) VALUES (
+    NULL, $1, NULL, 'anonymous', 'principal',
+    $2, $3, $4,
+    $5, $6, $7,
+    $8, $9, $10,
+    $11, $12, $13
+)
+`
+
+type AppendAnonymousPrincipalSecurityAuditEventParams struct {
+	EventID       uuid.UUID
+	Action        string
+	TargetType    string
+	TargetID      uuid.UUID
+	TargetVersion int64
+	Result        string
+	Reason        string
+	RequestID     string
+	CorrelationID string
+	DecisionID    string
+	SourceService string
+	OccurredAt    pgtype.Timestamptz
+	RecordedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) AppendAnonymousPrincipalSecurityAuditEvent(ctx context.Context, arg AppendAnonymousPrincipalSecurityAuditEventParams) error {
+	_, err := q.db.Exec(ctx, appendAnonymousPrincipalSecurityAuditEvent,
+		arg.EventID,
+		arg.Action,
+		arg.TargetType,
+		arg.TargetID,
+		arg.TargetVersion,
+		arg.Result,
+		arg.Reason,
+		arg.RequestID,
+		arg.CorrelationID,
+		arg.DecisionID,
+		arg.SourceService,
+		arg.OccurredAt,
+		arg.RecordedAt,
+	)
+	return err
+}
+
+const appendAnonymousTenantSecurityAuditEvent = `-- name: AppendAnonymousTenantSecurityAuditEvent :exec
+INSERT INTO iam_audit_events (
+    tenant_id, event_id, actor_id, authentication_method, boundary,
+    action, target_type, target_id, target_version, result, reason,
+    request_id, correlation_id, decision_id, source_service,
+    occurred_at, recorded_at
+) VALUES (
+    $1, $2, NULL, 'anonymous', 'tenant',
+    $3, $4, $5,
+    $6, $7, $8,
+    $9, $10, $11,
+    $12, $13, $14
+)
+`
+
+type AppendAnonymousTenantSecurityAuditEventParams struct {
+	TenantID      pgtype.UUID
+	EventID       uuid.UUID
+	Action        string
+	TargetType    string
+	TargetID      uuid.UUID
+	TargetVersion int64
+	Result        string
+	Reason        string
+	RequestID     string
+	CorrelationID string
+	DecisionID    string
+	SourceService string
+	OccurredAt    pgtype.Timestamptz
+	RecordedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) AppendAnonymousTenantSecurityAuditEvent(ctx context.Context, arg AppendAnonymousTenantSecurityAuditEventParams) error {
+	_, err := q.db.Exec(ctx, appendAnonymousTenantSecurityAuditEvent,
+		arg.TenantID,
+		arg.EventID,
+		arg.Action,
+		arg.TargetType,
+		arg.TargetID,
+		arg.TargetVersion,
+		arg.Result,
+		arg.Reason,
+		arg.RequestID,
+		arg.CorrelationID,
+		arg.DecisionID,
+		arg.SourceService,
+		arg.OccurredAt,
+		arg.RecordedAt,
+	)
+	return err
+}
+
+const appendPrincipalSecurityAuditEvent = `-- name: AppendPrincipalSecurityAuditEvent :exec
+INSERT INTO iam_audit_events (
+    tenant_id, event_id, actor_id, authentication_method, boundary,
+    action, target_type, target_id, target_version, result, reason,
+    request_id, correlation_id, decision_id, source_service,
+    occurred_at, recorded_at
+) VALUES (
+    NULL, $1, $2, 'password_action', 'principal',
+    $3, $4, $5,
+    $6, $7, $8,
+    $9, $10, $11,
+    $12, $13, $14
+)
+`
+
+type AppendPrincipalSecurityAuditEventParams struct {
+	EventID       uuid.UUID
+	ActorID       pgtype.UUID
+	Action        string
+	TargetType    string
+	TargetID      uuid.UUID
+	TargetVersion int64
+	Result        string
+	Reason        string
+	RequestID     string
+	CorrelationID string
+	DecisionID    string
+	SourceService string
+	OccurredAt    pgtype.Timestamptz
+	RecordedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) AppendPrincipalSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSecurityAuditEventParams) error {
+	_, err := q.db.Exec(ctx, appendPrincipalSecurityAuditEvent,
+		arg.EventID,
+		arg.ActorID,
+		arg.Action,
+		arg.TargetType,
+		arg.TargetID,
+		arg.TargetVersion,
+		arg.Result,
+		arg.Reason,
+		arg.RequestID,
+		arg.CorrelationID,
+		arg.DecisionID,
+		arg.SourceService,
+		arg.OccurredAt,
+		arg.RecordedAt,
+	)
+	return err
+}
+
 const appendSecurityAuditEvent = `-- name: AppendSecurityAuditEvent :exec
 INSERT INTO iam_audit_events (
     tenant_id,
@@ -53,9 +207,9 @@ INSERT INTO iam_audit_events (
 `
 
 type AppendSecurityAuditEventParams struct {
-	TenantID             uuid.UUID
+	TenantID             pgtype.UUID
 	EventID              uuid.UUID
-	ActorID              uuid.UUID
+	ActorID              pgtype.UUID
 	AuthenticationMethod string
 	Boundary             string
 	Action               string
@@ -91,6 +245,343 @@ func (q *Queries) AppendSecurityAuditEvent(ctx context.Context, arg AppendSecuri
 		arg.SourceService,
 		arg.OccurredAt,
 		arg.RecordedAt,
+	)
+	return err
+}
+
+const cancelPasswordActionNotification = `-- name: CancelPasswordActionNotification :exec
+UPDATE notification_outbox
+SET status = 'cancelled',
+    claimed_at = NULL,
+    version = version + 1,
+    updated_at = $1
+WHERE operation_id = $2
+  AND status IN ('pending', 'claimed')
+`
+
+type CancelPasswordActionNotificationParams struct {
+	UpdatedAt   pgtype.Timestamptz
+	OperationID uuid.UUID
+}
+
+func (q *Queries) CancelPasswordActionNotification(ctx context.Context, arg CancelPasswordActionNotificationParams) error {
+	_, err := q.db.Exec(ctx, cancelPasswordActionNotification, arg.UpdatedAt, arg.OperationID)
+	return err
+}
+
+const cancelReplacedPasswordActionNotifications = `-- name: CancelReplacedPasswordActionNotifications :exec
+UPDATE notification_outbox AS outbox
+SET status = 'cancelled',
+    claimed_at = NULL,
+    version = outbox.version + 1,
+    updated_at = $1
+FROM password_actions AS action
+WHERE outbox.operation_id = action.operation_id
+  AND action.principal_id = $2
+  AND action.status = 'replaced'
+  AND action.replaced_by = $3
+  AND outbox.status IN ('pending', 'claimed')
+`
+
+type CancelReplacedPasswordActionNotificationsParams struct {
+	UpdatedAt   pgtype.Timestamptz
+	PrincipalID uuid.UUID
+	ReplacedBy  pgtype.UUID
+}
+
+func (q *Queries) CancelReplacedPasswordActionNotifications(ctx context.Context, arg CancelReplacedPasswordActionNotificationsParams) error {
+	_, err := q.db.Exec(ctx, cancelReplacedPasswordActionNotifications, arg.UpdatedAt, arg.PrincipalID, arg.ReplacedBy)
+	return err
+}
+
+const claimPasswordActionNotification = `-- name: ClaimPasswordActionNotification :one
+WITH candidate AS (
+    SELECT outbox.id
+    FROM notification_outbox AS outbox
+    JOIN password_actions AS action
+      ON action.operation_id = outbox.operation_id
+    WHERE (
+        (outbox.status = 'pending' AND outbox.available_at <= $1)
+        OR (
+            outbox.status = 'claimed'
+            AND outbox.claimed_at <= $2
+        )
+    )
+      AND action.status = 'active'
+      AND action.expires_at > $1
+    ORDER BY outbox.available_at, outbox.id
+    FOR UPDATE OF outbox SKIP LOCKED
+    LIMIT 1
+)
+UPDATE notification_outbox AS outbox
+SET status = 'claimed',
+    attempt_count = outbox.attempt_count + 1,
+    claimed_at = $1,
+    version = outbox.version + 1,
+    updated_at = $1
+FROM candidate, password_actions AS action
+WHERE outbox.id = candidate.id
+  AND action.operation_id = outbox.operation_id
+RETURNING outbox.id, outbox.operation_id, outbox.principal_id,
+          outbox.intent, outbox.destination_email, outbox.attempt_count,
+          outbox.version, action.created_at AS issued_at,
+          action.expires_at
+`
+
+type ClaimPasswordActionNotificationParams struct {
+	Now                pgtype.Timestamptz
+	LeaseExpiredBefore pgtype.Timestamptz
+}
+
+type ClaimPasswordActionNotificationRow struct {
+	ID               uuid.UUID
+	OperationID      uuid.UUID
+	PrincipalID      uuid.UUID
+	Intent           string
+	DestinationEmail string
+	AttemptCount     int32
+	Version          int64
+	IssuedAt         pgtype.Timestamptz
+	ExpiresAt        pgtype.Timestamptz
+}
+
+func (q *Queries) ClaimPasswordActionNotification(ctx context.Context, arg ClaimPasswordActionNotificationParams) (ClaimPasswordActionNotificationRow, error) {
+	row := q.db.QueryRow(ctx, claimPasswordActionNotification, arg.Now, arg.LeaseExpiredBefore)
+	var i ClaimPasswordActionNotificationRow
+	err := row.Scan(
+		&i.ID,
+		&i.OperationID,
+		&i.PrincipalID,
+		&i.Intent,
+		&i.DestinationEmail,
+		&i.AttemptCount,
+		&i.Version,
+		&i.IssuedAt,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
+const consumePasswordAction = `-- name: ConsumePasswordAction :one
+UPDATE password_actions
+SET status = 'consumed',
+    consumed_at = $1,
+    version = version + 1,
+    updated_at = $1
+WHERE operation_id = $2
+  AND principal_id = $3
+  AND purpose = $4
+  AND status = 'active'
+  AND expires_at = $5
+  AND expires_at > $1
+  AND version = $6
+RETURNING version
+`
+
+type ConsumePasswordActionParams struct {
+	CompletedAt     pgtype.Timestamptz
+	OperationID     uuid.UUID
+	PrincipalID     uuid.UUID
+	Purpose         string
+	ExpiresAt       pgtype.Timestamptz
+	ExpectedVersion int64
+}
+
+func (q *Queries) ConsumePasswordAction(ctx context.Context, arg ConsumePasswordActionParams) (int64, error) {
+	row := q.db.QueryRow(ctx, consumePasswordAction,
+		arg.CompletedAt,
+		arg.OperationID,
+		arg.PrincipalID,
+		arg.Purpose,
+		arg.ExpiresAt,
+		arg.ExpectedVersion,
+	)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const createKnownPasswordActionRequest = `-- name: CreateKnownPasswordActionRequest :exec
+INSERT INTO password_action_requests (
+    operation_id, account_digest, audience, principal_id, purpose,
+    expires_at, idempotency_key, created_at
+) VALUES (
+    $1, $2, $3,
+    $4, $5, $6,
+    $7, $8
+)
+`
+
+type CreateKnownPasswordActionRequestParams struct {
+	OperationID    uuid.UUID
+	AccountDigest  []byte
+	Audience       string
+	PrincipalID    pgtype.UUID
+	Purpose        pgtype.Text
+	ExpiresAt      pgtype.Timestamptz
+	IdempotencyKey string
+	CreatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) CreateKnownPasswordActionRequest(ctx context.Context, arg CreateKnownPasswordActionRequestParams) error {
+	_, err := q.db.Exec(ctx, createKnownPasswordActionRequest,
+		arg.OperationID,
+		arg.AccountDigest,
+		arg.Audience,
+		arg.PrincipalID,
+		arg.Purpose,
+		arg.ExpiresAt,
+		arg.IdempotencyKey,
+		arg.CreatedAt,
+	)
+	return err
+}
+
+const createPasswordAction = `-- name: CreatePasswordAction :exec
+INSERT INTO password_actions (
+    operation_id, principal_id, purpose, status, expires_at,
+    version, created_at, updated_at
+) VALUES (
+    $1, $2, $3,
+    'active', $4, 1, $5, $5
+)
+`
+
+type CreatePasswordActionParams struct {
+	OperationID uuid.UUID
+	PrincipalID uuid.UUID
+	Purpose     string
+	ExpiresAt   pgtype.Timestamptz
+	CreatedAt   pgtype.Timestamptz
+}
+
+func (q *Queries) CreatePasswordAction(ctx context.Context, arg CreatePasswordActionParams) error {
+	_, err := q.db.Exec(ctx, createPasswordAction,
+		arg.OperationID,
+		arg.PrincipalID,
+		arg.Purpose,
+		arg.ExpiresAt,
+		arg.CreatedAt,
+	)
+	return err
+}
+
+const createPasswordActionCompletion = `-- name: CreatePasswordActionCompletion :exec
+INSERT INTO password_action_completions (
+    idempotency_key, operation_id, principal_id,
+    credential_version, completed_at
+) VALUES (
+    $1, $2, $3,
+    $4, $5
+)
+`
+
+type CreatePasswordActionCompletionParams struct {
+	IdempotencyKey    string
+	OperationID       uuid.UUID
+	PrincipalID       uuid.UUID
+	CredentialVersion int64
+	CompletedAt       pgtype.Timestamptz
+}
+
+func (q *Queries) CreatePasswordActionCompletion(ctx context.Context, arg CreatePasswordActionCompletionParams) error {
+	_, err := q.db.Exec(ctx, createPasswordActionCompletion,
+		arg.IdempotencyKey,
+		arg.OperationID,
+		arg.PrincipalID,
+		arg.CredentialVersion,
+		arg.CompletedAt,
+	)
+	return err
+}
+
+const createPasswordActionNotification = `-- name: CreatePasswordActionNotification :exec
+INSERT INTO notification_outbox (
+    id, operation_id, principal_id, intent, destination_email, status, available_at,
+    version, created_at, updated_at
+) VALUES (
+    $1, $2, $3,
+    $4, $5, 'pending', $6, 1,
+    $7, $7
+)
+`
+
+type CreatePasswordActionNotificationParams struct {
+	ID               uuid.UUID
+	OperationID      uuid.UUID
+	PrincipalID      uuid.UUID
+	Intent           string
+	DestinationEmail string
+	AvailableAt      pgtype.Timestamptz
+	CreatedAt        pgtype.Timestamptz
+}
+
+func (q *Queries) CreatePasswordActionNotification(ctx context.Context, arg CreatePasswordActionNotificationParams) error {
+	_, err := q.db.Exec(ctx, createPasswordActionNotification,
+		arg.ID,
+		arg.OperationID,
+		arg.PrincipalID,
+		arg.Intent,
+		arg.DestinationEmail,
+		arg.AvailableAt,
+		arg.CreatedAt,
+	)
+	return err
+}
+
+const createPasswordCredential = `-- name: CreatePasswordCredential :one
+INSERT INTO password_credentials (
+    principal_id, identity_id, password_hash, algorithm,
+    failed_attempts, locked_until, version, created_at, updated_at
+) VALUES (
+    $1, $2, $3,
+    'argon2id', 0, NULL, 1, $4, $4
+)
+RETURNING version
+`
+
+type CreatePasswordCredentialParams struct {
+	PrincipalID  uuid.UUID
+	IdentityID   uuid.UUID
+	PasswordHash string
+	CreatedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) CreatePasswordCredential(ctx context.Context, arg CreatePasswordCredentialParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createPasswordCredential,
+		arg.PrincipalID,
+		arg.IdentityID,
+		arg.PasswordHash,
+		arg.CreatedAt,
+	)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const createPasswordIdentity = `-- name: CreatePasswordIdentity :exec
+INSERT INTO identities (
+    id, principal_id, provider, issuer, subject, status,
+    version, created_at, updated_at
+) VALUES (
+    $1, $2, 'password', 'ani-local',
+    $3, 'active', 1, $4, $4
+)
+`
+
+type CreatePasswordIdentityParams struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	Subject     string
+	CreatedAt   pgtype.Timestamptz
+}
+
+func (q *Queries) CreatePasswordIdentity(ctx context.Context, arg CreatePasswordIdentityParams) error {
+	_, err := q.db.Exec(ctx, createPasswordIdentity,
+		arg.ID,
+		arg.PrincipalID,
+		arg.Subject,
+		arg.CreatedAt,
 	)
 	return err
 }
@@ -272,6 +763,91 @@ func (q *Queries) CreateTenantMembership(ctx context.Context, arg CreateTenantMe
 	return err
 }
 
+const createUnknownPasswordActionRequest = `-- name: CreateUnknownPasswordActionRequest :exec
+INSERT INTO password_action_requests (
+    operation_id, account_digest, audience, expires_at,
+    idempotency_key, created_at
+) VALUES (
+    $1, $2, $3,
+    $4, $5, $6
+)
+`
+
+type CreateUnknownPasswordActionRequestParams struct {
+	OperationID    uuid.UUID
+	AccountDigest  []byte
+	Audience       string
+	ExpiresAt      pgtype.Timestamptz
+	IdempotencyKey string
+	CreatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) CreateUnknownPasswordActionRequest(ctx context.Context, arg CreateUnknownPasswordActionRequestParams) error {
+	_, err := q.db.Exec(ctx, createUnknownPasswordActionRequest,
+		arg.OperationID,
+		arg.AccountDigest,
+		arg.Audience,
+		arg.ExpiresAt,
+		arg.IdempotencyKey,
+		arg.CreatedAt,
+	)
+	return err
+}
+
+const getPasswordActionCompletionByIdempotencyKey = `-- name: GetPasswordActionCompletionByIdempotencyKey :one
+SELECT operation_id, principal_id, credential_version
+FROM password_action_completions
+WHERE idempotency_key = $1
+FOR UPDATE
+`
+
+type GetPasswordActionCompletionByIdempotencyKeyParams struct {
+	IdempotencyKey string
+}
+
+type GetPasswordActionCompletionByIdempotencyKeyRow struct {
+	OperationID       uuid.UUID
+	PrincipalID       uuid.UUID
+	CredentialVersion int64
+}
+
+func (q *Queries) GetPasswordActionCompletionByIdempotencyKey(ctx context.Context, arg GetPasswordActionCompletionByIdempotencyKeyParams) (GetPasswordActionCompletionByIdempotencyKeyRow, error) {
+	row := q.db.QueryRow(ctx, getPasswordActionCompletionByIdempotencyKey, arg.IdempotencyKey)
+	var i GetPasswordActionCompletionByIdempotencyKeyRow
+	err := row.Scan(&i.OperationID, &i.PrincipalID, &i.CredentialVersion)
+	return i, err
+}
+
+const getPasswordActionRequestByIdempotencyKey = `-- name: GetPasswordActionRequestByIdempotencyKey :one
+SELECT operation_id, account_digest, audience, expires_at
+FROM password_action_requests
+WHERE idempotency_key = $1
+FOR UPDATE
+`
+
+type GetPasswordActionRequestByIdempotencyKeyParams struct {
+	IdempotencyKey string
+}
+
+type GetPasswordActionRequestByIdempotencyKeyRow struct {
+	OperationID   uuid.UUID
+	AccountDigest []byte
+	Audience      string
+	ExpiresAt     pgtype.Timestamptz
+}
+
+func (q *Queries) GetPasswordActionRequestByIdempotencyKey(ctx context.Context, arg GetPasswordActionRequestByIdempotencyKeyParams) (GetPasswordActionRequestByIdempotencyKeyRow, error) {
+	row := q.db.QueryRow(ctx, getPasswordActionRequestByIdempotencyKey, arg.IdempotencyKey)
+	var i GetPasswordActionRequestByIdempotencyKeyRow
+	err := row.Scan(
+		&i.OperationID,
+		&i.AccountDigest,
+		&i.Audience,
+		&i.ExpiresAt,
+	)
+	return i, err
+}
+
 const getTenantMembership = `-- name: GetTenantMembership :one
 SELECT id, principal_id, status, version, created_at, updated_at
 FROM tenant_memberships
@@ -305,6 +881,87 @@ func (q *Queries) GetTenantMembership(ctx context.Context, arg GetTenantMembersh
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getVerifiedAccountForPrincipal = `-- name: GetVerifiedAccountForPrincipal :one
+SELECT normalized_email
+FROM verified_emails
+WHERE principal_id = $1
+`
+
+type GetVerifiedAccountForPrincipalParams struct {
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) GetVerifiedAccountForPrincipal(ctx context.Context, arg GetVerifiedAccountForPrincipalParams) (string, error) {
+	row := q.db.QueryRow(ctx, getVerifiedAccountForPrincipal, arg.PrincipalID)
+	var normalized_email string
+	err := row.Scan(&normalized_email)
+	return normalized_email, err
+}
+
+const lockPasswordAction = `-- name: LockPasswordAction :one
+SELECT operation_id, principal_id, purpose, status, expires_at, version
+FROM password_actions
+WHERE operation_id = $1
+FOR UPDATE
+`
+
+type LockPasswordActionParams struct {
+	OperationID uuid.UUID
+}
+
+type LockPasswordActionRow struct {
+	OperationID uuid.UUID
+	PrincipalID uuid.UUID
+	Purpose     string
+	Status      string
+	ExpiresAt   pgtype.Timestamptz
+	Version     int64
+}
+
+func (q *Queries) LockPasswordAction(ctx context.Context, arg LockPasswordActionParams) (LockPasswordActionRow, error) {
+	row := q.db.QueryRow(ctx, lockPasswordAction, arg.OperationID)
+	var i LockPasswordActionRow
+	err := row.Scan(
+		&i.OperationID,
+		&i.PrincipalID,
+		&i.Purpose,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.Version,
+	)
+	return i, err
+}
+
+const lockPasswordActionPrincipal = `-- name: LockPasswordActionPrincipal :exec
+SELECT pg_advisory_xact_lock(
+    hashtextextended($1::uuid::text, 1)
+)
+`
+
+type LockPasswordActionPrincipalParams struct {
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) LockPasswordActionPrincipal(ctx context.Context, arg LockPasswordActionPrincipalParams) error {
+	_, err := q.db.Exec(ctx, lockPasswordActionPrincipal, arg.PrincipalID)
+	return err
+}
+
+const lockPasswordAuthenticationIdempotencyKey = `-- name: LockPasswordAuthenticationIdempotencyKey :exec
+SELECT pg_advisory_xact_lock(
+    hashtextextended($1::text, 0)
+)
+`
+
+type LockPasswordAuthenticationIdempotencyKeyParams struct {
+	IdempotencyKey string
+}
+
+func (q *Queries) LockPasswordAuthenticationIdempotencyKey(ctx context.Context, arg LockPasswordAuthenticationIdempotencyKeyParams) error {
+	_, err := q.db.Exec(ctx, lockPasswordAuthenticationIdempotencyKey, arg.IdempotencyKey)
+	return err
 }
 
 const lookupAuthorization = `-- name: LookupAuthorization :one
@@ -396,6 +1053,38 @@ func (q *Queries) LookupAuthorization(ctx context.Context, arg LookupAuthorizati
 	return i, err
 }
 
+const lookupPasswordActionTarget = `-- name: LookupPasswordActionTarget :one
+SELECT
+    principal.id AS principal_id,
+    credential.principal_id IS NOT NULL AS has_password,
+    email.normalized_email
+FROM verified_emails AS email
+JOIN principals AS principal
+  ON principal.id = email.principal_id
+ AND principal.principal_type = 'human'
+ AND principal.status = 'active'
+LEFT JOIN password_credentials AS credential
+  ON credential.principal_id = principal.id
+WHERE email.normalized_email = $1
+`
+
+type LookupPasswordActionTargetParams struct {
+	NormalizedAccount string
+}
+
+type LookupPasswordActionTargetRow struct {
+	PrincipalID     uuid.UUID
+	HasPassword     interface{}
+	NormalizedEmail string
+}
+
+func (q *Queries) LookupPasswordActionTarget(ctx context.Context, arg LookupPasswordActionTargetParams) (LookupPasswordActionTargetRow, error) {
+	row := q.db.QueryRow(ctx, lookupPasswordActionTarget, arg.NormalizedAccount)
+	var i LookupPasswordActionTargetRow
+	err := row.Scan(&i.PrincipalID, &i.HasPassword, &i.NormalizedEmail)
+	return i, err
+}
+
 const lookupPasswordLogin = `-- name: LookupPasswordLogin :one
 SELECT
     principal.id AS principal_id,
@@ -405,7 +1094,10 @@ SELECT
     access.status AS tenant_access_status,
     lifecycle.status AS lifecycle_status,
     lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
-    credential.password_hash
+    credential.password_hash,
+    credential.failed_attempts,
+    credential.locked_until,
+    credential.version AS credential_version
 FROM verified_emails AS email
 JOIN principals AS principal
   ON principal.id = email.principal_id
@@ -440,6 +1132,9 @@ type LookupPasswordLoginRow struct {
 	LifecycleStatus    string
 	LifecycleFresh     bool
 	PasswordHash       string
+	FailedAttempts     int32
+	LockedUntil        pgtype.Timestamptz
+	CredentialVersion  int64
 }
 
 func (q *Queries) LookupPasswordLogin(ctx context.Context, arg LookupPasswordLoginParams) (LookupPasswordLoginRow, error) {
@@ -454,8 +1149,324 @@ func (q *Queries) LookupPasswordLogin(ctx context.Context, arg LookupPasswordLog
 		&i.LifecycleStatus,
 		&i.LifecycleFresh,
 		&i.PasswordHash,
+		&i.FailedAttempts,
+		&i.LockedUntil,
+		&i.CredentialVersion,
 	)
 	return i, err
+}
+
+const markPasswordActionNotificationAttentionRequired = `-- name: MarkPasswordActionNotificationAttentionRequired :one
+UPDATE notification_outbox
+SET status = 'attention_required',
+    claimed_at = NULL,
+    version = version + 1,
+    updated_at = $1
+WHERE id = $2
+  AND status = 'claimed'
+  AND version = $3
+RETURNING version
+`
+
+type MarkPasswordActionNotificationAttentionRequiredParams struct {
+	UpdatedAt       pgtype.Timestamptz
+	ID              uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) MarkPasswordActionNotificationAttentionRequired(ctx context.Context, arg MarkPasswordActionNotificationAttentionRequiredParams) (int64, error) {
+	row := q.db.QueryRow(ctx, markPasswordActionNotificationAttentionRequired, arg.UpdatedAt, arg.ID, arg.ExpectedVersion)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const markPasswordActionNotificationDelivered = `-- name: MarkPasswordActionNotificationDelivered :one
+UPDATE notification_outbox
+SET status = 'delivered',
+    delivered_at = $1,
+    notification_id = $2,
+    version = version + 1,
+    updated_at = $1
+WHERE id = $3
+  AND status = 'claimed'
+  AND version = $4
+RETURNING version
+`
+
+type MarkPasswordActionNotificationDeliveredParams struct {
+	DeliveredAt     pgtype.Timestamptz
+	NotificationID  pgtype.Text
+	ID              uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) MarkPasswordActionNotificationDelivered(ctx context.Context, arg MarkPasswordActionNotificationDeliveredParams) (int64, error) {
+	row := q.db.QueryRow(ctx, markPasswordActionNotificationDelivered,
+		arg.DeliveredAt,
+		arg.NotificationID,
+		arg.ID,
+		arg.ExpectedVersion,
+	)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const recordPasswordLoginFailure = `-- name: RecordPasswordLoginFailure :one
+UPDATE password_credentials
+SET failed_attempts = CASE
+        WHEN locked_until IS NOT NULL AND locked_until <= $1 THEN 1
+        ELSE failed_attempts + 1
+    END,
+    locked_until = CASE
+        WHEN locked_until IS NOT NULL AND locked_until <= $1 THEN NULL
+        WHEN failed_attempts + 1 >= 5 THEN $2::timestamptz
+        ELSE NULL
+    END,
+    version = version + 1,
+    updated_at = $1
+WHERE principal_id = $3
+RETURNING failed_attempts, locked_until, version
+`
+
+type RecordPasswordLoginFailureParams struct {
+	FailedAt    pgtype.Timestamptz
+	LockUntil   pgtype.Timestamptz
+	PrincipalID uuid.UUID
+}
+
+type RecordPasswordLoginFailureRow struct {
+	FailedAttempts int32
+	LockedUntil    pgtype.Timestamptz
+	Version        int64
+}
+
+func (q *Queries) RecordPasswordLoginFailure(ctx context.Context, arg RecordPasswordLoginFailureParams) (RecordPasswordLoginFailureRow, error) {
+	row := q.db.QueryRow(ctx, recordPasswordLoginFailure, arg.FailedAt, arg.LockUntil, arg.PrincipalID)
+	var i RecordPasswordLoginFailureRow
+	err := row.Scan(&i.FailedAttempts, &i.LockedUntil, &i.Version)
+	return i, err
+}
+
+const replaceActivePasswordActions = `-- name: ReplaceActivePasswordActions :many
+UPDATE password_actions
+SET status = 'replaced',
+    replaced_by = $1,
+    version = version + 1,
+    updated_at = $2
+WHERE principal_id = $3
+  AND status = 'active'
+RETURNING operation_id
+`
+
+type ReplaceActivePasswordActionsParams struct {
+	ReplacedBy  pgtype.UUID
+	UpdatedAt   pgtype.Timestamptz
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) ReplaceActivePasswordActions(ctx context.Context, arg ReplaceActivePasswordActionsParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, replaceActivePasswordActions, arg.ReplacedBy, arg.UpdatedAt, arg.PrincipalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var operation_id uuid.UUID
+		if err := rows.Scan(&operation_id); err != nil {
+			return nil, err
+		}
+		items = append(items, operation_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const reschedulePasswordActionNotification = `-- name: ReschedulePasswordActionNotification :one
+UPDATE notification_outbox
+SET status = 'pending',
+    available_at = $1,
+    claimed_at = NULL,
+    version = version + 1,
+    updated_at = $2
+WHERE id = $3
+  AND status = 'claimed'
+  AND version = $4
+RETURNING version
+`
+
+type ReschedulePasswordActionNotificationParams struct {
+	AvailableAt     pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	ID              uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) ReschedulePasswordActionNotification(ctx context.Context, arg ReschedulePasswordActionNotificationParams) (int64, error) {
+	row := q.db.QueryRow(ctx, reschedulePasswordActionNotification,
+		arg.AvailableAt,
+		arg.UpdatedAt,
+		arg.ID,
+		arg.ExpectedVersion,
+	)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const resetPasswordLoginFailures = `-- name: ResetPasswordLoginFailures :one
+UPDATE password_credentials
+SET failed_attempts = 0,
+    locked_until = NULL,
+    version = CASE
+        WHEN failed_attempts <> 0 OR locked_until IS NOT NULL THEN version + 1
+        ELSE version
+    END,
+    updated_at = CASE
+        WHEN failed_attempts <> 0 OR locked_until IS NOT NULL THEN $1
+        ELSE updated_at
+    END
+WHERE principal_id = $2
+  AND version = $3
+RETURNING version
+`
+
+type ResetPasswordLoginFailuresParams struct {
+	UpdatedAt       pgtype.Timestamptz
+	PrincipalID     uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) ResetPasswordLoginFailures(ctx context.Context, arg ResetPasswordLoginFailuresParams) (int64, error) {
+	row := q.db.QueryRow(ctx, resetPasswordLoginFailures, arg.UpdatedAt, arg.PrincipalID, arg.ExpectedVersion)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const revokeRefreshTokenFamiliesForPrincipal = `-- name: RevokeRefreshTokenFamiliesForPrincipal :exec
+UPDATE refresh_token_families AS family
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = $1
+WHERE family.status = 'active'
+  AND EXISTS (
+    SELECT 1
+    FROM session_grants AS grant_row
+    JOIN sessions AS session_row
+      ON session_row.id = grant_row.session_id
+    WHERE grant_row.tenant_id = family.tenant_id
+      AND grant_row.id = family.grant_id
+      AND session_row.principal_id = $2
+  )
+`
+
+type RevokeRefreshTokenFamiliesForPrincipalParams struct {
+	UpdatedAt   pgtype.Timestamptz
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) RevokeRefreshTokenFamiliesForPrincipal(ctx context.Context, arg RevokeRefreshTokenFamiliesForPrincipalParams) error {
+	_, err := q.db.Exec(ctx, revokeRefreshTokenFamiliesForPrincipal, arg.UpdatedAt, arg.PrincipalID)
+	return err
+}
+
+const revokeRefreshTokensForPrincipal = `-- name: RevokeRefreshTokensForPrincipal :exec
+UPDATE refresh_tokens AS token
+SET status = 'revoked'
+WHERE token.status = 'active'
+  AND EXISTS (
+    SELECT 1
+    FROM refresh_token_families AS family
+    JOIN session_grants AS grant_row
+      ON grant_row.tenant_id = family.tenant_id
+     AND grant_row.id = family.grant_id
+    JOIN sessions AS session_row
+      ON session_row.id = grant_row.session_id
+    WHERE family.tenant_id = token.tenant_id
+      AND family.id = token.family_id
+      AND session_row.principal_id = $1
+  )
+`
+
+type RevokeRefreshTokensForPrincipalParams struct {
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) RevokeRefreshTokensForPrincipal(ctx context.Context, arg RevokeRefreshTokensForPrincipalParams) error {
+	_, err := q.db.Exec(ctx, revokeRefreshTokensForPrincipal, arg.PrincipalID)
+	return err
+}
+
+const revokeSessionGrantsForPrincipal = `-- name: RevokeSessionGrantsForPrincipal :exec
+UPDATE session_grants AS grant_row
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = $1
+WHERE grant_row.status = 'active'
+  AND EXISTS (
+    SELECT 1
+    FROM sessions AS session_row
+    WHERE session_row.id = grant_row.session_id
+      AND session_row.principal_id = $2
+  )
+`
+
+type RevokeSessionGrantsForPrincipalParams struct {
+	UpdatedAt   pgtype.Timestamptz
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) RevokeSessionGrantsForPrincipal(ctx context.Context, arg RevokeSessionGrantsForPrincipalParams) error {
+	_, err := q.db.Exec(ctx, revokeSessionGrantsForPrincipal, arg.UpdatedAt, arg.PrincipalID)
+	return err
+}
+
+const revokeSessionsForPrincipal = `-- name: RevokeSessionsForPrincipal :exec
+UPDATE sessions
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = $1
+WHERE principal_id = $2
+  AND status = 'active'
+`
+
+type RevokeSessionsForPrincipalParams struct {
+	UpdatedAt   pgtype.Timestamptz
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) RevokeSessionsForPrincipal(ctx context.Context, arg RevokeSessionsForPrincipalParams) error {
+	_, err := q.db.Exec(ctx, revokeSessionsForPrincipal, arg.UpdatedAt, arg.PrincipalID)
+	return err
+}
+
+const updatePasswordCredentialForReset = `-- name: UpdatePasswordCredentialForReset :one
+UPDATE password_credentials
+SET password_hash = $1,
+    failed_attempts = 0,
+    locked_until = NULL,
+    version = version + 1,
+    updated_at = $2
+WHERE principal_id = $3
+RETURNING version
+`
+
+type UpdatePasswordCredentialForResetParams struct {
+	PasswordHash string
+	UpdatedAt    pgtype.Timestamptz
+	PrincipalID  uuid.UUID
+}
+
+func (q *Queries) UpdatePasswordCredentialForReset(ctx context.Context, arg UpdatePasswordCredentialForResetParams) (int64, error) {
+	row := q.db.QueryRow(ctx, updatePasswordCredentialForReset, arg.PasswordHash, arg.UpdatedAt, arg.PrincipalID)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
 }
 
 const updateTenantMembershipStatus = `-- name: UpdateTenantMembershipStatus :one

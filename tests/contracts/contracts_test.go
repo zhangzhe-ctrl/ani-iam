@@ -93,6 +93,7 @@ type contractPins struct {
 	IAMStartCommit string             `json:"iam_start_commit"`
 	ANIStartCommit string             `json:"ani_start_commit"`
 	PolicyRevision string             `json:"policy_revision"`
+	Notification   notificationPin    `json:"notification"`
 	Toolchain      map[string]toolPin `json:"toolchain"`
 	Artifacts      map[string]string  `json:"artifacts"`
 	Fixtures       map[string]string  `json:"fixtures"`
@@ -101,6 +102,16 @@ type contractPins struct {
 type toolPin struct {
 	Version string `json:"version"`
 	SHA256  string `json:"sha256"`
+}
+
+type notificationPin struct {
+	Repository       string `json:"repository"`
+	Commit           string `json:"commit"`
+	RuntimeCommit    string `json:"runtime_commit"`
+	ModuleVersion    string `json:"module_version"`
+	ModuleSum        string `json:"module_sum"`
+	ProtoSHA256      string `json:"proto_sha256"`
+	DescriptorSHA256 string `json:"descriptor_sha256"`
 }
 
 func TestIAMDescriptorHasOnlyTargetServices(t *testing.T) {
@@ -313,6 +324,22 @@ func TestImmutableContractPins(t *testing.T) {
 	}
 	if pins.PolicyRevision != "sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa" {
 		t.Fatalf("policy revision = %q", pins.PolicyRevision)
+	}
+	wantNotification := notificationPin{
+		Repository:       "github.com/zhangzhe-ctrl/ani-notification-service",
+		Commit:           "0e3f0a2b47fcc1fa96fa926cae2b9ab55bd25d84",
+		RuntimeCommit:    "a477a38280c8626b0fdf6664e7afb049d22c2a58",
+		ModuleVersion:    "v0.0.0-20260907002920-0e3f0a2b47fc",
+		ModuleSum:        "h1:i0sqGu+qg4M18cdGJ00sQgp8Pd+jx8JmVn9s+OmoNJ8=",
+		ProtoSHA256:      "af226602b76ddd7b0cb312456f1845f67d1968eb0228da64fc1cced13a2671b5",
+		DescriptorSHA256: "7be0a2fa062229717a311af952fc8b3bb7f58c1ef21cde2de741bcbbb4dfc195",
+	}
+	if pins.Notification != wantNotification {
+		t.Fatalf("Notification pin = %#v, want %#v", pins.Notification, wantNotification)
+	}
+	goMod := string(readFile(t, "go.mod"))
+	if !strings.Contains(goMod, "github.com/zhangzhe-ctrl/ani-notification-service "+wantNotification.ModuleVersion) {
+		t.Fatalf("go.mod does not require frozen Notification module %s", wantNotification.ModuleVersion)
 	}
 	wantTools := map[string]toolPin{
 		"buf":                {Version: "1.72.0", SHA256: "8720830e26a733da55bb89bcd3cb44849c0965fc0c44fb5d691cccdc64dca5af"},

@@ -31,8 +31,12 @@ type PasswordLoginRequest struct {
 	Boundary       *Boundary              `protobuf:"bytes,4,opt,name=boundary,proto3" json:"boundary,omitempty"`
 	DeviceName     string                 `protobuf:"bytes,5,opt,name=device_name,json=deviceName,proto3" json:"device_name,omitempty"`
 	IdempotencyKey string                 `protobuf:"bytes,6,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Canonical end-client IPv4 or IPv6 literal derived by the trusted Gateway.
+	// IAM never accepts this value from a public request body or arbitrary
+	// forwarded metadata and hashes it before constructing an abuse-limit key.
+	SourceIp      string `protobuf:"bytes,7,opt,name=source_ip,json=sourceIp,proto3" json:"source_ip,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PasswordLoginRequest) Reset() {
@@ -103,6 +107,13 @@ func (x *PasswordLoginRequest) GetDeviceName() string {
 func (x *PasswordLoginRequest) GetIdempotencyKey() string {
 	if x != nil {
 		return x.IdempotencyKey
+	}
+	return ""
+}
+
+func (x *PasswordLoginRequest) GetSourceIp() string {
+	if x != nil {
+		return x.SourceIp
 	}
 	return ""
 }
@@ -1816,7 +1827,7 @@ var File_authentication_service_proto protoreflect.FileDescriptor
 
 const file_authentication_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1cauthentication_service.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf2\x01\n" +
+	"\x1cauthentication_service.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8f\x02\n" +
 	"\x14PasswordLoginRequest\x12\x18\n" +
 	"\aaccount\x18\x01 \x01(\tR\aaccount\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12,\n" +
@@ -1824,7 +1835,8 @@ const file_authentication_service_proto_rawDesc = "" +
 	"\bboundary\x18\x04 \x01(\v2\x10.iam.v1.BoundaryR\bboundary\x12\x1f\n" +
 	"\vdevice_name\x18\x05 \x01(\tR\n" +
 	"deviceName\x12'\n" +
-	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKey\"\xf4\x02\n" +
+	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKey\x12\x1b\n" +
+	"\tsource_ip\x18\a \x01(\tR\bsourceIp\"\xf4\x02\n" +
 	"\x15PasswordLoginResponse\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12,\n" +
 	"\x12expires_in_seconds\x18\x02 \x01(\rR\x10expiresInSeconds\x126\n" +

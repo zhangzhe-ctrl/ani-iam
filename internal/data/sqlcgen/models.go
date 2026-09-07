@@ -10,9 +10,9 @@ import (
 )
 
 type IamAuditEvent struct {
-	TenantID             uuid.UUID
+	TenantID             pgtype.UUID
 	EventID              uuid.UUID
-	ActorID              uuid.UUID
+	ActorID              pgtype.UUID
 	AuthenticationMethod string
 	Boundary             string
 	Action               string
@@ -39,6 +39,55 @@ type Identity struct {
 	Version     int64
 	CreatedAt   pgtype.Timestamptz
 	UpdatedAt   pgtype.Timestamptz
+}
+
+type NotificationOutbox struct {
+	ID               uuid.UUID
+	OperationID      uuid.UUID
+	PrincipalID      uuid.UUID
+	Intent           string
+	DestinationEmail string
+	Status           string
+	AttemptCount     int32
+	AvailableAt      pgtype.Timestamptz
+	ClaimedAt        pgtype.Timestamptz
+	DeliveredAt      pgtype.Timestamptz
+	NotificationID   pgtype.Text
+	Version          int64
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
+}
+
+type PasswordAction struct {
+	OperationID uuid.UUID
+	PrincipalID uuid.UUID
+	Purpose     string
+	Status      string
+	ExpiresAt   pgtype.Timestamptz
+	ConsumedAt  pgtype.Timestamptz
+	ReplacedBy  pgtype.UUID
+	Version     int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type PasswordActionCompletion struct {
+	IdempotencyKey    string
+	OperationID       uuid.UUID
+	PrincipalID       uuid.UUID
+	CredentialVersion int64
+	CompletedAt       pgtype.Timestamptz
+}
+
+type PasswordActionRequest struct {
+	OperationID    uuid.UUID
+	AccountDigest  []byte
+	Audience       string
+	PrincipalID    pgtype.UUID
+	Purpose        pgtype.Text
+	ExpiresAt      pgtype.Timestamptz
+	IdempotencyKey string
+	CreatedAt      pgtype.Timestamptz
 }
 
 type PasswordCredential struct {

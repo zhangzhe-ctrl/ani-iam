@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"net/netip"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ import (
 
 type authenticationUsecase interface {
 	PasswordLogin(context.Context, biz.PasswordLoginCommand) (biz.PasswordLoginResult, error)
+	RequestPasswordAction(context.Context, biz.RequestPasswordActionCommand) (biz.RequestPasswordActionResult, error)
+	CompletePasswordAction(context.Context, biz.CompletePasswordActionCommand) (biz.CompletePasswordActionResult, error)
 }
 
 type AuthenticationService struct {
@@ -50,11 +53,16 @@ func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv
 	if err != nil {
 		return nil, err
 	}
+	sourceIP, err := netip.ParseAddr(strings.TrimSpace(request.GetSourceIp()))
+	if err != nil {
+		return nil, invalidArgumentStatus("source_ip", "source IP is required and must be a valid IP address")
+	}
 	result, err := s.authentication.PasswordLogin(ctx, biz.PasswordLoginCommand{
 		Account:        request.GetAccount(),
 		Password:       request.GetPassword(),
 		Audience:       audience,
 		TenantID:       tenantID,
+		SourceIP:       sourceIP.Unmap(),
 		DeviceName:     request.GetDeviceName(),
 		IdempotencyKey: request.GetIdempotencyKey(),
 	})
@@ -67,6 +75,56 @@ func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv
 		})
 	}
 	return passwordLoginResponse(result, tenantID), nil
+}
+
+func (s *AuthenticationService) RequestPasswordAction(ctx context.Context, request *iamv1.RequestPasswordActionRequest) (*iamv1.RequestPasswordActionResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "password action request is required")
+	}
+	audience, err := audienceFromProto(request.GetAudience())
+	if err != nil {
+		return nil, err
+	}
+	result, err := s.authentication.RequestPasswordAction(ctx, biz.RequestPasswordActionCommand{
+		Account:        request.GetAccount(),
+		Audience:       audience,
+		IdempotencyKey: request.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID:    "requestPasswordAction",
+			IdempotencyKey: strings.TrimSpace(request.GetIdempotencyKey()),
+			CredentialKind: "password_action",
+			Dependency:     "authentication",
+		})
+	}
+	return &iamv1.RequestPasswordActionResponse{
+		OperationId: result.OperationID.String(),
+		ExpiresAt:   timestamppb.New(result.ExpiresAt),
+	}, nil
+}
+
+func (s *AuthenticationService) CompletePasswordAction(ctx context.Context, request *iamv1.CompletePasswordActionRequest) (*iamv1.CompletePasswordActionResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "password action completion request is required")
+	}
+	result, err := s.authentication.CompletePasswordAction(ctx, biz.CompletePasswordActionCommand{
+		ActionToken:    request.GetActionToken(),
+		NewPassword:    request.GetNewPassword(),
+		IdempotencyKey: request.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID:    "completePasswordAction",
+			IdempotencyKey: strings.TrimSpace(request.GetIdempotencyKey()),
+			CredentialKind: "password_action",
+			Dependency:     "authentication",
+		})
+	}
+	return &iamv1.CompletePasswordActionResponse{Result: &iamv1.MutationResult{
+		ResourceId: result.PrincipalID.String(),
+		Version:    uint64(result.CredentialVersion),
+	}}, nil
 }
 
 func passwordLoginResponse(result biz.PasswordLoginResult, tenantID uuid.UUID) *iamv1.PasswordLoginResponse {
@@ -159,6 +217,7 @@ func grantStatusToProto(value biz.GrantStatus) iamv1.GrantStatus {
 
 type errorContext struct {
 	OperationID            string
+	IdempotencyKey         string
 	TenantID               string
 	CredentialKind         string
 	Dependency             string
@@ -190,10 +249,16 @@ func mapIAMError(err error, details errorContext) error {
 			"retry_after_seconds": strconv.FormatInt(retryAfterSeconds, 10),
 		})
 	}
+	if errors.Is(err, biz.ErrIdempotencyConflict) {
+		return newIAMStatus(codes.AlreadyExists, "IDEMPOTENCY_CONFLICT", "idempotency key conflicts with another request", map[string]string{
+			"operation_id":    details.OperationID,
+			"idempotency_key": details.IdempotencyKey,
+		})
+	}
 	if field := invalidArgumentField(err); field != "" {
 		return invalidArgumentStatus(field, "IAM request is invalid")
 	}
-	if errors.Is(err, biz.ErrInvalidCredential) || errors.Is(err, biz.ErrAuthorizationCredentialInvalid) || errors.Is(err, biz.ErrAuthorizationCredentialRequired) {
+	if errors.Is(err, biz.ErrInvalidCredential) || errors.Is(err, biz.ErrPasswordActionInvalid) || errors.Is(err, biz.ErrPasswordActionTokenRequired) || errors.Is(err, biz.ErrAuthorizationCredentialInvalid) || errors.Is(err, biz.ErrAuthorizationCredentialRequired) {
 		credentialKind := details.CredentialKind
 		if credentialKind == "" {
 			credentialKind = "bearer"
@@ -258,6 +323,10 @@ func invalidArgumentField(err error) string {
 		return "password"
 	case errors.Is(err, biz.ErrAudienceRequired):
 		return "audience"
+	case errors.Is(err, biz.ErrSourceIPRequired):
+		return "source_ip"
+	case errors.Is(err, biz.ErrNewPasswordRequired):
+		return "new_password"
 	case errors.Is(err, biz.ErrIdempotencyKeyRequired):
 		return "idempotency_key"
 	case errors.Is(err, biz.ErrTenantScopeRequired):

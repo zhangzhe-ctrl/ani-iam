@@ -19,6 +19,8 @@ var targetArgon2idParams = &argon2id.Params{
 	KeyLength:   32,
 }
 
+const unknownAccountPasswordHash = "$argon2id$v=19$m=65536,t=3,p=4$wmZ4DebQvV94M2F2i/zEbA$n6n75AwgNsfve9aRCzF3G/wMV2yD7QQsA49VHlIfeNw"
+
 type Argon2idPasswordHasher struct{}
 
 func NewArgon2idPasswordHasher() *Argon2idPasswordHasher {
@@ -52,4 +54,9 @@ func (*Argon2idPasswordHasher) Verify(encodedHash string, password string) (bool
 	return argon2id.ComparePasswordAndHash(password, encodedHash)
 }
 
-var _ biz.PasswordVerifier = (*Argon2idPasswordHasher)(nil)
+func (hasher *Argon2idPasswordHasher) VerifyUnknown(password string) error {
+	_, err := hasher.Verify(unknownAccountPasswordHash, password)
+	return err
+}
+
+var _ biz.AuthenticationPassword = (*Argon2idPasswordHasher)(nil)

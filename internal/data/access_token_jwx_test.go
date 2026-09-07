@@ -82,6 +82,100 @@ func TestJWXAccessTokenCodecRoundTripsFrozenClaims(t *testing.T) {
 	}
 }
 
+func TestJWXAccessTokenCodecRoundTripsDomainSeparatedPasswordAction(t *testing.T) {
+	privateKey := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x51}, ed25519.SeedSize))
+	publicKey := privateKey.Public().(ed25519.PublicKey)
+	now := time.Date(2026, 9, 6, 12, 0, 0, 0, time.UTC)
+	codec, err := NewJWXAccessTokenCodec(
+		"dp2-06-test-key",
+		privateKey,
+		map[string]ed25519.PublicKey{"dp2-06-test-key": publicKey},
+		"ani-iam",
+		fixedDataClock{now: now},
+	)
+	if err != nil {
+		t.Fatalf("NewJWXAccessTokenCodec() error = %v", err)
+	}
+	want := biz.PasswordActionTokenClaims{
+		Issuer:      "ani-iam",
+		PrincipalID: uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17"),
+		OperationID: uuid.MustParse("0198f062-b76d-7001-9000-000000000051"),
+		Purpose:     biz.PasswordActionPurposeReset,
+		IssuedAt:    now,
+		ExpiresAt:   now.Add(30 * time.Minute),
+	}
+
+	signed, err := codec.IssuePasswordAction(context.Background(), want)
+	if err != nil {
+		t.Fatalf("IssuePasswordAction() error = %v", err)
+	}
+	message, err := jws.Parse([]byte(signed), jws.WithCompact())
+	if err != nil {
+		t.Fatalf("parse password-action JWS: %v", err)
+	}
+	if len(message.Signatures()) != 1 {
+		t.Fatalf("password-action signature count = %d, want 1", len(message.Signatures()))
+	}
+	tokenType, ok := message.Signatures()[0].ProtectedHeaders().Type()
+	if !ok || tokenType != "ANI-PASSWORD-ACTION+JWT" {
+		t.Fatalf("password-action protected typ = %q, %v", tokenType, ok)
+	}
+
+	got, err := codec.VerifyPasswordAction(context.Background(), signed)
+	if err != nil {
+		t.Fatalf("VerifyPasswordAction() error = %v", err)
+	}
+	if got != want {
+		t.Fatalf("VerifyPasswordAction() claims = %#v, want %#v", got, want)
+	}
+	if _, err := codec.Verify(context.Background(), signed); err == nil {
+		t.Fatal("Verify(access token) accepted a password-action token")
+	}
+
+	accessToken, err := codec.Issue(context.Background(), validJWXAccessTokenClaims(now))
+	if err != nil {
+		t.Fatalf("Issue(access token) error = %v", err)
+	}
+	if _, err := codec.VerifyPasswordAction(context.Background(), accessToken); err == nil {
+		t.Fatal("VerifyPasswordAction() accepted an access token")
+	}
+}
+
+func TestJWXAccessTokenCodecPasswordActionIssueIsDeterministicForDispatchRetry(t *testing.T) {
+	privateKey := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x52}, ed25519.SeedSize))
+	now := time.Date(2026, 9, 6, 12, 0, 0, 0, time.UTC)
+	codec, err := NewJWXAccessTokenCodec(
+		"dp2-06-test-key",
+		privateKey,
+		map[string]ed25519.PublicKey{"dp2-06-test-key": privateKey.Public().(ed25519.PublicKey)},
+		"ani-iam",
+		fixedDataClock{now: now.Add(5 * time.Minute)},
+	)
+	if err != nil {
+		t.Fatalf("NewJWXAccessTokenCodec() error = %v", err)
+	}
+	claims := biz.PasswordActionTokenClaims{
+		Issuer:      "ani-iam",
+		PrincipalID: uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17"),
+		OperationID: uuid.MustParse("0198f062-b76d-7001-9000-000000000052"),
+		Purpose:     biz.PasswordActionPurposeReset,
+		IssuedAt:    now,
+		ExpiresAt:   now.Add(30 * time.Minute),
+	}
+
+	first, err := codec.IssuePasswordAction(context.Background(), claims)
+	if err != nil {
+		t.Fatalf("first IssuePasswordAction() error = %v", err)
+	}
+	second, err := codec.IssuePasswordAction(context.Background(), claims)
+	if err != nil {
+		t.Fatalf("retry IssuePasswordAction() error = %v", err)
+	}
+	if first != second {
+		t.Fatal("IssuePasswordAction() changed the token for the same durable action claims")
+	}
+}
+
 func TestJWXAccessTokenCodecRejectsNonTargetAudience(t *testing.T) {
 	privateKey := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x24}, ed25519.SeedSize))
 	codec, err := NewJWXAccessTokenCodec(

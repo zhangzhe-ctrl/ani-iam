@@ -6,18 +6,52 @@ package sqlcgen
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
+	AppendAnonymousPrincipalSecurityAuditEvent(ctx context.Context, arg AppendAnonymousPrincipalSecurityAuditEventParams) error
+	AppendAnonymousTenantSecurityAuditEvent(ctx context.Context, arg AppendAnonymousTenantSecurityAuditEventParams) error
+	AppendPrincipalSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSecurityAuditEventParams) error
 	AppendSecurityAuditEvent(ctx context.Context, arg AppendSecurityAuditEventParams) error
+	CancelPasswordActionNotification(ctx context.Context, arg CancelPasswordActionNotificationParams) error
+	CancelReplacedPasswordActionNotifications(ctx context.Context, arg CancelReplacedPasswordActionNotificationsParams) error
+	ClaimPasswordActionNotification(ctx context.Context, arg ClaimPasswordActionNotificationParams) (ClaimPasswordActionNotificationRow, error)
+	ConsumePasswordAction(ctx context.Context, arg ConsumePasswordActionParams) (int64, error)
+	CreateKnownPasswordActionRequest(ctx context.Context, arg CreateKnownPasswordActionRequestParams) error
+	CreatePasswordAction(ctx context.Context, arg CreatePasswordActionParams) error
+	CreatePasswordActionCompletion(ctx context.Context, arg CreatePasswordActionCompletionParams) error
+	CreatePasswordActionNotification(ctx context.Context, arg CreatePasswordActionNotificationParams) error
+	CreatePasswordCredential(ctx context.Context, arg CreatePasswordCredentialParams) (int64, error)
+	CreatePasswordIdentity(ctx context.Context, arg CreatePasswordIdentityParams) error
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
 	CreateRefreshTokenFamily(ctx context.Context, arg CreateRefreshTokenFamilyParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateSessionGrant(ctx context.Context, arg CreateSessionGrantParams) error
 	CreateTenantMembership(ctx context.Context, arg CreateTenantMembershipParams) error
+	CreateUnknownPasswordActionRequest(ctx context.Context, arg CreateUnknownPasswordActionRequestParams) error
+	GetPasswordActionCompletionByIdempotencyKey(ctx context.Context, arg GetPasswordActionCompletionByIdempotencyKeyParams) (GetPasswordActionCompletionByIdempotencyKeyRow, error)
+	GetPasswordActionRequestByIdempotencyKey(ctx context.Context, arg GetPasswordActionRequestByIdempotencyKeyParams) (GetPasswordActionRequestByIdempotencyKeyRow, error)
 	GetTenantMembership(ctx context.Context, arg GetTenantMembershipParams) (GetTenantMembershipRow, error)
+	GetVerifiedAccountForPrincipal(ctx context.Context, arg GetVerifiedAccountForPrincipalParams) (string, error)
+	LockPasswordAction(ctx context.Context, arg LockPasswordActionParams) (LockPasswordActionRow, error)
+	LockPasswordActionPrincipal(ctx context.Context, arg LockPasswordActionPrincipalParams) error
+	LockPasswordAuthenticationIdempotencyKey(ctx context.Context, arg LockPasswordAuthenticationIdempotencyKeyParams) error
 	LookupAuthorization(ctx context.Context, arg LookupAuthorizationParams) (LookupAuthorizationRow, error)
+	LookupPasswordActionTarget(ctx context.Context, arg LookupPasswordActionTargetParams) (LookupPasswordActionTargetRow, error)
 	LookupPasswordLogin(ctx context.Context, arg LookupPasswordLoginParams) (LookupPasswordLoginRow, error)
+	MarkPasswordActionNotificationAttentionRequired(ctx context.Context, arg MarkPasswordActionNotificationAttentionRequiredParams) (int64, error)
+	MarkPasswordActionNotificationDelivered(ctx context.Context, arg MarkPasswordActionNotificationDeliveredParams) (int64, error)
+	RecordPasswordLoginFailure(ctx context.Context, arg RecordPasswordLoginFailureParams) (RecordPasswordLoginFailureRow, error)
+	ReplaceActivePasswordActions(ctx context.Context, arg ReplaceActivePasswordActionsParams) ([]uuid.UUID, error)
+	ReschedulePasswordActionNotification(ctx context.Context, arg ReschedulePasswordActionNotificationParams) (int64, error)
+	ResetPasswordLoginFailures(ctx context.Context, arg ResetPasswordLoginFailuresParams) (int64, error)
+	RevokeRefreshTokenFamiliesForPrincipal(ctx context.Context, arg RevokeRefreshTokenFamiliesForPrincipalParams) error
+	RevokeRefreshTokensForPrincipal(ctx context.Context, arg RevokeRefreshTokensForPrincipalParams) error
+	RevokeSessionGrantsForPrincipal(ctx context.Context, arg RevokeSessionGrantsForPrincipalParams) error
+	RevokeSessionsForPrincipal(ctx context.Context, arg RevokeSessionsForPrincipalParams) error
+	UpdatePasswordCredentialForReset(ctx context.Context, arg UpdatePasswordCredentialForResetParams) (int64, error)
 	UpdateTenantMembershipStatus(ctx context.Context, arg UpdateTenantMembershipStatusParams) (UpdateTenantMembershipStatusRow, error)
 }
 

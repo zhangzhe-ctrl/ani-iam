@@ -124,15 +124,16 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 			  AND c.relkind = 'r'
 			  AND c.relname IN (
 				'principals', 'tenant_access', 'tenant_memberships', 'tenant_roles',
-				'tenant_role_bindings', 'iam_audit_events'
+				'tenant_role_bindings', 'iam_audit_events', 'password_action_requests',
+				'password_actions', 'notification_outbox', 'password_action_completions'
 			  )
 			  AND r.rolname = 'ani_iam_migrator'
 		`).Scan(&migrationOwns)
 		if err != nil {
 			t.Fatalf("query migration-owned tables: %v", err)
 		}
-		if migrationOwns != 6 {
-			t.Fatalf("migration role owns %d target tables, want 6", migrationOwns)
+		if migrationOwns != 10 {
+			t.Fatalf("migration role owns %d target tables, want 10", migrationOwns)
 		}
 
 		rows, err := environment.runtimePool.Query(ctx, `
@@ -166,14 +167,15 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 		for _, privilege := range []string{"INSERT", "SELECT"} {
 			expectedGrants["iam_audit_events/"+privilege] = struct{}{}
 		}
-		for _, tableName := range []string{
-			"verified_emails", "identities", "password_credentials",
-			"tenant_lifecycle_projections", "tenant_role_permissions",
-		} {
+		for _, tableName := range []string{"verified_emails", "tenant_lifecycle_projections", "tenant_role_permissions"} {
 			expectedGrants[tableName+"/SELECT"] = struct{}{}
 		}
-		for _, tableName := range []string{"sessions", "session_grants", "refresh_token_families", "refresh_tokens"} {
-			for _, privilege := range []string{"INSERT", "SELECT"} {
+		for _, tableName := range []string{
+			"identities", "password_credentials", "sessions", "session_grants",
+			"refresh_token_families", "refresh_tokens", "password_action_requests",
+			"password_actions", "notification_outbox", "password_action_completions",
+		} {
+			for _, privilege := range []string{"INSERT", "SELECT", "UPDATE"} {
 				expectedGrants[tableName+"/"+privilege] = struct{}{}
 			}
 		}
@@ -213,7 +215,7 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 		}
 	})
 
-	t.Run("schema has no RLS and every tenant boundary is non-null", func(t *testing.T) {
+	t.Run("schema has no RLS and tenant-owned relations keep non-null tenant boundaries", func(t *testing.T) {
 		var rlsTables int
 		err := environment.runtimePool.QueryRow(ctx, `
 			SELECT count(*)
@@ -235,7 +237,7 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 			SELECT count(*)
 			FROM information_schema.columns
 			WHERE table_schema = 'public'
-			  AND table_name IN ('tenant_access', 'tenant_memberships', 'tenant_roles', 'tenant_role_bindings', 'iam_audit_events')
+			  AND table_name IN ('tenant_access', 'tenant_memberships', 'tenant_roles', 'tenant_role_bindings')
 			  AND column_name = 'tenant_id'
 			  AND is_nullable <> 'NO'
 		`).Scan(&nullableTenantColumns)
@@ -289,8 +291,8 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 		if err != nil {
 			t.Fatalf("query required audit columns: %v", err)
 		}
-		if requiredColumns != 17 {
-			t.Fatalf("required non-null audit columns = %d, want 17", requiredColumns)
+		if requiredColumns != 15 {
+			t.Fatalf("required non-null audit columns = %d, want 15", requiredColumns)
 		}
 
 		var identityConstraints int
@@ -303,7 +305,8 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 				  AND target_table.relname = 'iam_audit_events'
 				  AND constraint_definition.conname IN (
 					'iam_audit_events_authentication_method_allowed',
-					'iam_audit_events_boundary_tenant',
+					'iam_audit_events_boundary_scope',
+					'iam_audit_events_actor_scope',
 					'iam_audit_events_request_required',
 					'iam_audit_events_correlation_required',
 					'iam_audit_events_decision_required',
@@ -313,8 +316,8 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 		if err != nil {
 			t.Fatalf("query audit identity constraints: %v", err)
 		}
-		if identityConstraints != 6 {
-			t.Fatalf("audit identity constraints = %d, want 6", identityConstraints)
+		if identityConstraints != 7 {
+			t.Fatalf("audit identity constraints = %d, want 7", identityConstraints)
 		}
 	})
 

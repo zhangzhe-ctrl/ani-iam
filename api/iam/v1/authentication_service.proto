@@ -34,6 +34,11 @@ message PasswordLoginRequest {
   Boundary boundary = 4;
   string device_name = 5;
   string idempotency_key = 6;
+
+  // Canonical end-client IPv4 or IPv6 literal derived by the trusted Gateway.
+  // IAM never accepts this value from a public request body or arbitrary
+  // forwarded metadata and hashes it before constructing an abuse-limit key.
+  string source_ip = 7;
 }
 
 // PasswordLoginResponse returns an internal refresh secret for Gateway cookie delivery.

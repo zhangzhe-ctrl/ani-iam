@@ -53,6 +53,7 @@ func TestPasswordLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 		Boundary: &iamv1.Boundary{Boundary: &iamv1.Boundary_Tenant{Tenant: &iamv1.TenantBoundary{
 			TenantId: tenantID.String(),
 		}}},
+		SourceIp:       "203.0.113.10",
 		DeviceName:     "browser",
 		IdempotencyKey: "login-service-1",
 	})
@@ -61,6 +62,9 @@ func TestPasswordLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 	}
 	if usecase.command.TenantID != tenantID || usecase.command.Audience != biz.AudienceConsole || usecase.command.Account != " User@Example.COM " {
 		t.Fatalf("mapped command = %#v", usecase.command)
+	}
+	if usecase.command.SourceIP.String() != "203.0.113.10" {
+		t.Fatalf("mapped source IP = %q, want %q", usecase.command.SourceIP, "203.0.113.10")
 	}
 	if response.GetAccessToken() != "signed-access-token" || response.GetRefreshToken() != "opaque-refresh-secret" || response.GetExpiresInSeconds() != 900 {
 		t.Fatalf("token response = %#v", response)
@@ -73,6 +77,105 @@ func TestPasswordLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 	}
 }
 
+func TestRequestPasswordActionMapsFrozenNonEnumeratingContract(t *testing.T) {
+	operationID := uuid.MustParse("0198f062-b76d-7001-9000-000000000061")
+	expiresAt := time.Date(2026, 9, 6, 12, 30, 0, 0, time.UTC)
+	usecase := &recordingAuthenticationUsecase{requestResult: biz.RequestPasswordActionResult{
+		OperationID: operationID,
+		ExpiresAt:   expiresAt,
+	}}
+
+	response, err := NewAuthenticationService(usecase).RequestPasswordAction(context.Background(), &iamv1.RequestPasswordActionRequest{
+		Account:        " User@Example.COM ",
+		Audience:       iamv1.Audience_AUDIENCE_CONSOLE,
+		IdempotencyKey: "password-action-request-1",
+	})
+	if err != nil {
+		t.Fatalf("RequestPasswordAction() error = %v", err)
+	}
+	if response.GetOperationId() != operationID.String() || !response.GetExpiresAt().AsTime().Equal(expiresAt) {
+		t.Fatalf("RequestPasswordAction() response = %#v", response)
+	}
+	if usecase.requestCalls != 1 || usecase.requestCommand.Account != " User@Example.COM " ||
+		usecase.requestCommand.Audience != biz.AudienceConsole || usecase.requestCommand.IdempotencyKey != "password-action-request-1" {
+		t.Fatalf("RequestPasswordAction() mapped command = %#v calls=%d", usecase.requestCommand, usecase.requestCalls)
+	}
+}
+
+func TestCompletePasswordActionMapsFrozenMutationContract(t *testing.T) {
+	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")
+	usecase := &recordingAuthenticationUsecase{completeResult: biz.CompletePasswordActionResult{
+		PrincipalID:       principalID,
+		CredentialVersion: 2,
+	}}
+
+	response, err := NewAuthenticationService(usecase).CompletePasswordAction(context.Background(), &iamv1.CompletePasswordActionRequest{
+		ActionToken:    "opaque-signed-action-token",
+		NewPassword:    "new test password",
+		IdempotencyKey: "password-action-complete-1",
+	})
+	if err != nil {
+		t.Fatalf("CompletePasswordAction() error = %v", err)
+	}
+	if response.GetResult().GetResourceId() != principalID.String() || response.GetResult().GetVersion() != 2 {
+		t.Fatalf("CompletePasswordAction() response = %#v", response)
+	}
+	if usecase.completeCalls != 1 || usecase.completeCommand.ActionToken != "opaque-signed-action-token" ||
+		usecase.completeCommand.NewPassword != "new test password" || usecase.completeCommand.IdempotencyKey != "password-action-complete-1" {
+		t.Fatalf("CompletePasswordAction() mapped command = %#v calls=%d", usecase.completeCommand, usecase.completeCalls)
+	}
+}
+
+func TestPasswordActionMapsIdempotencyConflictToFrozenError(t *testing.T) {
+	tests := []struct {
+		name        string
+		operationID string
+		call        func() error
+	}{
+		{
+			name:        "request",
+			operationID: "requestPasswordAction",
+			call: func() error {
+				service := NewAuthenticationService(&recordingAuthenticationUsecase{requestErr: biz.ErrIdempotencyConflict})
+				_, err := service.RequestPasswordAction(context.Background(), &iamv1.RequestPasswordActionRequest{
+					Account:        "user@example.com",
+					Audience:       iamv1.Audience_AUDIENCE_CONSOLE,
+					IdempotencyKey: "conflicting-action-key",
+				})
+				return err
+			},
+		},
+		{
+			name:        "complete",
+			operationID: "completePasswordAction",
+			call: func() error {
+				service := NewAuthenticationService(&recordingAuthenticationUsecase{completeErr: biz.ErrIdempotencyConflict})
+				_, err := service.CompletePasswordAction(context.Background(), &iamv1.CompletePasswordActionRequest{
+					ActionToken:    "opaque-action-token",
+					NewPassword:    "new test password",
+					IdempotencyKey: "conflicting-action-key",
+				})
+				return err
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.call()
+			grpcStatus := status.Convert(err)
+			if grpcStatus.Code() != codes.AlreadyExists || len(grpcStatus.Details()) != 1 {
+				t.Fatalf("idempotency conflict status = %s details=%#v", grpcStatus.Code(), grpcStatus.Details())
+			}
+			info, ok := grpcStatus.Details()[0].(*errdetails.ErrorInfo)
+			if !ok || info.GetReason() != "IDEMPOTENCY_CONFLICT" ||
+				info.GetMetadata()["operation_id"] != test.operationID ||
+				info.GetMetadata()["idempotency_key"] != "conflicting-action-key" {
+				t.Fatalf("idempotency conflict ErrorInfo = %#v", info)
+			}
+		})
+	}
+}
+
 func TestPasswordLoginMapsInvalidCredentialToStableErrorInfo(t *testing.T) {
 	service := NewAuthenticationService(&recordingAuthenticationUsecase{err: biz.ErrInvalidCredential})
 	_, err := service.PasswordLogin(context.Background(), &iamv1.PasswordLoginRequest{
@@ -80,6 +183,7 @@ func TestPasswordLoginMapsInvalidCredentialToStableErrorInfo(t *testing.T) {
 		Password:       "wrong-password",
 		Audience:       iamv1.Audience_AUDIENCE_CONSOLE,
 		Boundary:       tenantBoundary(uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")),
+		SourceIp:       "203.0.113.10",
 		IdempotencyKey: "login-invalid-credential",
 	})
 	if err == nil {
@@ -111,6 +215,7 @@ func TestPasswordLoginMapsRateLimitToStableErrorInfo(t *testing.T) {
 		Password:       "wrong-password",
 		Audience:       iamv1.Audience_AUDIENCE_CONSOLE,
 		Boundary:       tenantBoundary(uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")),
+		SourceIp:       "203.0.113.10",
 		IdempotencyKey: "login-rate-limit",
 	})
 	grpcStatus := status.Convert(err)
@@ -159,6 +264,29 @@ func TestPasswordLoginValidationUsesFrozenErrorInfo(t *testing.T) {
 	}
 }
 
+func TestPasswordLoginRejectsMissingOrInvalidSourceIPBeforeUsecase(t *testing.T) {
+	tests := []struct {
+		name     string
+		sourceIP string
+	}{
+		{name: "missing source IP"},
+		{name: "invalid source IP", sourceIP: "not-an-ip"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			usecase := &recordingAuthenticationUsecase{}
+			request := validPasswordLoginRequest()
+			request.SourceIp = test.sourceIP
+
+			_, err := NewAuthenticationService(usecase).PasswordLogin(context.Background(), request)
+			assertFrozenErrorInfo(t, err, codes.InvalidArgument, "INVALID_ARGUMENT", map[string]string{"field": "source_ip"})
+			if usecase.calls != 0 {
+				t.Fatalf("PasswordLogin usecase calls = %d, want 0", usecase.calls)
+			}
+		})
+	}
+}
+
 func TestPasswordLoginRejectsBossAudienceWithTenantBoundaryBeforeUsecase(t *testing.T) {
 	usecase := &recordingAuthenticationUsecase{}
 	service := NewAuthenticationService(usecase)
@@ -198,6 +326,7 @@ func TestPasswordLoginMapsDomainValidationToFrozenErrorInfo(t *testing.T) {
 		Password:       "password",
 		Audience:       iamv1.Audience_AUDIENCE_CONSOLE,
 		Boundary:       tenantBoundary(uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")),
+		SourceIp:       "203.0.113.10",
 		IdempotencyKey: "login-invalid-account",
 	})
 	assertFrozenErrorInfo(t, err, codes.InvalidArgument, "INVALID_ARGUMENT", map[string]string{"field": "account"})
@@ -255,11 +384,12 @@ func validPasswordLoginRequest() *iamv1.PasswordLoginRequest {
 		Password:       "password",
 		Audience:       iamv1.Audience_AUDIENCE_CONSOLE,
 		Boundary:       tenantBoundary(uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")),
+		SourceIp:       "203.0.113.10",
 		IdempotencyKey: "login-service-real-usecase",
 	}
 }
 
-func newServiceAuthenticationUsecase(throttle biz.LoginThrottle, uow biz.LoginUnitOfWork) *biz.AuthenticationUsecase {
+func newServiceAuthenticationUsecase(throttle biz.LoginThrottle, uow biz.AuthenticationUnitOfWork) *biz.AuthenticationUsecase {
 	return biz.NewAuthenticationUsecase(
 		servicePasswordLoginReader{state: biz.PasswordLoginState{
 			PrincipalID:      uuid.MustParse("0198f062-b76d-7001-9000-000000000001"),
@@ -293,31 +423,65 @@ type servicePasswordLoginReader struct{ state biz.PasswordLoginState }
 func (r servicePasswordLoginReader) LookupPasswordLogin(context.Context, biz.TenantScope, string) (biz.PasswordLoginState, error) {
 	return r.state, nil
 }
+func (servicePasswordLoginReader) LookupPasswordActionTarget(context.Context, string, biz.Audience) (biz.PasswordActionTarget, bool, error) {
+	return biz.PasswordActionTarget{}, false, nil
+}
 
 type servicePasswordVerifier struct{}
 
 func (servicePasswordVerifier) Verify(string, string) (bool, error) { return true, nil }
+func (servicePasswordVerifier) VerifyUnknown(string) error          { return nil }
+func (servicePasswordVerifier) Hash(string) (string, error)         { return "test-password-hash", nil }
 
 type allowingServiceLoginThrottle struct{}
 
-func (allowingServiceLoginThrottle) Allow(context.Context, string) error { return nil }
-func (allowingServiceLoginThrottle) Reset(context.Context, string) error { return nil }
+func (allowingServiceLoginThrottle) Check(context.Context, biz.LoginThrottleAttempt) error {
+	return nil
+}
+func (allowingServiceLoginThrottle) RecordFailure(context.Context, biz.LoginThrottleAttempt) error {
+	return nil
+}
+func (allowingServiceLoginThrottle) Reset(context.Context, biz.LoginThrottleAttempt) error {
+	return nil
+}
 
 type failingServiceLoginThrottle struct{ err error }
 
-func (t failingServiceLoginThrottle) Allow(context.Context, string) error { return t.err }
-func (t failingServiceLoginThrottle) Reset(context.Context, string) error { return t.err }
+func (t failingServiceLoginThrottle) Check(context.Context, biz.LoginThrottleAttempt) error {
+	return t.err
+}
+func (t failingServiceLoginThrottle) RecordFailure(context.Context, biz.LoginThrottleAttempt) error {
+	return t.err
+}
+func (t failingServiceLoginThrottle) Reset(context.Context, biz.LoginThrottleAttempt) error {
+	return t.err
+}
 
 type failingServiceLoginUnitOfWork struct{ err error }
 
 func (u failingServiceLoginUnitOfWork) CommitLogin(context.Context, biz.TenantScope, biz.LoginMutation) error {
 	return u.err
 }
+func (u failingServiceLoginUnitOfWork) RecordLoginFailure(context.Context, biz.TenantScope, biz.LoginFailureMutation) error {
+	return u.err
+}
+func (u failingServiceLoginUnitOfWork) RequestPasswordAction(context.Context, biz.PasswordActionRequestMutation) (biz.RequestPasswordActionResult, error) {
+	return biz.RequestPasswordActionResult{}, u.err
+}
+func (u failingServiceLoginUnitOfWork) CompletePasswordAction(context.Context, biz.PasswordActionCompletion) (biz.CompletePasswordActionResult, error) {
+	return biz.CompletePasswordActionResult{}, u.err
+}
 
 type serviceAccessTokenIssuer struct{}
 
 func (serviceAccessTokenIssuer) Issue(context.Context, biz.AccessTokenClaims) (string, error) {
 	return "service-access-token", nil
+}
+func (serviceAccessTokenIssuer) IssuePasswordAction(context.Context, biz.PasswordActionTokenClaims) (string, error) {
+	return "test-password-action-token", nil
+}
+func (serviceAccessTokenIssuer) VerifyPasswordAction(context.Context, string) (biz.PasswordActionTokenClaims, error) {
+	return biz.PasswordActionTokenClaims{}, biz.ErrPasswordActionInvalid
 }
 
 type serviceSecretGenerator struct{}
@@ -359,10 +523,30 @@ func assertFrozenErrorInfo(t *testing.T, err error, wantCode codes.Code, wantRea
 }
 
 type recordingAuthenticationUsecase struct {
-	result  biz.PasswordLoginResult
-	err     error
-	command biz.PasswordLoginCommand
-	calls   int
+	result          biz.PasswordLoginResult
+	err             error
+	command         biz.PasswordLoginCommand
+	calls           int
+	requestResult   biz.RequestPasswordActionResult
+	requestErr      error
+	requestCommand  biz.RequestPasswordActionCommand
+	requestCalls    int
+	completeResult  biz.CompletePasswordActionResult
+	completeErr     error
+	completeCommand biz.CompletePasswordActionCommand
+	completeCalls   int
+}
+
+func (u *recordingAuthenticationUsecase) RequestPasswordAction(_ context.Context, command biz.RequestPasswordActionCommand) (biz.RequestPasswordActionResult, error) {
+	u.requestCalls++
+	u.requestCommand = command
+	return u.requestResult, u.requestErr
+}
+
+func (u *recordingAuthenticationUsecase) CompletePasswordAction(_ context.Context, command biz.CompletePasswordActionCommand) (biz.CompletePasswordActionResult, error) {
+	u.completeCalls++
+	u.completeCommand = command
+	return u.completeResult, u.completeErr
 }
 
 func (u *recordingAuthenticationUsecase) PasswordLogin(_ context.Context, command biz.PasswordLoginCommand) (biz.PasswordLoginResult, error) {

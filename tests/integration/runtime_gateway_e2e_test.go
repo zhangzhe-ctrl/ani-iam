@@ -115,6 +115,9 @@ func startIAMProcessForGatewayE2E(t *testing.T, environment *postgresEnvironment
 	clientCertFile, clientKeyFile := writeProcessE2ELeafCertificate(
 		t, directory, "gateway-client", "ani-gateway", x509.ExtKeyUsageClientAuth, caCertificate, caKey,
 	)
+	notificationClientCertFile, notificationClientKeyFile := writeProcessE2ELeafCertificate(
+		t, directory, "notification-client", "ani-iam", x509.ExtKeyUsageClientAuth, caCertificate, caKey,
+	)
 	accessTokenKeyFile := writeProcessE2EAccessTokenKey(t, directory)
 	grpcAddress := reserveIAMProcessLoopbackAddress(t)
 	adminAddress := reserveIAMProcessLoopbackAddress(t)
@@ -151,10 +154,20 @@ runtime:
     issuer: ani-iam
     active_key_id: dp2-05-process-e2e
     private_key_file: %q
+  notification:
+    address: 127.0.0.1:1
+    certificate_file: %q
+    private_key_file: %q
+    server_ca_file: %q
+    server_dns_name: ani-notification
+    console_action_url_base: https://console.example.test/password-action
+    locale: en-US
+    dispatch_interval: 0.25s
+    submission_timeout: 1s
   policy_revision: %s
 `, grpcAddress, serverCertFile, serverKeyFile, caFile, adminAddress,
 		postgresDSN(runtimeRole, environment.runtimePass, normalizeProcessE2ELoopbackAddress(t, environment.host), primaryDB, "ani-iam-dp2-05-process-e2e"), redisAddress,
-		accessTokenKeyFile, testIntegrationPolicyRevision)
+		accessTokenKeyFile, notificationClientCertFile, notificationClientKeyFile, caFile, testIntegrationPolicyRevision)
 	if err := os.WriteFile(configFile, []byte(configDocument), 0o600); err != nil {
 		t.Fatalf("write IAM process config: %v", err)
 	}
