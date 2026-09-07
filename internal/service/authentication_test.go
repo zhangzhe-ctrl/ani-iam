@@ -78,6 +78,154 @@ func TestPasswordLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 	}
 }
 
+func TestRefreshSessionMapsFrozenInternalRotationContract(t *testing.T) {
+	now := time.Date(2026, 9, 7, 13, 0, 0, 0, time.UTC)
+	tenantID := uuid.MustParse("0199c71e-d000-7001-9000-000000000001")
+	principalID := uuid.MustParse("0199c71e-d000-7001-9000-000000000002")
+	sessionID := uuid.MustParse("0199c71e-d000-7001-9000-000000000003")
+	grantID := uuid.MustParse("0199c71e-d000-7001-9000-000000000004")
+	usecase := &recordingAuthenticationUsecase{refreshResult: biz.RefreshSessionResult{
+		TenantID: tenantID, Principal: biz.Principal{ID: principalID, Status: biz.PrincipalStatusActive},
+		Session: biz.Session{
+			ID: sessionID, PrincipalID: principalID, Audience: biz.AudienceConsole,
+			Status: biz.SessionStatusActive, Version: 2,
+			AuthnMethods: []biz.AuditAuthenticationMethod{biz.AuditAuthenticationMethodPassword},
+			CreatedAt:    now.Add(-time.Hour), UpdatedAt: now,
+			IdleExpiresAt: now.Add(7 * 24 * time.Hour), AbsoluteExpiry: now.Add(30 * 24 * time.Hour),
+		},
+		Grant:       biz.SessionGrant{ID: grantID, SessionID: sessionID, Status: biz.GrantStatusActive, Version: 3},
+		AccessToken: "rotated-access", RefreshToken: "rotated-refresh", AccessTokenExpiresAt: now.Add(15 * time.Minute),
+	}}
+
+	response, err := NewAuthenticationService(usecase).RefreshSession(context.Background(), &iamv1.RefreshSessionRequest{
+		RefreshToken: "old-refresh", CsrfToken: "csrf-proof", Origin: "https://console.test.example", IdempotencyKey: "refresh-service-1",
+	})
+	if err != nil {
+		t.Fatalf("RefreshSession() error = %v", err)
+	}
+	if usecase.refreshCommand.RefreshToken != "old-refresh" || usecase.refreshCommand.CSRFToken != "csrf-proof" ||
+		usecase.refreshCommand.Origin != "https://console.test.example" || usecase.refreshCommand.IdempotencyKey != "refresh-service-1" {
+		t.Fatalf("RefreshSession() command = %#v", usecase.refreshCommand)
+	}
+	if response.GetLogin().GetAccessToken() != "rotated-access" || response.GetLogin().GetRefreshToken() != "rotated-refresh" ||
+		response.GetLogin().GetExpiresInSeconds() != 900 || response.GetLogin().GetGrant().GetVersion() != 3 {
+		t.Fatalf("RefreshSession() response = %#v", response)
+	}
+}
+
+func TestLogoutSessionMapsCookieProofAndKeepsIdempotentResponseOpaque(t *testing.T) {
+	usecase := &recordingAuthenticationUsecase{}
+	response, err := NewAuthenticationService(usecase).LogoutSession(context.Background(), &iamv1.LogoutSessionRequest{
+		RefreshToken: "cookie-refresh", CsrfToken: "csrf-proof",
+		Origin: "https://console.test.example", IdempotencyKey: "logout-service-1",
+	})
+	if err != nil {
+		t.Fatalf("LogoutSession() error = %v", err)
+	}
+	if usecase.logoutCommand.RefreshToken != "cookie-refresh" || usecase.logoutCommand.CSRFToken != "csrf-proof" ||
+		usecase.logoutCommand.Origin != "https://console.test.example" || usecase.logoutCommand.IdempotencyKey != "logout-service-1" {
+		t.Fatalf("LogoutSession() command = %#v", usecase.logoutCommand)
+	}
+	if response.GetResult() == nil || response.GetResult().GetResourceId() != "" || response.GetResult().GetVersion() != 0 {
+		t.Fatalf("LogoutSession() leaked state = %#v", response)
+	}
+}
+
+func TestSwitchTenantMapsBearerAndReturnsTargetBoundary(t *testing.T) {
+	now := time.Date(2026, 9, 7, 13, 30, 0, 0, time.UTC)
+	targetTenantID := uuid.MustParse("0199c71e-d000-7101-9000-000000000001")
+	principalID := uuid.MustParse("0199c71e-d000-7101-9000-000000000002")
+	sessionID := uuid.MustParse("0199c71e-d000-7101-9000-000000000003")
+	grantID := uuid.MustParse("0199c71e-d000-7101-9000-000000000004")
+	usecase := &recordingAuthenticationUsecase{switchResult: biz.SwitchTenantResult{
+		TenantID: targetTenantID, Principal: biz.Principal{ID: principalID, Status: biz.PrincipalStatusActive},
+		Session: biz.Session{
+			ID: sessionID, PrincipalID: principalID, Audience: biz.AudienceConsole,
+			Status: biz.SessionStatusActive, Version: 2,
+			AuthnMethods: []biz.AuditAuthenticationMethod{biz.AuditAuthenticationMethodOIDC},
+			CreatedAt:    now.Add(-time.Hour), UpdatedAt: now,
+			IdleExpiresAt: now.Add(7 * 24 * time.Hour), AbsoluteExpiry: now.Add(30 * 24 * time.Hour),
+		},
+		Grant:       biz.SessionGrant{ID: grantID, SessionID: sessionID, Status: biz.GrantStatusActive, Version: 5},
+		AccessToken: "target-access", RefreshToken: "target-refresh", AccessTokenExpiresAt: now.Add(15 * time.Minute),
+	}}
+
+	response, err := NewAuthenticationService(usecase).SwitchTenant(context.Background(), &iamv1.SwitchTenantRequest{
+		Credential: &iamv1.BearerCredential{Value: "source-access"}, TenantId: targetTenantID.String(),
+		IdempotencyKey: "switch-service-1",
+	})
+	if err != nil {
+		t.Fatalf("SwitchTenant() error = %v", err)
+	}
+	if usecase.switchCommand.RawCredential != "source-access" || usecase.switchCommand.TargetTenantID != targetTenantID ||
+		usecase.switchCommand.IdempotencyKey != "switch-service-1" {
+		t.Fatalf("SwitchTenant() command = %#v", usecase.switchCommand)
+	}
+	if response.GetLogin().GetPrincipal().GetBoundary().GetTenant().GetTenantId() != targetTenantID.String() ||
+		response.GetLogin().GetGrant().GetGrantId() != grantID.String() || response.GetLogin().GetGrant().GetVersion() != 5 ||
+		response.GetLogin().GetAccessToken() != "target-access" || response.GetLogin().GetRefreshToken() != "target-refresh" {
+		t.Fatalf("SwitchTenant() response = %#v", response)
+	}
+}
+
+func TestSessionContinuityMapsFrozenFailures(t *testing.T) {
+	targetTenantID := uuid.MustParse("0199c71e-d000-7201-9000-000000000001")
+	tests := []struct {
+		name         string
+		usecase      *recordingAuthenticationUsecase
+		invoke       func(*AuthenticationService) error
+		wantCode     codes.Code
+		wantReason   string
+		wantMetadata map[string]string
+	}{
+		{
+			name: "refresh reuse", usecase: &recordingAuthenticationUsecase{refreshErr: biz.ErrInvalidCredential},
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.RefreshSession(context.Background(), &iamv1.RefreshSessionRequest{
+					RefreshToken: "reused-refresh", CsrfToken: "csrf", Origin: "https://console.test.example", IdempotencyKey: "refresh-reuse",
+				})
+				return err
+			},
+			wantCode: codes.Unauthenticated, wantReason: "CREDENTIAL_INVALID", wantMetadata: map[string]string{"credential_kind": "refresh_token"},
+		},
+		{
+			name: "switch membership denied", usecase: &recordingAuthenticationUsecase{switchErr: biz.ErrMembershipInactive},
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.SwitchTenant(context.Background(), &iamv1.SwitchTenantRequest{
+					Credential: &iamv1.BearerCredential{Value: "access"}, TenantId: targetTenantID.String(), IdempotencyKey: "switch-denied",
+				})
+				return err
+			},
+			wantCode: codes.PermissionDenied, wantReason: "PERMISSION_DENIED", wantMetadata: map[string]string{"operation_id": "switchTenant", "decision_id": "not-issued"},
+		},
+		{
+			name: "switch lifecycle stale", usecase: &recordingAuthenticationUsecase{switchErr: biz.ErrTenantLifecycleStale},
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.SwitchTenant(context.Background(), &iamv1.SwitchTenantRequest{
+					Credential: &iamv1.BearerCredential{Value: "access"}, TenantId: targetTenantID.String(), IdempotencyKey: "switch-stale",
+				})
+				return err
+			},
+			wantCode: codes.Unavailable, wantReason: "TENANT_LIFECYCLE_STALE", wantMetadata: map[string]string{"tenant_id": targetTenantID.String()},
+		},
+		{
+			name: "refresh dependency", usecase: &recordingAuthenticationUsecase{refreshErr: biz.ErrAuthenticationDependency},
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.RefreshSession(context.Background(), &iamv1.RefreshSessionRequest{
+					RefreshToken: "refresh", CsrfToken: "csrf", Origin: "https://console.test.example", IdempotencyKey: "refresh-down",
+				})
+				return err
+			},
+			wantCode: codes.Unavailable, wantReason: "IAM_UNAVAILABLE", wantMetadata: map[string]string{"dependency": "authentication"},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assertFrozenErrorInfo(t, test.invoke(NewAuthenticationService(test.usecase)), test.wantCode, test.wantReason, test.wantMetadata)
+		})
+	}
+}
+
 func TestBeginOIDCLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 	tenantID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe601")
 	now := time.Date(2026, 9, 7, 8, 0, 0, 0, time.UTC)
@@ -648,6 +796,15 @@ func (r servicePasswordLoginReader) LookupPasswordLogin(context.Context, biz.Ten
 func (servicePasswordLoginReader) LookupPasswordActionTarget(context.Context, string, biz.Audience) (biz.PasswordActionTarget, bool, error) {
 	return biz.PasswordActionTarget{}, false, nil
 }
+func (servicePasswordLoginReader) LookupRefreshSession(context.Context, [32]byte) (biz.RefreshSessionState, error) {
+	return biz.RefreshSessionState{}, biz.ErrInvalidCredential
+}
+func (servicePasswordLoginReader) LookupLogoutSession(context.Context, [32]byte) (biz.LogoutSessionState, bool, error) {
+	return biz.LogoutSessionState{}, false, nil
+}
+func (servicePasswordLoginReader) LookupTenantSwitch(context.Context, biz.TenantScope, biz.AccessTokenClaims) (biz.TenantSwitchState, error) {
+	return biz.TenantSwitchState{}, biz.ErrInvalidCredential
+}
 
 type servicePasswordVerifier struct{}
 
@@ -666,6 +823,9 @@ func (allowingServiceLoginThrottle) RecordFailure(context.Context, biz.LoginThro
 func (allowingServiceLoginThrottle) Reset(context.Context, biz.LoginThrottleAttempt) error {
 	return nil
 }
+func (allowingServiceLoginThrottle) CheckRefresh(context.Context, biz.RefreshThrottleAttempt) error {
+	return nil
+}
 
 type failingServiceLoginThrottle struct{ err error }
 
@@ -676,6 +836,9 @@ func (t failingServiceLoginThrottle) RecordFailure(context.Context, biz.LoginThr
 	return t.err
 }
 func (t failingServiceLoginThrottle) Reset(context.Context, biz.LoginThrottleAttempt) error {
+	return t.err
+}
+func (t failingServiceLoginThrottle) CheckRefresh(context.Context, biz.RefreshThrottleAttempt) error {
 	return t.err
 }
 
@@ -693,6 +856,18 @@ func (u failingServiceLoginUnitOfWork) RequestPasswordAction(context.Context, bi
 func (u failingServiceLoginUnitOfWork) CompletePasswordAction(context.Context, biz.PasswordActionCompletion) (biz.CompletePasswordActionResult, error) {
 	return biz.CompletePasswordActionResult{}, u.err
 }
+func (u failingServiceLoginUnitOfWork) RotateRefreshSession(context.Context, biz.RefreshSessionMutation) (biz.RefreshSessionMutationResult, error) {
+	return biz.RefreshSessionMutationResult{}, u.err
+}
+func (u failingServiceLoginUnitOfWork) RevokeRefreshReuse(context.Context, biz.RefreshReuseMutation) (bool, error) {
+	return false, u.err
+}
+func (u failingServiceLoginUnitOfWork) LogoutSession(context.Context, biz.LogoutSessionMutation) (biz.LogoutSessionMutationResult, error) {
+	return biz.LogoutSessionMutationResult{}, u.err
+}
+func (u failingServiceLoginUnitOfWork) SwitchTenant(context.Context, biz.TenantScope, biz.TenantSwitchMutation) error {
+	return u.err
+}
 
 type serviceAccessTokenIssuer struct{}
 
@@ -701,6 +876,9 @@ func (serviceAccessTokenIssuer) Issue(context.Context, biz.AccessTokenClaims) (s
 }
 func (serviceAccessTokenIssuer) IssuePasswordAction(context.Context, biz.PasswordActionTokenClaims) (string, error) {
 	return "test-password-action-token", nil
+}
+func (serviceAccessTokenIssuer) Verify(context.Context, string) (biz.AccessTokenClaims, error) {
+	return biz.AccessTokenClaims{}, biz.ErrAuthorizationCredentialInvalid
 }
 func (serviceAccessTokenIssuer) VerifyPasswordAction(context.Context, string) (biz.PasswordActionTokenClaims, error) {
 	return biz.PasswordActionTokenClaims{}, biz.ErrPasswordActionInvalid
@@ -757,6 +935,29 @@ type recordingAuthenticationUsecase struct {
 	completeErr     error
 	completeCommand biz.CompletePasswordActionCommand
 	completeCalls   int
+	refreshResult   biz.RefreshSessionResult
+	refreshErr      error
+	refreshCommand  biz.RefreshSessionCommand
+	logoutErr       error
+	logoutCommand   biz.LogoutSessionCommand
+	switchResult    biz.SwitchTenantResult
+	switchErr       error
+	switchCommand   biz.SwitchTenantCommand
+}
+
+func (u *recordingAuthenticationUsecase) RefreshSession(_ context.Context, command biz.RefreshSessionCommand) (biz.RefreshSessionResult, error) {
+	u.refreshCommand = command
+	return u.refreshResult, u.refreshErr
+}
+
+func (u *recordingAuthenticationUsecase) LogoutSession(_ context.Context, command biz.LogoutSessionCommand) (biz.LogoutSessionResult, error) {
+	u.logoutCommand = command
+	return biz.LogoutSessionResult{}, u.logoutErr
+}
+
+func (u *recordingAuthenticationUsecase) SwitchTenant(_ context.Context, command biz.SwitchTenantCommand) (biz.SwitchTenantResult, error) {
+	u.switchCommand = command
+	return u.switchResult, u.switchErr
 }
 
 func (u *recordingAuthenticationUsecase) RequestPasswordAction(_ context.Context, command biz.RequestPasswordActionCommand) (biz.RequestPasswordActionResult, error) {

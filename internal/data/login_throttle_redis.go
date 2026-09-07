@@ -88,6 +88,21 @@ end
 return counts
 `)
 
+var checkRefreshThrottle = redis.NewScript(`
+local current = redis.call("INCR", KEYS[1])
+if current == 1 then
+  redis.call("PEXPIRE", KEYS[1], ARGV[1])
+end
+local ttl = redis.call("PTTL", KEYS[1])
+if ttl < 1 then
+  return {-1, ttl}
+end
+if current > tonumber(ARGV[2]) then
+  return {1, ttl}
+end
+return {0, ttl}
+`)
+
 func NewRedisLoginThrottle(client redis.UniversalClient, config RedisLoginThrottleConfig) (biz.LoginThrottle, error) {
 	namespace := strings.Trim(strings.TrimSpace(config.Namespace), ":")
 	if client == nil || namespace == "" || config.Limit < 2 || config.Limit > 31 ||
@@ -162,6 +177,30 @@ func (t *redisLoginThrottle) Reset(ctx context.Context, attempt biz.LoginThrottl
 		return fmt.Errorf("reset Redis login throttle: %w", err)
 	}
 	return nil
+}
+
+func (t *redisLoginThrottle) CheckRefresh(ctx context.Context, attempt biz.RefreshThrottleAttempt) error {
+	if attempt.Digest == ([sha256.Size]byte{}) {
+		return errors.New("refresh-token digest is required")
+	}
+	key := t.namespace + ":refresh:token:" + hex.EncodeToString(attempt.Digest[:])
+	result, err := checkRefreshThrottle.Run(ctx, t.client, []string{key}, t.window.Milliseconds(), t.limit).Int64Slice()
+	if err != nil {
+		return fmt.Errorf("check Redis refresh throttle: %w", err)
+	}
+	if len(result) != 2 || result[0] < 0 {
+		return errors.New("check Redis refresh throttle returned invalid state")
+	}
+	if result[0] == 0 {
+		return nil
+	}
+	if result[0] != 1 {
+		return errors.New("check Redis refresh throttle returned invalid scope")
+	}
+	return &biz.AuthenticationRateLimitError{
+		LimitScope: "refresh_token",
+		RetryAfter: time.Duration(result[1]) * time.Millisecond,
+	}
 }
 
 func (t *redisLoginThrottle) keys(attempt biz.LoginThrottleAttempt) ([]string, error) {

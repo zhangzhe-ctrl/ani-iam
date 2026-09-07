@@ -679,3 +679,458 @@ JOIN tenant_access AS access
 JOIN tenant_lifecycle_projections AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = sqlc.arg(principal_id);
+
+-- name: LookupRefreshSession :one
+SELECT
+    token.tenant_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at AS session_created_at,
+    session_row.updated_at AS session_updated_at,
+    grant_row.id AS grant_id,
+    grant_row.membership_id,
+    grant_row.status AS grant_status,
+    grant_row.version AS grant_version,
+    grant_row.created_at AS grant_created_at,
+    grant_row.updated_at AS grant_updated_at,
+    family.id AS family_id,
+    family.status AS family_status,
+    family.version AS family_version,
+    family.created_at AS family_created_at,
+    family.updated_at AS family_updated_at,
+    token.id AS token_id,
+    token.digest,
+    token.status AS token_status,
+    token.issued_at,
+    token.expires_at,
+    token.consumed_at,
+    token.replaced_by
+FROM refresh_tokens AS token
+JOIN refresh_token_families AS family
+  ON family.tenant_id = token.tenant_id
+ AND family.id = token.family_id
+JOIN session_grants AS grant_row
+  ON grant_row.tenant_id = family.tenant_id
+ AND grant_row.id = family.grant_id
+JOIN sessions AS session_row
+  ON session_row.id = grant_row.session_id
+JOIN principals AS principal
+  ON principal.id = session_row.principal_id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = grant_row.tenant_id
+ AND membership.id = grant_row.membership_id
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE token.digest = sqlc.arg(refresh_digest);
+
+-- name: LockRefreshSession :one
+SELECT
+    token.tenant_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at AS session_created_at,
+    session_row.updated_at AS session_updated_at,
+    grant_row.id AS grant_id,
+    grant_row.membership_id,
+    grant_row.status AS grant_status,
+    grant_row.version AS grant_version,
+    grant_row.created_at AS grant_created_at,
+    grant_row.updated_at AS grant_updated_at,
+    family.id AS family_id,
+    family.status AS family_status,
+    family.version AS family_version,
+    family.created_at AS family_created_at,
+    family.updated_at AS family_updated_at,
+    token.id AS token_id,
+    token.digest,
+    token.status AS token_status,
+    token.issued_at,
+    token.expires_at,
+    token.consumed_at,
+    token.replaced_by
+FROM refresh_tokens AS token
+JOIN refresh_token_families AS family
+  ON family.tenant_id = token.tenant_id
+ AND family.id = token.family_id
+JOIN session_grants AS grant_row
+  ON grant_row.tenant_id = family.tenant_id
+ AND grant_row.id = family.grant_id
+JOIN sessions AS session_row
+  ON session_row.id = grant_row.session_id
+JOIN principals AS principal
+  ON principal.id = session_row.principal_id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = grant_row.tenant_id
+ AND membership.id = grant_row.membership_id
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE token.digest = sqlc.arg(refresh_digest)
+-- The runtime role intentionally has SELECT-only access to lifecycle projections.
+-- Lock mutable authentication rows while re-reading lifecycle in this transaction;
+-- do not broaden runtime privileges merely to obtain a row lock on the projection.
+FOR UPDATE OF token, family, grant_row, session_row, principal, membership, access;
+
+-- name: ConsumeRefreshToken :one
+UPDATE refresh_tokens
+SET status = 'consumed',
+    consumed_at = sqlc.arg(consumed_at),
+    replaced_by = sqlc.arg(replaced_by)
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND id = sqlc.arg(token_id)
+  AND family_id = sqlc.arg(family_id)
+  AND digest = sqlc.arg(refresh_digest)
+  AND status = 'active'
+RETURNING id;
+
+-- name: UpdateSessionIdleExpiry :one
+UPDATE sessions
+SET idle_expires_at = sqlc.arg(idle_expires_at),
+    version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE id = sqlc.arg(session_id)
+  AND status = 'active'
+  AND version = sqlc.arg(expected_version)
+  AND idle_expires_at > sqlc.arg(updated_at)
+  AND absolute_expires_at > sqlc.arg(updated_at)
+RETURNING version;
+
+-- name: RevokeRefreshFamilyForReuse :one
+UPDATE refresh_token_families
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND id = sqlc.arg(family_id)
+  AND grant_id = sqlc.arg(grant_id)
+  AND status = 'active'
+  AND version = sqlc.arg(expected_version)
+RETURNING version;
+
+-- name: RevokeActiveRefreshTokensForFamily :exec
+UPDATE refresh_tokens
+SET status = 'revoked'
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND family_id = sqlc.arg(family_id)
+  AND status = 'active';
+
+-- name: IncrementSessionGrantVersionForReuse :one
+UPDATE session_grants
+SET version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND id = sqlc.arg(grant_id)
+  AND status = 'active'
+  AND version = sqlc.arg(expected_version)
+RETURNING version;
+
+-- name: LookupLogoutSession :one
+SELECT
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at,
+    session_row.updated_at
+FROM refresh_tokens AS token
+JOIN refresh_token_families AS family
+  ON family.tenant_id = token.tenant_id
+ AND family.id = token.family_id
+JOIN session_grants AS grant_row
+  ON grant_row.tenant_id = family.tenant_id
+ AND grant_row.id = family.grant_id
+JOIN sessions AS session_row
+  ON session_row.id = grant_row.session_id
+JOIN principals AS principal
+  ON principal.id = session_row.principal_id
+WHERE token.digest = sqlc.arg(refresh_digest);
+
+-- name: LockLogoutSession :one
+SELECT
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at,
+    session_row.updated_at
+FROM refresh_tokens AS token
+JOIN refresh_token_families AS family
+  ON family.tenant_id = token.tenant_id
+ AND family.id = token.family_id
+JOIN session_grants AS grant_row
+  ON grant_row.tenant_id = family.tenant_id
+ AND grant_row.id = family.grant_id
+JOIN sessions AS session_row
+  ON session_row.id = grant_row.session_id
+JOIN principals AS principal
+  ON principal.id = session_row.principal_id
+WHERE token.digest = sqlc.arg(refresh_digest)
+FOR UPDATE OF token, family, grant_row, session_row, principal;
+
+-- name: RevokeCurrentSession :one
+UPDATE sessions
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE id = sqlc.arg(session_id)
+  AND status = 'active'
+  AND version = sqlc.arg(expected_version)
+RETURNING version;
+
+-- name: RevokeCurrentSessionGrants :exec
+UPDATE session_grants
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE session_id = sqlc.arg(session_id)
+  AND status = 'active';
+
+-- name: RevokeCurrentSessionFamilies :exec
+UPDATE refresh_token_families AS family
+SET status = 'revoked',
+    version = family.version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE family.status = 'active'
+  AND EXISTS (
+    SELECT 1
+    FROM session_grants AS grant_row
+    WHERE grant_row.tenant_id = family.tenant_id
+      AND grant_row.id = family.grant_id
+      AND grant_row.session_id = sqlc.arg(session_id)
+  );
+
+-- name: RevokeCurrentSessionRefreshTokens :exec
+UPDATE refresh_tokens AS token
+SET status = 'revoked'
+WHERE token.status = 'active'
+  AND EXISTS (
+    SELECT 1
+    FROM refresh_token_families AS family
+    JOIN session_grants AS grant_row
+      ON grant_row.tenant_id = family.tenant_id
+     AND grant_row.id = family.grant_id
+    WHERE family.tenant_id = token.tenant_id
+      AND family.id = token.family_id
+      AND grant_row.session_id = sqlc.arg(session_id)
+  );
+
+-- name: AppendPrincipalSessionSecurityAuditEvent :exec
+INSERT INTO iam_audit_events (
+    tenant_id, event_id, actor_id, authentication_method, boundary,
+    action, target_type, target_id, target_version, result, reason,
+    request_id, correlation_id, decision_id, source_service,
+    occurred_at, recorded_at
+) VALUES (
+    NULL, sqlc.arg(event_id), sqlc.arg(actor_id), sqlc.arg(authentication_method), 'principal',
+    sqlc.arg(action), sqlc.arg(target_type), sqlc.arg(target_id),
+    sqlc.arg(target_version), sqlc.arg(result), sqlc.arg(reason),
+    sqlc.arg(request_id), sqlc.arg(correlation_id), sqlc.arg(decision_id),
+    sqlc.arg(source_service), sqlc.arg(occurred_at), sqlc.arg(recorded_at)
+);
+
+-- name: LockSessionContinuity :exec
+SELECT pg_advisory_xact_lock(
+    hashtextextended(sqlc.arg(session_id)::uuid::text, 2)
+);
+
+-- name: LookupTenantSwitch :one
+SELECT
+    source_grant.tenant_id AS source_tenant_id,
+    target_membership.tenant_id AS target_tenant_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    target_membership.id AS target_membership_id,
+    target_membership.status AS target_membership_status,
+    target_access.status AS target_access_status,
+    target_lifecycle.status AS target_lifecycle_status,
+    target_lifecycle.fresh_until > statement_timestamp() AS target_lifecycle_fresh,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at AS session_created_at,
+    session_row.updated_at AS session_updated_at,
+    source_grant.id AS source_grant_id,
+    source_grant.membership_id AS source_membership_id,
+    source_grant.status AS source_grant_status,
+    source_grant.version AS source_grant_version,
+    source_grant.created_at AS source_grant_created_at,
+    source_grant.updated_at AS source_grant_updated_at,
+    target_grant.id AS target_grant_id,
+    target_grant.status AS target_grant_status,
+    target_grant.version AS target_grant_version,
+    target_grant.created_at AS target_grant_created_at,
+    target_grant.updated_at AS target_grant_updated_at,
+    target_family.id AS target_family_id,
+    target_family.status AS target_family_status,
+    target_family.version AS target_family_version,
+    target_family.created_at AS target_family_created_at,
+    target_family.updated_at AS target_family_updated_at
+FROM principals AS principal
+JOIN sessions AS session_row
+  ON session_row.id = sqlc.arg(session_id)
+ AND session_row.principal_id = principal.id
+JOIN session_grants AS source_grant
+  ON source_grant.tenant_id = sqlc.arg(source_tenant_id)
+ AND source_grant.id = sqlc.arg(source_grant_id)
+ AND source_grant.session_id = session_row.id
+JOIN tenant_memberships AS source_membership
+  ON source_membership.tenant_id = source_grant.tenant_id
+ AND source_membership.id = source_grant.membership_id
+ AND source_membership.principal_id = principal.id
+JOIN tenant_memberships AS target_membership
+  ON target_membership.tenant_id = sqlc.arg(target_tenant_id)
+ AND target_membership.principal_id = principal.id
+ AND target_membership.status <> 'removed'
+JOIN tenant_access AS target_access
+  ON target_access.tenant_id = target_membership.tenant_id
+JOIN tenant_lifecycle_projections AS target_lifecycle
+  ON target_lifecycle.tenant_id = target_membership.tenant_id
+LEFT JOIN session_grants AS target_grant
+  ON target_grant.tenant_id = target_membership.tenant_id
+ AND target_grant.session_id = session_row.id
+ AND target_grant.status = 'active'
+LEFT JOIN refresh_token_families AS target_family
+  ON target_family.tenant_id = target_grant.tenant_id
+ AND target_family.grant_id = target_grant.id
+ AND target_family.status = 'active'
+WHERE principal.id = sqlc.arg(principal_id);
+
+-- name: LockTenantSwitchBoundary :one
+SELECT
+    source_grant.tenant_id AS source_tenant_id,
+    target_membership.tenant_id AS target_tenant_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    target_membership.id AS target_membership_id,
+    target_membership.status AS target_membership_status,
+    target_access.status AS target_access_status,
+    target_lifecycle.status AS target_lifecycle_status,
+    target_lifecycle.fresh_until > statement_timestamp() AS target_lifecycle_fresh,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at AS session_created_at,
+    session_row.updated_at AS session_updated_at,
+    source_grant.id AS source_grant_id,
+    source_grant.membership_id AS source_membership_id,
+    source_grant.status AS source_grant_status,
+    source_grant.version AS source_grant_version,
+    source_grant.created_at AS source_grant_created_at,
+    source_grant.updated_at AS source_grant_updated_at
+FROM principals AS principal
+JOIN sessions AS session_row
+  ON session_row.id = sqlc.arg(session_id)
+ AND session_row.principal_id = principal.id
+JOIN session_grants AS source_grant
+  ON source_grant.tenant_id = sqlc.arg(source_tenant_id)
+ AND source_grant.id = sqlc.arg(source_grant_id)
+ AND source_grant.session_id = session_row.id
+JOIN tenant_memberships AS source_membership
+  ON source_membership.tenant_id = source_grant.tenant_id
+ AND source_membership.id = source_grant.membership_id
+ AND source_membership.principal_id = principal.id
+JOIN tenant_memberships AS target_membership
+  ON target_membership.tenant_id = sqlc.arg(target_tenant_id)
+ AND target_membership.principal_id = principal.id
+ AND target_membership.status <> 'removed'
+JOIN tenant_access AS target_access
+  ON target_access.tenant_id = target_membership.tenant_id
+JOIN tenant_lifecycle_projections AS target_lifecycle
+  ON target_lifecycle.tenant_id = target_membership.tenant_id
+WHERE principal.id = sqlc.arg(principal_id)
+-- tenant_lifecycle_projections is a read-only projection for the IAM runtime.
+FOR UPDATE OF principal, session_row, source_grant, source_membership,
+    target_membership, target_access;
+
+-- name: LockActiveTargetGrant :one
+SELECT id, membership_id, status, version, created_at, updated_at
+FROM session_grants
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND session_id = sqlc.arg(session_id)
+  AND status = 'active'
+FOR UPDATE;
+
+-- name: LockActiveRefreshFamily :one
+SELECT id, grant_id, status, version, created_at, updated_at
+FROM refresh_token_families
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND grant_id = sqlc.arg(grant_id)
+  AND status = 'active'
+FOR UPDATE;
+
+-- name: LockActiveRefreshToken :one
+SELECT id, family_id, digest, status, issued_at, expires_at, consumed_at, replaced_by
+FROM refresh_tokens
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND family_id = sqlc.arg(family_id)
+  AND status = 'active'
+FOR UPDATE;
+
+-- name: IncrementSessionGrantVersionForSwitch :one
+UPDATE session_grants
+SET version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND id = sqlc.arg(grant_id)
+  AND session_id = sqlc.arg(session_id)
+  AND membership_id = sqlc.arg(membership_id)
+  AND status = 'active'
+  AND version = sqlc.arg(expected_version)
+RETURNING version;

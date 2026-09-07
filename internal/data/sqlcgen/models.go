@@ -120,6 +120,7 @@ type RefreshToken struct {
 	IssuedAt   pgtype.Timestamptz
 	ExpiresAt  pgtype.Timestamptz
 	ConsumedAt pgtype.Timestamptz
+	ReplacedBy pgtype.UUID
 }
 
 type RefreshTokenFamily struct {

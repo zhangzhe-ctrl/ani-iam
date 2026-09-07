@@ -15,11 +15,13 @@ type Querier interface {
 	AppendAnonymousPrincipalSecurityAuditEvent(ctx context.Context, arg AppendAnonymousPrincipalSecurityAuditEventParams) error
 	AppendAnonymousTenantSecurityAuditEvent(ctx context.Context, arg AppendAnonymousTenantSecurityAuditEventParams) error
 	AppendPrincipalSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSecurityAuditEventParams) error
+	AppendPrincipalSessionSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSessionSecurityAuditEventParams) error
 	AppendSecurityAuditEvent(ctx context.Context, arg AppendSecurityAuditEventParams) error
 	CancelPasswordActionNotification(ctx context.Context, arg CancelPasswordActionNotificationParams) error
 	CancelReplacedPasswordActionNotifications(ctx context.Context, arg CancelReplacedPasswordActionNotificationsParams) error
 	ClaimPasswordActionNotification(ctx context.Context, arg ClaimPasswordActionNotificationParams) (ClaimPasswordActionNotificationRow, error)
 	ConsumePasswordAction(ctx context.Context, arg ConsumePasswordActionParams) (int64, error)
+	ConsumeRefreshToken(ctx context.Context, arg ConsumeRefreshTokenParams) (uuid.UUID, error)
 	CreateKnownPasswordActionRequest(ctx context.Context, arg CreateKnownPasswordActionRequestParams) error
 	CreateOIDCIdentity(ctx context.Context, arg CreateOIDCIdentityParams) error
 	CreatePasswordAction(ctx context.Context, arg CreatePasswordActionParams) error
@@ -37,17 +39,33 @@ type Querier interface {
 	GetPasswordActionRequestByIdempotencyKey(ctx context.Context, arg GetPasswordActionRequestByIdempotencyKeyParams) (GetPasswordActionRequestByIdempotencyKeyRow, error)
 	GetTenantMembership(ctx context.Context, arg GetTenantMembershipParams) (GetTenantMembershipRow, error)
 	GetVerifiedAccountForPrincipal(ctx context.Context, arg GetVerifiedAccountForPrincipalParams) (string, error)
+	IncrementSessionGrantVersionForReuse(ctx context.Context, arg IncrementSessionGrantVersionForReuseParams) (int64, error)
+	IncrementSessionGrantVersionForSwitch(ctx context.Context, arg IncrementSessionGrantVersionForSwitchParams) (int64, error)
+	LockActiveRefreshFamily(ctx context.Context, arg LockActiveRefreshFamilyParams) (LockActiveRefreshFamilyRow, error)
+	LockActiveRefreshToken(ctx context.Context, arg LockActiveRefreshTokenParams) (LockActiveRefreshTokenRow, error)
+	LockActiveTargetGrant(ctx context.Context, arg LockActiveTargetGrantParams) (LockActiveTargetGrantRow, error)
+	LockLogoutSession(ctx context.Context, arg LockLogoutSessionParams) (LockLogoutSessionRow, error)
 	LockOIDCLinkAuthentication(ctx context.Context, arg LockOIDCLinkAuthenticationParams) (pgtype.Timestamptz, error)
 	LockOIDCLoginAuthentication(ctx context.Context, arg LockOIDCLoginAuthenticationParams) (LockOIDCLoginAuthenticationRow, error)
 	LockPasswordAction(ctx context.Context, arg LockPasswordActionParams) (LockPasswordActionRow, error)
 	LockPasswordActionPrincipal(ctx context.Context, arg LockPasswordActionPrincipalParams) error
 	LockPasswordAuthenticationIdempotencyKey(ctx context.Context, arg LockPasswordAuthenticationIdempotencyKeyParams) error
+	// The runtime role intentionally has SELECT-only access to lifecycle projections.
+	// Lock mutable authentication rows while re-reading lifecycle in this transaction;
+	// do not broaden runtime privileges merely to obtain a row lock on the projection.
+	LockRefreshSession(ctx context.Context, arg LockRefreshSessionParams) (LockRefreshSessionRow, error)
+	LockSessionContinuity(ctx context.Context, arg LockSessionContinuityParams) error
+	// tenant_lifecycle_projections is a read-only projection for the IAM runtime.
+	LockTenantSwitchBoundary(ctx context.Context, arg LockTenantSwitchBoundaryParams) (LockTenantSwitchBoundaryRow, error)
 	LookupAuthorization(ctx context.Context, arg LookupAuthorizationParams) (LookupAuthorizationRow, error)
+	LookupLogoutSession(ctx context.Context, arg LookupLogoutSessionParams) (LookupLogoutSessionRow, error)
 	LookupOIDCIdentityOwner(ctx context.Context, arg LookupOIDCIdentityOwnerParams) (uuid.UUID, error)
 	LookupOIDCLogin(ctx context.Context, arg LookupOIDCLoginParams) (LookupOIDCLoginRow, error)
 	LookupOIDCReauthentication(ctx context.Context, arg LookupOIDCReauthenticationParams) (LookupOIDCReauthenticationRow, error)
 	LookupPasswordActionTarget(ctx context.Context, arg LookupPasswordActionTargetParams) (LookupPasswordActionTargetRow, error)
 	LookupPasswordLogin(ctx context.Context, arg LookupPasswordLoginParams) (LookupPasswordLoginRow, error)
+	LookupRefreshSession(ctx context.Context, arg LookupRefreshSessionParams) (LookupRefreshSessionRow, error)
+	LookupTenantSwitch(ctx context.Context, arg LookupTenantSwitchParams) (LookupTenantSwitchRow, error)
 	LookupVerifiedEmailOwner(ctx context.Context, arg LookupVerifiedEmailOwnerParams) (uuid.UUID, error)
 	MarkPasswordActionNotificationAttentionRequired(ctx context.Context, arg MarkPasswordActionNotificationAttentionRequiredParams) (int64, error)
 	MarkPasswordActionNotificationDelivered(ctx context.Context, arg MarkPasswordActionNotificationDeliveredParams) (int64, error)
@@ -55,11 +73,18 @@ type Querier interface {
 	ReplaceActivePasswordActions(ctx context.Context, arg ReplaceActivePasswordActionsParams) ([]uuid.UUID, error)
 	ReschedulePasswordActionNotification(ctx context.Context, arg ReschedulePasswordActionNotificationParams) (int64, error)
 	ResetPasswordLoginFailures(ctx context.Context, arg ResetPasswordLoginFailuresParams) (int64, error)
+	RevokeActiveRefreshTokensForFamily(ctx context.Context, arg RevokeActiveRefreshTokensForFamilyParams) error
+	RevokeCurrentSession(ctx context.Context, arg RevokeCurrentSessionParams) (int64, error)
+	RevokeCurrentSessionFamilies(ctx context.Context, arg RevokeCurrentSessionFamiliesParams) error
+	RevokeCurrentSessionGrants(ctx context.Context, arg RevokeCurrentSessionGrantsParams) error
+	RevokeCurrentSessionRefreshTokens(ctx context.Context, arg RevokeCurrentSessionRefreshTokensParams) error
+	RevokeRefreshFamilyForReuse(ctx context.Context, arg RevokeRefreshFamilyForReuseParams) (int64, error)
 	RevokeRefreshTokenFamiliesForPrincipal(ctx context.Context, arg RevokeRefreshTokenFamiliesForPrincipalParams) error
 	RevokeRefreshTokensForPrincipal(ctx context.Context, arg RevokeRefreshTokensForPrincipalParams) error
 	RevokeSessionGrantsForPrincipal(ctx context.Context, arg RevokeSessionGrantsForPrincipalParams) error
 	RevokeSessionsForPrincipal(ctx context.Context, arg RevokeSessionsForPrincipalParams) error
 	UpdatePasswordCredentialForReset(ctx context.Context, arg UpdatePasswordCredentialForResetParams) (int64, error)
+	UpdateSessionIdleExpiry(ctx context.Context, arg UpdateSessionIdleExpiryParams) (int64, error)
 	UpdateTenantMembershipStatus(ctx context.Context, arg UpdateTenantMembershipStatusParams) (UpdateTenantMembershipStatusRow, error)
 }
 

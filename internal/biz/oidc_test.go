@@ -141,6 +141,12 @@ func TestCompleteOIDCLoginAuthenticatesOnlyAnExistingIdentity(t *testing.T) {
 	if got := uow.login.RefreshToken.Digest; got != sha256.Sum256([]byte("refresh-secret")) {
 		t.Fatalf("refresh digest = %x", got)
 	}
+	if result.Session.Version != 1 || uow.login.Session.Version != 1 ||
+		uow.login.RefreshFamily.Version != 1 ||
+		uow.login.RefreshToken.Status != RefreshTokenStatusActive {
+		t.Fatalf("OIDC session continuity state = result session:%#v mutation session:%#v family:%#v token:%#v",
+			result.Session, uow.login.Session, uow.login.RefreshFamily, uow.login.RefreshToken)
+	}
 	if len(tokens.claims.AuthnMethods) != 1 || tokens.claims.AuthnMethods[0] != AuditAuthenticationMethodOIDC {
 		t.Fatalf("access-token authn methods = %#v", tokens.claims.AuthnMethods)
 	}

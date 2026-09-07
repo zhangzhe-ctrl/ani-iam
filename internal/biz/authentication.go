@@ -116,6 +116,7 @@ type Session struct {
 	PrincipalID       uuid.UUID
 	Audience          Audience
 	Status            SessionStatus
+	Version           int64
 	AuthnMethods      []AuditAuthenticationMethod
 	DeviceName        string
 	IdleExpiresAt     time.Time
@@ -139,16 +140,29 @@ type RefreshTokenFamily struct {
 	ID        uuid.UUID
 	GrantID   uuid.UUID
 	Status    GrantStatus
+	Version   int64
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
+type RefreshTokenStatus string
+
+const (
+	RefreshTokenStatusActive   RefreshTokenStatus = "active"
+	RefreshTokenStatusConsumed RefreshTokenStatus = "consumed"
+	RefreshTokenStatusRevoked  RefreshTokenStatus = "revoked"
+	RefreshTokenStatusExpired  RefreshTokenStatus = "expired"
+)
+
 type RefreshToken struct {
-	ID        uuid.UUID
-	FamilyID  uuid.UUID
-	Digest    [sha256.Size]byte
-	IssuedAt  time.Time
-	ExpiresAt time.Time
+	ID         uuid.UUID
+	FamilyID   uuid.UUID
+	Digest     [sha256.Size]byte
+	Status     RefreshTokenStatus
+	IssuedAt   time.Time
+	ExpiresAt  time.Time
+	ConsumedAt time.Time
+	ReplacedBy uuid.UUID
 }
 
 type AccessTokenClaims struct {
@@ -244,6 +258,7 @@ type LoginThrottle interface {
 	Check(context.Context, LoginThrottleAttempt) error
 	RecordFailure(context.Context, LoginThrottleAttempt) error
 	Reset(context.Context, LoginThrottleAttempt) error
+	CheckRefresh(context.Context, RefreshThrottleAttempt) error
 }
 
 type LoginUnitOfWork interface {
@@ -372,6 +387,7 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 		PrincipalID:       state.PrincipalID,
 		Audience:          command.Audience,
 		Status:            SessionStatusActive,
+		Version:           1,
 		AuthnMethods:      []AuditAuthenticationMethod{AuditAuthenticationMethodPassword},
 		DeviceName:        strings.TrimSpace(command.DeviceName),
 		IdleExpiresAt:     idleExpiresAt,
@@ -393,6 +409,7 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 		ID:        ids[2],
 		GrantID:   grant.ID,
 		Status:    GrantStatusActive,
+		Version:   1,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -404,6 +421,7 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 		ID:        ids[3],
 		FamilyID:  family.ID,
 		Digest:    sha256.Sum256([]byte(refreshSecret)),
+		Status:    RefreshTokenStatusActive,
 		IssuedAt:  now,
 		ExpiresAt: absoluteExpiresAt,
 	}
@@ -574,8 +592,13 @@ func (u *AuthenticationUsecase) newIDs(count int) ([]uuid.UUID, error) {
 }
 
 func loginDeadlines(audience Audience, now time.Time) (access, idle, absolute time.Time) {
+	accessLifetime, idleLifetime, absoluteLifetime := sessionLifetimePolicy(audience)
+	return now.Add(accessLifetime), now.Add(idleLifetime), now.Add(absoluteLifetime)
+}
+
+func sessionLifetimePolicy(audience Audience) (access, idle, absolute time.Duration) {
 	if audience == AudienceBoss {
-		return now.Add(10 * time.Minute), now.Add(30 * time.Minute), now.Add(8 * time.Hour)
+		return 10 * time.Minute, 30 * time.Minute, 8 * time.Hour
 	}
-	return now.Add(15 * time.Minute), now.Add(7 * 24 * time.Hour), now.Add(30 * 24 * time.Hour)
+	return 15 * time.Minute, 7 * 24 * time.Hour, 30 * 24 * time.Hour
 }

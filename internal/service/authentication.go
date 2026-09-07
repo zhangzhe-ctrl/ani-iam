@@ -22,6 +22,9 @@ type authenticationUsecase interface {
 	PasswordLogin(context.Context, biz.PasswordLoginCommand) (biz.PasswordLoginResult, error)
 	RequestPasswordAction(context.Context, biz.RequestPasswordActionCommand) (biz.RequestPasswordActionResult, error)
 	CompletePasswordAction(context.Context, biz.CompletePasswordActionCommand) (biz.CompletePasswordActionResult, error)
+	RefreshSession(context.Context, biz.RefreshSessionCommand) (biz.RefreshSessionResult, error)
+	LogoutSession(context.Context, biz.LogoutSessionCommand) (biz.LogoutSessionResult, error)
+	SwitchTenant(context.Context, biz.SwitchTenantCommand) (biz.SwitchTenantResult, error)
 }
 
 type oidcUsecase interface {
@@ -138,6 +141,66 @@ func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv
 	return loginResponse(result, tenantID), nil
 }
 
+func (s *AuthenticationService) RefreshSession(ctx context.Context, request *iamv1.RefreshSessionRequest) (*iamv1.RefreshSessionResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "refresh request is required")
+	}
+	result, err := s.authentication.RefreshSession(ctx, biz.RefreshSessionCommand{
+		RefreshToken: request.GetRefreshToken(), CSRFToken: request.GetCsrfToken(),
+		Origin: request.GetOrigin(), IdempotencyKey: request.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID: "refreshSession", IdempotencyKey: strings.TrimSpace(request.GetIdempotencyKey()),
+			CredentialKind: "refresh_token", Dependency: "authentication",
+		})
+	}
+	return &iamv1.RefreshSessionResponse{Login: loginResponse(result, result.TenantID)}, nil
+}
+
+func (s *AuthenticationService) LogoutSession(ctx context.Context, request *iamv1.LogoutSessionRequest) (*iamv1.LogoutSessionResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "logout request is required")
+	}
+	_, err := s.authentication.LogoutSession(ctx, biz.LogoutSessionCommand{
+		RefreshToken: request.GetRefreshToken(), CSRFToken: request.GetCsrfToken(),
+		Origin: request.GetOrigin(), IdempotencyKey: request.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID: "logoutSession", IdempotencyKey: strings.TrimSpace(request.GetIdempotencyKey()),
+			CredentialKind: "refresh_token", Dependency: "authentication",
+		})
+	}
+	// The public Gateway maps this response to 204. Keeping the internal result
+	// empty also avoids distinguishing unknown from already-revoked credentials.
+	return &iamv1.LogoutSessionResponse{Result: &iamv1.MutationResult{}}, nil
+}
+
+func (s *AuthenticationService) SwitchTenant(ctx context.Context, request *iamv1.SwitchTenantRequest) (*iamv1.SwitchTenantResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "tenant-switch request is required")
+	}
+	tenantID, err := uuid.Parse(strings.TrimSpace(request.GetTenantId()))
+	if err != nil || tenantID == uuid.Nil {
+		return nil, invalidArgumentStatus("tenant_id", "target tenant is invalid")
+	}
+	credential := ""
+	if request.GetCredential() != nil {
+		credential = request.GetCredential().GetValue()
+	}
+	result, err := s.authentication.SwitchTenant(ctx, biz.SwitchTenantCommand{
+		RawCredential: credential, TargetTenantID: tenantID, IdempotencyKey: request.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID: "switchTenant", IdempotencyKey: strings.TrimSpace(request.GetIdempotencyKey()),
+			TenantID: tenantID.String(), CredentialKind: "bearer", Dependency: "authentication",
+		})
+	}
+	return &iamv1.SwitchTenantResponse{Login: loginResponse(result, tenantID)}, nil
+}
+
 func (s *AuthenticationService) CompleteOIDCLogin(ctx context.Context, request *iamv1.CompleteOIDCLoginRequest) (*iamv1.CompleteOIDCLoginResponse, error) {
 	if request == nil {
 		return nil, invalidArgumentStatus("request", "OIDC login completion request is required")
@@ -247,7 +310,11 @@ func loginResponse(result biz.LoginResult, tenantID uuid.UUID) *iamv1.PasswordLo
 		Version:  uint64(result.Grant.Version),
 		Status:   grantStatusToProto(result.Grant.Status),
 	}
-	expiresIn := result.AccessTokenExpiresAt.Sub(result.Session.CreatedAt)
+	issuedAt := result.Session.UpdatedAt
+	if issuedAt.IsZero() {
+		issuedAt = result.Session.CreatedAt
+	}
+	expiresIn := result.AccessTokenExpiresAt.Sub(issuedAt)
 	if expiresIn < 0 {
 		expiresIn = 0
 	}
@@ -442,6 +509,12 @@ func invalidArgumentField(err error) string {
 		return "audience"
 	case errors.Is(err, biz.ErrSourceIPRequired):
 		return "source_ip"
+	case errors.Is(err, biz.ErrRefreshTokenRequired):
+		return "refresh_token"
+	case errors.Is(err, biz.ErrCSRFTokenRequired):
+		return "csrf_token"
+	case errors.Is(err, biz.ErrOriginRequired):
+		return "origin"
 	case errors.Is(err, biz.ErrOIDCRedirectInvalid):
 		return "redirect_uri"
 	case errors.Is(err, biz.ErrOIDCConfigurationInvalid):

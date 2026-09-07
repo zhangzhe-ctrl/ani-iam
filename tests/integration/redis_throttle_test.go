@@ -4,6 +4,7 @@ package integration_test
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"net/netip"
 	"strings"
@@ -97,6 +98,21 @@ func TestRedisLoginThrottleIsolatesHashedAccountAndSourceIPLocks(t *testing.T) {
 		NormalizedAccount: "other@example.com",
 		SourceIP:          netip.MustParseAddr("203.0.113.10"),
 	}), "password_ip", 15*time.Minute)
+
+	refreshAttempt := biz.RefreshThrottleAttempt{Digest: sha256.Sum256([]byte("opaque-refresh-token"))}
+	for attempt := 1; attempt <= 5; attempt++ {
+		if err := throttle.CheckRefresh(ctx, refreshAttempt); err != nil {
+			t.Fatalf("CheckRefresh() attempt %d error = %v", attempt, err)
+		}
+	}
+	assertRedisLoginRateLimit(t, throttle.CheckRefresh(ctx, refreshAttempt), "refresh_token", 15*time.Minute)
+	refreshKeys, err := client.Keys(ctx, "ani-iam:dp2-06:test-run:refresh:token:*").Result()
+	if err != nil || len(refreshKeys) != 1 {
+		t.Fatalf("refresh digest keys = %#v, error = %v, want one", refreshKeys, err)
+	}
+	if strings.Contains(refreshKeys[0], "opaque-refresh-token") {
+		t.Fatalf("Redis refresh key contains raw credential: %q", refreshKeys[0])
+	}
 	if err := throttle.Check(ctx, biz.LoginThrottleAttempt{
 		NormalizedAccount: "other@example.com",
 		SourceIP:          netip.MustParseAddr("203.0.113.11"),
@@ -180,6 +196,9 @@ func TestRedisLoginThrottleIsolatesHashedAccountAndSourceIPLocks(t *testing.T) {
 	})
 	assertStoppedRedisFailure("Reset()", func(ctx context.Context) error {
 		return throttle.Reset(ctx, lockedAttempt)
+	})
+	assertStoppedRedisFailure("CheckRefresh()", func(ctx context.Context) error {
+		return throttle.CheckRefresh(ctx, biz.RefreshThrottleAttempt{Digest: sha256.Sum256([]byte("stopped-refresh-token"))})
 	})
 }
 

@@ -114,6 +114,7 @@ type PasswordActionUnitOfWork interface {
 type AuthenticationReader interface {
 	PasswordLoginReader
 	PasswordActionReader
+	SessionContinuityReader
 }
 
 type AuthenticationPassword interface {
@@ -124,10 +125,12 @@ type AuthenticationPassword interface {
 type AuthenticationUnitOfWork interface {
 	LoginUnitOfWork
 	PasswordActionUnitOfWork
+	SessionContinuityUnitOfWork
 }
 
 type AuthenticationTokenCodec interface {
 	AccessTokenIssuer
+	AccessCredentialVerifier
 	PasswordActionTokenCodec
 }
 

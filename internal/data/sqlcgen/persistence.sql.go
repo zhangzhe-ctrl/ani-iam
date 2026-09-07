@@ -166,6 +166,60 @@ func (q *Queries) AppendPrincipalSecurityAuditEvent(ctx context.Context, arg App
 	return err
 }
 
+const appendPrincipalSessionSecurityAuditEvent = `-- name: AppendPrincipalSessionSecurityAuditEvent :exec
+INSERT INTO iam_audit_events (
+    tenant_id, event_id, actor_id, authentication_method, boundary,
+    action, target_type, target_id, target_version, result, reason,
+    request_id, correlation_id, decision_id, source_service,
+    occurred_at, recorded_at
+) VALUES (
+    NULL, $1, $2, $3, 'principal',
+    $4, $5, $6,
+    $7, $8, $9,
+    $10, $11, $12,
+    $13, $14, $15
+)
+`
+
+type AppendPrincipalSessionSecurityAuditEventParams struct {
+	EventID              uuid.UUID
+	ActorID              pgtype.UUID
+	AuthenticationMethod string
+	Action               string
+	TargetType           string
+	TargetID             uuid.UUID
+	TargetVersion        int64
+	Result               string
+	Reason               string
+	RequestID            string
+	CorrelationID        string
+	DecisionID           string
+	SourceService        string
+	OccurredAt           pgtype.Timestamptz
+	RecordedAt           pgtype.Timestamptz
+}
+
+func (q *Queries) AppendPrincipalSessionSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSessionSecurityAuditEventParams) error {
+	_, err := q.db.Exec(ctx, appendPrincipalSessionSecurityAuditEvent,
+		arg.EventID,
+		arg.ActorID,
+		arg.AuthenticationMethod,
+		arg.Action,
+		arg.TargetType,
+		arg.TargetID,
+		arg.TargetVersion,
+		arg.Result,
+		arg.Reason,
+		arg.RequestID,
+		arg.CorrelationID,
+		arg.DecisionID,
+		arg.SourceService,
+		arg.OccurredAt,
+		arg.RecordedAt,
+	)
+	return err
+}
+
 const appendSecurityAuditEvent = `-- name: AppendSecurityAuditEvent :exec
 INSERT INTO iam_audit_events (
     tenant_id,
@@ -399,6 +453,42 @@ func (q *Queries) ConsumePasswordAction(ctx context.Context, arg ConsumePassword
 	var version int64
 	err := row.Scan(&version)
 	return version, err
+}
+
+const consumeRefreshToken = `-- name: ConsumeRefreshToken :one
+UPDATE refresh_tokens
+SET status = 'consumed',
+    consumed_at = $1,
+    replaced_by = $2
+WHERE tenant_id = $3
+  AND id = $4
+  AND family_id = $5
+  AND digest = $6
+  AND status = 'active'
+RETURNING id
+`
+
+type ConsumeRefreshTokenParams struct {
+	ConsumedAt    pgtype.Timestamptz
+	ReplacedBy    pgtype.UUID
+	TenantID      uuid.UUID
+	TokenID       uuid.UUID
+	FamilyID      uuid.UUID
+	RefreshDigest []byte
+}
+
+func (q *Queries) ConsumeRefreshToken(ctx context.Context, arg ConsumeRefreshTokenParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, consumeRefreshToken,
+		arg.ConsumedAt,
+		arg.ReplacedBy,
+		arg.TenantID,
+		arg.TokenID,
+		arg.FamilyID,
+		arg.RefreshDigest,
+	)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const createKnownPasswordActionRequest = `-- name: CreateKnownPasswordActionRequest :exec
@@ -937,6 +1027,258 @@ func (q *Queries) GetVerifiedAccountForPrincipal(ctx context.Context, arg GetVer
 	return normalized_email, err
 }
 
+const incrementSessionGrantVersionForReuse = `-- name: IncrementSessionGrantVersionForReuse :one
+UPDATE session_grants
+SET version = version + 1,
+    updated_at = $1
+WHERE tenant_id = $2
+  AND id = $3
+  AND status = 'active'
+  AND version = $4
+RETURNING version
+`
+
+type IncrementSessionGrantVersionForReuseParams struct {
+	UpdatedAt       pgtype.Timestamptz
+	TenantID        uuid.UUID
+	GrantID         uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) IncrementSessionGrantVersionForReuse(ctx context.Context, arg IncrementSessionGrantVersionForReuseParams) (int64, error) {
+	row := q.db.QueryRow(ctx, incrementSessionGrantVersionForReuse,
+		arg.UpdatedAt,
+		arg.TenantID,
+		arg.GrantID,
+		arg.ExpectedVersion,
+	)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const incrementSessionGrantVersionForSwitch = `-- name: IncrementSessionGrantVersionForSwitch :one
+UPDATE session_grants
+SET version = version + 1,
+    updated_at = $1
+WHERE tenant_id = $2
+  AND id = $3
+  AND session_id = $4
+  AND membership_id = $5
+  AND status = 'active'
+  AND version = $6
+RETURNING version
+`
+
+type IncrementSessionGrantVersionForSwitchParams struct {
+	UpdatedAt       pgtype.Timestamptz
+	TenantID        uuid.UUID
+	GrantID         uuid.UUID
+	SessionID       uuid.UUID
+	MembershipID    uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) IncrementSessionGrantVersionForSwitch(ctx context.Context, arg IncrementSessionGrantVersionForSwitchParams) (int64, error) {
+	row := q.db.QueryRow(ctx, incrementSessionGrantVersionForSwitch,
+		arg.UpdatedAt,
+		arg.TenantID,
+		arg.GrantID,
+		arg.SessionID,
+		arg.MembershipID,
+		arg.ExpectedVersion,
+	)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const lockActiveRefreshFamily = `-- name: LockActiveRefreshFamily :one
+SELECT id, grant_id, status, version, created_at, updated_at
+FROM refresh_token_families
+WHERE tenant_id = $1
+  AND grant_id = $2
+  AND status = 'active'
+FOR UPDATE
+`
+
+type LockActiveRefreshFamilyParams struct {
+	TenantID uuid.UUID
+	GrantID  uuid.UUID
+}
+
+type LockActiveRefreshFamilyRow struct {
+	ID        uuid.UUID
+	GrantID   uuid.UUID
+	Status    string
+	Version   int64
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) LockActiveRefreshFamily(ctx context.Context, arg LockActiveRefreshFamilyParams) (LockActiveRefreshFamilyRow, error) {
+	row := q.db.QueryRow(ctx, lockActiveRefreshFamily, arg.TenantID, arg.GrantID)
+	var i LockActiveRefreshFamilyRow
+	err := row.Scan(
+		&i.ID,
+		&i.GrantID,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const lockActiveRefreshToken = `-- name: LockActiveRefreshToken :one
+SELECT id, family_id, digest, status, issued_at, expires_at, consumed_at, replaced_by
+FROM refresh_tokens
+WHERE tenant_id = $1
+  AND family_id = $2
+  AND status = 'active'
+FOR UPDATE
+`
+
+type LockActiveRefreshTokenParams struct {
+	TenantID uuid.UUID
+	FamilyID uuid.UUID
+}
+
+type LockActiveRefreshTokenRow struct {
+	ID         uuid.UUID
+	FamilyID   uuid.UUID
+	Digest     []byte
+	Status     string
+	IssuedAt   pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	ConsumedAt pgtype.Timestamptz
+	ReplacedBy pgtype.UUID
+}
+
+func (q *Queries) LockActiveRefreshToken(ctx context.Context, arg LockActiveRefreshTokenParams) (LockActiveRefreshTokenRow, error) {
+	row := q.db.QueryRow(ctx, lockActiveRefreshToken, arg.TenantID, arg.FamilyID)
+	var i LockActiveRefreshTokenRow
+	err := row.Scan(
+		&i.ID,
+		&i.FamilyID,
+		&i.Digest,
+		&i.Status,
+		&i.IssuedAt,
+		&i.ExpiresAt,
+		&i.ConsumedAt,
+		&i.ReplacedBy,
+	)
+	return i, err
+}
+
+const lockActiveTargetGrant = `-- name: LockActiveTargetGrant :one
+SELECT id, membership_id, status, version, created_at, updated_at
+FROM session_grants
+WHERE tenant_id = $1
+  AND session_id = $2
+  AND status = 'active'
+FOR UPDATE
+`
+
+type LockActiveTargetGrantParams struct {
+	TenantID  uuid.UUID
+	SessionID uuid.UUID
+}
+
+type LockActiveTargetGrantRow struct {
+	ID           uuid.UUID
+	MembershipID uuid.UUID
+	Status       string
+	Version      int64
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) LockActiveTargetGrant(ctx context.Context, arg LockActiveTargetGrantParams) (LockActiveTargetGrantRow, error) {
+	row := q.db.QueryRow(ctx, lockActiveTargetGrant, arg.TenantID, arg.SessionID)
+	var i LockActiveTargetGrantRow
+	err := row.Scan(
+		&i.ID,
+		&i.MembershipID,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const lockLogoutSession = `-- name: LockLogoutSession :one
+SELECT
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at,
+    session_row.updated_at
+FROM refresh_tokens AS token
+JOIN refresh_token_families AS family
+  ON family.tenant_id = token.tenant_id
+ AND family.id = token.family_id
+JOIN session_grants AS grant_row
+  ON grant_row.tenant_id = family.tenant_id
+ AND grant_row.id = family.grant_id
+JOIN sessions AS session_row
+  ON session_row.id = grant_row.session_id
+JOIN principals AS principal
+  ON principal.id = session_row.principal_id
+WHERE token.digest = $1
+FOR UPDATE OF token, family, grant_row, session_row, principal
+`
+
+type LockLogoutSessionParams struct {
+	RefreshDigest []byte
+}
+
+type LockLogoutSessionRow struct {
+	PrincipalID       uuid.UUID
+	PrincipalStatus   string
+	SessionID         uuid.UUID
+	Audience          string
+	SessionStatus     string
+	SessionVersion    int64
+	AuthnMethods      []string
+	DeviceName        string
+	IdleExpiresAt     pgtype.Timestamptz
+	AbsoluteExpiresAt pgtype.Timestamptz
+	ReauthenticatedAt pgtype.Timestamptz
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+}
+
+func (q *Queries) LockLogoutSession(ctx context.Context, arg LockLogoutSessionParams) (LockLogoutSessionRow, error) {
+	row := q.db.QueryRow(ctx, lockLogoutSession, arg.RefreshDigest)
+	var i LockLogoutSessionRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.SessionID,
+		&i.Audience,
+		&i.SessionStatus,
+		&i.SessionVersion,
+		&i.AuthnMethods,
+		&i.DeviceName,
+		&i.IdleExpiresAt,
+		&i.AbsoluteExpiresAt,
+		&i.ReauthenticatedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const lockOIDCLinkAuthentication = `-- name: LockOIDCLinkAuthentication :one
 SELECT session.reauthenticated_at
 FROM principals AS principal
@@ -1125,6 +1467,303 @@ func (q *Queries) LockPasswordAuthenticationIdempotencyKey(ctx context.Context, 
 	return err
 }
 
+const lockRefreshSession = `-- name: LockRefreshSession :one
+SELECT
+    token.tenant_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at AS session_created_at,
+    session_row.updated_at AS session_updated_at,
+    grant_row.id AS grant_id,
+    grant_row.membership_id,
+    grant_row.status AS grant_status,
+    grant_row.version AS grant_version,
+    grant_row.created_at AS grant_created_at,
+    grant_row.updated_at AS grant_updated_at,
+    family.id AS family_id,
+    family.status AS family_status,
+    family.version AS family_version,
+    family.created_at AS family_created_at,
+    family.updated_at AS family_updated_at,
+    token.id AS token_id,
+    token.digest,
+    token.status AS token_status,
+    token.issued_at,
+    token.expires_at,
+    token.consumed_at,
+    token.replaced_by
+FROM refresh_tokens AS token
+JOIN refresh_token_families AS family
+  ON family.tenant_id = token.tenant_id
+ AND family.id = token.family_id
+JOIN session_grants AS grant_row
+  ON grant_row.tenant_id = family.tenant_id
+ AND grant_row.id = family.grant_id
+JOIN sessions AS session_row
+  ON session_row.id = grant_row.session_id
+JOIN principals AS principal
+  ON principal.id = session_row.principal_id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = grant_row.tenant_id
+ AND membership.id = grant_row.membership_id
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE token.digest = $1
+FOR UPDATE OF token, family, grant_row, session_row, principal, membership, access
+`
+
+type LockRefreshSessionParams struct {
+	RefreshDigest []byte
+}
+
+type LockRefreshSessionRow struct {
+	TenantID           uuid.UUID
+	PrincipalID        uuid.UUID
+	PrincipalStatus    string
+	MembershipStatus   string
+	TenantAccessStatus string
+	LifecycleStatus    string
+	LifecycleFresh     bool
+	SessionID          uuid.UUID
+	Audience           string
+	SessionStatus      string
+	SessionVersion     int64
+	AuthnMethods       []string
+	DeviceName         string
+	IdleExpiresAt      pgtype.Timestamptz
+	AbsoluteExpiresAt  pgtype.Timestamptz
+	ReauthenticatedAt  pgtype.Timestamptz
+	SessionCreatedAt   pgtype.Timestamptz
+	SessionUpdatedAt   pgtype.Timestamptz
+	GrantID            uuid.UUID
+	MembershipID       uuid.UUID
+	GrantStatus        string
+	GrantVersion       int64
+	GrantCreatedAt     pgtype.Timestamptz
+	GrantUpdatedAt     pgtype.Timestamptz
+	FamilyID           uuid.UUID
+	FamilyStatus       string
+	FamilyVersion      int64
+	FamilyCreatedAt    pgtype.Timestamptz
+	FamilyUpdatedAt    pgtype.Timestamptz
+	TokenID            uuid.UUID
+	Digest             []byte
+	TokenStatus        string
+	IssuedAt           pgtype.Timestamptz
+	ExpiresAt          pgtype.Timestamptz
+	ConsumedAt         pgtype.Timestamptz
+	ReplacedBy         pgtype.UUID
+}
+
+// The runtime role intentionally has SELECT-only access to lifecycle projections.
+// Lock mutable authentication rows while re-reading lifecycle in this transaction;
+// do not broaden runtime privileges merely to obtain a row lock on the projection.
+func (q *Queries) LockRefreshSession(ctx context.Context, arg LockRefreshSessionParams) (LockRefreshSessionRow, error) {
+	row := q.db.QueryRow(ctx, lockRefreshSession, arg.RefreshDigest)
+	var i LockRefreshSessionRow
+	err := row.Scan(
+		&i.TenantID,
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.MembershipStatus,
+		&i.TenantAccessStatus,
+		&i.LifecycleStatus,
+		&i.LifecycleFresh,
+		&i.SessionID,
+		&i.Audience,
+		&i.SessionStatus,
+		&i.SessionVersion,
+		&i.AuthnMethods,
+		&i.DeviceName,
+		&i.IdleExpiresAt,
+		&i.AbsoluteExpiresAt,
+		&i.ReauthenticatedAt,
+		&i.SessionCreatedAt,
+		&i.SessionUpdatedAt,
+		&i.GrantID,
+		&i.MembershipID,
+		&i.GrantStatus,
+		&i.GrantVersion,
+		&i.GrantCreatedAt,
+		&i.GrantUpdatedAt,
+		&i.FamilyID,
+		&i.FamilyStatus,
+		&i.FamilyVersion,
+		&i.FamilyCreatedAt,
+		&i.FamilyUpdatedAt,
+		&i.TokenID,
+		&i.Digest,
+		&i.TokenStatus,
+		&i.IssuedAt,
+		&i.ExpiresAt,
+		&i.ConsumedAt,
+		&i.ReplacedBy,
+	)
+	return i, err
+}
+
+const lockSessionContinuity = `-- name: LockSessionContinuity :exec
+SELECT pg_advisory_xact_lock(
+    hashtextextended($1::uuid::text, 2)
+)
+`
+
+type LockSessionContinuityParams struct {
+	SessionID uuid.UUID
+}
+
+func (q *Queries) LockSessionContinuity(ctx context.Context, arg LockSessionContinuityParams) error {
+	_, err := q.db.Exec(ctx, lockSessionContinuity, arg.SessionID)
+	return err
+}
+
+const lockTenantSwitchBoundary = `-- name: LockTenantSwitchBoundary :one
+SELECT
+    source_grant.tenant_id AS source_tenant_id,
+    target_membership.tenant_id AS target_tenant_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    target_membership.id AS target_membership_id,
+    target_membership.status AS target_membership_status,
+    target_access.status AS target_access_status,
+    target_lifecycle.status AS target_lifecycle_status,
+    target_lifecycle.fresh_until > statement_timestamp() AS target_lifecycle_fresh,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at AS session_created_at,
+    session_row.updated_at AS session_updated_at,
+    source_grant.id AS source_grant_id,
+    source_grant.membership_id AS source_membership_id,
+    source_grant.status AS source_grant_status,
+    source_grant.version AS source_grant_version,
+    source_grant.created_at AS source_grant_created_at,
+    source_grant.updated_at AS source_grant_updated_at
+FROM principals AS principal
+JOIN sessions AS session_row
+  ON session_row.id = $1
+ AND session_row.principal_id = principal.id
+JOIN session_grants AS source_grant
+  ON source_grant.tenant_id = $2
+ AND source_grant.id = $3
+ AND source_grant.session_id = session_row.id
+JOIN tenant_memberships AS source_membership
+  ON source_membership.tenant_id = source_grant.tenant_id
+ AND source_membership.id = source_grant.membership_id
+ AND source_membership.principal_id = principal.id
+JOIN tenant_memberships AS target_membership
+  ON target_membership.tenant_id = $4
+ AND target_membership.principal_id = principal.id
+ AND target_membership.status <> 'removed'
+JOIN tenant_access AS target_access
+  ON target_access.tenant_id = target_membership.tenant_id
+JOIN tenant_lifecycle_projections AS target_lifecycle
+  ON target_lifecycle.tenant_id = target_membership.tenant_id
+WHERE principal.id = $5
+FOR UPDATE OF principal, session_row, source_grant, source_membership,
+    target_membership, target_access
+`
+
+type LockTenantSwitchBoundaryParams struct {
+	SessionID      uuid.UUID
+	SourceTenantID uuid.UUID
+	SourceGrantID  uuid.UUID
+	TargetTenantID uuid.UUID
+	PrincipalID    uuid.UUID
+}
+
+type LockTenantSwitchBoundaryRow struct {
+	SourceTenantID         uuid.UUID
+	TargetTenantID         uuid.UUID
+	PrincipalID            uuid.UUID
+	PrincipalStatus        string
+	TargetMembershipID     uuid.UUID
+	TargetMembershipStatus string
+	TargetAccessStatus     string
+	TargetLifecycleStatus  string
+	TargetLifecycleFresh   bool
+	SessionID              uuid.UUID
+	Audience               string
+	SessionStatus          string
+	SessionVersion         int64
+	AuthnMethods           []string
+	DeviceName             string
+	IdleExpiresAt          pgtype.Timestamptz
+	AbsoluteExpiresAt      pgtype.Timestamptz
+	ReauthenticatedAt      pgtype.Timestamptz
+	SessionCreatedAt       pgtype.Timestamptz
+	SessionUpdatedAt       pgtype.Timestamptz
+	SourceGrantID          uuid.UUID
+	SourceMembershipID     uuid.UUID
+	SourceGrantStatus      string
+	SourceGrantVersion     int64
+	SourceGrantCreatedAt   pgtype.Timestamptz
+	SourceGrantUpdatedAt   pgtype.Timestamptz
+}
+
+// tenant_lifecycle_projections is a read-only projection for the IAM runtime.
+func (q *Queries) LockTenantSwitchBoundary(ctx context.Context, arg LockTenantSwitchBoundaryParams) (LockTenantSwitchBoundaryRow, error) {
+	row := q.db.QueryRow(ctx, lockTenantSwitchBoundary,
+		arg.SessionID,
+		arg.SourceTenantID,
+		arg.SourceGrantID,
+		arg.TargetTenantID,
+		arg.PrincipalID,
+	)
+	var i LockTenantSwitchBoundaryRow
+	err := row.Scan(
+		&i.SourceTenantID,
+		&i.TargetTenantID,
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.TargetMembershipID,
+		&i.TargetMembershipStatus,
+		&i.TargetAccessStatus,
+		&i.TargetLifecycleStatus,
+		&i.TargetLifecycleFresh,
+		&i.SessionID,
+		&i.Audience,
+		&i.SessionStatus,
+		&i.SessionVersion,
+		&i.AuthnMethods,
+		&i.DeviceName,
+		&i.IdleExpiresAt,
+		&i.AbsoluteExpiresAt,
+		&i.ReauthenticatedAt,
+		&i.SessionCreatedAt,
+		&i.SessionUpdatedAt,
+		&i.SourceGrantID,
+		&i.SourceMembershipID,
+		&i.SourceGrantStatus,
+		&i.SourceGrantVersion,
+		&i.SourceGrantCreatedAt,
+		&i.SourceGrantUpdatedAt,
+	)
+	return i, err
+}
+
 const lookupAuthorization = `-- name: LookupAuthorization :one
 SELECT
     principal.status AS principal_status,
@@ -1210,6 +1849,76 @@ func (q *Queries) LookupAuthorization(ctx context.Context, arg LookupAuthorizati
 		&i.GrantStatus,
 		&i.GrantVersion,
 		&i.PermissionAllowed,
+	)
+	return i, err
+}
+
+const lookupLogoutSession = `-- name: LookupLogoutSession :one
+SELECT
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at,
+    session_row.updated_at
+FROM refresh_tokens AS token
+JOIN refresh_token_families AS family
+  ON family.tenant_id = token.tenant_id
+ AND family.id = token.family_id
+JOIN session_grants AS grant_row
+  ON grant_row.tenant_id = family.tenant_id
+ AND grant_row.id = family.grant_id
+JOIN sessions AS session_row
+  ON session_row.id = grant_row.session_id
+JOIN principals AS principal
+  ON principal.id = session_row.principal_id
+WHERE token.digest = $1
+`
+
+type LookupLogoutSessionParams struct {
+	RefreshDigest []byte
+}
+
+type LookupLogoutSessionRow struct {
+	PrincipalID       uuid.UUID
+	PrincipalStatus   string
+	SessionID         uuid.UUID
+	Audience          string
+	SessionStatus     string
+	SessionVersion    int64
+	AuthnMethods      []string
+	DeviceName        string
+	IdleExpiresAt     pgtype.Timestamptz
+	AbsoluteExpiresAt pgtype.Timestamptz
+	ReauthenticatedAt pgtype.Timestamptz
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+}
+
+func (q *Queries) LookupLogoutSession(ctx context.Context, arg LookupLogoutSessionParams) (LookupLogoutSessionRow, error) {
+	row := q.db.QueryRow(ctx, lookupLogoutSession, arg.RefreshDigest)
+	var i LookupLogoutSessionRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.SessionID,
+		&i.Audience,
+		&i.SessionStatus,
+		&i.SessionVersion,
+		&i.AuthnMethods,
+		&i.DeviceName,
+		&i.IdleExpiresAt,
+		&i.AbsoluteExpiresAt,
+		&i.ReauthenticatedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1473,6 +2182,319 @@ func (q *Queries) LookupPasswordLogin(ctx context.Context, arg LookupPasswordLog
 	return i, err
 }
 
+const lookupRefreshSession = `-- name: LookupRefreshSession :one
+SELECT
+    token.tenant_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at AS session_created_at,
+    session_row.updated_at AS session_updated_at,
+    grant_row.id AS grant_id,
+    grant_row.membership_id,
+    grant_row.status AS grant_status,
+    grant_row.version AS grant_version,
+    grant_row.created_at AS grant_created_at,
+    grant_row.updated_at AS grant_updated_at,
+    family.id AS family_id,
+    family.status AS family_status,
+    family.version AS family_version,
+    family.created_at AS family_created_at,
+    family.updated_at AS family_updated_at,
+    token.id AS token_id,
+    token.digest,
+    token.status AS token_status,
+    token.issued_at,
+    token.expires_at,
+    token.consumed_at,
+    token.replaced_by
+FROM refresh_tokens AS token
+JOIN refresh_token_families AS family
+  ON family.tenant_id = token.tenant_id
+ AND family.id = token.family_id
+JOIN session_grants AS grant_row
+  ON grant_row.tenant_id = family.tenant_id
+ AND grant_row.id = family.grant_id
+JOIN sessions AS session_row
+  ON session_row.id = grant_row.session_id
+JOIN principals AS principal
+  ON principal.id = session_row.principal_id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = grant_row.tenant_id
+ AND membership.id = grant_row.membership_id
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE token.digest = $1
+`
+
+type LookupRefreshSessionParams struct {
+	RefreshDigest []byte
+}
+
+type LookupRefreshSessionRow struct {
+	TenantID           uuid.UUID
+	PrincipalID        uuid.UUID
+	PrincipalStatus    string
+	MembershipStatus   string
+	TenantAccessStatus string
+	LifecycleStatus    string
+	LifecycleFresh     bool
+	SessionID          uuid.UUID
+	Audience           string
+	SessionStatus      string
+	SessionVersion     int64
+	AuthnMethods       []string
+	DeviceName         string
+	IdleExpiresAt      pgtype.Timestamptz
+	AbsoluteExpiresAt  pgtype.Timestamptz
+	ReauthenticatedAt  pgtype.Timestamptz
+	SessionCreatedAt   pgtype.Timestamptz
+	SessionUpdatedAt   pgtype.Timestamptz
+	GrantID            uuid.UUID
+	MembershipID       uuid.UUID
+	GrantStatus        string
+	GrantVersion       int64
+	GrantCreatedAt     pgtype.Timestamptz
+	GrantUpdatedAt     pgtype.Timestamptz
+	FamilyID           uuid.UUID
+	FamilyStatus       string
+	FamilyVersion      int64
+	FamilyCreatedAt    pgtype.Timestamptz
+	FamilyUpdatedAt    pgtype.Timestamptz
+	TokenID            uuid.UUID
+	Digest             []byte
+	TokenStatus        string
+	IssuedAt           pgtype.Timestamptz
+	ExpiresAt          pgtype.Timestamptz
+	ConsumedAt         pgtype.Timestamptz
+	ReplacedBy         pgtype.UUID
+}
+
+func (q *Queries) LookupRefreshSession(ctx context.Context, arg LookupRefreshSessionParams) (LookupRefreshSessionRow, error) {
+	row := q.db.QueryRow(ctx, lookupRefreshSession, arg.RefreshDigest)
+	var i LookupRefreshSessionRow
+	err := row.Scan(
+		&i.TenantID,
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.MembershipStatus,
+		&i.TenantAccessStatus,
+		&i.LifecycleStatus,
+		&i.LifecycleFresh,
+		&i.SessionID,
+		&i.Audience,
+		&i.SessionStatus,
+		&i.SessionVersion,
+		&i.AuthnMethods,
+		&i.DeviceName,
+		&i.IdleExpiresAt,
+		&i.AbsoluteExpiresAt,
+		&i.ReauthenticatedAt,
+		&i.SessionCreatedAt,
+		&i.SessionUpdatedAt,
+		&i.GrantID,
+		&i.MembershipID,
+		&i.GrantStatus,
+		&i.GrantVersion,
+		&i.GrantCreatedAt,
+		&i.GrantUpdatedAt,
+		&i.FamilyID,
+		&i.FamilyStatus,
+		&i.FamilyVersion,
+		&i.FamilyCreatedAt,
+		&i.FamilyUpdatedAt,
+		&i.TokenID,
+		&i.Digest,
+		&i.TokenStatus,
+		&i.IssuedAt,
+		&i.ExpiresAt,
+		&i.ConsumedAt,
+		&i.ReplacedBy,
+	)
+	return i, err
+}
+
+const lookupTenantSwitch = `-- name: LookupTenantSwitch :one
+SELECT
+    source_grant.tenant_id AS source_tenant_id,
+    target_membership.tenant_id AS target_tenant_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    target_membership.id AS target_membership_id,
+    target_membership.status AS target_membership_status,
+    target_access.status AS target_access_status,
+    target_lifecycle.status AS target_lifecycle_status,
+    target_lifecycle.fresh_until > statement_timestamp() AS target_lifecycle_fresh,
+    session_row.id AS session_id,
+    session_row.audience,
+    session_row.status AS session_status,
+    session_row.version AS session_version,
+    session_row.authn_methods,
+    session_row.device_name,
+    session_row.idle_expires_at,
+    session_row.absolute_expires_at,
+    session_row.reauthenticated_at,
+    session_row.created_at AS session_created_at,
+    session_row.updated_at AS session_updated_at,
+    source_grant.id AS source_grant_id,
+    source_grant.membership_id AS source_membership_id,
+    source_grant.status AS source_grant_status,
+    source_grant.version AS source_grant_version,
+    source_grant.created_at AS source_grant_created_at,
+    source_grant.updated_at AS source_grant_updated_at,
+    target_grant.id AS target_grant_id,
+    target_grant.status AS target_grant_status,
+    target_grant.version AS target_grant_version,
+    target_grant.created_at AS target_grant_created_at,
+    target_grant.updated_at AS target_grant_updated_at,
+    target_family.id AS target_family_id,
+    target_family.status AS target_family_status,
+    target_family.version AS target_family_version,
+    target_family.created_at AS target_family_created_at,
+    target_family.updated_at AS target_family_updated_at
+FROM principals AS principal
+JOIN sessions AS session_row
+  ON session_row.id = $1
+ AND session_row.principal_id = principal.id
+JOIN session_grants AS source_grant
+  ON source_grant.tenant_id = $2
+ AND source_grant.id = $3
+ AND source_grant.session_id = session_row.id
+JOIN tenant_memberships AS source_membership
+  ON source_membership.tenant_id = source_grant.tenant_id
+ AND source_membership.id = source_grant.membership_id
+ AND source_membership.principal_id = principal.id
+JOIN tenant_memberships AS target_membership
+  ON target_membership.tenant_id = $4
+ AND target_membership.principal_id = principal.id
+ AND target_membership.status <> 'removed'
+JOIN tenant_access AS target_access
+  ON target_access.tenant_id = target_membership.tenant_id
+JOIN tenant_lifecycle_projections AS target_lifecycle
+  ON target_lifecycle.tenant_id = target_membership.tenant_id
+LEFT JOIN session_grants AS target_grant
+  ON target_grant.tenant_id = target_membership.tenant_id
+ AND target_grant.session_id = session_row.id
+ AND target_grant.status = 'active'
+LEFT JOIN refresh_token_families AS target_family
+  ON target_family.tenant_id = target_grant.tenant_id
+ AND target_family.grant_id = target_grant.id
+ AND target_family.status = 'active'
+WHERE principal.id = $5
+`
+
+type LookupTenantSwitchParams struct {
+	SessionID      uuid.UUID
+	SourceTenantID uuid.UUID
+	SourceGrantID  uuid.UUID
+	TargetTenantID uuid.UUID
+	PrincipalID    uuid.UUID
+}
+
+type LookupTenantSwitchRow struct {
+	SourceTenantID         uuid.UUID
+	TargetTenantID         uuid.UUID
+	PrincipalID            uuid.UUID
+	PrincipalStatus        string
+	TargetMembershipID     uuid.UUID
+	TargetMembershipStatus string
+	TargetAccessStatus     string
+	TargetLifecycleStatus  string
+	TargetLifecycleFresh   bool
+	SessionID              uuid.UUID
+	Audience               string
+	SessionStatus          string
+	SessionVersion         int64
+	AuthnMethods           []string
+	DeviceName             string
+	IdleExpiresAt          pgtype.Timestamptz
+	AbsoluteExpiresAt      pgtype.Timestamptz
+	ReauthenticatedAt      pgtype.Timestamptz
+	SessionCreatedAt       pgtype.Timestamptz
+	SessionUpdatedAt       pgtype.Timestamptz
+	SourceGrantID          uuid.UUID
+	SourceMembershipID     uuid.UUID
+	SourceGrantStatus      string
+	SourceGrantVersion     int64
+	SourceGrantCreatedAt   pgtype.Timestamptz
+	SourceGrantUpdatedAt   pgtype.Timestamptz
+	TargetGrantID          pgtype.UUID
+	TargetGrantStatus      pgtype.Text
+	TargetGrantVersion     pgtype.Int8
+	TargetGrantCreatedAt   pgtype.Timestamptz
+	TargetGrantUpdatedAt   pgtype.Timestamptz
+	TargetFamilyID         pgtype.UUID
+	TargetFamilyStatus     pgtype.Text
+	TargetFamilyVersion    pgtype.Int8
+	TargetFamilyCreatedAt  pgtype.Timestamptz
+	TargetFamilyUpdatedAt  pgtype.Timestamptz
+}
+
+func (q *Queries) LookupTenantSwitch(ctx context.Context, arg LookupTenantSwitchParams) (LookupTenantSwitchRow, error) {
+	row := q.db.QueryRow(ctx, lookupTenantSwitch,
+		arg.SessionID,
+		arg.SourceTenantID,
+		arg.SourceGrantID,
+		arg.TargetTenantID,
+		arg.PrincipalID,
+	)
+	var i LookupTenantSwitchRow
+	err := row.Scan(
+		&i.SourceTenantID,
+		&i.TargetTenantID,
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.TargetMembershipID,
+		&i.TargetMembershipStatus,
+		&i.TargetAccessStatus,
+		&i.TargetLifecycleStatus,
+		&i.TargetLifecycleFresh,
+		&i.SessionID,
+		&i.Audience,
+		&i.SessionStatus,
+		&i.SessionVersion,
+		&i.AuthnMethods,
+		&i.DeviceName,
+		&i.IdleExpiresAt,
+		&i.AbsoluteExpiresAt,
+		&i.ReauthenticatedAt,
+		&i.SessionCreatedAt,
+		&i.SessionUpdatedAt,
+		&i.SourceGrantID,
+		&i.SourceMembershipID,
+		&i.SourceGrantStatus,
+		&i.SourceGrantVersion,
+		&i.SourceGrantCreatedAt,
+		&i.SourceGrantUpdatedAt,
+		&i.TargetGrantID,
+		&i.TargetGrantStatus,
+		&i.TargetGrantVersion,
+		&i.TargetGrantCreatedAt,
+		&i.TargetGrantUpdatedAt,
+		&i.TargetFamilyID,
+		&i.TargetFamilyStatus,
+		&i.TargetFamilyVersion,
+		&i.TargetFamilyCreatedAt,
+		&i.TargetFamilyUpdatedAt,
+	)
+	return i, err
+}
+
 const lookupVerifiedEmailOwner = `-- name: LookupVerifiedEmailOwner :one
 SELECT principal_id
 FROM verified_emails
@@ -1682,6 +2704,151 @@ func (q *Queries) ResetPasswordLoginFailures(ctx context.Context, arg ResetPassw
 	return version, err
 }
 
+const revokeActiveRefreshTokensForFamily = `-- name: RevokeActiveRefreshTokensForFamily :exec
+UPDATE refresh_tokens
+SET status = 'revoked'
+WHERE tenant_id = $1
+  AND family_id = $2
+  AND status = 'active'
+`
+
+type RevokeActiveRefreshTokensForFamilyParams struct {
+	TenantID uuid.UUID
+	FamilyID uuid.UUID
+}
+
+func (q *Queries) RevokeActiveRefreshTokensForFamily(ctx context.Context, arg RevokeActiveRefreshTokensForFamilyParams) error {
+	_, err := q.db.Exec(ctx, revokeActiveRefreshTokensForFamily, arg.TenantID, arg.FamilyID)
+	return err
+}
+
+const revokeCurrentSession = `-- name: RevokeCurrentSession :one
+UPDATE sessions
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = $1
+WHERE id = $2
+  AND status = 'active'
+  AND version = $3
+RETURNING version
+`
+
+type RevokeCurrentSessionParams struct {
+	UpdatedAt       pgtype.Timestamptz
+	SessionID       uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) RevokeCurrentSession(ctx context.Context, arg RevokeCurrentSessionParams) (int64, error) {
+	row := q.db.QueryRow(ctx, revokeCurrentSession, arg.UpdatedAt, arg.SessionID, arg.ExpectedVersion)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const revokeCurrentSessionFamilies = `-- name: RevokeCurrentSessionFamilies :exec
+UPDATE refresh_token_families AS family
+SET status = 'revoked',
+    version = family.version + 1,
+    updated_at = $1
+WHERE family.status = 'active'
+  AND EXISTS (
+    SELECT 1
+    FROM session_grants AS grant_row
+    WHERE grant_row.tenant_id = family.tenant_id
+      AND grant_row.id = family.grant_id
+      AND grant_row.session_id = $2
+  )
+`
+
+type RevokeCurrentSessionFamiliesParams struct {
+	UpdatedAt pgtype.Timestamptz
+	SessionID uuid.UUID
+}
+
+func (q *Queries) RevokeCurrentSessionFamilies(ctx context.Context, arg RevokeCurrentSessionFamiliesParams) error {
+	_, err := q.db.Exec(ctx, revokeCurrentSessionFamilies, arg.UpdatedAt, arg.SessionID)
+	return err
+}
+
+const revokeCurrentSessionGrants = `-- name: RevokeCurrentSessionGrants :exec
+UPDATE session_grants
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = $1
+WHERE session_id = $2
+  AND status = 'active'
+`
+
+type RevokeCurrentSessionGrantsParams struct {
+	UpdatedAt pgtype.Timestamptz
+	SessionID uuid.UUID
+}
+
+func (q *Queries) RevokeCurrentSessionGrants(ctx context.Context, arg RevokeCurrentSessionGrantsParams) error {
+	_, err := q.db.Exec(ctx, revokeCurrentSessionGrants, arg.UpdatedAt, arg.SessionID)
+	return err
+}
+
+const revokeCurrentSessionRefreshTokens = `-- name: RevokeCurrentSessionRefreshTokens :exec
+UPDATE refresh_tokens AS token
+SET status = 'revoked'
+WHERE token.status = 'active'
+  AND EXISTS (
+    SELECT 1
+    FROM refresh_token_families AS family
+    JOIN session_grants AS grant_row
+      ON grant_row.tenant_id = family.tenant_id
+     AND grant_row.id = family.grant_id
+    WHERE family.tenant_id = token.tenant_id
+      AND family.id = token.family_id
+      AND grant_row.session_id = $1
+  )
+`
+
+type RevokeCurrentSessionRefreshTokensParams struct {
+	SessionID uuid.UUID
+}
+
+func (q *Queries) RevokeCurrentSessionRefreshTokens(ctx context.Context, arg RevokeCurrentSessionRefreshTokensParams) error {
+	_, err := q.db.Exec(ctx, revokeCurrentSessionRefreshTokens, arg.SessionID)
+	return err
+}
+
+const revokeRefreshFamilyForReuse = `-- name: RevokeRefreshFamilyForReuse :one
+UPDATE refresh_token_families
+SET status = 'revoked',
+    version = version + 1,
+    updated_at = $1
+WHERE tenant_id = $2
+  AND id = $3
+  AND grant_id = $4
+  AND status = 'active'
+  AND version = $5
+RETURNING version
+`
+
+type RevokeRefreshFamilyForReuseParams struct {
+	UpdatedAt       pgtype.Timestamptz
+	TenantID        uuid.UUID
+	FamilyID        uuid.UUID
+	GrantID         uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) RevokeRefreshFamilyForReuse(ctx context.Context, arg RevokeRefreshFamilyForReuseParams) (int64, error) {
+	row := q.db.QueryRow(ctx, revokeRefreshFamilyForReuse,
+		arg.UpdatedAt,
+		arg.TenantID,
+		arg.FamilyID,
+		arg.GrantID,
+		arg.ExpectedVersion,
+	)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
 const revokeRefreshTokenFamiliesForPrincipal = `-- name: RevokeRefreshTokenFamiliesForPrincipal :exec
 UPDATE refresh_token_families AS family
 SET status = 'revoked',
@@ -1798,6 +2965,38 @@ type UpdatePasswordCredentialForResetParams struct {
 
 func (q *Queries) UpdatePasswordCredentialForReset(ctx context.Context, arg UpdatePasswordCredentialForResetParams) (int64, error) {
 	row := q.db.QueryRow(ctx, updatePasswordCredentialForReset, arg.PasswordHash, arg.UpdatedAt, arg.PrincipalID)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
+const updateSessionIdleExpiry = `-- name: UpdateSessionIdleExpiry :one
+UPDATE sessions
+SET idle_expires_at = $1,
+    version = version + 1,
+    updated_at = $2
+WHERE id = $3
+  AND status = 'active'
+  AND version = $4
+  AND idle_expires_at > $2
+  AND absolute_expires_at > $2
+RETURNING version
+`
+
+type UpdateSessionIdleExpiryParams struct {
+	IdleExpiresAt   pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	SessionID       uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) UpdateSessionIdleExpiry(ctx context.Context, arg UpdateSessionIdleExpiryParams) (int64, error) {
+	row := q.db.QueryRow(ctx, updateSessionIdleExpiry,
+		arg.IdleExpiresAt,
+		arg.UpdatedAt,
+		arg.SessionID,
+		arg.ExpectedVersion,
+	)
 	var version int64
 	err := row.Scan(&version)
 	return version, err

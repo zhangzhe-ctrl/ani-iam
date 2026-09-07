@@ -1,5 +1,6 @@
-h1:+CY9Si44leBy3WoCcN4GBx0x6n2x1DYtl+GeF//S67Y=
+h1:xgJDwrKq4oeM+RpqsV+fuPWFuz39BiP0JbHGzQ/0KL4=
 202609040001_persistence_foundation.sql h1:1O+c8yPX7X6/Ht8Xe7N9Ts/iSuxO4EhUIqbaPSgEosA=
 202609040002_target_vertical_slice.sql h1:s/42JKAIg1+jlhX3hg14A6aH40hVgktjN2qEw4IzN5A=
 202609060001_password_authentication.sql h1:b/R3eyo6ykdArqfUhuokeErcSur9kK86Wm+TD3Dn64M=
 202609070001_oidc_identity.sql h1:8GFZ8jyJg+b02m7FOIj/gSvUYPrBWWM/PloUxmbgRNY=
+202609070002_session_continuity.sql h1:jG/+FHUzmvsFpbZ1SRwAHVjGH4M75jaRjdvTkp8hbY0=

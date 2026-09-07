@@ -16,12 +16,12 @@ Status: accepted / published
 | DP2-05 | 跑通 Password→Session→CheckPermission→目标 Gateway→受保护 API 的真实纵向链路 | 02, 03, 04 | **Go/No-Go A** |
 | DP2-06 | 交付目标 Password 设置、Argon2id 登录、锁定、重置和撤销边界 | 05 | DP2-2 |
 | DP2-07 | 交付 OIDC PKCE 登录、verified email 和显式 Identity Link | 05 | DP2-2 |
-| DP2-08 | 交付 Session/Grant、旋转 Refresh、reuse、Logout、SwitchTenant 和浏览器 Cookie/CSRF | 06, 07 | DP2-2 |
+| DP2-08 | 交付 IAM Session/Grant、旋转 Refresh、reuse、Logout、SwitchTenant，并冻结 Gateway/Console/BOSS 浏览器对接契约 | 06, 07 | DP2-2 |
 | DP2-09 | 交付 Tenant Access、Membership、基础 Role/Binding、Permission 和一次 Gateway 决策 | 05 | DP2-2 |
 | DP2-10 | 交付单 Tenant Service Principal、Bearer API Key 生命周期与 Envoy 验证 | 04, 09 | DP2-2 |
 | DP2-11 | 交付 mTLS/SPIFFE Workload Service Token 和 Inference 调用链 | 03, 04 | DP2-2 |
 | DP2-12 | 交付 Core Lifecycle 投影、Bootstrap、Outbox/NATS、gap repair、heartbeat 和 DLQ | 03, 04, 09 | DP2-2 |
-| DP2-13 | 完成 Gateway、Envoy、Inference、Console、BOSS 当前切换关键调用面对等 | 08, 09, 10, 11, 12 | DP2-2 |
+| DP2-13 | 完成 Gateway、Envoy、Inference、Console、BOSS 当前切换关键调用面对等，包括按 DP2-08 冻结契约完成 Cookie/CSRF 与浏览器 E2E | 08, 09, 10, 11, 12 | DP2-2 |
 | DP2-14 | 在隔离测试轨道整组切入目标 IAM 并完成部署级回退，不删旧资产、不失效 Credential | 13 | **Go/No-Go B** |
 | DP2-15 | 交付完整 Invitation、Role/Binding、Platform/BOSS 管理和双人高风险恢复 | 14 | DP2-3 |
 | DP2-16 | 交付 Audit 查询/180 天语义和全部公开 mutation 的统一 Idempotency Ledger | 15 | DP2-3 |
@@ -52,3 +52,5 @@ Status: accepted / published
 5. 接受发布后全部票为 `ready-for-agent`，但只允许 frontier 被领取；随后精确接受一次性 DP2-00 基线清理。
 
 DP2-00 的接受只授权本地实验归档和实现树清理，没有领取 DP2-01，也不授权外部系统、切流、重建、Credential 失效或旧部署资产删除。
+
+DP2-08 的 2026-09-08 收口决定进一步固定：本事项不实现或声称统一 24 小时 Idempotency Ledger，同 key replay/conflict/expiry 继续由 DP2-16 交付；`/auth/{audience}/*` 与 Console/BOSS Cookie Path 隔离只冻结 DP2-13 调用方契约，不在 DP2-08 扩展或修改 ANI 路径。

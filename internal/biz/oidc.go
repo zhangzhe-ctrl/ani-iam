@@ -621,7 +621,8 @@ func (u *OIDCUsecase) CompleteLogin(ctx context.Context, command CompleteOIDCLog
 	accessExpiresAt, idleExpiresAt, absoluteExpiresAt := loginDeadlines(operation.Audience, now)
 	session := Session{
 		ID: ids[0], PrincipalID: loginState.PrincipalID, Audience: operation.Audience,
-		Status: SessionStatusActive, AuthnMethods: []AuditAuthenticationMethod{AuditAuthenticationMethodOIDC},
+		Status: SessionStatusActive, Version: 1,
+		AuthnMethods:  []AuditAuthenticationMethod{AuditAuthenticationMethodOIDC},
 		DeviceName:    strings.TrimSpace(command.DeviceName),
 		IdleExpiresAt: idleExpiresAt, AbsoluteExpiry: absoluteExpiresAt, ReauthenticatedAt: now, CreatedAt: now, UpdatedAt: now,
 	}
@@ -630,7 +631,7 @@ func (u *OIDCUsecase) CompleteLogin(ctx context.Context, command CompleteOIDCLog
 		Status: GrantStatusActive, Version: 1, CreatedAt: now, UpdatedAt: now,
 	}
 	family := RefreshTokenFamily{
-		ID: ids[2], GrantID: grant.ID, Status: GrantStatusActive, CreatedAt: now, UpdatedAt: now,
+		ID: ids[2], GrantID: grant.ID, Status: GrantStatusActive, Version: 1, CreatedAt: now, UpdatedAt: now,
 	}
 	refreshSecret, err := u.secrets.NewSecret()
 	if err != nil || strings.TrimSpace(refreshSecret) == "" {
@@ -638,7 +639,7 @@ func (u *OIDCUsecase) CompleteLogin(ctx context.Context, command CompleteOIDCLog
 	}
 	refresh := RefreshToken{
 		ID: ids[3], FamilyID: family.ID, Digest: sha256.Sum256([]byte(refreshSecret)),
-		IssuedAt: now, ExpiresAt: absoluteExpiresAt,
+		Status: RefreshTokenStatusActive, IssuedAt: now, ExpiresAt: absoluteExpiresAt,
 	}
 	claims := AccessTokenClaims{
 		Issuer: "ani-iam", Subject: loginState.PrincipalID, Audience: operation.Audience,
