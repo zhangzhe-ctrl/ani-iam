@@ -2,12 +2,12 @@
 
 ## Current result
 
-`pass` for pre-commit DP2-06 closure. The independent final Standards review
-and ticket Spec review are both `pass` with no actionable finding; all
+`pass` for DP2-06 closure at implementation commit
+`74d7e441435d35dc66a733c8bf4a93129b26de3f`. The independent final Standards
+review and ticket Spec review are both `pass` with no actionable finding; all
 implementation, real-dependency, generation, supply-chain, and exact
-staged-diff gates below pass. The ticket remains `claimed` only until the local
-feature commit is created; no commit, push, deployment, or cluster action has
-occurred at the time of this record.
+staged-diff gates below pass. The ticket is `resolved`. No push, deployment, or
+cluster action occurred.
 
 ## Immutable inputs
 
@@ -196,3 +196,13 @@ The issue file, complete evidence directory, generated outputs, source, tests,
 migration, module files, and approved config/composition files are all in the
 same index. No `git add -A`, reset, stash, amend, rebase, push, deployment, or
 cluster action was used.
+
+## Commit and closure
+
+- Feature commit: `74d7e441435d35dc66a733c8bf4a93129b26de3f`
+  (`feat(dp2-06): deliver password authentication`).
+- `git status --short --branch` was clean immediately after that commit.
+- This record and the issue resolution are a separate documentation-only
+  closure commit because a commit cannot truthfully contain its own SHA.
+- DP2-06 is resolved with the residual `not_verified` boundaries above intact.
+  No push, deployment, live traffic, or cluster action was performed.

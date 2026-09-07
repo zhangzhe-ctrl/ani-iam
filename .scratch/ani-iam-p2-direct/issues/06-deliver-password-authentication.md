@@ -4,7 +4,7 @@
 
 **Blocked by:** 05 / 证明目标最小纵向链路（Go/No-Go A 已人工接受）
 
-**Status:** claimed
+**Status:** resolved
 
 **Type:** enhancement
 
@@ -92,3 +92,14 @@ Before commit, retain only Allowed-path diffs and terminate task-owned PostgreSQ
 - `2026-09-07`: final Spec review found that a durable PostgreSQL lock with empty Redis state did not recreate account/IP cooldown, enabling a known/unknown second-request difference. A unit regression first failed with zero Redis failure calls. The corrected locked path performs dummy Argon and records the same account/IP failure. Standards review then found that this first correction omitted the required authentication-failure Audit. A second unit regression first failed with a nil Audit mutation. The final implementation reuses the existing anonymous principal redacted Audit-only UOW path before Redis; it does not change or extend the durable lock, and Audit failure stops before Redis mutation. The real empty-Redis plus durable-lock test passed in `3.148s` and verifies one redacted Audit, unchanged credential failure/lock/version state, uniform first invalid credential, account cooldown, and shared-IP cooldown.
 - `2026-09-07`: independent final Standards review `pass` and independent final ticket Spec review `pass`, each with no actionable finding. Exact-final-tree `go test -tags=integration -race ./... -count=1` passed with `tests/integration` in `110.650s`; full normal tests, vet, module tidy/verify, contracts, formatting, diff check, fixed generation, affected-code vulnerability scan, deterministic SBOM, classified Secret scan, and task-container cleanup also pass. Staged-path/diff audit and the local commit remain pending; the ticket stays `claimed` until those finish.
 - `2026-09-07`: exact pre-commit staging contains 64 paths, all inside the ticket's base or explicitly approved extensions. The unstaged diff and non-ignored untracked list are empty; cached `diff --check`, allowlist, generated/build/temp artifact audit, and index-snapshot Secret assessment pass. Gitleaks reports the same eight classified non-Secret integrity/test heuristics and the only staged artifact candidate is the intentional deterministic evidence `bom.cdx.json`. The local feature commit remains the only pending closure action.
+
+## Resolution record
+
+- Resolved at: `2026-09-07T13:15:06+08:00`.
+- Start SHA: `0f9cb1c73bef12ee7183016ae012c1a52b008de0`.
+- Implementation SHA: `74d7e441435d35dc66a733c8bf4a93129b26de3f` (`feat(dp2-06): deliver password authentication`).
+- The exact feature index contained 64 approved paths; its staged diff SHA-256 was `9f3f6990657c6bb870c7ac8e6ba53a1788122305c32e59406a59f12cf8170654`. The unstaged and non-ignored untracked sets were empty.
+- Full normal and race/integration tests, focused real PostgreSQL/Redis and two-process mTLS tests, vet, module, contract, formatting, generated-output, migration, vulnerability, SBOM, Secret, artifact, staged-path, and diff gates passed. Independent Standards and Spec reviews both passed with no actionable finding.
+- `not_verified` remains explicit for production Argon2 performance; cluster certificate issuance, Secret mounting, rotation, deployment, and live traffic; strict PostgreSQL/Redis atomicity and durable coordination/repair/replay; and configured remote config-plugin transport. These are not represented as DP2-06 passes.
+- The branch and HEAD were verified at the implementation SHA with a clean worktree immediately after the feature commit. No push, deployment, cluster action, reset, stash, amend, rebase, or force operation was used.
+- Recovery, if required, is a new reviewed revert commit against exact implementation SHA `74d7e441435d35dc66a733c8bf4a93129b26de3f`; the committed history is not rewritten.

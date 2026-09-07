@@ -406,6 +406,12 @@ tests, `go vet`, module tidy/verify, contract tests, formatting, diff check,
 fixed govulncheck, sqlc, Atlas, API Buf, and local exact-version config
 generation also pass on this final tree. A Docker audit found no remaining
 PostgreSQL or Redis container. Independent Standards and Spec re-reviews both
-returned `pass` with no actionable finding. Closure now waits only for the
-local feature commit; the exact 64-path staged-diff audit is `pass` with an
-empty unstaged/untracked set.
+returned `pass` with no actionable finding. The exact 64-path staged-diff audit
+is `pass` with an empty unstaged/untracked set.
+
+The feature was committed locally as
+`74d7e441435d35dc66a733c8bf4a93129b26de3f`
+(`feat(dp2-06): deliver password authentication`). The worktree was clean
+immediately after the commit, and the ticket is resolved. This documentation
+closure does not change the implementation tree. No push, deployment, live
+traffic, or cluster action was performed.
