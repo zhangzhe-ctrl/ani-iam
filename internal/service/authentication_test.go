@@ -28,6 +28,7 @@ func TestPasswordLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 			PrincipalID:    principalID,
 			Audience:       biz.AudienceConsole,
 			Status:         biz.SessionStatusActive,
+			AuthnMethods:   []biz.AuditAuthenticationMethod{biz.AuditAuthenticationMethodPassword},
 			DeviceName:     "browser",
 			IdleExpiresAt:  now.Add(7 * 24 * time.Hour),
 			AbsoluteExpiry: now.Add(30 * 24 * time.Hour),
@@ -75,6 +76,227 @@ func TestPasswordLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 	if response.GetSession().GetSessionId() != sessionID.String() || response.GetGrant().GetGrantId() != grantID.String() {
 		t.Fatalf("session/grant response = %#v / %#v", response.GetSession(), response.GetGrant())
 	}
+}
+
+func TestBeginOIDCLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
+	tenantID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe601")
+	now := time.Date(2026, 9, 7, 8, 0, 0, 0, time.UTC)
+	oidc := &recordingOIDCServiceUsecase{beginLoginResult: biz.BeginOIDCLoginResult{
+		AuthorizationURL: "https://dex.test.example/auth?client_id=ani-console",
+		State:            "opaque-state",
+		ExpiresAt:        now.Add(10 * time.Minute),
+	}}
+	service := NewAuthenticationService(&recordingAuthenticationUsecase{}, oidc)
+	response, err := service.BeginOIDCLogin(context.Background(), &iamv1.BeginOIDCLoginRequest{
+		Audience:       iamv1.Audience_AUDIENCE_CONSOLE,
+		Boundary:       &iamv1.Boundary{Boundary: &iamv1.Boundary_Tenant{Tenant: &iamv1.TenantBoundary{TenantId: tenantID.String()}}},
+		RedirectUri:    "https://console.test.example/auth/oidc/callback",
+		IdempotencyKey: "oidc-begin-service-1",
+	})
+	if err != nil {
+		t.Fatalf("BeginOIDCLogin() error = %v", err)
+	}
+	if oidc.beginLoginCommand.TenantID != tenantID || oidc.beginLoginCommand.Audience != biz.AudienceConsole ||
+		oidc.beginLoginCommand.RedirectURI != "https://console.test.example/auth/oidc/callback" {
+		t.Fatalf("mapped command = %#v", oidc.beginLoginCommand)
+	}
+	if response.GetAuthorizationUrl() != oidc.beginLoginResult.AuthorizationURL || response.GetState() != "opaque-state" ||
+		!response.GetExpiresAt().AsTime().Equal(oidc.beginLoginResult.ExpiresAt) {
+		t.Fatalf("BeginOIDCLogin() response = %#v", response)
+	}
+}
+
+func TestCompleteOIDCLoginMapsOIDCSessionResult(t *testing.T) {
+	now := time.Date(2026, 9, 7, 8, 30, 0, 0, time.UTC)
+	tenantID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe611")
+	principalID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe612")
+	sessionID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe613")
+	grantID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe614")
+	oidc := &recordingOIDCServiceUsecase{completeLoginResult: biz.LoginResult{
+		TenantID:    tenantID,
+		Principal:   biz.Principal{ID: principalID, Status: biz.PrincipalStatusActive},
+		Session:     biz.Session{ID: sessionID, PrincipalID: principalID, Audience: biz.AudienceConsole, Status: biz.SessionStatusActive, AuthnMethods: []biz.AuditAuthenticationMethod{biz.AuditAuthenticationMethodOIDC}, DeviceName: "browser", IdleExpiresAt: now.Add(7 * 24 * time.Hour), AbsoluteExpiry: now.Add(30 * 24 * time.Hour), ReauthenticatedAt: now, CreatedAt: now, UpdatedAt: now},
+		Grant:       biz.SessionGrant{ID: grantID, SessionID: sessionID, Status: biz.GrantStatusActive, Version: 1},
+		AccessToken: "signed-oidc-access-token", RefreshToken: "opaque-refresh-secret", AccessTokenExpiresAt: now.Add(15 * time.Minute),
+	}}
+	service := NewAuthenticationService(&recordingAuthenticationUsecase{}, oidc)
+	response, err := service.CompleteOIDCLogin(context.Background(), &iamv1.CompleteOIDCLoginRequest{
+		Code: "authorization-code", State: "opaque-state",
+		RedirectUri: "https://console.test.example/auth/oidc/callback", DeviceName: "browser",
+	})
+	if err != nil {
+		t.Fatalf("CompleteOIDCLogin() error = %v", err)
+	}
+	if oidc.completeLoginCommand.Code != "authorization-code" || oidc.completeLoginCommand.State != "opaque-state" {
+		t.Fatalf("mapped command = %#v", oidc.completeLoginCommand)
+	}
+	login := response.GetLogin()
+	if login == nil || login.GetPrincipal().GetBoundary().GetTenant().GetTenantId() != tenantID.String() ||
+		len(login.GetPrincipal().GetAuthnMethods()) != 1 || login.GetPrincipal().GetAuthnMethods()[0] != iamv1.AuthnMethod_AUTHN_METHOD_OIDC ||
+		len(login.GetSession().GetAuthnMethods()) != 1 || login.GetSession().GetAuthnMethods()[0] != iamv1.AuthnMethod_AUTHN_METHOD_OIDC {
+		t.Fatalf("CompleteOIDCLogin() response = %#v", response)
+	}
+}
+
+func TestBeginOIDCIdentityLinkMapsAuthenticatedContract(t *testing.T) {
+	now := time.Date(2026, 9, 7, 9, 0, 0, 0, time.UTC)
+	oidc := &recordingOIDCServiceUsecase{beginLinkResult: biz.BeginOIDCIdentityLinkResult{
+		AuthorizationURL: "https://dex.test.example/auth?link=1", State: "link-state", ExpiresAt: now.Add(10 * time.Minute),
+	}}
+	service := NewAuthenticationService(&recordingAuthenticationUsecase{}, oidc)
+	response, err := service.BeginOIDCIdentityLink(context.Background(), &iamv1.BeginOIDCIdentityLinkRequest{
+		Credential: &iamv1.BearerCredential{Value: "signed-access-token"}, Provider: "dex",
+		RedirectUri: "https://console.test.example/auth/oidc/link/callback", IdempotencyKey: "oidc-link-service-1",
+	})
+	if err != nil {
+		t.Fatalf("BeginOIDCIdentityLink() error = %v", err)
+	}
+	if oidc.beginLinkCommand.RawCredential != "signed-access-token" || oidc.beginLinkCommand.Provider != "dex" ||
+		oidc.beginLinkCommand.IdempotencyKey != "oidc-link-service-1" {
+		t.Fatalf("mapped command = %#v", oidc.beginLinkCommand)
+	}
+	if response.GetAuthorizationUrl() != oidc.beginLinkResult.AuthorizationURL || response.GetState() != "link-state" ||
+		!response.GetExpiresAt().AsTime().Equal(oidc.beginLinkResult.ExpiresAt) {
+		t.Fatalf("BeginOIDCIdentityLink() response = %#v", response)
+	}
+}
+
+func TestCompleteOIDCIdentityLinkMapsAuthenticatedContract(t *testing.T) {
+	identityID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe621")
+	principalID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe622")
+	oidc := &recordingOIDCServiceUsecase{completeLinkResult: biz.OIDCIdentityLinkResult{
+		IdentityID: identityID, PrincipalID: principalID,
+	}}
+	service := NewAuthenticationService(&recordingAuthenticationUsecase{}, oidc)
+	response, err := service.CompleteOIDCIdentityLink(context.Background(), &iamv1.CompleteOIDCIdentityLinkRequest{
+		Credential: &iamv1.BearerCredential{Value: "signed-access-token"}, Code: "authorization-code",
+		State: "link-state", RedirectUri: "https://console.test.example/auth/oidc/link/callback",
+	})
+	if err != nil {
+		t.Fatalf("CompleteOIDCIdentityLink() error = %v", err)
+	}
+	if oidc.completeLinkCommand.RawCredential != "signed-access-token" || oidc.completeLinkCommand.Code != "authorization-code" || oidc.completeLinkCommand.State != "link-state" {
+		t.Fatalf("mapped command = %#v", oidc.completeLinkCommand)
+	}
+	if response.GetIdentityId() != identityID.String() || response.GetPrincipalId() != principalID.String() {
+		t.Fatalf("CompleteOIDCIdentityLink() response = %#v", response)
+	}
+}
+
+func TestOIDCHandlersMapSecurityFailuresToFrozenErrorInfo(t *testing.T) {
+	tenantID := uuid.MustParse("0199c6fb-62e4-7d12-a27f-5f3caa1fe631")
+	tests := []struct {
+		name         string
+		domainErr    error
+		invoke       func(*AuthenticationService) error
+		wantCode     codes.Code
+		wantReason   string
+		wantMetadata map[string]string
+	}{
+		{
+			name: "begin login exact redirect", domainErr: biz.ErrOIDCRedirectInvalid,
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.BeginOIDCLogin(context.Background(), &iamv1.BeginOIDCLoginRequest{
+					Audience: iamv1.Audience_AUDIENCE_CONSOLE, Boundary: tenantBoundary(tenantID),
+					RedirectUri: "https://attacker.example/callback", IdempotencyKey: "oidc-error-begin",
+				})
+				return err
+			},
+			wantCode: codes.InvalidArgument, wantReason: "INVALID_ARGUMENT", wantMetadata: map[string]string{"field": "redirect_uri"},
+		},
+		{
+			name: "complete login consumed state", domainErr: biz.ErrOIDCStateInvalid,
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.CompleteOIDCLogin(context.Background(), &iamv1.CompleteOIDCLoginRequest{
+					Code: "authorization-code", State: "consumed-state", RedirectUri: "https://console.test.example/auth/oidc/callback",
+				})
+				return err
+			},
+			wantCode: codes.Unauthenticated, wantReason: "CREDENTIAL_INVALID", wantMetadata: map[string]string{"credential_kind": "oidc"},
+		},
+		{
+			name: "begin link reauthentication required", domainErr: biz.ErrOIDCReauthenticationRequired,
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.BeginOIDCIdentityLink(context.Background(), &iamv1.BeginOIDCIdentityLinkRequest{
+					Credential: &iamv1.BearerCredential{Value: "access-token"}, Provider: "dex",
+					RedirectUri: "https://console.test.example/auth/oidc/link/callback", IdempotencyKey: "oidc-error-link",
+				})
+				return err
+			},
+			wantCode: codes.PermissionDenied, wantReason: "PERMISSION_DENIED",
+			wantMetadata: map[string]string{"operation_id": "beginOIDCIdentityLink", "decision_id": "not-issued"},
+		},
+		{
+			name: "complete link identity conflict", domainErr: biz.ErrOIDCIdentityConflict,
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.CompleteOIDCIdentityLink(context.Background(), &iamv1.CompleteOIDCIdentityLinkRequest{
+					Credential: &iamv1.BearerCredential{Value: "access-token"}, Code: "authorization-code",
+					State: "link-state", RedirectUri: "https://console.test.example/auth/oidc/link/callback",
+				})
+				return err
+			},
+			wantCode: codes.PermissionDenied, wantReason: "PERMISSION_DENIED",
+			wantMetadata: map[string]string{"operation_id": "completeOIDCIdentityLink", "decision_id": "not-issued"},
+		},
+		{
+			name: "provider dependency", domainErr: biz.ErrOIDCDependency,
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.CompleteOIDCLogin(context.Background(), &iamv1.CompleteOIDCLoginRequest{
+					Code: "authorization-code", State: "state", RedirectUri: "https://console.test.example/auth/oidc/callback",
+				})
+				return err
+			},
+			wantCode: codes.Unavailable, wantReason: "IAM_UNAVAILABLE", wantMetadata: map[string]string{"dependency": "oidc"},
+		},
+		{
+			name: "provider timeout", domainErr: errors.Join(biz.ErrOIDCDependency, context.DeadlineExceeded),
+			invoke: func(service *AuthenticationService) error {
+				_, err := service.CompleteOIDCLogin(context.Background(), &iamv1.CompleteOIDCLoginRequest{
+					Code: "authorization-code", State: "state", RedirectUri: "https://console.test.example/auth/oidc/callback",
+				})
+				return err
+			},
+			wantCode: codes.DeadlineExceeded, wantReason: "IAM_TIMEOUT", wantMetadata: map[string]string{"operation_id": "completeOIDCLogin"},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			service := NewAuthenticationService(&recordingAuthenticationUsecase{}, &recordingOIDCServiceUsecase{err: test.domainErr})
+			assertFrozenErrorInfo(t, test.invoke(service), test.wantCode, test.wantReason, test.wantMetadata)
+		})
+	}
+}
+
+type recordingOIDCServiceUsecase struct {
+	beginLoginCommand    biz.BeginOIDCLoginCommand
+	beginLoginResult     biz.BeginOIDCLoginResult
+	completeLoginCommand biz.CompleteOIDCLoginCommand
+	completeLoginResult  biz.LoginResult
+	beginLinkCommand     biz.BeginOIDCIdentityLinkCommand
+	beginLinkResult      biz.BeginOIDCIdentityLinkResult
+	completeLinkCommand  biz.CompleteOIDCIdentityLinkCommand
+	completeLinkResult   biz.OIDCIdentityLinkResult
+	err                  error
+}
+
+func (u *recordingOIDCServiceUsecase) BeginLogin(_ context.Context, command biz.BeginOIDCLoginCommand) (biz.BeginOIDCLoginResult, error) {
+	u.beginLoginCommand = command
+	return u.beginLoginResult, u.err
+}
+
+func (u *recordingOIDCServiceUsecase) CompleteLogin(_ context.Context, command biz.CompleteOIDCLoginCommand) (biz.LoginResult, error) {
+	u.completeLoginCommand = command
+	return u.completeLoginResult, u.err
+}
+
+func (u *recordingOIDCServiceUsecase) BeginIdentityLink(_ context.Context, command biz.BeginOIDCIdentityLinkCommand) (biz.BeginOIDCIdentityLinkResult, error) {
+	u.beginLinkCommand = command
+	return u.beginLinkResult, u.err
+}
+
+func (u *recordingOIDCServiceUsecase) CompleteIdentityLink(_ context.Context, command biz.CompleteOIDCIdentityLinkCommand) (biz.OIDCIdentityLinkResult, error) {
+	u.completeLinkCommand = command
+	return u.completeLinkResult, u.err
 }
 
 func TestRequestPasswordActionMapsFrozenNonEnumeratingContract(t *testing.T) {

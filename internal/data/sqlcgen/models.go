@@ -143,6 +143,8 @@ type Session struct {
 	Version           int64
 	CreatedAt         pgtype.Timestamptz
 	UpdatedAt         pgtype.Timestamptz
+	ReauthenticatedAt pgtype.Timestamptz
+	AuthnMethods      []string
 }
 
 type SessionGrant struct {

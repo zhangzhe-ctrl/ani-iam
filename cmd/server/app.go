@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"sync"
 	"time"
 
@@ -178,6 +179,10 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	if err != nil {
 		return nil, err
 	}
+	oidcClientSecret, err := data.LoadOIDCClientSecretFile(runtime.Oidc.ClientSecretFile)
+	if err != nil {
+		return nil, err
+	}
 	clock := data.NewSystemClock()
 	tokenCodec, err := data.NewJWXAccessTokenCodec(
 		runtime.AccessToken.ActiveKeyId,
@@ -247,13 +252,51 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	}
 	postgresData := data.NewData(postgresPool)
 	ids := data.NewUUIDv7Generator()
+	secrets := data.NewSecretGenerator()
+	oidcProvider, err := data.NewCoreOSOIDCProvider(startupContext, data.CoreOSOIDCProviderConfig{
+		Name:         runtime.Oidc.Provider,
+		IssuerURL:    runtime.Oidc.IssuerUrl,
+		ClientID:     runtime.Oidc.ClientId,
+		ClientSecret: oidcClientSecret,
+		RedirectURIs: []string{runtime.Oidc.LoginRedirectUri, runtime.Oidc.IdentityLinkRedirectUri},
+		HTTPClient:   &http.Client{Timeout: runtime.Oidc.HttpTimeout.AsDuration()},
+	})
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, fmt.Errorf("configure OIDC provider: %w", err)
+	}
+	oidcOperations, err := data.NewRedisOIDCOperationStore(redisClient, runtime.Redis.Namespace)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, fmt.Errorf("configure Redis OIDC operation store: %w", err)
+	}
+	oidcUsecase, err := biz.NewOIDCUsecase(
+		biz.OIDCUsecaseConfig{
+			Provider:                runtime.Oidc.Provider,
+			LoginRedirectURI:        runtime.Oidc.LoginRedirectUri,
+			IdentityLinkRedirectURI: runtime.Oidc.IdentityLinkRedirectUri,
+			RecentReauthentication:  runtime.Oidc.RecentReauthentication.AsDuration(),
+		},
+		oidcProvider,
+		oidcOperations,
+		data.NewPostgresOIDCReader(postgresData),
+		data.NewPostgresOIDCUnitOfWork(postgresData),
+		tokenCodec,
+		secrets,
+		ids,
+		clock,
+	)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, fmt.Errorf("configure OIDC use case: %w", err)
+	}
 	authentication := biz.NewAuthenticationUsecase(
 		data.NewPostgresPasswordLoginReader(postgresData),
 		data.NewArgon2idPasswordHasher(),
 		throttle,
 		data.NewPostgresLoginUnitOfWork(postgresData),
 		tokenCodec,
-		data.NewSecretGenerator(),
+		secrets,
 		ids,
 		clock,
 	)
@@ -278,7 +321,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	closeNotification := func(context.Context) error {
 		return notificationClient.Close()
 	}
-	authenticationService := service.NewAuthenticationService(authentication)
+	authenticationService := service.NewAuthenticationService(authentication, oidcUsecase)
 	authorizationService := service.NewAuthorizationService(authorization)
 	adminService := service.NewIAMAdminService()
 

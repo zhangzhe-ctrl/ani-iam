@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -20,6 +21,7 @@ type Querier interface {
 	ClaimPasswordActionNotification(ctx context.Context, arg ClaimPasswordActionNotificationParams) (ClaimPasswordActionNotificationRow, error)
 	ConsumePasswordAction(ctx context.Context, arg ConsumePasswordActionParams) (int64, error)
 	CreateKnownPasswordActionRequest(ctx context.Context, arg CreateKnownPasswordActionRequestParams) error
+	CreateOIDCIdentity(ctx context.Context, arg CreateOIDCIdentityParams) error
 	CreatePasswordAction(ctx context.Context, arg CreatePasswordActionParams) error
 	CreatePasswordActionCompletion(ctx context.Context, arg CreatePasswordActionCompletionParams) error
 	CreatePasswordActionNotification(ctx context.Context, arg CreatePasswordActionNotificationParams) error
@@ -35,12 +37,18 @@ type Querier interface {
 	GetPasswordActionRequestByIdempotencyKey(ctx context.Context, arg GetPasswordActionRequestByIdempotencyKeyParams) (GetPasswordActionRequestByIdempotencyKeyRow, error)
 	GetTenantMembership(ctx context.Context, arg GetTenantMembershipParams) (GetTenantMembershipRow, error)
 	GetVerifiedAccountForPrincipal(ctx context.Context, arg GetVerifiedAccountForPrincipalParams) (string, error)
+	LockOIDCLinkAuthentication(ctx context.Context, arg LockOIDCLinkAuthenticationParams) (pgtype.Timestamptz, error)
+	LockOIDCLoginAuthentication(ctx context.Context, arg LockOIDCLoginAuthenticationParams) (LockOIDCLoginAuthenticationRow, error)
 	LockPasswordAction(ctx context.Context, arg LockPasswordActionParams) (LockPasswordActionRow, error)
 	LockPasswordActionPrincipal(ctx context.Context, arg LockPasswordActionPrincipalParams) error
 	LockPasswordAuthenticationIdempotencyKey(ctx context.Context, arg LockPasswordAuthenticationIdempotencyKeyParams) error
 	LookupAuthorization(ctx context.Context, arg LookupAuthorizationParams) (LookupAuthorizationRow, error)
+	LookupOIDCIdentityOwner(ctx context.Context, arg LookupOIDCIdentityOwnerParams) (uuid.UUID, error)
+	LookupOIDCLogin(ctx context.Context, arg LookupOIDCLoginParams) (LookupOIDCLoginRow, error)
+	LookupOIDCReauthentication(ctx context.Context, arg LookupOIDCReauthenticationParams) (LookupOIDCReauthenticationRow, error)
 	LookupPasswordActionTarget(ctx context.Context, arg LookupPasswordActionTargetParams) (LookupPasswordActionTargetRow, error)
 	LookupPasswordLogin(ctx context.Context, arg LookupPasswordLoginParams) (LookupPasswordLoginRow, error)
+	LookupVerifiedEmailOwner(ctx context.Context, arg LookupVerifiedEmailOwnerParams) (uuid.UUID, error)
 	MarkPasswordActionNotificationAttentionRequired(ctx context.Context, arg MarkPasswordActionNotificationAttentionRequiredParams) (int64, error)
 	MarkPasswordActionNotificationDelivered(ctx context.Context, arg MarkPasswordActionNotificationDeliveredParams) (int64, error)
 	RecordPasswordLoginFailure(ctx context.Context, arg RecordPasswordLoginFailureParams) (RecordPasswordLoginFailureRow, error)

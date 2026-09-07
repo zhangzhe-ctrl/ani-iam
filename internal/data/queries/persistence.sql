@@ -472,12 +472,143 @@ INSERT INTO password_action_completions (
 
 -- name: CreateSession :exec
 INSERT INTO sessions (
-    id, principal_id, audience, status, device_name, idle_expires_at,
-    absolute_expires_at, version, created_at, updated_at
+    id, principal_id, audience, status, authn_methods, device_name, idle_expires_at,
+    absolute_expires_at, reauthenticated_at, version, created_at, updated_at
 ) VALUES (
-    sqlc.arg(id), sqlc.arg(principal_id), sqlc.arg(audience), sqlc.arg(status),
+    sqlc.arg(id), sqlc.arg(principal_id), sqlc.arg(audience), sqlc.arg(status), sqlc.arg(authn_methods),
     sqlc.arg(device_name), sqlc.arg(idle_expires_at),
-    sqlc.arg(absolute_expires_at), 1, sqlc.arg(created_at), sqlc.arg(updated_at)
+    sqlc.arg(absolute_expires_at), sqlc.arg(reauthenticated_at), 1,
+    sqlc.arg(created_at), sqlc.arg(updated_at)
+);
+
+-- name: LookupOIDCLogin :one
+SELECT
+    identity.id AS identity_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    membership.id AS membership_id,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    email.normalized_email
+FROM identities AS identity
+JOIN principals AS principal
+  ON principal.id = identity.principal_id
+JOIN verified_emails AS email
+  ON email.principal_id = principal.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = sqlc.arg(tenant_id)
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE identity.provider = sqlc.arg(provider)
+  AND identity.issuer = sqlc.arg(issuer)
+  AND identity.subject = sqlc.arg(subject)
+  AND identity.status = 'active';
+
+-- name: LockOIDCLoginAuthentication :one
+SELECT
+    identity.status AS identity_status,
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    email.normalized_email
+FROM identities AS identity
+JOIN principals AS principal
+  ON principal.id = identity.principal_id
+JOIN verified_emails AS email
+  ON email.principal_id = principal.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = sqlc.arg(tenant_id)
+ AND membership.id = sqlc.arg(membership_id)
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE identity.id = sqlc.arg(identity_id)
+  AND identity.provider = sqlc.arg(provider)
+  AND identity.issuer = sqlc.arg(issuer)
+  AND identity.subject = sqlc.arg(subject)
+  AND principal.id = sqlc.arg(principal_id)
+FOR SHARE OF identity, principal, membership, access;
+
+-- name: LookupOIDCReauthentication :one
+SELECT
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    session.id AS session_id,
+    session.status AS session_status,
+    session_grant.id AS grant_id,
+    session_grant.status AS grant_status,
+    session_grant.version AS grant_version,
+    session_grant.tenant_id,
+    session.reauthenticated_at
+FROM principals AS principal
+JOIN sessions AS session
+  ON session.id = sqlc.arg(session_id)
+ AND session.principal_id = principal.id
+JOIN session_grants AS session_grant
+  ON session_grant.tenant_id = sqlc.arg(tenant_id)
+ AND session_grant.id = sqlc.arg(grant_id)
+ AND session_grant.session_id = session.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = session_grant.tenant_id
+ AND membership.id = session_grant.membership_id
+ AND membership.principal_id = principal.id
+WHERE principal.id = sqlc.arg(principal_id);
+
+-- name: LookupVerifiedEmailOwner :one
+SELECT principal_id
+FROM verified_emails
+WHERE normalized_email = sqlc.arg(normalized_email);
+
+-- name: LockOIDCLinkAuthentication :one
+SELECT session.reauthenticated_at
+FROM principals AS principal
+JOIN sessions AS session
+  ON session.id = sqlc.arg(session_id)
+ AND session.principal_id = principal.id
+JOIN session_grants AS session_grant
+  ON session_grant.tenant_id = sqlc.arg(tenant_id)
+ AND session_grant.id = sqlc.arg(grant_id)
+ AND session_grant.session_id = session.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = session_grant.tenant_id
+ AND membership.id = session_grant.membership_id
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE principal.id = sqlc.arg(principal_id)
+  AND principal.status = 'active'
+  AND session.status = 'active'
+  AND session_grant.status = 'active'
+  AND session_grant.version = sqlc.arg(expected_grant_version)
+  AND membership.status = 'active'
+  AND access.status = 'active'
+  AND lifecycle.status = 'active'
+  AND lifecycle.fresh_until > statement_timestamp()
+FOR SHARE OF principal, session, session_grant, membership, access;
+
+-- name: LookupOIDCIdentityOwner :one
+SELECT principal_id
+FROM identities
+WHERE issuer = sqlc.arg(issuer) AND subject = sqlc.arg(subject)
+FOR SHARE;
+
+-- name: CreateOIDCIdentity :exec
+INSERT INTO identities (
+    id, principal_id, provider, issuer, subject, status, version, created_at, updated_at
+) VALUES (
+    sqlc.arg(id), sqlc.arg(principal_id), sqlc.arg(provider), sqlc.arg(issuer),
+    sqlc.arg(subject), 'active', 1, sqlc.arg(created_at), sqlc.arg(updated_at)
 );
 
 -- name: CreateSessionGrant :exec

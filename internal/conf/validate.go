@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -102,8 +103,9 @@ func validateDuration(name string, value *durationpb.Duration, maximum time.Dura
 }
 
 func validateRuntime(runtime *Runtime) error {
-	if runtime == nil || runtime.Postgresql == nil || runtime.Redis == nil || runtime.AccessToken == nil || runtime.Notification == nil {
-		return fmt.Errorf("PostgreSQL, Redis, access-token, and Notification runtime config are required")
+	if runtime == nil || runtime.Postgresql == nil || runtime.Redis == nil || runtime.AccessToken == nil ||
+		runtime.Notification == nil || runtime.Oidc == nil {
+		return fmt.Errorf("PostgreSQL, Redis, access-token, Notification, and OIDC runtime config are required")
 	}
 	if err := validatePostgreSQL(runtime.Postgresql); err != nil {
 		return err
@@ -115,6 +117,9 @@ func validateRuntime(runtime *Runtime) error {
 		return err
 	}
 	if err := validateNotification(runtime.Notification); err != nil {
+		return err
+	}
+	if err := validateOIDC(runtime.Oidc); err != nil {
 		return err
 	}
 	revision := strings.TrimSpace(runtime.PolicyRevision)
@@ -214,4 +219,77 @@ func validateNotification(notification *Notification) error {
 		return err
 	}
 	return validateDuration("Notification submission", notification.SubmissionTimeout, 30*time.Second)
+}
+
+func validateOIDC(oidc *OIDC) error {
+	if oidc.Provider != "dex" {
+		return fmt.Errorf("OIDC provider must be dex")
+	}
+	if err := validateOIDCIssuer(oidc.IssuerUrl); err != nil {
+		return err
+	}
+	if oidc.ClientId != "ani-console" {
+		return fmt.Errorf("OIDC client ID must be ani-console")
+	}
+	if strings.TrimSpace(oidc.ClientSecretFile) == "" || !filepath.IsAbs(oidc.ClientSecretFile) {
+		return fmt.Errorf("OIDC client-secret file must be an absolute path")
+	}
+	if err := validateOIDCRedirect("login", oidc.LoginRedirectUri); err != nil {
+		return err
+	}
+	if err := validateOIDCRedirect("identity-link", oidc.IdentityLinkRedirectUri); err != nil {
+		return err
+	}
+	if oidc.LoginRedirectUri == oidc.IdentityLinkRedirectUri {
+		return fmt.Errorf("OIDC login and identity-link redirects must be distinct")
+	}
+	if err := validateDuration("OIDC recent reauthentication", oidc.RecentReauthentication, time.Hour); err != nil {
+		return err
+	}
+	return validateDuration("OIDC HTTP", oidc.HttpTimeout, 30*time.Second)
+}
+
+func validateOIDCIssuer(value string) error {
+	parsed, err := parseCanonicalOIDCURL(value)
+	if err != nil {
+		return fmt.Errorf("OIDC issuer must be a canonical HTTPS URL or isolated loopback HTTP URL")
+	}
+	if parsed.Scheme == "https" {
+		return nil
+	}
+	host := parsed.Hostname()
+	ip := net.ParseIP(host)
+	if parsed.Scheme != "http" || ip == nil || !ip.IsLoopback() {
+		return fmt.Errorf("OIDC issuer must be a canonical HTTPS URL or isolated loopback HTTP URL")
+	}
+	return nil
+}
+
+func validateOIDCRedirect(name, value string) error {
+	parsed, err := parseCanonicalOIDCURL(value)
+	if err != nil || parsed.Scheme != "https" || parsed.Path == "" || parsed.Path == "/" {
+		return fmt.Errorf("OIDC %s redirect must be a canonical HTTPS URL", name)
+	}
+	return nil
+}
+
+func parseCanonicalOIDCURL(value string) (*url.URL, error) {
+	if value == "" || value != strings.TrimSpace(value) {
+		return nil, fmt.Errorf("URL is empty or contains surrounding whitespace")
+	}
+	parsed, err := url.Parse(value)
+	if err != nil || !parsed.IsAbs() || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" ||
+		parsed.Fragment != "" || parsed.RawPath != "" || parsed.String() != value || parsed.Scheme != strings.ToLower(parsed.Scheme) ||
+		parsed.Host != strings.ToLower(parsed.Host) || strings.Contains(parsed.Hostname(), "*") {
+		return nil, fmt.Errorf("URL is not canonical")
+	}
+	for _, character := range parsed.Hostname() {
+		if character > 127 {
+			return nil, fmt.Errorf("URL host must be ASCII")
+		}
+	}
+	if parsed.Path != "" && path.Clean(parsed.Path) != parsed.Path {
+		return nil, fmt.Errorf("URL path is not canonical")
+	}
+	return parsed, nil
 }

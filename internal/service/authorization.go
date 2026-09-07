@@ -63,8 +63,21 @@ func authorizationDecisionToProto(decision biz.AuthorizationDecision) *iamv1.Aut
 }
 
 func trustedPrincipalToProto(principal biz.TrustedPrincipalContext) *iamv1.PrincipalContext {
-	authnMethods := make([]iamv1.AuthnMethod, 0, len(principal.AuthnMethods))
-	for _, method := range principal.AuthnMethods {
+	authnMethods := authnMethodsToProto(principal.AuthnMethods)
+	return &iamv1.PrincipalContext{
+		PrincipalId:     principal.ID.String(),
+		PrincipalType:   iamv1.PrincipalType_PRINCIPAL_TYPE_HUMAN,
+		PrincipalStatus: principalStatusToProto(principal.Status),
+		Boundary:        tenantBoundary(principal.TenantID),
+		SessionId:       principal.SessionID.String(),
+		GrantId:         principal.GrantID.String(),
+		AuthnMethods:    authnMethods,
+	}
+}
+
+func authnMethodsToProto(methods []biz.AuditAuthenticationMethod) []iamv1.AuthnMethod {
+	authnMethods := make([]iamv1.AuthnMethod, 0, len(methods))
+	for _, method := range methods {
 		switch method {
 		case biz.AuditAuthenticationMethodPassword:
 			authnMethods = append(authnMethods, iamv1.AuthnMethod_AUTHN_METHOD_PASSWORD)
@@ -76,15 +89,7 @@ func trustedPrincipalToProto(principal biz.TrustedPrincipalContext) *iamv1.Princ
 			authnMethods = append(authnMethods, iamv1.AuthnMethod_AUTHN_METHOD_SERVICE_TOKEN)
 		}
 	}
-	return &iamv1.PrincipalContext{
-		PrincipalId:     principal.ID.String(),
-		PrincipalType:   iamv1.PrincipalType_PRINCIPAL_TYPE_HUMAN,
-		PrincipalStatus: principalStatusToProto(principal.Status),
-		Boundary:        tenantBoundary(principal.TenantID),
-		SessionId:       principal.SessionID.String(),
-		GrantId:         principal.GrantID.String(),
-		AuthnMethods:    authnMethods,
-	}
+	return authnMethods
 }
 
 var _ iamv1.AuthorizationServiceServer = (*AuthorizationService)(nil)

@@ -3,9 +3,15 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"io"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -17,7 +23,44 @@ import (
 )
 
 func TestBuildAppFailsClosedWhenSigningKeyIsUnavailable(t *testing.T) {
-	bootstrap := &conf.Bootstrap{
+	bootstrap := buildAppTestBootstrap()
+
+	app, err := buildApp(bootstrap, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if app != nil {
+		t.Fatal("buildApp() returned an app without its configured signing key")
+	}
+	if err == nil || !strings.Contains(err.Error(), "access-token private key") {
+		t.Fatalf("buildApp() error = %v, want signing-key failure", err)
+	}
+}
+
+func TestBuildAppFailsClosedWhenOIDCClientSecretIsUnavailable(t *testing.T) {
+	bootstrap := buildAppTestBootstrap()
+	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("generate signing key: %v", err)
+	}
+	encoded, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		t.Fatalf("marshal signing key: %v", err)
+	}
+	keyPath := filepath.Join(t.TempDir(), "access-token-key.pem")
+	if err := os.WriteFile(keyPath, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: encoded}), 0o600); err != nil {
+		t.Fatalf("write signing key: %v", err)
+	}
+	bootstrap.Runtime.AccessToken.PrivateKeyFile = keyPath
+
+	app, err := buildApp(bootstrap, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if app != nil {
+		t.Fatal("buildApp() returned an app without its configured OIDC client secret")
+	}
+	if err == nil || !strings.Contains(err.Error(), "OIDC client secret") {
+		t.Fatalf("buildApp() error = %v, want OIDC client-secret failure", err)
+	}
+}
+
+func buildAppTestBootstrap() *conf.Bootstrap {
+	return &conf.Bootstrap{
 		Profile: conf.IsolatedProfile,
 		Server: &conf.Server{
 			Grpc: &conf.Server_GRPC{
@@ -65,16 +108,18 @@ func TestBuildAppFailsClosedWhenSigningKeyIsUnavailable(t *testing.T) {
 				DispatchInterval:     durationpb.New(time.Second),
 				SubmissionTimeout:    durationpb.New(time.Second),
 			},
+			Oidc: &conf.OIDC{
+				Provider:                "dex",
+				IssuerUrl:               "https://dex.example.test/dex",
+				ClientId:                "ani-console",
+				ClientSecretFile:        "/nonexistent/ani-iam-dex-client-secret",
+				LoginRedirectUri:        "https://console.example.test/auth/oidc/callback",
+				IdentityLinkRedirectUri: "https://console.example.test/auth/oidc/link/callback",
+				RecentReauthentication:  durationpb.New(10 * time.Minute),
+				HttpTimeout:             durationpb.New(time.Second),
+			},
 			PolicyRevision: data.TargetPolicyRevision,
 		},
-	}
-
-	app, err := buildApp(bootstrap, slog.New(slog.NewTextHandler(io.Discard, nil)))
-	if app != nil {
-		t.Fatal("buildApp() returned an app without its configured signing key")
-	}
-	if err == nil || !strings.Contains(err.Error(), "access-token private key") {
-		t.Fatalf("buildApp() error = %v, want signing-key failure", err)
 	}
 }
 

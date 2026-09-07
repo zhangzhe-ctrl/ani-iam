@@ -149,6 +149,7 @@ type Runtime struct {
 	AccessToken    *AccessToken           `protobuf:"bytes,3,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
 	PolicyRevision string                 `protobuf:"bytes,4,opt,name=policy_revision,json=policyRevision,proto3" json:"policy_revision,omitempty"`
 	Notification   *Notification          `protobuf:"bytes,5,opt,name=notification,proto3" json:"notification,omitempty"`
+	Oidc           *OIDC                  `protobuf:"bytes,6,opt,name=oidc,proto3" json:"oidc,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -214,6 +215,13 @@ func (x *Runtime) GetPolicyRevision() string {
 func (x *Runtime) GetNotification() *Notification {
 	if x != nil {
 		return x.Notification
+	}
+	return nil
+}
+
+func (x *Runtime) GetOidc() *OIDC {
+	if x != nil {
+		return x.Oidc
 	}
 	return nil
 }
@@ -546,6 +554,106 @@ func (x *Notification) GetSubmissionTimeout() *durationpb.Duration {
 	return nil
 }
 
+type OIDC struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	Provider                string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	IssuerUrl               string                 `protobuf:"bytes,2,opt,name=issuer_url,json=issuerUrl,proto3" json:"issuer_url,omitempty"`
+	ClientId                string                 `protobuf:"bytes,3,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientSecretFile        string                 `protobuf:"bytes,4,opt,name=client_secret_file,json=clientSecretFile,proto3" json:"client_secret_file,omitempty"`
+	LoginRedirectUri        string                 `protobuf:"bytes,5,opt,name=login_redirect_uri,json=loginRedirectUri,proto3" json:"login_redirect_uri,omitempty"`
+	IdentityLinkRedirectUri string                 `protobuf:"bytes,6,opt,name=identity_link_redirect_uri,json=identityLinkRedirectUri,proto3" json:"identity_link_redirect_uri,omitempty"`
+	RecentReauthentication  *durationpb.Duration   `protobuf:"bytes,7,opt,name=recent_reauthentication,json=recentReauthentication,proto3" json:"recent_reauthentication,omitempty"`
+	HttpTimeout             *durationpb.Duration   `protobuf:"bytes,8,opt,name=http_timeout,json=httpTimeout,proto3" json:"http_timeout,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *OIDC) Reset() {
+	*x = OIDC{}
+	mi := &file_conf_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OIDC) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OIDC) ProtoMessage() {}
+
+func (x *OIDC) ProtoReflect() protoreflect.Message {
+	mi := &file_conf_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OIDC.ProtoReflect.Descriptor instead.
+func (*OIDC) Descriptor() ([]byte, []int) {
+	return file_conf_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *OIDC) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *OIDC) GetIssuerUrl() string {
+	if x != nil {
+		return x.IssuerUrl
+	}
+	return ""
+}
+
+func (x *OIDC) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *OIDC) GetClientSecretFile() string {
+	if x != nil {
+		return x.ClientSecretFile
+	}
+	return ""
+}
+
+func (x *OIDC) GetLoginRedirectUri() string {
+	if x != nil {
+		return x.LoginRedirectUri
+	}
+	return ""
+}
+
+func (x *OIDC) GetIdentityLinkRedirectUri() string {
+	if x != nil {
+		return x.IdentityLinkRedirectUri
+	}
+	return ""
+}
+
+func (x *OIDC) GetRecentReauthentication() *durationpb.Duration {
+	if x != nil {
+		return x.RecentReauthentication
+	}
+	return nil
+}
+
+func (x *OIDC) GetHttpTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.HttpTimeout
+	}
+	return nil
+}
+
 type Server_GRPC struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Network       string                 `protobuf:"bytes,1,opt,name=network,proto3" json:"network,omitempty"`
@@ -558,7 +666,7 @@ type Server_GRPC struct {
 
 func (x *Server_GRPC) Reset() {
 	*x = Server_GRPC{}
-	mi := &file_conf_proto_msgTypes[7]
+	mi := &file_conf_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -570,7 +678,7 @@ func (x *Server_GRPC) String() string {
 func (*Server_GRPC) ProtoMessage() {}
 
 func (x *Server_GRPC) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_proto_msgTypes[7]
+	mi := &file_conf_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -625,7 +733,7 @@ type Server_Admin struct {
 
 func (x *Server_Admin) Reset() {
 	*x = Server_Admin{}
-	mi := &file_conf_proto_msgTypes[8]
+	mi := &file_conf_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -637,7 +745,7 @@ func (x *Server_Admin) String() string {
 func (*Server_Admin) ProtoMessage() {}
 
 func (x *Server_Admin) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_proto_msgTypes[8]
+	mi := &file_conf_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -686,7 +794,7 @@ type Server_GRPC_TLS struct {
 
 func (x *Server_GRPC_TLS) Reset() {
 	*x = Server_GRPC_TLS{}
-	mi := &file_conf_proto_msgTypes[9]
+	mi := &file_conf_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -698,7 +806,7 @@ func (x *Server_GRPC_TLS) String() string {
 func (*Server_GRPC_TLS) ProtoMessage() {}
 
 func (x *Server_GRPC_TLS) ProtoReflect() protoreflect.Message {
-	mi := &file_conf_proto_msgTypes[9]
+	mi := &file_conf_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -769,7 +877,7 @@ const file_conf_proto_rawDesc = "" +
 	"\x05Admin\x12\x18\n" +
 	"\anetwork\x18\x01 \x01(\tR\anetwork\x12\x12\n" +
 	"\x04addr\x18\x02 \x01(\tR\x04addr\x123\n" +
-	"\atimeout\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\x95\x02\n" +
+	"\atimeout\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\xbd\x02\n" +
 	"\aRuntime\x128\n" +
 	"\n" +
 	"postgresql\x18\x01 \x01(\v2\x18.ani.iam.conf.PostgreSQLR\n" +
@@ -777,7 +885,8 @@ const file_conf_proto_rawDesc = "" +
 	"\x05redis\x18\x02 \x01(\v2\x13.ani.iam.conf.RedisR\x05redis\x12<\n" +
 	"\faccess_token\x18\x03 \x01(\v2\x19.ani.iam.conf.AccessTokenR\vaccessToken\x12'\n" +
 	"\x0fpolicy_revision\x18\x04 \x01(\tR\x0epolicyRevision\x12>\n" +
-	"\fnotification\x18\x05 \x01(\v2\x1a.ani.iam.conf.NotificationR\fnotification\"\x1e\n" +
+	"\fnotification\x18\x05 \x01(\v2\x1a.ani.iam.conf.NotificationR\fnotification\x12&\n" +
+	"\x04oidc\x18\x06 \x01(\v2\x12.ani.iam.conf.OIDCR\x04oidc\"\x1e\n" +
 	"\n" +
 	"PostgreSQL\x12\x10\n" +
 	"\x03dsn\x18\x01 \x01(\tR\x03dsn\"\xa8\x03\n" +
@@ -807,7 +916,17 @@ const file_conf_proto_rawDesc = "" +
 	"\x17console_action_url_base\x18\x06 \x01(\tR\x14consoleActionUrlBase\x12\x16\n" +
 	"\x06locale\x18\a \x01(\tR\x06locale\x12F\n" +
 	"\x11dispatch_interval\x18\b \x01(\v2\x19.google.protobuf.DurationR\x10dispatchInterval\x12H\n" +
-	"\x12submission_timeout\x18\t \x01(\v2\x19.google.protobuf.DurationR\x11submissionTimeoutB5Z3github.com/zhangzhe-ctrl/ani-iam/internal/conf;confb\x06proto3"
+	"\x12submission_timeout\x18\t \x01(\v2\x19.google.protobuf.DurationR\x11submissionTimeout\"\x89\x03\n" +
+	"\x04OIDC\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1d\n" +
+	"\n" +
+	"issuer_url\x18\x02 \x01(\tR\tissuerUrl\x12\x1b\n" +
+	"\tclient_id\x18\x03 \x01(\tR\bclientId\x12,\n" +
+	"\x12client_secret_file\x18\x04 \x01(\tR\x10clientSecretFile\x12,\n" +
+	"\x12login_redirect_uri\x18\x05 \x01(\tR\x10loginRedirectUri\x12;\n" +
+	"\x1aidentity_link_redirect_uri\x18\x06 \x01(\tR\x17identityLinkRedirectUri\x12R\n" +
+	"\x17recent_reauthentication\x18\a \x01(\v2\x19.google.protobuf.DurationR\x16recentReauthentication\x12<\n" +
+	"\fhttp_timeout\x18\b \x01(\v2\x19.google.protobuf.DurationR\vhttpTimeoutB5Z3github.com/zhangzhe-ctrl/ani-iam/internal/conf;confb\x06proto3"
 
 var (
 	file_conf_proto_rawDescOnce sync.Once
@@ -821,7 +940,7 @@ func file_conf_proto_rawDescGZIP() []byte {
 	return file_conf_proto_rawDescData
 }
 
-var file_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),           // 0: ani.iam.conf.Bootstrap
 	(*Server)(nil),              // 1: ani.iam.conf.Server
@@ -830,35 +949,39 @@ var file_conf_proto_goTypes = []any{
 	(*Redis)(nil),               // 4: ani.iam.conf.Redis
 	(*AccessToken)(nil),         // 5: ani.iam.conf.AccessToken
 	(*Notification)(nil),        // 6: ani.iam.conf.Notification
-	(*Server_GRPC)(nil),         // 7: ani.iam.conf.Server.GRPC
-	(*Server_Admin)(nil),        // 8: ani.iam.conf.Server.Admin
-	(*Server_GRPC_TLS)(nil),     // 9: ani.iam.conf.Server.GRPC.TLS
-	(*durationpb.Duration)(nil), // 10: google.protobuf.Duration
+	(*OIDC)(nil),                // 7: ani.iam.conf.OIDC
+	(*Server_GRPC)(nil),         // 8: ani.iam.conf.Server.GRPC
+	(*Server_Admin)(nil),        // 9: ani.iam.conf.Server.Admin
+	(*Server_GRPC_TLS)(nil),     // 10: ani.iam.conf.Server.GRPC.TLS
+	(*durationpb.Duration)(nil), // 11: google.protobuf.Duration
 }
 var file_conf_proto_depIdxs = []int32{
 	1,  // 0: ani.iam.conf.Bootstrap.server:type_name -> ani.iam.conf.Server
 	2,  // 1: ani.iam.conf.Bootstrap.runtime:type_name -> ani.iam.conf.Runtime
-	7,  // 2: ani.iam.conf.Server.grpc:type_name -> ani.iam.conf.Server.GRPC
-	8,  // 3: ani.iam.conf.Server.admin:type_name -> ani.iam.conf.Server.Admin
-	10, // 4: ani.iam.conf.Server.shutdown_timeout:type_name -> google.protobuf.Duration
+	8,  // 2: ani.iam.conf.Server.grpc:type_name -> ani.iam.conf.Server.GRPC
+	9,  // 3: ani.iam.conf.Server.admin:type_name -> ani.iam.conf.Server.Admin
+	11, // 4: ani.iam.conf.Server.shutdown_timeout:type_name -> google.protobuf.Duration
 	3,  // 5: ani.iam.conf.Runtime.postgresql:type_name -> ani.iam.conf.PostgreSQL
 	4,  // 6: ani.iam.conf.Runtime.redis:type_name -> ani.iam.conf.Redis
 	5,  // 7: ani.iam.conf.Runtime.access_token:type_name -> ani.iam.conf.AccessToken
 	6,  // 8: ani.iam.conf.Runtime.notification:type_name -> ani.iam.conf.Notification
-	10, // 9: ani.iam.conf.Redis.login_window:type_name -> google.protobuf.Duration
-	10, // 10: ani.iam.conf.Redis.dial_timeout:type_name -> google.protobuf.Duration
-	10, // 11: ani.iam.conf.Redis.read_timeout:type_name -> google.protobuf.Duration
-	10, // 12: ani.iam.conf.Redis.write_timeout:type_name -> google.protobuf.Duration
-	10, // 13: ani.iam.conf.Notification.dispatch_interval:type_name -> google.protobuf.Duration
-	10, // 14: ani.iam.conf.Notification.submission_timeout:type_name -> google.protobuf.Duration
-	10, // 15: ani.iam.conf.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	9,  // 16: ani.iam.conf.Server.GRPC.tls:type_name -> ani.iam.conf.Server.GRPC.TLS
-	10, // 17: ani.iam.conf.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	18, // [18:18] is the sub-list for method output_type
-	18, // [18:18] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	7,  // 9: ani.iam.conf.Runtime.oidc:type_name -> ani.iam.conf.OIDC
+	11, // 10: ani.iam.conf.Redis.login_window:type_name -> google.protobuf.Duration
+	11, // 11: ani.iam.conf.Redis.dial_timeout:type_name -> google.protobuf.Duration
+	11, // 12: ani.iam.conf.Redis.read_timeout:type_name -> google.protobuf.Duration
+	11, // 13: ani.iam.conf.Redis.write_timeout:type_name -> google.protobuf.Duration
+	11, // 14: ani.iam.conf.Notification.dispatch_interval:type_name -> google.protobuf.Duration
+	11, // 15: ani.iam.conf.Notification.submission_timeout:type_name -> google.protobuf.Duration
+	11, // 16: ani.iam.conf.OIDC.recent_reauthentication:type_name -> google.protobuf.Duration
+	11, // 17: ani.iam.conf.OIDC.http_timeout:type_name -> google.protobuf.Duration
+	11, // 18: ani.iam.conf.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	10, // 19: ani.iam.conf.Server.GRPC.tls:type_name -> ani.iam.conf.Server.GRPC.TLS
+	11, // 20: ani.iam.conf.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	21, // [21:21] is the sub-list for method output_type
+	21, // [21:21] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_conf_proto_init() }
@@ -872,7 +995,7 @@ func file_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conf_proto_rawDesc), len(file_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

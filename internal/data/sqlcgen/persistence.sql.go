@@ -437,6 +437,38 @@ func (q *Queries) CreateKnownPasswordActionRequest(ctx context.Context, arg Crea
 	return err
 }
 
+const createOIDCIdentity = `-- name: CreateOIDCIdentity :exec
+INSERT INTO identities (
+    id, principal_id, provider, issuer, subject, status, version, created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4,
+    $5, 'active', 1, $6, $7
+)
+`
+
+type CreateOIDCIdentityParams struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	Provider    string
+	Issuer      string
+	Subject     string
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+func (q *Queries) CreateOIDCIdentity(ctx context.Context, arg CreateOIDCIdentityParams) error {
+	_, err := q.db.Exec(ctx, createOIDCIdentity,
+		arg.ID,
+		arg.PrincipalID,
+		arg.Provider,
+		arg.Issuer,
+		arg.Subject,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
 const createPasswordAction = `-- name: CreatePasswordAction :exec
 INSERT INTO password_actions (
     operation_id, principal_id, purpose, status, expires_at,
@@ -648,12 +680,13 @@ func (q *Queries) CreateRefreshTokenFamily(ctx context.Context, arg CreateRefres
 
 const createSession = `-- name: CreateSession :exec
 INSERT INTO sessions (
-    id, principal_id, audience, status, device_name, idle_expires_at,
-    absolute_expires_at, version, created_at, updated_at
+    id, principal_id, audience, status, authn_methods, device_name, idle_expires_at,
+    absolute_expires_at, reauthenticated_at, version, created_at, updated_at
 ) VALUES (
-    $1, $2, $3, $4,
-    $5, $6,
-    $7, 1, $8, $9
+    $1, $2, $3, $4, $5,
+    $6, $7,
+    $8, $9, 1,
+    $10, $11
 )
 `
 
@@ -662,9 +695,11 @@ type CreateSessionParams struct {
 	PrincipalID       uuid.UUID
 	Audience          string
 	Status            string
+	AuthnMethods      []string
 	DeviceName        string
 	IdleExpiresAt     pgtype.Timestamptz
 	AbsoluteExpiresAt pgtype.Timestamptz
+	ReauthenticatedAt pgtype.Timestamptz
 	CreatedAt         pgtype.Timestamptz
 	UpdatedAt         pgtype.Timestamptz
 }
@@ -675,9 +710,11 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 		arg.PrincipalID,
 		arg.Audience,
 		arg.Status,
+		arg.AuthnMethods,
 		arg.DeviceName,
 		arg.IdleExpiresAt,
 		arg.AbsoluteExpiresAt,
+		arg.ReauthenticatedAt,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -900,6 +937,130 @@ func (q *Queries) GetVerifiedAccountForPrincipal(ctx context.Context, arg GetVer
 	return normalized_email, err
 }
 
+const lockOIDCLinkAuthentication = `-- name: LockOIDCLinkAuthentication :one
+SELECT session.reauthenticated_at
+FROM principals AS principal
+JOIN sessions AS session
+  ON session.id = $1
+ AND session.principal_id = principal.id
+JOIN session_grants AS session_grant
+  ON session_grant.tenant_id = $2
+ AND session_grant.id = $3
+ AND session_grant.session_id = session.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = session_grant.tenant_id
+ AND membership.id = session_grant.membership_id
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE principal.id = $4
+  AND principal.status = 'active'
+  AND session.status = 'active'
+  AND session_grant.status = 'active'
+  AND session_grant.version = $5
+  AND membership.status = 'active'
+  AND access.status = 'active'
+  AND lifecycle.status = 'active'
+  AND lifecycle.fresh_until > statement_timestamp()
+FOR SHARE OF principal, session, session_grant, membership, access
+`
+
+type LockOIDCLinkAuthenticationParams struct {
+	SessionID            uuid.UUID
+	TenantID             uuid.UUID
+	GrantID              uuid.UUID
+	PrincipalID          uuid.UUID
+	ExpectedGrantVersion int64
+}
+
+func (q *Queries) LockOIDCLinkAuthentication(ctx context.Context, arg LockOIDCLinkAuthenticationParams) (pgtype.Timestamptz, error) {
+	row := q.db.QueryRow(ctx, lockOIDCLinkAuthentication,
+		arg.SessionID,
+		arg.TenantID,
+		arg.GrantID,
+		arg.PrincipalID,
+		arg.ExpectedGrantVersion,
+	)
+	var reauthenticated_at pgtype.Timestamptz
+	err := row.Scan(&reauthenticated_at)
+	return reauthenticated_at, err
+}
+
+const lockOIDCLoginAuthentication = `-- name: LockOIDCLoginAuthentication :one
+SELECT
+    identity.status AS identity_status,
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    email.normalized_email
+FROM identities AS identity
+JOIN principals AS principal
+  ON principal.id = identity.principal_id
+JOIN verified_emails AS email
+  ON email.principal_id = principal.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = $1
+ AND membership.id = $2
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE identity.id = $3
+  AND identity.provider = $4
+  AND identity.issuer = $5
+  AND identity.subject = $6
+  AND principal.id = $7
+FOR SHARE OF identity, principal, membership, access
+`
+
+type LockOIDCLoginAuthenticationParams struct {
+	TenantID     uuid.UUID
+	MembershipID uuid.UUID
+	IdentityID   uuid.UUID
+	Provider     string
+	Issuer       string
+	Subject      string
+	PrincipalID  uuid.UUID
+}
+
+type LockOIDCLoginAuthenticationRow struct {
+	IdentityStatus     string
+	PrincipalStatus    string
+	MembershipStatus   string
+	TenantAccessStatus string
+	LifecycleStatus    string
+	LifecycleFresh     bool
+	NormalizedEmail    string
+}
+
+func (q *Queries) LockOIDCLoginAuthentication(ctx context.Context, arg LockOIDCLoginAuthenticationParams) (LockOIDCLoginAuthenticationRow, error) {
+	row := q.db.QueryRow(ctx, lockOIDCLoginAuthentication,
+		arg.TenantID,
+		arg.MembershipID,
+		arg.IdentityID,
+		arg.Provider,
+		arg.Issuer,
+		arg.Subject,
+		arg.PrincipalID,
+	)
+	var i LockOIDCLoginAuthenticationRow
+	err := row.Scan(
+		&i.IdentityStatus,
+		&i.PrincipalStatus,
+		&i.MembershipStatus,
+		&i.TenantAccessStatus,
+		&i.LifecycleStatus,
+		&i.LifecycleFresh,
+		&i.NormalizedEmail,
+	)
+	return i, err
+}
+
 const lockPasswordAction = `-- name: LockPasswordAction :one
 SELECT operation_id, principal_id, purpose, status, expires_at, version
 FROM password_actions
@@ -1053,6 +1214,162 @@ func (q *Queries) LookupAuthorization(ctx context.Context, arg LookupAuthorizati
 	return i, err
 }
 
+const lookupOIDCIdentityOwner = `-- name: LookupOIDCIdentityOwner :one
+SELECT principal_id
+FROM identities
+WHERE issuer = $1 AND subject = $2
+FOR SHARE
+`
+
+type LookupOIDCIdentityOwnerParams struct {
+	Issuer  string
+	Subject string
+}
+
+func (q *Queries) LookupOIDCIdentityOwner(ctx context.Context, arg LookupOIDCIdentityOwnerParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, lookupOIDCIdentityOwner, arg.Issuer, arg.Subject)
+	var principal_id uuid.UUID
+	err := row.Scan(&principal_id)
+	return principal_id, err
+}
+
+const lookupOIDCLogin = `-- name: LookupOIDCLogin :one
+SELECT
+    identity.id AS identity_id,
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    membership.id AS membership_id,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    email.normalized_email
+FROM identities AS identity
+JOIN principals AS principal
+  ON principal.id = identity.principal_id
+JOIN verified_emails AS email
+  ON email.principal_id = principal.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = $1
+ AND membership.principal_id = principal.id
+JOIN tenant_access AS access
+  ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = membership.tenant_id
+WHERE identity.provider = $2
+  AND identity.issuer = $3
+  AND identity.subject = $4
+  AND identity.status = 'active'
+`
+
+type LookupOIDCLoginParams struct {
+	TenantID uuid.UUID
+	Provider string
+	Issuer   string
+	Subject  string
+}
+
+type LookupOIDCLoginRow struct {
+	IdentityID         uuid.UUID
+	PrincipalID        uuid.UUID
+	PrincipalStatus    string
+	MembershipID       uuid.UUID
+	MembershipStatus   string
+	TenantAccessStatus string
+	LifecycleStatus    string
+	LifecycleFresh     bool
+	NormalizedEmail    string
+}
+
+func (q *Queries) LookupOIDCLogin(ctx context.Context, arg LookupOIDCLoginParams) (LookupOIDCLoginRow, error) {
+	row := q.db.QueryRow(ctx, lookupOIDCLogin,
+		arg.TenantID,
+		arg.Provider,
+		arg.Issuer,
+		arg.Subject,
+	)
+	var i LookupOIDCLoginRow
+	err := row.Scan(
+		&i.IdentityID,
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.MembershipID,
+		&i.MembershipStatus,
+		&i.TenantAccessStatus,
+		&i.LifecycleStatus,
+		&i.LifecycleFresh,
+		&i.NormalizedEmail,
+	)
+	return i, err
+}
+
+const lookupOIDCReauthentication = `-- name: LookupOIDCReauthentication :one
+SELECT
+    principal.id AS principal_id,
+    principal.status AS principal_status,
+    session.id AS session_id,
+    session.status AS session_status,
+    session_grant.id AS grant_id,
+    session_grant.status AS grant_status,
+    session_grant.version AS grant_version,
+    session_grant.tenant_id,
+    session.reauthenticated_at
+FROM principals AS principal
+JOIN sessions AS session
+  ON session.id = $1
+ AND session.principal_id = principal.id
+JOIN session_grants AS session_grant
+  ON session_grant.tenant_id = $2
+ AND session_grant.id = $3
+ AND session_grant.session_id = session.id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = session_grant.tenant_id
+ AND membership.id = session_grant.membership_id
+ AND membership.principal_id = principal.id
+WHERE principal.id = $4
+`
+
+type LookupOIDCReauthenticationParams struct {
+	SessionID   uuid.UUID
+	TenantID    uuid.UUID
+	GrantID     uuid.UUID
+	PrincipalID uuid.UUID
+}
+
+type LookupOIDCReauthenticationRow struct {
+	PrincipalID       uuid.UUID
+	PrincipalStatus   string
+	SessionID         uuid.UUID
+	SessionStatus     string
+	GrantID           uuid.UUID
+	GrantStatus       string
+	GrantVersion      int64
+	TenantID          uuid.UUID
+	ReauthenticatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) LookupOIDCReauthentication(ctx context.Context, arg LookupOIDCReauthenticationParams) (LookupOIDCReauthenticationRow, error) {
+	row := q.db.QueryRow(ctx, lookupOIDCReauthentication,
+		arg.SessionID,
+		arg.TenantID,
+		arg.GrantID,
+		arg.PrincipalID,
+	)
+	var i LookupOIDCReauthenticationRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.PrincipalStatus,
+		&i.SessionID,
+		&i.SessionStatus,
+		&i.GrantID,
+		&i.GrantStatus,
+		&i.GrantVersion,
+		&i.TenantID,
+		&i.ReauthenticatedAt,
+	)
+	return i, err
+}
+
 const lookupPasswordActionTarget = `-- name: LookupPasswordActionTarget :one
 SELECT
     principal.id AS principal_id,
@@ -1154,6 +1471,23 @@ func (q *Queries) LookupPasswordLogin(ctx context.Context, arg LookupPasswordLog
 		&i.CredentialVersion,
 	)
 	return i, err
+}
+
+const lookupVerifiedEmailOwner = `-- name: LookupVerifiedEmailOwner :one
+SELECT principal_id
+FROM verified_emails
+WHERE normalized_email = $1
+`
+
+type LookupVerifiedEmailOwnerParams struct {
+	NormalizedEmail string
+}
+
+func (q *Queries) LookupVerifiedEmailOwner(ctx context.Context, arg LookupVerifiedEmailOwnerParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, lookupVerifiedEmailOwner, arg.NormalizedEmail)
+	var principal_id uuid.UUID
+	err := row.Scan(&principal_id)
+	return principal_id, err
 }
 
 const markPasswordActionNotificationAttentionRequired = `-- name: MarkPasswordActionNotificationAttentionRequired :one

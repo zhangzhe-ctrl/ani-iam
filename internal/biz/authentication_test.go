@@ -66,6 +66,9 @@ func TestPasswordLoginCreatesActiveTenantSession(t *testing.T) {
 	if result.Session.Status != SessionStatusActive || result.Grant.Status != GrantStatusActive || result.Grant.Version != 1 {
 		t.Fatalf("session/grant = %#v / %#v", result.Session, result.Grant)
 	}
+	if len(result.Session.AuthnMethods) != 1 || result.Session.AuthnMethods[0] != AuditAuthenticationMethodPassword {
+		t.Fatalf("Session authn methods = %#v, want [password]", result.Session.AuthnMethods)
+	}
 	if result.Session.ID == uuid.Nil || result.Grant.ID == uuid.Nil || result.AccessTokenExpiresAt != now.Add(15*time.Minute) {
 		t.Fatalf("result = %#v", result)
 	}

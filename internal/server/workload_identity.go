@@ -18,11 +18,15 @@ import (
 var ErrInvalidGatewayWorkloadIdentity = errors.New("invalid Gateway workload identity")
 
 var gatewayDP2AllowedRPCs = map[string]struct{}{
-	"/grpc.health.v1.Health/Check":                         {},
-	"/iam.v1.AuthenticationService/PasswordLogin":          {},
-	"/iam.v1.AuthenticationService/RequestPasswordAction":  {},
-	"/iam.v1.AuthenticationService/CompletePasswordAction": {},
-	"/iam.v1.AuthorizationService/CheckPermission":         {},
+	"/grpc.health.v1.Health/Check":                           {},
+	"/iam.v1.AuthenticationService/PasswordLogin":            {},
+	"/iam.v1.AuthenticationService/RequestPasswordAction":    {},
+	"/iam.v1.AuthenticationService/CompletePasswordAction":   {},
+	"/iam.v1.AuthenticationService/BeginOIDCLogin":           {},
+	"/iam.v1.AuthenticationService/CompleteOIDCLogin":        {},
+	"/iam.v1.AuthenticationService/BeginOIDCIdentityLink":    {},
+	"/iam.v1.AuthenticationService/CompleteOIDCIdentityLink": {},
+	"/iam.v1.AuthorizationService/CheckPermission":           {},
 }
 
 func NewGatewayWorkloadIdentityMiddleware(gatewayDNSName string) (middleware.Middleware, error) {

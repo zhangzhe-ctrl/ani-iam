@@ -24,13 +24,74 @@ type authenticationUsecase interface {
 	CompletePasswordAction(context.Context, biz.CompletePasswordActionCommand) (biz.CompletePasswordActionResult, error)
 }
 
+type oidcUsecase interface {
+	BeginLogin(context.Context, biz.BeginOIDCLoginCommand) (biz.BeginOIDCLoginResult, error)
+	CompleteLogin(context.Context, biz.CompleteOIDCLoginCommand) (biz.LoginResult, error)
+	BeginIdentityLink(context.Context, biz.BeginOIDCIdentityLinkCommand) (biz.BeginOIDCIdentityLinkResult, error)
+	CompleteIdentityLink(context.Context, biz.CompleteOIDCIdentityLinkCommand) (biz.OIDCIdentityLinkResult, error)
+}
+
+func (s *AuthenticationService) CompleteOIDCIdentityLink(ctx context.Context, request *iamv1.CompleteOIDCIdentityLinkRequest) (*iamv1.CompleteOIDCIdentityLinkResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "OIDC identity-link completion request is required")
+	}
+	if s.oidc == nil {
+		return nil, newIAMStatus(codes.Unavailable, "IAM_UNAVAILABLE", "IAM dependency is unavailable", map[string]string{"dependency": "oidc"})
+	}
+	credential := ""
+	if request.GetCredential() != nil {
+		credential = request.GetCredential().GetValue()
+	}
+	result, err := s.oidc.CompleteIdentityLink(ctx, biz.CompleteOIDCIdentityLinkCommand{
+		RawCredential: credential, Code: request.GetCode(), State: request.GetState(), RedirectURI: request.GetRedirectUri(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID: "completeOIDCIdentityLink", CredentialKind: "oidc", Dependency: "oidc",
+		})
+	}
+	return &iamv1.CompleteOIDCIdentityLinkResponse{
+		IdentityId: result.IdentityID.String(), PrincipalId: result.PrincipalID.String(),
+	}, nil
+}
+
+func (s *AuthenticationService) BeginOIDCIdentityLink(ctx context.Context, request *iamv1.BeginOIDCIdentityLinkRequest) (*iamv1.BeginOIDCIdentityLinkResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "OIDC identity-link request is required")
+	}
+	if s.oidc == nil {
+		return nil, newIAMStatus(codes.Unavailable, "IAM_UNAVAILABLE", "IAM dependency is unavailable", map[string]string{"dependency": "oidc"})
+	}
+	credential := ""
+	if request.GetCredential() != nil {
+		credential = request.GetCredential().GetValue()
+	}
+	result, err := s.oidc.BeginIdentityLink(ctx, biz.BeginOIDCIdentityLinkCommand{
+		RawCredential: credential, Provider: request.GetProvider(), RedirectURI: request.GetRedirectUri(), IdempotencyKey: request.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID: "beginOIDCIdentityLink", IdempotencyKey: strings.TrimSpace(request.GetIdempotencyKey()),
+			CredentialKind: "bearer", Dependency: "oidc",
+		})
+	}
+	return &iamv1.BeginOIDCIdentityLinkResponse{
+		AuthorizationUrl: result.AuthorizationURL, State: result.State, ExpiresAt: timestamppb.New(result.ExpiresAt),
+	}, nil
+}
+
 type AuthenticationService struct {
 	iamv1.UnimplementedAuthenticationServiceServer
 	authentication authenticationUsecase
+	oidc           oidcUsecase
 }
 
-func NewAuthenticationService(authentication authenticationUsecase) *AuthenticationService {
-	return &AuthenticationService{authentication: authentication}
+func NewAuthenticationService(authentication authenticationUsecase, oidc ...oidcUsecase) *AuthenticationService {
+	service := &AuthenticationService{authentication: authentication}
+	if len(oidc) == 1 {
+		service.oidc = oidc[0]
+	}
+	return service
 }
 
 func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv1.PasswordLoginRequest) (*iamv1.PasswordLoginResponse, error) {
@@ -74,7 +135,57 @@ func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv
 			Dependency:     "authentication",
 		})
 	}
-	return passwordLoginResponse(result, tenantID), nil
+	return loginResponse(result, tenantID), nil
+}
+
+func (s *AuthenticationService) CompleteOIDCLogin(ctx context.Context, request *iamv1.CompleteOIDCLoginRequest) (*iamv1.CompleteOIDCLoginResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "OIDC login completion request is required")
+	}
+	if s.oidc == nil {
+		return nil, newIAMStatus(codes.Unavailable, "IAM_UNAVAILABLE", "IAM dependency is unavailable", map[string]string{"dependency": "oidc"})
+	}
+	result, err := s.oidc.CompleteLogin(ctx, biz.CompleteOIDCLoginCommand{
+		Code: request.GetCode(), State: request.GetState(), RedirectURI: request.GetRedirectUri(), DeviceName: request.GetDeviceName(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{OperationID: "completeOIDCLogin", CredentialKind: "oidc", Dependency: "oidc"})
+	}
+	if result.TenantID == uuid.Nil {
+		return nil, mapIAMError(biz.ErrOIDCDependency, errorContext{OperationID: "completeOIDCLogin", Dependency: "oidc"})
+	}
+	return &iamv1.CompleteOIDCLoginResponse{
+		Login: loginResponse(result, result.TenantID),
+	}, nil
+}
+
+func (s *AuthenticationService) BeginOIDCLogin(ctx context.Context, request *iamv1.BeginOIDCLoginRequest) (*iamv1.BeginOIDCLoginResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "OIDC login request is required")
+	}
+	if s.oidc == nil {
+		return nil, newIAMStatus(codes.Unavailable, "IAM_UNAVAILABLE", "IAM dependency is unavailable", map[string]string{"dependency": "oidc"})
+	}
+	audience, err := audienceFromProto(request.GetAudience())
+	if err != nil {
+		return nil, err
+	}
+	tenantID, err := tenantIDFromBoundary(request.GetBoundary())
+	if err != nil {
+		return nil, err
+	}
+	result, err := s.oidc.BeginLogin(ctx, biz.BeginOIDCLoginCommand{
+		Audience: audience, TenantID: tenantID, RedirectURI: request.GetRedirectUri(), IdempotencyKey: request.GetIdempotencyKey(),
+	})
+	if err != nil {
+		return nil, mapIAMError(err, errorContext{
+			OperationID: "beginOIDCLogin", IdempotencyKey: strings.TrimSpace(request.GetIdempotencyKey()),
+			TenantID: tenantID.String(), CredentialKind: "oidc", Dependency: "oidc",
+		})
+	}
+	return &iamv1.BeginOIDCLoginResponse{
+		AuthorizationUrl: result.AuthorizationURL, State: result.State, ExpiresAt: timestamppb.New(result.ExpiresAt),
+	}, nil
 }
 
 func (s *AuthenticationService) RequestPasswordAction(ctx context.Context, request *iamv1.RequestPasswordActionRequest) (*iamv1.RequestPasswordActionResponse, error) {
@@ -127,9 +238,9 @@ func (s *AuthenticationService) CompletePasswordAction(ctx context.Context, requ
 	}}, nil
 }
 
-func passwordLoginResponse(result biz.PasswordLoginResult, tenantID uuid.UUID) *iamv1.PasswordLoginResponse {
+func loginResponse(result biz.LoginResult, tenantID uuid.UUID) *iamv1.PasswordLoginResponse {
 	boundary := tenantBoundary(tenantID)
-	authnMethods := []iamv1.AuthnMethod{iamv1.AuthnMethod_AUTHN_METHOD_PASSWORD}
+	authnMethods := authnMethodsToProto(result.Session.AuthnMethods)
 	grant := &iamv1.SessionGrantSummary{
 		GrantId:  result.Grant.ID.String(),
 		Boundary: boundary,
@@ -258,13 +369,19 @@ func mapIAMError(err error, details errorContext) error {
 	if field := invalidArgumentField(err); field != "" {
 		return invalidArgumentStatus(field, "IAM request is invalid")
 	}
-	if errors.Is(err, biz.ErrInvalidCredential) || errors.Is(err, biz.ErrPasswordActionInvalid) || errors.Is(err, biz.ErrPasswordActionTokenRequired) || errors.Is(err, biz.ErrAuthorizationCredentialInvalid) || errors.Is(err, biz.ErrAuthorizationCredentialRequired) {
+	if errors.Is(err, biz.ErrInvalidCredential) || errors.Is(err, biz.ErrPasswordActionInvalid) || errors.Is(err, biz.ErrPasswordActionTokenRequired) || errors.Is(err, biz.ErrAuthorizationCredentialInvalid) || errors.Is(err, biz.ErrAuthorizationCredentialRequired) || errors.Is(err, biz.ErrOIDCStateInvalid) || errors.Is(err, biz.ErrOIDCEmailUnverified) {
 		credentialKind := details.CredentialKind
 		if credentialKind == "" {
 			credentialKind = "bearer"
 		}
 		return newIAMStatus(codes.Unauthenticated, "CREDENTIAL_INVALID", "credential is invalid", map[string]string{
 			"credential_kind": credentialKind,
+		})
+	}
+	if errors.Is(err, biz.ErrOIDCReauthenticationRequired) || errors.Is(err, biz.ErrOIDCIdentityConflict) || errors.Is(err, biz.ErrOIDCEmailConflict) {
+		return newIAMStatus(codes.PermissionDenied, "PERMISSION_DENIED", "access is denied", map[string]string{
+			"operation_id": details.OperationID,
+			"decision_id":  "not-issued",
 		})
 	}
 	if errors.Is(err, biz.ErrAuthorizationOperationUnregistered) {
@@ -297,7 +414,7 @@ func mapIAMError(err error, details errorContext) error {
 			"decision_id":  decisionID,
 		})
 	}
-	if errors.Is(err, biz.ErrAuthenticationDependency) || errors.Is(err, biz.ErrAuthorizationDependency) || errors.Is(err, biz.ErrPersistenceUnavailable) {
+	if errors.Is(err, biz.ErrAuthenticationDependency) || errors.Is(err, biz.ErrAuthorizationDependency) || errors.Is(err, biz.ErrOIDCDependency) || errors.Is(err, biz.ErrPersistenceUnavailable) {
 		dependency := details.Dependency
 		if dependency == "" {
 			dependency = "iam"
@@ -325,6 +442,10 @@ func invalidArgumentField(err error) string {
 		return "audience"
 	case errors.Is(err, biz.ErrSourceIPRequired):
 		return "source_ip"
+	case errors.Is(err, biz.ErrOIDCRedirectInvalid):
+		return "redirect_uri"
+	case errors.Is(err, biz.ErrOIDCConfigurationInvalid):
+		return "provider"
 	case errors.Is(err, biz.ErrNewPasswordRequired):
 		return "new_password"
 	case errors.Is(err, biz.ErrIdempotencyKeyRequired):

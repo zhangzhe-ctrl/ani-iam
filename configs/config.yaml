@@ -40,4 +40,13 @@ runtime:
     locale: en-US
     dispatch_interval: 0.25s
     submission_timeout: 5s
+  oidc:
+    provider: dex
+    issuer_url: https://dex.example.test/dex
+    client_id: ani-console
+    client_secret_file: /run/secrets/ani-iam-dex-client-secret
+    login_redirect_uri: https://console.example.test/auth/oidc/callback
+    identity_link_redirect_uri: https://console.example.test/auth/oidc/link/callback
+    recent_reauthentication: 600s
+    http_timeout: 5s
   policy_revision: sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa

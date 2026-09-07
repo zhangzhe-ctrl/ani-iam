@@ -189,6 +189,7 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 	}
 
 	var sessionCount, grantCount, auditCount int
+	var passwordSessionMethods []string
 	if err := environment.runtimePool.QueryRow(ctx, `SELECT count(*) FROM sessions WHERE id = $1`, login.Session.ID).Scan(&sessionCount); err != nil {
 		t.Fatalf("query committed Session: %v", err)
 	}
@@ -198,8 +199,14 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 	if err := environment.runtimePool.QueryRow(ctx, `SELECT count(*) FROM iam_audit_events WHERE tenant_id = $1 AND event_id = $2`, tenantA, fixture.loginIDs[5]).Scan(&auditCount); err != nil {
 		t.Fatalf("query committed login Audit: %v", err)
 	}
+	if err := environment.runtimePool.QueryRow(ctx, `SELECT authn_methods FROM sessions WHERE id = $1`, login.Session.ID).Scan(&passwordSessionMethods); err != nil {
+		t.Fatalf("query committed Session authn methods: %v", err)
+	}
 	if sessionCount != 1 || grantCount != 1 || auditCount != 1 {
 		t.Fatalf("atomic login rows = session:%d grant:%d audit:%d, want 1/1/1", sessionCount, grantCount, auditCount)
+	}
+	if len(passwordSessionMethods) != 1 || passwordSessionMethods[0] != "password" {
+		t.Fatalf("password Session authn_methods = %#v, want [password]", passwordSessionMethods)
 	}
 
 	authorization := biz.NewAuthorizationUsecase(

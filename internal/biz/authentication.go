@@ -112,15 +112,17 @@ type PasswordLoginState struct {
 }
 
 type Session struct {
-	ID             uuid.UUID
-	PrincipalID    uuid.UUID
-	Audience       Audience
-	Status         SessionStatus
-	DeviceName     string
-	IdleExpiresAt  time.Time
-	AbsoluteExpiry time.Time
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID                uuid.UUID
+	PrincipalID       uuid.UUID
+	Audience          Audience
+	Status            SessionStatus
+	AuthnMethods      []AuditAuthenticationMethod
+	DeviceName        string
+	IdleExpiresAt     time.Time
+	AbsoluteExpiry    time.Time
+	ReauthenticatedAt time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 type SessionGrant struct {
@@ -191,7 +193,10 @@ type PasswordLoginCommand struct {
 	IdempotencyKey string
 }
 
-type PasswordLoginResult struct {
+// LoginResult is the shared Human login result produced by Password and OIDC
+// authentication. Transport-specific response mapping stays in service.
+type LoginResult struct {
+	TenantID             uuid.UUID
 	Principal            Principal
 	Session              Session
 	Grant                SessionGrant
@@ -199,6 +204,8 @@ type PasswordLoginResult struct {
 	RefreshToken         string
 	AccessTokenExpiresAt time.Time
 }
+
+type PasswordLoginResult = LoginResult
 
 // LoginThrottleAttempt is the normalized, non-secret abuse-control input. The
 // adapter hashes both values before constructing storage keys.
@@ -361,15 +368,17 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 	}
 	accessExpiresAt, idleExpiresAt, absoluteExpiresAt := loginDeadlines(command.Audience, now)
 	session := Session{
-		ID:             ids[0],
-		PrincipalID:    state.PrincipalID,
-		Audience:       command.Audience,
-		Status:         SessionStatusActive,
-		DeviceName:     strings.TrimSpace(command.DeviceName),
-		IdleExpiresAt:  idleExpiresAt,
-		AbsoluteExpiry: absoluteExpiresAt,
-		CreatedAt:      now,
-		UpdatedAt:      now,
+		ID:                ids[0],
+		PrincipalID:       state.PrincipalID,
+		Audience:          command.Audience,
+		Status:            SessionStatusActive,
+		AuthnMethods:      []AuditAuthenticationMethod{AuditAuthenticationMethodPassword},
+		DeviceName:        strings.TrimSpace(command.DeviceName),
+		IdleExpiresAt:     idleExpiresAt,
+		AbsoluteExpiry:    absoluteExpiresAt,
+		ReauthenticatedAt: now,
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}
 	grant := SessionGrant{
 		ID:           ids[1],
@@ -452,6 +461,7 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 	// into an error that a caller could retry into a second Session.
 	_ = u.throttle.Reset(ctx, attempt)
 	return PasswordLoginResult{
+		TenantID:             command.TenantID,
 		Principal:            Principal{ID: state.PrincipalID, Status: state.PrincipalStatus},
 		Session:              session,
 		Grant:                grant,

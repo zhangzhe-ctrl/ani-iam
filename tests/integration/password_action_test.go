@@ -263,12 +263,12 @@ func TestPostgresPasswordResetConsumesOnceAndRevokesOnlyTargetPrincipal(t *testi
 	ctx := context.Background()
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")
 	otherPrincipalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e18")
+	now := time.Date(2026, 9, 6, 14, 0, 0, 0, time.UTC)
 	seedPasswordActionPrincipal(t, ctx, environment, principalID, uuid.MustParse("0198f062-b76d-7201-9000-000000000081"), "user@example.com", true)
 	seedPasswordActionPrincipal(t, ctx, environment, otherPrincipalID, uuid.MustParse("0198f062-b76d-7201-9000-000000000082"), "other@example.com", true)
-	seedPasswordActionSessions(t, ctx, environment, principalID, otherPrincipalID)
+	seedPasswordActionSessions(t, ctx, environment, principalID, otherPrincipalID, now)
 
 	uow := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool))
-	now := time.Date(2026, 9, 6, 14, 0, 0, 0, time.UTC)
 	target := biz.PasswordActionTarget{PrincipalID: principalID, HasPassword: true, VerifiedEmail: "user@example.com"}
 	request := passwordActionRequestMutation(
 		uuid.MustParse("0198f062-b76d-7001-9000-000000000081"),
@@ -757,7 +757,7 @@ func seedPasswordActionPrincipal(t *testing.T, ctx context.Context, environment 
 	}
 }
 
-func seedPasswordActionSessions(t *testing.T, ctx context.Context, environment *postgresEnvironment, principalID, otherPrincipalID uuid.UUID) {
+func seedPasswordActionSessions(t *testing.T, ctx context.Context, environment *postgresEnvironment, principalID, otherPrincipalID uuid.UUID, now time.Time) {
 	t.Helper()
 	seedPool := mustPool(t, environment.migrationDSN(primaryDB))
 	defer seedPool.Close()
@@ -789,7 +789,7 @@ func seedPasswordActionSessions(t *testing.T, ctx context.Context, environment *
 		{uuid.MustParse("0198f062-b76d-7101-9000-000000000089"), uuid.MustParse("0198f062-b76d-7101-9000-00000000008a"), uuid.MustParse("0198f062-b76d-7101-9000-00000000008b"), uuid.MustParse("0198f062-b76d-7101-9000-00000000008c"), otherPrincipalID, membershipB, "other-one"},
 	}
 	for _, fixture := range fixtures {
-		if _, err := seedPool.Exec(ctx, `INSERT INTO sessions (id, principal_id, audience, status, device_name, idle_expires_at, absolute_expires_at, version, created_at, updated_at) VALUES ($1, $2, 'console', 'active', 'browser', now() + interval '7 days', now() + interval '30 days', 1, now(), now())`, fixture.sessionID, fixture.principalID); err != nil {
+		if _, err := seedPool.Exec(ctx, `INSERT INTO sessions (id, principal_id, audience, status, authn_methods, device_name, idle_expires_at, absolute_expires_at, reauthenticated_at, version, created_at, updated_at) VALUES ($1, $2, 'console', 'active', ARRAY['password']::text[], 'browser', $3::timestamptz + interval '7 days', $3::timestamptz + interval '30 days', $3, 1, $3, $3)`, fixture.sessionID, fixture.principalID, now); err != nil {
 			t.Fatalf("seed password-action session: %v", err)
 		}
 		if _, err := seedPool.Exec(ctx, `INSERT INTO session_grants (tenant_id, id, session_id, membership_id, status, version, created_at, updated_at) VALUES ($1, $2, $3, $4, 'active', 1, now(), now())`, tenantA, fixture.grantID, fixture.sessionID, fixture.membershipID); err != nil {

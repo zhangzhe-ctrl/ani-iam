@@ -110,6 +110,9 @@ func (u *postgresLoginUnitOfWork) CommitLogin(
 	if err != nil {
 		return err
 	}
+	if len(mutation.Session.AuthnMethods) != 1 || mutation.Session.AuthnMethods[0] != biz.AuditAuthenticationMethodPassword {
+		return biz.ErrInvalidPersistenceState
+	}
 	tx, err := u.data.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
 		return mapPostgresError("begin login unit of work", err, nil)
@@ -136,9 +139,11 @@ func (u *postgresLoginUnitOfWork) CommitLogin(
 		PrincipalID:       mutation.Session.PrincipalID,
 		Audience:          string(mutation.Session.Audience),
 		Status:            string(mutation.Session.Status),
+		AuthnMethods:      []string{string(mutation.Session.AuthnMethods[0])},
 		DeviceName:        mutation.Session.DeviceName,
 		IdleExpiresAt:     requiredTimestamptz(mutation.Session.IdleExpiresAt),
 		AbsoluteExpiresAt: requiredTimestamptz(mutation.Session.AbsoluteExpiry),
+		ReauthenticatedAt: requiredTimestamptz(mutation.Session.ReauthenticatedAt),
 		CreatedAt:         requiredTimestamptz(mutation.Session.CreatedAt),
 		UpdatedAt:         requiredTimestamptz(mutation.Session.UpdatedAt),
 	}); err != nil {
