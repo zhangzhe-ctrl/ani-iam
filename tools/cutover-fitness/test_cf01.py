@@ -7,6 +7,8 @@ from pathlib import Path
 import cf01
 import probe
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 class ManifestValidationTests(unittest.TestCase):
     def test_accepts_only_digest_images_task_labels_and_allowed_namespaces(self):
@@ -65,6 +67,16 @@ spec:
             },
         )
         self.assertNotIn("@@", rendered)
+
+
+class CurrentAuthDockerfileTests(unittest.TestCase):
+    def test_uses_workspace_without_mutating_module_files(self):
+        dockerfile = (REPO_ROOT / "deploy/cutover-fitness/current-auth.Dockerfile").read_text()
+        self.assertIn("go work init ./runtimeadmin ./pkg ./services/auth-service", dockerfile)
+        self.assertNotIn("GOWORK=off", dockerfile)
+        self.assertNotIn("go mod tidy", dockerfile)
+        self.assertRegex(dockerfile, r"FROM docker\.io/library/golang@sha256:[0-9a-f]{64} AS build")
+        self.assertRegex(dockerfile, r"FROM docker\.io/library/alpine@sha256:[0-9a-f]{64}")
 
 
 class EvidenceTests(unittest.TestCase):

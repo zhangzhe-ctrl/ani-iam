@@ -1,0 +1,38 @@
+{
+  "recorded_at": "2026-09-08T12:18:01Z",
+  "result": "pass",
+  "scope": "current Auth image only",
+  "source": {
+    "repository": "/home/chabking/workspace/ANI",
+    "ref_selected_by_issue_01": "main",
+    "commit": "56a5f0b493c8404a024a92647d93f2ba2f7daf35",
+    "tree": "4ba6a15ad0cddf0db66a25d695b082d47346aff1",
+    "remote_main_at_verification": "56a5f0b493c8404a024a92647d93f2ba2f7daf35",
+    "context": "detached git archive; no ANI working-tree files"
+  },
+  "build": {
+    "dockerfile": "deploy/cutover-fitness/current-auth.Dockerfile",
+    "dockerfile_sha256": "a3ad5ba868509b3432f6aa3e6fa8a1f851380bc6fc846f198be1421a95d8b0cc",
+    "platform": "linux/amd64",
+    "module_strategy": "temporary go.work in the image build stage; no go.mod/go.sum mutation",
+    "base_images": {
+      "build": "docker.io/library/golang@sha256:1e0126852075c9c60731c8ba49088448b91f63e2aed97ca9d1a9791622a05946",
+      "runtime": "docker.io/library/alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc"
+    },
+    "normalized_command": "docker buildx build --platform linux/amd64 --file deploy/cutover-fitness/current-auth.Dockerfile --label dev.ani.cutover-fitness-id=CF-01 --label dev.ani.run-id=20260908t114831z --label org.opencontainers.image.revision=56a5f0b493c8404a024a92647d93f2ba2f7daf35 --tag docker.changqingyun.cn/ani/cf01-auth-service-current:20260908t114831z-56a5f0b --push <detached-source-context>"
+  },
+  "image": {
+    "repository": "docker.changqingyun.cn/ani/cf01-auth-service-current",
+    "tag": "20260908t114831z-56a5f0b",
+    "oci_index_digest": "sha256:8e5d4d11662d7fdfab92f3732b07e9b0999c2de2b4bcf50af52a86cd83d1c018",
+    "linux_amd64_manifest_digest": "sha256:a24142867f066fb9b123c3d6f62dcd69d0ac14f24b8811bff8ec37e293f1fb66",
+    "immutable_reference": "docker.changqingyun.cn/ani/cf01-auth-service-current@sha256:8e5d4d11662d7fdfab92f3732b07e9b0999c2de2b4bcf50af52a86cd83d1c018"
+  },
+  "verification": {
+    "registry_manifest_read": "pass",
+    "image_revision_label": "56a5f0b493c8404a024a92647d93f2ba2f7daf35",
+    "entrypoint": "/usr/local/bin/auth-service",
+    "user": "65532:65532",
+    "runtime_deployment": "not_verified"
+  }
+}
