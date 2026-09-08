@@ -117,7 +117,7 @@ target 的 `direct-p2-isolated` profile 当前要求 IAM gRPC、PostgreSQL、Red
 
 | 时间 | 工作 | 退出证据 |
 | --- | --- | --- |
-| 0:00–0:30 | 重验 commit/tree/overlay、cluster UID、两个 namespace 不存在；确认 pull-only robot 输入；创建 detached build context | `inputs.json` |
+| 0:00–0:30 | 重验 commit/tree/overlay、cluster UID、两个 namespace 不存在；确认本机 Harbor login host 但不读取 Credential；创建 detached build context | `inputs.json` |
 | 0:30–1:15 | 推送并按 digest 拉取 probe image；绑定两个固定 `ani-block` PVC；验证 default-deny、同 lane allow 与跨 lane L3/L4 deny | 三个 foundation gate |
 | 1:15–2:30 | 并行构建/推送 current Gateway/Auth、target Gateway/ani-iam；runner 使用固定 probe image + task ConfigMap；记录 OCI digest | `artifacts.json` |
 | 2:30–3:35 | 各 lane 部署最小依赖、migration、PKI、fixture backend 与应用；只要求最小启动路径健康/就绪 | workload inventory |
@@ -133,7 +133,7 @@ T+4:00 必须停止，不因为“再补一个功能”扩展窗口。未完成�
 2. `ani-block` PVC 无法绑定，或实际绑定到未声明的 StorageClass；
 3. default-deny / 同 lane allow / 跨 lane L3/L4 deny 的实际 NetworkPolicy canary 不符合预期；DNS 可解析不构成失败；
 4. source SHA/tree、image digest、manifest digest 或 cluster UID 与 plan 不一致；
-5. 需要读取、复制或记录既有共享 Secret，或需要复用 `ani-system`/其他 namespace 的数据库、Redis、NATS、Dex 或 Credential。
+5. cluster 不能直接 pull-by-digest，或需要读取、复制或记录本地 Docker Credential、既有共享 Secret，或需要复用 `ani-system`/其他 namespace 的数据库、Redis、NATS、Dex 或 Credential。
 
 ### 6.2 `environment-established` 最小 smoke
 
@@ -174,6 +174,6 @@ T+4:00 必须停止，不因为“再补一个功能”扩展窗口。未完成�
 
 CF-01 不接共享流量，不改 ANI `main`，不推 IAM 业务提交，不切 selector，不失效 Credential，不删除旧 Auth，也不清理任何现有 namespace/PV/image。
 
-所有新资源必须带 `cutover-fitness-id=CF-01` 与唯一 `run-id`。本地现有 Docker credential 只用于本地 push，不复制进 cluster。cluster pull 使用仅能读取五个 CF-01 repositories 的 task-scoped robot；两个 namespace 中 Secret 均精确命名为 `cf01-registry-pull`，通过不落本地/远端明文文件、不打印内容的 stdin 流程创建。该 robot 的取得和写入方式必须在实施前由人工确认。
+所有新资源必须带 `cutover-fitness-id=CF-01` 与唯一 `run-id`。本地现有 Docker credential 只用于本地 push，不读取、打印、记录或复制进 cluster。用户已确认测试集群可以直接拉取五个 CF-01 repositories，因此本事项不创建 `imagePullSecret`；必须用新 `cf01-probe` digest 在每个 Ready node 实际验证直接拉取。任一节点 pull 失败即停止，不得降级为复制 Credential、创建 Secret、修改节点 registry 配置或扩大权限。
 
 失败时先停止写流量并保留证据。删除两个 namespace、清理 `Retain` PV、删除 registry image 或失效任何 Credential 都是后续破坏性动作，执行前必须再次列出精确对象并取得人工确认；本规格不预授权删除。

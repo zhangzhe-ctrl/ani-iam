@@ -4,7 +4,7 @@
 
 **Blocked by:** 00 / 固化 CUTOVER-FITNESS-01 环境与证据方案
 
-**Status:** needs-info
+**Status:** claimed
 
 **Type:** enhancement
 
@@ -29,7 +29,7 @@
 - namespace `ani-cutover-current`
 - namespace `ani-cutover-target`
 - 只新增 `docker.changqingyun.cn/ani/cf01-probe`、`docker.changqingyun.cn/ani/cf01-ani-gateway-current`、`docker.changqingyun.cn/ani/cf01-auth-service-current`、`docker.changqingyun.cn/ani/cf01-ani-gateway-target`、`docker.changqingyun.cn/ani/cf01-ani-iam-target` repositories 中本事项 tag/digest
-- 两个 namespace 中各一个精确命名为 `cf01-registry-pull` 的 task-scoped pull-only Secret；不得复制本地 Docker credential
+- cluster 直接 pull-by-digest；不得创建 `imagePullSecret`，不得读取、打印、记录或复制本地 Docker credential
 - `ani-cutover-current/cf01-current-postgres-data` 与 `ani-cutover-target/cf01-target-postgres-data` 两个 PVC，以及它们触发的 provisioner-owned PV/VolumeAttachment；这些 cluster-scoped 副作用只允许创建/观察，不授权删除
 - task-owned local Docker build cache 与 detached temporary build directories
 
@@ -59,8 +59,9 @@
 
 **Recovery:** 不连接共享流量，因此运行失败不触发 ANI 回退。停止 runner 和新增写入，保留精确资源/日志供诊断。任何 workload/namespace/PV/image 删除都先列出带 `cutover-fitness-id=CF-01` 与 `run-id` 的精确对象，并等待人工确认；`ani-block` 为 `Retain`，不得假设删 PVC 会清理 PV。
 
-**Human checkpoints:** 当前缺少一个只读五个 CF-01 repositories 的 task-scoped registry robot，因此事项保持 `needs-info`。开始集群/registry 写入前必须由人工提供或确认该 robot 的安全输入方式，并接受两个 `cf01-registry-pull` Secret、source/tree/overlay、目标 namespaces、image repositories、manifest digest 和四小时时间盒；删除或重建任何资源前另行精确确认。
+**Human checkpoints:** 用户已接受 source/tree/overlay、两个目标 namespaces、五个 image repositories、cluster 直接 pull-by-digest、manifest/运行证据和四小时时间盒，因此本事项已领取。删除或重建任何资源、创建 `imagePullSecret`、复制 Credential、修改节点 registry 配置或扩大权限仍须另行精确确认；本事项遇到 pull 失败时直接停止。
 
 ## Comments
 
 - 2026-09-08：只读 preflight 判定环境适合本事项，但 image pull、PVC bind、NetworkPolicy enforcement 和实际 runtime 仍为 `not_verified`；必须按顺序作为前三个门禁。用户提供的本地 Docker 登录只作为 push 前置，不默认授权复制进 cluster；pull-only robot 输入确认前不得领取本事项。
+- 2026-09-08T18:52:53+08:00（`started_at=2026-09-08T10:52:53Z`）：用户已授权使用本机现有 Harbor 登录向五个固定 CF-01 repository 构建并 push，并确认 cluster 可直接拉取；本事项不创建 `cf01-registry-pull` 或任何 `imagePullSecret`。新 `cf01-probe` 的 pull-by-digest canary 是事实门禁，必须在每个 Ready node 实际成功；任一直接拉取失败即停止，不得降级为复制本地 Credential、创建 Secret、修改节点 registry 配置或扩大权限。四小时时间盒从本条领取记录开始。

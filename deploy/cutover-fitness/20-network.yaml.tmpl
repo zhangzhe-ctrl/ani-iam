@@ -1,0 +1,209 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cf01-default-deny
+  namespace: ani-cutover-current
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cf01-default-deny
+  namespace: ani-cutover-target
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cf01-allow-dns-and-same-lane
+  namespace: ani-cutover-current
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: ani-cutover-current}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: ani-cutover-current}
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: kube-system}
+          podSelector:
+            matchLabels: {k8s-app: kube-dns}
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cf01-allow-dns-and-same-lane
+  namespace: ani-cutover-target
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: ani-cutover-target}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: ani-cutover-target}
+    - to:
+        - namespaceSelector:
+            matchLabels: {kubernetes.io/metadata.name: kube-system}
+          podSelector:
+            matchLabels: {k8s-app: kube-dns}
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cf01-echo
+  namespace: ani-cutover-current
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: cf01-echo, run-id: @@RUN_ID@@}
+  template:
+    metadata:
+      labels:
+        app: cf01-echo
+        cutover-fitness-id: CF-01
+        run-id: @@RUN_ID@@
+    spec:
+      containers:
+        - name: probe
+          image: @@PROBE_IMAGE@@
+          imagePullPolicy: Always
+          args: ["serve", "--tcp-port", "18080", "--udp-port", "18081"]
+          ports:
+            - {name: tcp, containerPort: 18080, protocol: TCP}
+            - {name: udp, containerPort: 18081, protocol: UDP}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: ["ALL"]}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cf01-echo
+  namespace: ani-cutover-current
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  type: ClusterIP
+  selector: {app: cf01-echo, run-id: @@RUN_ID@@}
+  ports:
+    - {name: tcp, port: 18080, targetPort: tcp, protocol: TCP}
+    - {name: udp, port: 18081, targetPort: udp, protocol: UDP}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cf01-network-runner
+  namespace: ani-cutover-current
+  labels:
+    app: cf01-network-runner
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  containers:
+    - name: probe
+      image: @@PROBE_IMAGE@@
+      imagePullPolicy: Always
+      args: ["sleep", "--seconds", "14400"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: {drop: ["ALL"]}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cf01-echo
+  namespace: ani-cutover-target
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: cf01-echo, run-id: @@RUN_ID@@}
+  template:
+    metadata:
+      labels:
+        app: cf01-echo
+        cutover-fitness-id: CF-01
+        run-id: @@RUN_ID@@
+    spec:
+      containers:
+        - name: probe
+          image: @@PROBE_IMAGE@@
+          imagePullPolicy: Always
+          args: ["serve", "--tcp-port", "18080", "--udp-port", "18081"]
+          ports:
+            - {name: tcp, containerPort: 18080, protocol: TCP}
+            - {name: udp, containerPort: 18081, protocol: UDP}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: ["ALL"]}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cf01-echo
+  namespace: ani-cutover-target
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  type: ClusterIP
+  selector: {app: cf01-echo, run-id: @@RUN_ID@@}
+  ports:
+    - {name: tcp, port: 18080, targetPort: tcp, protocol: TCP}
+    - {name: udp, port: 18081, targetPort: udp, protocol: UDP}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cf01-network-runner
+  namespace: ani-cutover-target
+  labels:
+    app: cf01-network-runner
+    cutover-fitness-id: CF-01
+    run-id: @@RUN_ID@@
+spec:
+  containers:
+    - name: probe
+      image: @@PROBE_IMAGE@@
+      imagePullPolicy: Always
+      args: ["sleep", "--seconds", "14400"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities: {drop: ["ALL"]}

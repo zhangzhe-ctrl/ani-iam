@@ -36,8 +36,8 @@
 
 - 本地 Docker engine 可用；本地 Docker 配置只读确认已包含 `docker.changqingyun.cn` 的 auth host，未打印 Credential。
 - 本地与 cluster node 到 `https://docker.changqingyun.cn/v2/` 均得到预期私有 registry `401` challenge，DNS/TLS/网络为 `pass`。
-- 实际 push、namespaced `imagePullSecret` 和 cluster pull-by-digest 尚未执行，结果为 `not_verified`。
-- 本地登录只授权本地 push 的技术前置；不得默认把该 credential 复制到 cluster。两个 namespace 需要同名 `cf01-registry-pull` Secret，其内容来自只读五个 CF-01 repositories 的 task-scoped robot；该输入方式尚待人工确认，因此实施事项为 `needs-info`。
+- 实际 push 和 cluster direct pull-by-digest 尚未执行，结果为 `not_verified`。
+- 用户已确认本机 Harbor 登录可用于五个固定 CF-01 repositories 的本地 push，并确认 cluster 可直接拉取；不得读取、打印、记录或复制该 credential，两个 namespace 不创建 `imagePullSecret`。新 probe digest 必须在每个 Ready node 实际拉取，任一失败即停止且不得降级绕过。
 - cluster 另有 5 个与本事项无关的 `ImagePullBackOff` Pod，因此 image pull canary 必须排在第一位，不能根据网络 `401` 推断拉取成功。
 - ANI 现有 image workflow 固定为另一 registry；CF-01 不修改 workflow，首版从本地精确 build context 构建/推送。
 
@@ -57,7 +57,7 @@
 
 ## Risks that remain `not_verified`
 
-1. 私有 registry 凭据写入两个 task-owned imagePullSecret 后能否按 digest 拉取。
+1. 私有 registry 的新 probe digest 能否在所有 Ready node 不使用 imagePullSecret 直接拉取。
 2. `ani-block` 在 Ceph `HEALTH_WARN` 下能否及时 bind 和稳定读写。
 3. 新 namespace 的 default-deny、同 lane allow、跨 lane L3/L4 deny 是否实际生效；DNS 仍可正常解析。
 4. current Gateway/Auth 完整启动所需 Core migrations/config 是否能在时间盒内重放。
@@ -66,4 +66,4 @@
 
 ## Frozen consequence
 
-环境适合实施 `.scratch/cutover-fitness-01/issues/01-establish-dual-lane.md`，但 pull-only robot 输入尚未确认，所以当前不能领取。输入确认后，实施仍须在任何 cluster/registry 写入前展示精确写入对象。半天只以 `environment-established` 为出口；不完成或冒充 DP2-14。时间盒结束并封存证据后，如无安全事件，则按本轮用户授权恢复 DP2-10 的唯一 `claimed` 状态，同时保持其 dirty recovery state 不变。
+环境适合实施 `.scratch/cutover-fitness-01/issues/01-establish-dual-lane.md`。用户已确认本机 Harbor push 与 cluster direct pull，本事项已解除 `needs-info` 并在固定 source/tree/overlay、目标 namespaces、五个 repositories 和四小时时间盒内领取。半天只以 `environment-established` 为出口；不完成或冒充 DP2-14。时间盒结束并封存证据后，如无安全事件，则按本轮用户授权恢复 DP2-10 的唯一 `claimed` 状态，同时保持其 dirty recovery state 不变。
