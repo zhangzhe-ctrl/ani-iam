@@ -4,7 +4,7 @@
 
 **Blocked by:** DP2-10 pause checkpoint accepted on 2026-09-08
 
-**Status:** claimed
+**Status:** ready-for-human
 
 **Type:** bug
 
@@ -32,3 +32,7 @@
 **Stop conditions:** 远端 main 漂移；必须回退 #145 后功能；恢复后契约仍需新业务决策；需要修改 compatibility baseline、未来 IAM 语义、未授权路径或部署状态；Actions 无法在 exact SHA 验证。
 
 **Recovery:** PR 不合并；删除远端候选分支需另行确认。现有 ANI checkout、Direct P2 worktrees 和 DP2-10 worktree保持不动。
+
+## Comments
+
+- 2026-09-08：恢复提交 `fd4ede316f3734300381884908ebaa8bc8aaa925` 已推送并创建 ANI PR #152；Actions run `34202658984` 在原基线 `caa2a5e72fad98215a5ea26696e453e5c2ef6523` 上全部通过。CI 运行期间 ANI main 前进到 `804db51a5f93605f9bbd4ac407f0489ecb1d187c`，PR 随后变为 `CONFLICTING`。按 baseline-drift stop condition 转为 `ready-for-human`；未经人工接受新基线不得 merge/rebase 或继续改动。
