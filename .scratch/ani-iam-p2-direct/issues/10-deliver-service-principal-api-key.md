@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 / 建立无 RLS 持久化基础；09 / 交付 Tenant Access、Membership 与目标授权
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 **Type:** enhancement
 
@@ -32,3 +32,7 @@
 **Stop conditions:** Key 无主体、跨 Tenant、必须保存明文/Permission snapshot，或 Envoy 只能依赖 Gateway 证据。
 
 **Recovery:** 吊销并清理隔离 Key/Service Principal，恢复 Envoy 隔离配置；不影响 Human Principal。
+
+## Comments
+
+- 2026-09-08：用户确认 DP2-10 安全暂停，并要求先执行 ANI 9 月 30 日前 containment。当前完成范围、未验证项和恢复入口固定在 `../evidence/10-deliver-service-principal-api-key/pause-checkpoint-20260908.md`；本事项退出 `claimed`，剩余实现不得在 containment 期间继续。
