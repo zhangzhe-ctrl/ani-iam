@@ -25,7 +25,7 @@
 - [x] Core compatibility 与 current Gateway authz gate 在 PR exact SHA 的 GitHub Actions 中通过。
 - [x] GitHub Actions required aggregate 通过。
 - [x] staged/committed path audit 只包含 Allowed paths 与接受基线自身路径，无 secret、无部署、无切流。
-- [x] PR 已创建但未合并，并记录 head SHA、URL、Actions run ID 和结果。
+- [x] PR 已创建并记录 head SHA、URL、Actions run ID 和结果；exact-head 门禁通过后由外部人工批准并合并。
 
 **Verification:** 不运行本地 test gate；执行本地生成、`git diff --check` 和 path/secret audit；完整测试与两个恢复门禁仅由 GitHub Actions 在 exact pushed SHA 上验证。
 
@@ -37,4 +37,5 @@
 
 - 2026-09-08：恢复提交 `fd4ede316f3734300381884908ebaa8bc8aaa925` 已推送并创建 ANI PR #152；Actions run `34202658984` 在原基线 `caa2a5e72fad98215a5ea26696e453e5c2ef6523` 上全部通过。CI 运行期间 ANI main 前进到 `804db51a5f93605f9bbd4ac407f0489ecb1d187c`，PR 随后变为 `CONFLICTING`。按 baseline-drift stop condition 转为 `ready-for-human`；未经人工接受新基线不得 merge/rebase 或继续改动。
 - 2026-09-08：用户确认 `804db51a5f93605f9bbd4ac407f0489ecb1d187c` 是其 rebase 后的预期 main，并要求修复 PR 冲突。该精确 SHA 作为新的已接受 reconciliation baseline，本事项重新进入 `claimed`；必须保留其 observability API/handlers，只移除 #145 IAM 语义。
-- 2026-09-08：以非改写历史的 merge commit `19cc06832e2dd4d1b56fe448f31c21d77055e24d` 完成 reconciliation，父提交为恢复候选 `fd4ede316f3734300381884908ebaa8bc8aaa925` 与已接受 main `804db51a5f93605f9bbd4ac407f0489ecb1d187c`。4 个 Observability 与 9 个 Tenant operation 仅映射到当前 Gateway authz schema；Direct P2 metadata 未被接受回现行 ANI。Actions run `34204529598` 在 exact head 全部通过，PR #152 为 `MERGEABLE`、`REVIEW_REQUIRED`、未合并；事项关闭为 `resolved`。
+- 2026-09-08：以非改写历史的分支 merge commit `19cc06832e2dd4d1b56fe448f31c21d77055e24d` 完成 reconciliation，父提交为恢复候选 `fd4ede316f3734300381884908ebaa8bc8aaa925` 与已接受 main `804db51a5f93605f9bbd4ac407f0489ecb1d187c`。4 个 Observability 与 9 个 Tenant operation 仅映射到当前 Gateway authz schema；Direct P2 metadata 未被接受回现行 ANI。Actions run `34204529598` 在 exact head 全部通过。
+- 2026-09-08：在最终核对期间，外部用户 `zhangzhe-ctrl` 完成人工批准并将 PR #152 squash merge 为 main `56a5f0b493c8404a024a92647d93f2ba2f7daf35`；其父提交为已接受 main `804db51a5f93605f9bbd4ac407f0489ecb1d187c`，tree 与已验证 head 相同，均为 `4ba6a15ad0cddf0db66a25d695b082d47346aff1`。该合并不是本事项代理执行；事项保持 `resolved`。

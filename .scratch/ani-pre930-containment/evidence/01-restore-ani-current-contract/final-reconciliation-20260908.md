@@ -30,4 +30,6 @@ Core SDK, static API documentation, and Gateway authorization policy were regene
 - `pass`: Dependency CVE Scan.
 - `pass`: Required PR Gates.
 
-At final verification, remote main remained exactly `804db51a5f93605f9bbd4ac407f0489ecb1d187c`; PR #152 was `OPEN`, `MERGEABLE`, and `REVIEW_REQUIRED`. Node.js 20 deprecation messages and the existing accepted Services import allowlist were non-blocking annotations. The PR was not merged, and no deployment, cutover, data mutation, or credential action was performed.
+Immediately after exact-head verification, PR #152 was `OPEN`, `MERGEABLE`, and `REVIEW_REQUIRED`. During the final audit, external human user `zhangzhe-ctrl` approved and squash-merged it at `2026-09-08T08:35:39Z` as main commit `56a5f0b493c8404a024a92647d93f2ba2f7daf35`. The merge commit has parent `804db51a5f93605f9bbd4ac407f0489ecb1d187c` and tree `4ba6a15ad0cddf0db66a25d695b082d47346aff1`, exactly the same tree as verified branch head `19cc06832e2dd4d1b56fe448f31c21d77055e24d`. The agent did not execute the approval or merge.
+
+Node.js 20 deprecation messages and the existing accepted Services import allowlist were non-blocking annotations. No deployment, cutover, data mutation, or credential action was performed.
