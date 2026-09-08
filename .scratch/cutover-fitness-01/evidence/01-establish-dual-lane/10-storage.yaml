@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cf01-current-postgres-data
+  namespace: ani-cutover-current
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: 20260908t105253z
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: ani-block
+  resources:
+    requests: {storage: 1Gi}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cf01-target-postgres-data
+  namespace: ani-cutover-target
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: 20260908t105253z
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: ani-block
+  resources:
+    requests: {storage: 1Gi}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cf01-storage-canary
+  namespace: ani-cutover-current
+  labels:
+    app: cf01-storage-canary
+    cutover-fitness-id: CF-01
+    run-id: 20260908t105253z
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: cf01-storage-canary
+        cutover-fitness-id: CF-01
+        run-id: 20260908t105253z
+    spec:
+      restartPolicy: Never
+      securityContext: {fsGroup: 65532}
+      containers:
+        - name: probe
+          image: docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88
+          imagePullPolicy: Always
+          args: ["storage", "--path", "/data/cf01-canary", "--marker", "CF01-CURRENT-STORAGE-V1", "--hold-seconds", "0"]
+          volumeMounts:
+            - {name: data, mountPath: /data}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: ["ALL"]}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: cf01-current-postgres-data}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cf01-storage-canary
+  namespace: ani-cutover-target
+  labels:
+    app: cf01-storage-canary
+    cutover-fitness-id: CF-01
+    run-id: 20260908t105253z
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: cf01-storage-canary
+        cutover-fitness-id: CF-01
+        run-id: 20260908t105253z
+    spec:
+      restartPolicy: Never
+      securityContext: {fsGroup: 65532}
+      containers:
+        - name: probe
+          image: docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88
+          imagePullPolicy: Always
+          args: ["storage", "--path", "/data/cf01-canary", "--marker", "CF01-TARGET-STORAGE-V1", "--hold-seconds", "0"]
+          volumeMounts:
+            - {name: data, mountPath: /data}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: ["ALL"]}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: cf01-target-postgres-data}

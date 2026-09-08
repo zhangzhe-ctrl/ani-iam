@@ -1,0 +1,10 @@
+{
+  "image": "docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88",
+  "image_pull_secrets": "none",
+  "nodes": {
+    "dev-phys-02": "pass",
+    "dev-phys-03": "pass",
+    "kubercloud": "pass"
+  },
+  "result": "pass"
+}

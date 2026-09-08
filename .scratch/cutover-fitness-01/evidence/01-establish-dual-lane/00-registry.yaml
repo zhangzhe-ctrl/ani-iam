@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ani-cutover-current
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: 20260908t105253z
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ani-cutover-target
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: 20260908t105253z
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cf01-registry-pull-canary
+  namespace: ani-cutover-current
+  labels:
+    cutover-fitness-id: CF-01
+    run-id: 20260908t105253z
+spec:
+  selector:
+    matchLabels:
+      app: cf01-registry-pull-canary
+      run-id: 20260908t105253z
+  template:
+    metadata:
+      labels:
+        app: cf01-registry-pull-canary
+        cutover-fitness-id: CF-01
+        run-id: 20260908t105253z
+    spec:
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: probe
+          image: docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88
+          imagePullPolicy: Always
+          args: ["sleep", "--seconds", "14400"]
+          resources:
+            requests: {cpu: 5m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 64Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: ["ALL"]}
+      restartPolicy: Always

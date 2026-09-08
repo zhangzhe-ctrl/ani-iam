@@ -1,0 +1,6 @@
+{
+  "comparison": "not_compared",
+  "entries": [],
+  "reason": "Neither runtime lane nor fixed smoke ran after the current Auth immutable build failure.",
+  "scenario_id": "CF01-HUMAN-PASSWORD-PROTECTED-READ-V1"
+}

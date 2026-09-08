@@ -1,0 +1,13 @@
+2026-09-08T10:52:53Z preflight fixed Git objects, overlay, cluster identity, namespaces, registry login host: exit 0
+2026-09-08T10:55:00Z python3 -m unittest discover -s tools/cutover-fitness -p test_*.py: RED exit 1, then GREEN exit 0
+2026-09-08T11:00:00Z source_gate.sh against detached fixed objects: exit 0; overlay and projected tree matched
+2026-09-08T11:02:00Z duplicate source_gate.sh diagnostic rerun: exit 2; local tmpfs user quota was exhausted while writing a second archive; the first complete source gate remained the build input
+2026-09-08T11:04:00Z git diff --cached --check and Allowed-path staged audit: exit 0
+2026-09-08T11:05:00Z docker build/push cf01-probe from harness a0112b0660249a779ea089fa2f4436f579751d59: exit 0
+2026-09-08T11:07:00Z kubectl apply/wait registry pull DaemonSet and 3-node digest matrix: exit 0
+2026-09-08T11:09:00Z kubectl apply/wait two ani-block PVC storage write/read Jobs: exit 0
+2026-09-08T11:12:00Z kubectl apply/wait NetworkPolicies and TCP/UDP allow/deny probes: exit 0
+2026-09-08T11:16:00Z docker build exact current Auth image: exit 1; see build-logs/current-auth.log
+2026-09-08T11:16:00Z docker build exact target ani-iam image: exit 0; image not pushed after stop
+2026-09-08T11:20:38Z stop new environment writes; runtime and smoke not run: exit 0
+2026-09-08T11:29:00Z validate exact /tmp/ani-cf01-20260908t105253z-* prefix and delete this Goal's detached temporary directory only: exit 0

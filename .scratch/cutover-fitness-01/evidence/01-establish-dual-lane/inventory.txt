@@ -1,0 +1,20 @@
+cluster_uid=f5cafbf1-5246-4f8f-b9da-742182f37528 context=kubernetes-admin@kubernetes kubernetes=v1.36.1
+namespace ani-cutover-current uid=aeae0faf-8764-4d74-8e50-2f7ab34e57a0 label=cutover-fitness-id=CF-01 run-id=20260908t105253z
+namespace ani-cutover-target uid=86a86f83-71e2-4c75-bb50-d81d83a73b90 label=cutover-fitness-id=CF-01 run-id=20260908t105253z
+ani-cutover-current DaemonSet/cf01-registry-pull-canary desired=3 available=3
+ani-cutover-current Deployment/cf01-echo ready=1
+ani-cutover-current Job/cf01-storage-canary active=0 succeeded=1
+ani-cutover-current Pod/cf01-network-runner phase=Running
+ani-cutover-current Service/cf01-echo type=ClusterIP endpoint=10.16.7.138
+ani-cutover-current NetworkPolicy/cf01-default-deny
+ani-cutover-current NetworkPolicy/cf01-allow-dns-and-same-lane
+ani-cutover-current PVC/cf01-current-postgres-data phase=Bound storageClass=ani-block pv=pvc-022b7c33-4f93-4eb0-8e22-528e232ccea0 reclaim=Retain
+ani-cutover-target Deployment/cf01-echo ready=1
+ani-cutover-target Job/cf01-storage-canary active=0 succeeded=1
+ani-cutover-target Pod/cf01-network-runner phase=Running
+ani-cutover-target Service/cf01-echo type=ClusterIP endpoint=10.16.7.140
+ani-cutover-target NetworkPolicy/cf01-default-deny
+ani-cutover-target NetworkPolicy/cf01-allow-dns-and-same-lane
+ani-cutover-target PVC/cf01-target-postgres-data phase=Bound storageClass=ani-block pv=pvc-9c76730e-0a13-4dd3-be3c-3ad3660b0536 reclaim=Retain
+task-owned Secret count: ani-cutover-current=0 ani-cutover-target=0
+No Ingress, NodePort, LoadBalancer, runtime application, migration, seed, Principal, Credential, or cross-lane Endpoint was created.

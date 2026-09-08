@@ -1,0 +1,32 @@
+{
+  "dp2_10_handoff": "pass",
+  "environment-established": "fail",
+  "foundation": {
+    "network": "pass",
+    "registry": "pass",
+    "storage": "pass"
+  },
+  "journeys": {
+    "human_password_oidc_session": {"A": "not_verified", "C": "not_verified", "F": "not_verified", "I": "not_verified"},
+    "lifecycle_bootstrap_nats_core": {"A": "not_verified", "C": "not_verified", "F": "not_verified", "I": "not_verified"},
+    "refresh_logout_switch_tenant": {"A": "not_verified", "C": "not_verified", "F": "not_verified", "I": "not_verified"},
+    "service_principal_api_key_envoy": {"A": "not_verified", "C": "not_verified", "F": "not_verified", "I": "not_verified"},
+    "service_token_inference": {"A": "not_verified", "C": "not_verified", "F": "not_verified", "I": "not_verified"},
+    "tenant_permission_gateway": {"A": "not_verified", "C": "not_verified", "F": "not_verified", "I": "not_verified"}
+  },
+  "product_build": {
+    "current_auth": "fail",
+    "current_gateway": "not_verified",
+    "target_gateway": "not_verified",
+    "target_iam_local_build": "pass",
+    "target_iam_push": "not_verified"
+  },
+  "run_id": "20260908t105253z",
+  "smoke": {
+    "current": "not_verified",
+    "scenario_id": "CF01-HUMAN-PASSWORD-PROTECTED-READ-V1",
+    "target": "not_verified",
+    "target_check_permission_exactly_once": "not_verified"
+  },
+  "stop_reason": "The exact current ANI Auth Dockerfile failed because the fixed module graph requires go mod tidy; changing the Dockerfile or source is outside the immutable build and Allowed path boundary."
+}

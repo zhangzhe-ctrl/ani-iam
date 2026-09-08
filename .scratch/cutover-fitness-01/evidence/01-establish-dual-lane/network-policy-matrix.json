@@ -1,0 +1,17 @@
+{
+  "current": {
+    "cross_lane_tcp": "pass",
+    "cross_lane_udp": "pass",
+    "dns_resolution": "pass",
+    "same_lane_tcp": "pass",
+    "same_lane_udp": "pass"
+  },
+  "default_deny": {"current": "pass", "target": "pass"},
+  "target": {
+    "cross_lane_tcp": "pass",
+    "cross_lane_udp": "pass",
+    "dns_resolution": "pass",
+    "same_lane_tcp": "pass",
+    "same_lane_udp": "pass"
+  }
+}

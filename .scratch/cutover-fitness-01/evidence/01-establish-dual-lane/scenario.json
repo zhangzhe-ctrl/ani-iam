@@ -1,0 +1,10 @@
+{
+  "id": "CF01-HUMAN-PASSWORD-PROTECTED-READ-V1",
+  "result": "not_verified",
+  "steps": [
+    "GET /readyz",
+    "POST /auth/password/login",
+    "GET /instances with lane-local bearer access token"
+  ],
+  "target_check_permission_calls": "not_verified"
+}

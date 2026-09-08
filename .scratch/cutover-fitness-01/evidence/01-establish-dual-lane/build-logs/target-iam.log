@@ -1,0 +1,112 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from ani-iam.Dockerfile
+#1 transferring dockerfile: 683B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+#2 ...
+
+#3 [internal] load metadata for docker.io/library/golang@sha256:28d89ee9cc0ff9fec75c82ca201e6bf7fdf9a679d4b7b24dfa04f2bb766bb468
+#3 DONE 1.9s
+
+#2 [internal] load metadata for docker.io/library/alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+#2 DONE 1.9s
+
+#4 [internal] load .dockerignore
+#4 transferring context:
+#4 transferring context: 2B done
+#4 DONE 29.6s
+
+#5 [stage-1 1/3] FROM docker.io/library/alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+#5 resolve docker.io/library/alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc 0.0s done
+#5 DONE 0.0s
+
+#6 [stage-1 1/3] FROM docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+#6 resolve docker.io/library/alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc 0.0s done
+#6 CACHED
+
+#7 [build 1/4] FROM docker.io/library/golang@sha256:28d89ee9cc0ff9fec75c82ca201e6bf7fdf9a679d4b7b24dfa04f2bb766bb468
+#7 resolve docker.io/library/golang@sha256:28d89ee9cc0ff9fec75c82ca201e6bf7fdf9a679d4b7b24dfa04f2bb766bb468 0.0s done
+#7 ...
+
+#8 [internal] load build context
+#8 transferring context: 3.66MB 0.1s done
+#8 DONE 0.2s
+
+#7 [build 1/4] FROM docker.io/library/golang@sha256:28d89ee9cc0ff9fec75c82ca201e6bf7fdf9a679d4b7b24dfa04f2bb766bb468
+#7 DONE 0.2s
+
+#9 [build 2/4] WORKDIR /src
+#9 DONE 0.2s
+
+#10 [stage-1 2/3] RUN adduser -D -H -u 65532 ani
+#10 DONE 0.4s
+
+#11 [build 3/4] COPY . .
+#11 DONE 0.2s
+
+#12 [build 4/4] RUN --mount=type=cache,target=/go/pkg/mod     --mount=type=cache,target=/root/.cache/go-build     CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o /out/ani-iam ./cmd/server
+#12 0.164 go: downloading github.com/go-kratos/kratos/contrib/otel/v3 v3.0.0-20260515082355-1ddb58e407c5
+#12 0.164 go: downloading github.com/go-kratos/kratos/v3 v3.0.0
+#12 1.628 go: downloading github.com/jackc/pgx/v5 v5.10.0
+#12 1.628 go: downloading github.com/redis/go-redis/v9 v9.22.0
+#12 1.631 go: downloading go.uber.org/automaxprocs v1.6.0
+#12 1.835 go: downloading go.opentelemetry.io/otel v1.44.0
+#12 2.712 go: downloading go.opentelemetry.io/otel/trace v1.44.0
+#12 2.712 go: downloading google.golang.org/protobuf v1.36.11
+#12 2.792 go: downloading golang.org/x/sync v0.22.0
+#12 2.941 go: downloading github.com/gorilla/mux v1.8.1
+#12 2.959 go: downloading github.com/gorilla/websocket v1.5.3
+#12 3.058 go: downloading google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60
+#12 3.157 go: downloading github.com/fsnotify/fsnotify v1.10.1
+#12 3.297 go: downloading golang.org/x/net v0.57.0
+#12 3.356 go: downloading github.com/prometheus/client_golang v1.24.1
+#12 3.531 go: downloading go.opentelemetry.io/otel/exporters/prometheus v0.66.0
+#12 3.757 go: downloading go.opentelemetry.io/otel/metric v1.44.0
+#12 3.757 go: downloading go.opentelemetry.io/otel/sdk/metric v1.44.0
+#12 3.872 go: downloading go.opentelemetry.io/otel/sdk v1.44.0
+#12 4.102 go: downloading google.golang.org/genproto/googleapis/rpc v0.0.0-20260511170946-3700d4141b60
+#12 4.216 go: downloading github.com/alexedwards/argon2id v1.0.0
+#12 4.217 go: downloading github.com/coreos/go-oidc/v3 v3.20.0
+#12 4.219 go: downloading github.com/lestrrat-go/jwx/v3 v3.2.0
+#12 4.575 go: downloading github.com/zhangzhe-ctrl/ani-notification-service v0.0.0-20260907002920-0e3f0a2b47fc
+#12 4.591 go: downloading golang.org/x/oauth2 v0.36.0
+#12 4.676 go: downloading golang.org/x/sys v0.47.0
+#12 4.678 go: downloading github.com/go-logr/logr v1.4.3
+#12 4.991 go: downloading github.com/go-playground/form/v4 v4.3.0
+#12 5.005 go: downloading gopkg.in/yaml.v3 v3.0.1
+#12 5.209 go: downloading github.com/beorn7/perks v1.0.1
+#12 5.210 go: downloading github.com/prometheus/client_model v0.6.2
+#12 5.298 go: downloading github.com/prometheus/common v0.70.1
+#12 5.622 go: downloading github.com/prometheus/procfs v0.21.1
+#12 5.625 go: downloading github.com/prometheus/otlptranslator v1.0.0
+#12 5.744 go: downloading golang.org/x/text v0.41.0
+#12 6.708 go: downloading golang.org/x/crypto v0.56.0
+#12 6.709 go: downloading github.com/go-jose/go-jose/v4 v4.1.4
+#12 6.711 go: downloading github.com/lestrrat-go/option/v2 v2.0.0
+#12 6.711 go: downloading github.com/lestrrat-go/blackmagic v1.0.4
+#12 7.022 go: downloading github.com/lestrrat-go/dsig v1.3.0
+#12 7.041 go: downloading go.uber.org/atomic v1.11.0
+#12 7.059 go: downloading github.com/go-logr/stdr v1.2.2
+#12 7.143 go: downloading go.opentelemetry.io/auto/sdk v1.2.1
+#12 7.396 go: downloading github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
+#12 7.428 go: downloading github.com/lestrrat-go/httprc/v3 v3.0.6
+#12 7.472 go: downloading github.com/valyala/fastjson v1.6.10
+#12 7.767 go: downloading github.com/lestrrat-go/httpcc v1.0.1
+#12 DONE 37.5s
+
+#13 [stage-1 3/3] COPY --from=build /out/ani-iam /usr/local/bin/ani-iam
+#13 DONE 0.1s
+
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 1.4s done
+#14 exporting manifest sha256:57285c461a71bad32ce4511f494192a74aef033c3618b5f995c3826e7b3e23f1 done
+#14 exporting config sha256:240d71db0dca4b38bbb86d4a7e20629ddbe474d57a8a9eaa2f1ac3ecc2f5ff1d done
+#14 exporting attestation manifest sha256:0005fffc93ca8a38322191399d0cfdd6984e0b159c32a992d2a9a9bdf097e7c4 0.0s done
+#14 exporting manifest list sha256:104bf90e176937e3264fe871760732362b44f5b658b3c2e7fd93230f59ec8a37 done
+#14 naming to docker.changqingyun.cn/ani/cf01-ani-iam-target:20260908t105253z-a0112b0 done
+#14 unpacking to docker.changqingyun.cn/ani/cf01-ani-iam-target:20260908t105253z-a0112b0
+#14 unpacking to docker.changqingyun.cn/ani/cf01-ani-iam-target:20260908t105253z-a0112b0 0.2s done
+#14 DONE 1.6s

@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 / 建立无 RLS 持久化基础；09 / 交付 Tenant Access、Membership 与目标授权
 
-**Status:** ready-for-human
+**Status:** claimed
 
 **Type:** enhancement
 
@@ -36,3 +36,4 @@
 ## Comments
 
 - 2026-09-08：用户确认 DP2-10 安全暂停，并要求先执行 ANI 9 月 30 日前 containment。当前完成范围、未验证项和恢复入口固定在 `../evidence/10-deliver-service-principal-api-key/pause-checkpoint-20260908.md`；本事项退出 `claimed`，剩余实现不得在 containment 期间继续。
+- 2026-09-08T11:27:14Z：CF-01 已封存并停止，`environment-established=fail`；Registry/Storage/Network foundation 可复用，current/target runtime、固定 smoke 与 target exactly-one `CheckPermission` 均为 `not_verified`。失败根因是 fixed current ANI Auth Dockerfile build 要求 `go mod tidy`，未修改 ANI source 绕过。无 Credential/跨 lane/共享环境事件，无运行中的写入动作；CF-01 namespace、probe/echo/runner 与两个 Retain PVC/PV 保留待人工诊断。DP2-10 现恢复为唯一 `claimed`，原 dirty recovery state 精确保持不变；本 Comment 仅完成 handoff，不继续实现 DP2-10。

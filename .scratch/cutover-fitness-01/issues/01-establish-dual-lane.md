@@ -4,7 +4,7 @@
 
 **Blocked by:** 00 / 固化 CUTOVER-FITNESS-01 环境与证据方案
 
-**Status:** claimed
+**Status:** ready-for-human
 
 **Type:** enhancement
 
@@ -44,14 +44,14 @@
 
 **Evidence path:** `.scratch/cutover-fitness-01/evidence/01-establish-dual-lane/`
 
-- [ ] 开始前确认 00 为 `resolved`、本事项为唯一 `claimed`，DP2-10 仍为 `ready-for-human` 且 dirty recovery state 精确不变。
-- [ ] `git archive`/detached context 与三组固定 commit/tree 完全一致；build context 不包含当前工作树未提交文件。
-- [ ] registry push/pull-by-digest、两个固定 `ani-block` PVC bind、NetworkPolicy same-lane allow/cross-lane L3/L4 deny 三项 foundation gate 均为 `pass`。
+- [x] 开始前确认 00 为 `resolved`、本事项为唯一 `claimed`，DP2-10 仍为 `ready-for-human` 且 dirty recovery state 精确不变。
+- [x] `git archive`/detached context 与三组固定 commit/tree 完全一致；build context 不包含当前工作树未提交文件。
+- [x] registry push/pull-by-digest、两个固定 `ani-block` PVC bind、NetworkPolicy same-lane allow/cross-lane L3/L4 deny 三项 foundation gate 均为 `pass`。
 - [ ] 两个 namespace 各自拥有依赖、Secret、PKI、seed 和 Credential，且跨 lane 负向 probe 为 `pass`。
 - [ ] current 与 target workload Ready；Ready 只作部署事实，不替代行为结论。
 - [ ] scenario `CF01-HUMAN-PASSWORD-PROTECTED-READ-V1` 在 current/target 各执行一次：`GET /readyz`、`POST /auth/password/login`、携带 lane-local Access Token 的 `GET /instances` 均符合各自契约；target 的 `listInstances` 恰好一次 decision。
-- [ ] 生成 `plan.json`、`environment.json`、`artifacts.json`、`results.json`、`summary.md`、`sha256sums.txt`，Secret scan 为 `pass`。
-- [ ] T+4:00 或更早停止环境写入并封存 evidence；若无安全事件，事项 01 退出 `claimed` 后把 DP2-10 恢复为唯一 `claimed`，且不执行清理。
+- [x] 生成 `plan.json`、`environment.json`、`artifacts.json`、`results.json`、`summary.md`、`sha256sums.txt`，Secret scan 为 `pass`。
+- [x] T+4:00 或更早停止环境写入并封存 evidence；若无安全事件，事项 01 退出 `claimed` 后把 DP2-10 恢复为唯一 `claimed`，且不执行清理。
 
 **Verification:** base/overlay/projected tree 与 OCI digest 校验；`kubectl` inventory/Endpoint/NetworkPolicy/PVC 证据；current/target 固定 HTTP smoke；跨 lane DNS 可解析但 TCP/UDP 连接失败；证据 Secret scan；repo staged-path audit 与 `git diff --check`。
 
@@ -65,3 +65,4 @@
 
 - 2026-09-08：只读 preflight 判定环境适合本事项，但 image pull、PVC bind、NetworkPolicy enforcement 和实际 runtime 仍为 `not_verified`；必须按顺序作为前三个门禁。用户提供的本地 Docker 登录只作为 push 前置，不默认授权复制进 cluster；pull-only robot 输入确认前不得领取本事项。
 - 2026-09-08T18:52:53+08:00（`started_at=2026-09-08T10:52:53Z`）：用户已授权使用本机现有 Harbor 登录向五个固定 CF-01 repository 构建并 push，并确认 cluster 可直接拉取；本事项不创建 `cf01-registry-pull` 或任何 `imagePullSecret`。新 `cf01-probe` 的 pull-by-digest canary 是事实门禁，必须在每个 Ready node 实际成功；任一直接拉取失败即停止，不得降级为复制本地 Credential、创建 Secret、修改节点 registry 配置或扩大权限。四小时时间盒从本条领取记录开始。
+- 2026-09-08T11:27:14Z：`environment-established=fail`，事项转为 `ready-for-human`。Registry、Storage、Network 三项 foundation gate 均为 `pass`，但固定 current ANI Auth Dockerfile 在 fixed source 上构建失败：`go build` 要求更新 `go.mod`/运行 `go mod tidy`；修改 ANI Dockerfile、module 或 detached source 均越界，因此按 immutable build stop condition 停止，current/target runtime 与固定 smoke 保持 `not_verified`。完整证据在 `../evidence/01-establish-dual-lane/`。未创建 Secret/Credential，未发生跨 lane 泄露或共享环境写入，storage Job 已结束且无运行中的写入动作；foundation namespace、probe/echo/runner、两个 PVC/PV 按授权保留，不执行删除。DP2-10 protected porcelain SHA-256 仍为 `02fe876c9e4a3e2f49c43a864864d62230a548e641fda790b7e5549752aedff6`，tracked binary diff SHA-256 仍为 `e1387ff7898b606ceaf4f524346525fc2e3b6df0a0eb0ae064b7389882a4371c`。

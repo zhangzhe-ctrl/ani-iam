@@ -1,0 +1,28 @@
+{
+  "cluster_uid": "f5cafbf1-5246-4f8f-b9da-742182f37528",
+  "current": {
+    "commit": "56a5f0b493c8404a024a92647d93f2ba2f7daf35",
+    "tree": "4ba6a15ad0cddf0db66a25d695b082d47346aff1"
+  },
+  "configuration": {"result": "not_verified", "sha256": null},
+  "difference_ledger": {"path": "difference-ledger.json", "sha256": "6c6ec6cdcfe66f735ac89ca47de0b9f0879e8089226de94268286a26fa77a849"},
+  "harness_commit": "a0112b0660249a779ea089fa2f4436f579751d59",
+  "namespaces": {
+    "current": "ani-cutover-current",
+    "target": "ani-cutover-target"
+  },
+  "overlay": {
+    "projected_tree": "28eb0508c93aab28e86e044a88ada9e19bf16830",
+    "sha256": "542084f3e06be1d454cd99eb0114a76b8e06a52f9cbf5a9d661e749fb678edc2",
+    "source_commit": "804db51a5f93605f9bbd4ac407f0489ecb1d187c"
+  },
+  "probe_image": "docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88",
+  "run_id": "20260908t105253z",
+  "scenario": {"path": "scenario.json", "sha256": "e252260e2722ab2aa6dbf0bf8e85c518a36d919b355cfaa79e7e4c08c6c6f061"},
+  "seed": {"result": "not_verified", "sha256": null},
+  "started_at": "2026-09-08T10:52:53Z",
+  "target": {
+    "commit": "a56a332834967603eb47a3824727982032bc4f5e",
+    "tree": "ef84bfb6382eaa73f13a68754f506edeb17f2206"
+  }
+}

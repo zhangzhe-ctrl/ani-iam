@@ -1,0 +1,15 @@
+{
+  "ani_iam_branch": "codex/direct-p2-06-14",
+  "ani_iam_head": "8cb182e71b95e3dcedbd8b97d4daadeb82c66137",
+  "ani_iam_tree": "1c0017a1ad6bd4cb3289c73234897f056d8d0c30",
+  "ani_origin_main": "56a5f0b493c8404a024a92647d93f2ba2f7daf35",
+  "cluster_context": "kubernetes-admin@kubernetes",
+  "cluster_uid": "f5cafbf1-5246-4f8f-b9da-742182f37528",
+  "namespace_preflight": {"ani-cutover-current": "absent", "ani-cutover-target": "absent"},
+  "overlay_sha256": "542084f3e06be1d454cd99eb0114a76b8e06a52f9cbf5a9d661e749fb678edc2",
+  "projected_tree": "28eb0508c93aab28e86e044a88ada9e19bf16830",
+  "registry_login_host_present": true,
+  "run_id": "20260908t105253z",
+  "target_ani_iam_commit": "a56a332834967603eb47a3824727982032bc4f5e",
+  "target_ani_iam_tree": "ef84bfb6382eaa73f13a68754f506edeb17f2206"
+}

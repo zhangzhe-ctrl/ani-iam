@@ -1,0 +1,38 @@
+{
+  "active_write_workloads": 0,
+  "cluster": {
+    "context": "kubernetes-admin@kubernetes",
+    "kubernetes_version": "v1.36.1",
+    "uid": "f5cafbf1-5246-4f8f-b9da-742182f37528"
+  },
+  "finished_at": "2026-09-08T11:27:14Z",
+  "namespace_uids": {
+    "ani-cutover-current": "aeae0faf-8764-4d74-8e50-2f7ab34e57a0",
+    "ani-cutover-target": "86a86f83-71e2-4c75-bb50-d81d83a73b90"
+  },
+  "persistence": [
+    {
+      "namespace": "ani-cutover-current",
+      "pv": "pvc-022b7c33-4f93-4eb0-8e22-528e232ccea0",
+      "pv_uid": "ecbd663d-7cea-4fb0-85bd-cc557ae4d540",
+      "pvc": "cf01-current-postgres-data",
+      "pvc_uid": "022b7c33-4f93-4eb0-8e22-528e232ccea0",
+      "reclaim_policy": "Retain",
+      "state": "Bound",
+      "storage_class": "ani-block"
+    },
+    {
+      "namespace": "ani-cutover-target",
+      "pv": "pvc-9c76730e-0a13-4dd3-be3c-3ad3660b0536",
+      "pv_uid": "069d4d49-d446-48de-b820-2ca9f988f4a7",
+      "pvc": "cf01-target-postgres-data",
+      "pvc_uid": "9c76730e-0a13-4dd3-be3c-3ad3660b0536",
+      "reclaim_policy": "Retain",
+      "state": "Bound",
+      "storage_class": "ani-block"
+    }
+  ],
+  "run_id": "20260908t105253z",
+  "secret_objects_created": 0,
+  "started_at": "2026-09-08T10:52:53Z"
+}

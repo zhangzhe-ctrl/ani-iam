@@ -1,0 +1,14 @@
+{
+  "after": {
+    "dp2_10_status": "claimed",
+    "protected_porcelain_sha256": "02fe876c9e4a3e2f49c43a864864d62230a548e641fda790b7e5549752aedff6",
+    "tracked_binary_diff_sha256": "e1387ff7898b606ceaf4f524346525fc2e3b6df0a0eb0ae064b7389882a4371c"
+  },
+  "before": {
+    "dp2_10_status": "ready-for-human",
+    "protected_porcelain_sha256": "02fe876c9e4a3e2f49c43a864864d62230a548e641fda790b7e5549752aedff6",
+    "tracked_binary_diff_sha256": "e1387ff7898b606ceaf4f524346525fc2e3b6df0a0eb0ae064b7389882a4371c"
+  },
+  "result": "pass",
+  "scope": "internal/**, migrations/**, tests/integration/service_principal_test.go, and DP2-10 preflight-and-plan.md"
+}
