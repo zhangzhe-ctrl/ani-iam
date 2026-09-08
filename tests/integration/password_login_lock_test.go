@@ -53,8 +53,8 @@ func TestPostgresConcurrentPasswordFailuresProduceOneDurableLock(t *testing.T) {
 				&recordingAccessTokenIssuer{},
 				staticIntegrationSecretGenerator{},
 				&fixedIDGenerator{ids: []uuid.UUID{auditID}},
-				fixedClock{now: now},
-			)
+				fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 			<-start
 			_, err := usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
 				Account:        "user@example.com",
@@ -131,8 +131,8 @@ func TestPostgresPasswordFailureAuditConflictRollsBackDurableState(t *testing.T)
 		&recordingAccessTokenIssuer{},
 		staticIntegrationSecretGenerator{},
 		&fixedIDGenerator{ids: []uuid.UUID{duplicateAuditID}},
-		fixedClock{now: now},
-	)
+		fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 	_, err = usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
 		Account:        "user@example.com",
 		Password:       "wrong-password",
@@ -181,8 +181,8 @@ func TestUnknownPasswordAccountUsesDummyArgonAndPersistsRedactedAudit(t *testing
 		&recordingAccessTokenIssuer{},
 		staticIntegrationSecretGenerator{},
 		&fixedIDGenerator{ids: []uuid.UUID{auditID}},
-		fixedClock{now: now},
-	)
+		fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 	_, err := usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
 		Account:        "unknown@example.com",
 		Password:       "do-not-persist-this-password",
@@ -233,8 +233,8 @@ func TestPostgresPasswordFailuresLockAfterFiveAttemptsWithAudit(t *testing.T) {
 		&recordingAccessTokenIssuer{},
 		staticIntegrationSecretGenerator{},
 		ids,
-		fixedClock{now: now},
-	)
+		fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 	for failure := 1; failure <= 5; failure++ {
 		_, err := usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
 			Account:        "user@example.com",
@@ -314,8 +314,8 @@ func TestPostgresPasswordLoginSuccessResetsDurableFailuresAtomically(t *testing.
 		&recordingAccessTokenIssuer{token: "test-access-token"},
 		staticIntegrationSecretGenerator{secret: "test-refresh-secret"},
 		loginIDs,
-		fixedClock{now: now},
-	)
+		fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 	if _, err := usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
 		Account:        "user@example.com",
 		Password:       "correct-password",
@@ -402,8 +402,8 @@ func TestPostgresPasswordLoginAuditConflictRollsBackFailureResetAndSession(t *te
 		&recordingAccessTokenIssuer{token: "test-access-token"},
 		staticIntegrationSecretGenerator{secret: "test-refresh-secret"},
 		loginIDs,
-		fixedClock{now: now},
-	)
+		fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 	_, err = usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
 		Account:        "user@example.com",
 		Password:       "correct-password",
@@ -529,8 +529,8 @@ func TestPasswordLoginPostgresFailurePreservesRealRedisThrottleState(t *testing.
 		&recordingAccessTokenIssuer{token: "test-access-token"},
 		staticIntegrationSecretGenerator{secret: "test-refresh-secret"},
 		loginIDs,
-		fixedClock{now: now},
-	)
+		fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 	_, err = usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
 		Account:        attempt.NormalizedAccount,
 		Password:       "correct-password",
@@ -605,8 +605,8 @@ func TestPasswordLoginMasksDurablePostgresLockAsInvalidCredential(t *testing.T) 
 		&recordingAccessTokenIssuer{},
 		staticIntegrationSecretGenerator{},
 		&fixedIDGenerator{ids: []uuid.UUID{auditID}},
-		fixedClock{now: now},
-	)
+		fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 	command := biz.PasswordLoginCommand{
 		Account:        "user@example.com",
 		Password:       "correct-password",

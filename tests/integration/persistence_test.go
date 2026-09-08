@@ -176,6 +176,7 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 			"identities", "password_credentials", "sessions", "session_grants",
 			"refresh_token_families", "refresh_tokens", "password_action_requests",
 			"password_actions", "notification_outbox", "password_action_completions",
+			"service_principals", "api_keys",
 		} {
 			for _, privilege := range []string{"INSERT", "SELECT", "UPDATE"} {
 				expectedGrants[tableName+"/"+privilege] = struct{}{}

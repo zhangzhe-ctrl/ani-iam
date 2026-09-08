@@ -24,10 +24,16 @@ type registryDocument struct {
 }
 
 type registryOperation struct {
-	OperationID string               `json:"operation_id"`
-	IAMDecision string               `json:"iam_decision"`
-	Permission  *registryPermission  `json:"permission"`
-	Obligations []registryObligation `json:"obligations"`
+	OperationID string                 `json:"operation_id"`
+	IAMDecision string                 `json:"iam_decision"`
+	Permission  *registryPermission    `json:"permission"`
+	Obligations []registryObligation   `json:"obligations"`
+	Authn       registryAuthentication `json:"authn"`
+}
+
+type registryAuthentication struct {
+	CredentialKinds []string `json:"credential_kinds"`
+	PrincipalKinds  []string `json:"principal_kinds"`
 }
 
 type registryPermission struct {
@@ -109,6 +115,19 @@ func validateAndCollect(document registryDocument) ([]registryOperation, []catal
 		if _, err := scopeExpression(operation.Permission.Scope); err != nil {
 			return nil, nil, fmt.Errorf("operation %q: %w", operation.OperationID, err)
 		}
+		if len(operation.Authn.CredentialKinds) == 0 || len(operation.Authn.PrincipalKinds) == 0 {
+			return nil, nil, fmt.Errorf("operation %q has incomplete authentication restrictions", operation.OperationID)
+		}
+		for _, kind := range operation.Authn.CredentialKinds {
+			if _, err := credentialKindExpression(kind); err != nil {
+				return nil, nil, fmt.Errorf("operation %q: %w", operation.OperationID, err)
+			}
+		}
+		for _, kind := range operation.Authn.PrincipalKinds {
+			if _, err := principalKindExpression(kind); err != nil {
+				return nil, nil, fmt.Errorf("operation %q: %w", operation.OperationID, err)
+			}
+		}
 		for _, action := range operation.Permission.Actions {
 			if strings.TrimSpace(action) == "" {
 				return nil, nil, fmt.Errorf("operation %q has an empty action", operation.OperationID)
@@ -168,7 +187,15 @@ func renderGo(document registryDocument, sourceSHA256 string, policies []registr
 	fmt.Fprintln(&output, "var generatedTargetPolicies = map[string]biz.AuthorizationPolicy{")
 	for _, operation := range policies {
 		scope, _ := scopeExpression(operation.Permission.Scope)
-		fmt.Fprintf(&output, "\t%s: {OperationID: %s, Resource: %s, Actions: []string{%s}, Scope: %s", strconv.Quote(operation.OperationID), strconv.Quote(operation.OperationID), strconv.Quote(operation.Permission.Resource), quotedList(operation.Permission.Actions), scope)
+		credentialKinds := make([]string, len(operation.Authn.CredentialKinds))
+		for index, kind := range operation.Authn.CredentialKinds {
+			credentialKinds[index], _ = credentialKindExpression(kind)
+		}
+		principalKinds := make([]string, len(operation.Authn.PrincipalKinds))
+		for index, kind := range operation.Authn.PrincipalKinds {
+			principalKinds[index], _ = principalKindExpression(kind)
+		}
+		fmt.Fprintf(&output, "\t%s: {OperationID: %s, Resource: %s, Actions: []string{%s}, Scope: %s, CredentialKinds: []biz.CredentialKind{%s}, PrincipalKinds: []biz.PrincipalType{%s}", strconv.Quote(operation.OperationID), strconv.Quote(operation.OperationID), strconv.Quote(operation.Permission.Resource), quotedList(operation.Permission.Actions), scope, strings.Join(credentialKinds, ", "), strings.Join(principalKinds, ", "))
 		if len(operation.Obligations) > 0 {
 			fmt.Fprint(&output, ", Obligations: []biz.AuthorizationObligation{")
 			for index, obligation := range operation.Obligations {
@@ -183,6 +210,30 @@ func renderGo(document registryDocument, sourceSHA256 string, policies []registr
 	}
 	fmt.Fprintln(&output, "}")
 	return format.Source(output.Bytes())
+}
+
+func credentialKindExpression(kind string) (string, error) {
+	switch kind {
+	case "access_token":
+		return "biz.CredentialKindAccessToken", nil
+	case "api_key":
+		return "biz.CredentialKindAPIKey", nil
+	case "service_token":
+		return "biz.CredentialKindServiceToken", nil
+	default:
+		return "", fmt.Errorf("unsupported credential kind %q", kind)
+	}
+}
+
+func principalKindExpression(kind string) (string, error) {
+	switch kind {
+	case "human":
+		return "biz.PrincipalTypeHuman", nil
+	case "service":
+		return "biz.PrincipalTypeService", nil
+	default:
+		return "", fmt.Errorf("unsupported principal kind %q", kind)
+	}
 }
 
 func renderSQL(document registryDocument, sourceSHA256 string, permissions []catalogPermission) []byte {

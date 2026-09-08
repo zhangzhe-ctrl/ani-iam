@@ -281,6 +281,7 @@ type AuthenticationUsecase struct {
 	uow      AuthenticationUnitOfWork
 	tokens   AuthenticationTokenCodec
 	secrets  SecretGenerator
+	usage    APIKeyUsageObserver
 	ids      IDGenerator
 	clock    Clock
 }
@@ -294,6 +295,7 @@ func NewAuthenticationUsecase(
 	secrets SecretGenerator,
 	ids IDGenerator,
 	clock Clock,
+	observer APIKeyUsageObserver,
 ) *AuthenticationUsecase {
 	return &AuthenticationUsecase{
 		reader:   reader,
@@ -302,6 +304,7 @@ func NewAuthenticationUsecase(
 		uow:      uow,
 		tokens:   tokens,
 		secrets:  secrets,
+		usage:    observer,
 		ids:      ids,
 		clock:    clock,
 	}

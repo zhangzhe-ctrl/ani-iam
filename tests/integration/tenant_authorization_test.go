@@ -155,8 +155,8 @@ func TestTenantAuthorizationRestrictedPostgresAndLastAdminConcurrency(t *testing
 	}
 	usecase := biz.NewTenantAuthorizationUsecase(
 		data.NewPostgresTenantAuthorizationUnitOfWork(data.NewData(environment.runtimePool)),
-		catalog, data.NewUUIDv7Generator(), data.NewSystemClock(),
-	)
+		catalog, data.NewUUIDv7Generator(), data.NewSystemClock(), allowingAPIKeyCreationLimiter{})
+
 	scopeOne := mustTenantScope(t, tenantOne)
 	reader := data.NewPostgresTenantAuthorizationReader(data.NewData(environment.runtimePool))
 	record, err := reader.GetMembership(ctx, scopeOne, membershipOne)
@@ -247,7 +247,7 @@ func TestTenantAuthorizationAuditFailureRollsBackMembershipMutation(t *testing.T
 	now := time.Date(2026, 9, 8, 9, 45, 0, 0, time.UTC)
 	seedTenantAuthorizationBoundary(t, ctx, environment.runtimePool, tenantID, roleID, now, []uuid.UUID{adminID}, []uuid.UUID{membershipID})
 	catalog, _ := data.NewTargetPermissionCatalog(data.TargetPolicyRevision)
-	usecase := biz.NewTenantAuthorizationUsecase(data.NewPostgresTenantAuthorizationUnitOfWork(data.NewData(environment.runtimePool)), catalog, data.NewUUIDv7Generator(), data.NewSystemClock())
+	usecase := biz.NewTenantAuthorizationUsecase(data.NewPostgresTenantAuthorizationUnitOfWork(data.NewData(environment.runtimePool)), catalog, data.NewUUIDv7Generator(), data.NewSystemClock(), allowingAPIKeyCreationLimiter{})
 
 	_, err := usecase.UpdateMembership(ctx, mustTenantScope(t, tenantID), biz.UpdateTenantMembershipCommand{
 		MembershipID: membershipID, Status: biz.MembershipStatusActive, ExpectedVersion: 1,
@@ -300,8 +300,8 @@ func TestTenantAuthorizationRoleBindingAuditsTargetTheBindingVersion(t *testing.
 	}
 	usecase := biz.NewTenantAuthorizationUsecase(
 		data.NewPostgresTenantAuthorizationUnitOfWork(data.NewData(environment.runtimePool)),
-		catalog, data.NewUUIDv7Generator(), data.NewSystemClock(),
-	)
+		catalog, data.NewUUIDv7Generator(), data.NewSystemClock(), allowingAPIKeyCreationLimiter{})
+
 	actor := biz.TenantAuthorizationActor{
 		PrincipalID: actorID, AuthenticationMethod: biz.AuditAuthenticationMethodPassword,
 		RequestID: "binding-audit", CorrelationID: "binding-audit", DecisionID: "binding-audit",

@@ -115,6 +115,7 @@ type AuthenticationReader interface {
 	PasswordLoginReader
 	PasswordActionReader
 	SessionContinuityReader
+	PrincipalValidationReader
 }
 
 type AuthenticationPassword interface {
@@ -126,6 +127,7 @@ type AuthenticationUnitOfWork interface {
 	LoginUnitOfWork
 	PasswordActionUnitOfWork
 	SessionContinuityUnitOfWork
+	PrincipalValidationAuditWriter
 }
 
 type AuthenticationTokenCodec interface {

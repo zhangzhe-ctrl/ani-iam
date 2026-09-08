@@ -65,8 +65,8 @@ func TestPostgresFailureMapsToStableIAMUnavailable(t *testing.T) {
 		&recordingAccessTokenIssuer{},
 		staticIntegrationSecretGenerator{},
 		&fixedIDGenerator{},
-		fixedClock{},
-	)
+		fixedClock{}, allowingAPIKeyUsageObserver{})
+
 	authentication := service.NewAuthenticationService(usecase)
 
 	_, err := authentication.PasswordLogin(context.Background(), &iamv1.PasswordLoginRequest{
@@ -128,8 +128,8 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 		tokenCodec,
 		staticIntegrationSecretGenerator{secret: "opaque-refresh-secret"},
 		&fixedIDGenerator{ids: authenticationIDs},
-		fixedClock{now: now},
-	)
+		fixedClock{now: now}, allowingAPIKeyUsageObserver{})
+
 	_, err = authentication.PasswordLogin(ctx, biz.PasswordLoginCommand{
 		Account:        "user@example.com",
 		Password:       "wrong-password",
@@ -214,8 +214,8 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 		tokenCodec,
 		data.NewPostgresAuthorizationReader(data.NewData(environment.runtimePool)),
 		&fixedIDGenerator{ids: []uuid.UUID{fixture.decisionID}},
-		fixedClock{now: now.Add(time.Minute)},
-	)
+		fixedClock{now: now.Add(time.Minute)}, allowingAPIKeyUsageObserver{})
+
 	decision, err := authorization.CheckPermission(ctx, biz.CheckPermissionCommand{
 		RawCredential:  login.AccessToken,
 		OperationID:    "listInstances",
@@ -239,9 +239,9 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 		targetPolicyRegistry{},
 		tokenCodec,
 		data.NewPostgresAuthorizationReader(data.NewData(environment.runtimePool)),
-		&fixedIDGenerator{ids: []uuid.UUID{fixture.deniedDecisionID}},
-		fixedClock{now: now.Add(time.Minute)},
-	)
+		&fixedIDGenerator{ids: []uuid.UUID{fixture.deniedDecisionID, fixture.deniedAuditID}},
+		fixedClock{now: now.Add(time.Minute)}, allowingAPIKeyUsageObserver{})
+
 	denied, err := deniedAuthorization.CheckPermission(ctx, biz.CheckPermissionCommand{
 		RawCredential:  login.AccessToken,
 		OperationID:    "listInstances",
@@ -272,8 +272,8 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 			&recordingAccessTokenIssuer{token: "second-access-token"},
 			staticIntegrationSecretGenerator{secret: "different-refresh-secret"},
 			&fixedIDGenerator{ids: secondIDs},
-			fixedClock{now: now.Add(2 * time.Minute)},
-		)
+			fixedClock{now: now.Add(2 * time.Minute)}, allowingAPIKeyUsageObserver{})
+
 		_, err := usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
 			Account:        "user@example.com",
 			Password:       "correct-password",
@@ -337,6 +337,7 @@ type targetLoginFixture struct {
 	loginIDs         []uuid.UUID
 	decisionID       uuid.UUID
 	deniedDecisionID uuid.UUID
+	deniedAuditID    uuid.UUID
 }
 
 func seedTargetLoginFixture(t *testing.T, ctx context.Context, environment *postgresEnvironment, passwordHash string) targetLoginFixture {
@@ -356,6 +357,7 @@ func seedTargetLoginFixture(t *testing.T, ctx context.Context, environment *post
 		},
 		decisionID:       uuid.MustParse("0198f062-b76d-7101-9000-000000000007"),
 		deniedDecisionID: uuid.MustParse("0198f062-b76d-7101-9000-000000000008"),
+		deniedAuditID:    uuid.MustParse("0198f062-b76d-7101-9000-00000000000a"),
 	}
 	identityID := uuid.MustParse("0198f062-b76d-7201-9000-000000000001")
 	roleID := uuid.MustParse("0198f062-b76d-7201-9000-000000000002")
@@ -442,7 +444,10 @@ func (targetPolicyRegistry) Lookup(operationID string) (biz.AuthorizationPolicy,
 	if operationID != "listInstances" {
 		return biz.AuthorizationPolicy{}, false
 	}
-	return biz.AuthorizationPolicy{OperationID: operationID, Resource: "instances", Actions: []string{"read"}, Scope: biz.PermissionScopeTenant}, true
+	return biz.AuthorizationPolicy{
+		OperationID: operationID, Resource: "instances", Actions: []string{"read"}, Scope: biz.PermissionScopeTenant,
+		CredentialKinds: []biz.CredentialKind{biz.CredentialKindAccessToken}, PrincipalKinds: []biz.PrincipalType{biz.PrincipalTypeHuman},
+	}, true
 }
 
 func newVerticalSliceRedisClient(t *testing.T, ctx context.Context) *redis.Client {

@@ -117,11 +117,13 @@ type TenantAuthorizationTransaction interface {
 	IsActiveHumanAdministrator(context.Context, TenantScope, uuid.UUID) (bool, error)
 	BindRole(context.Context, TenantScope, TenantRoleBinding, int64, time.Time) (TenantMembership, TenantRoleBinding, error)
 	UnbindRole(context.Context, TenantScope, uuid.UUID, uuid.UUID, int64, time.Time) (TenantMembership, TenantRoleBinding, error)
+	DisableServicePrincipalForMembership(context.Context, TenantScope, uuid.UUID, time.Time) (ServicePrincipal, int64, error)
 	AppendAudit(context.Context, TenantScope, SecurityAuditEvent) error
 }
 
 type TenantAuthorizationUnitOfWork interface {
 	WithinTenantAuthorization(context.Context, TenantScope, func(context.Context, TenantAuthorizationTransaction) error) error
+	ServicePrincipalUnitOfWork
 }
 
 type UpdateTenantMembershipCommand struct {
@@ -159,14 +161,52 @@ type TenantMembershipMutationResult struct {
 }
 
 type TenantAuthorizationUsecase struct {
-	uow     TenantAuthorizationUnitOfWork
-	catalog PermissionCatalog
-	ids     IDGenerator
-	clock   Clock
+	uow               TenantAuthorizationUnitOfWork
+	catalog           PermissionCatalog
+	ids               IDGenerator
+	clock             Clock
+	servicePrincipals *ServicePrincipalUsecase
 }
 
-func NewTenantAuthorizationUsecase(uow TenantAuthorizationUnitOfWork, catalog PermissionCatalog, ids IDGenerator, clock Clock) *TenantAuthorizationUsecase {
-	return &TenantAuthorizationUsecase{uow: uow, catalog: catalog, ids: ids, clock: clock}
+func NewTenantAuthorizationUsecase(
+	uow TenantAuthorizationUnitOfWork,
+	catalog PermissionCatalog,
+	ids IDGenerator,
+	clock Clock,
+	limiter APIKeyCreationLimiter,
+) *TenantAuthorizationUsecase {
+	return &TenantAuthorizationUsecase{
+		uow: uow, catalog: catalog, ids: ids, clock: clock,
+		servicePrincipals: NewServicePrincipalUsecase(uow, ids, clock, limiter),
+	}
+}
+
+func (u *TenantAuthorizationUsecase) CreateServicePrincipal(ctx context.Context, scope TenantScope, command CreateServicePrincipalCommand) (CreateServicePrincipalResult, error) {
+	if u.servicePrincipals == nil {
+		return CreateServicePrincipalResult{}, ErrAuthenticationDependency
+	}
+	return u.servicePrincipals.CreateServicePrincipal(ctx, scope, command)
+}
+
+func (u *TenantAuthorizationUsecase) CreateAPIKey(ctx context.Context, scope TenantScope, command CreateAPIKeyCommand) (CreateAPIKeyResult, error) {
+	if u.servicePrincipals == nil {
+		return CreateAPIKeyResult{}, ErrAuthenticationDependency
+	}
+	return u.servicePrincipals.CreateAPIKey(ctx, scope, command)
+}
+
+func (u *TenantAuthorizationUsecase) UpdateServicePrincipal(ctx context.Context, scope TenantScope, command UpdateServicePrincipalCommand) (UpdateServicePrincipalResult, error) {
+	if u.servicePrincipals == nil {
+		return UpdateServicePrincipalResult{}, ErrAuthenticationDependency
+	}
+	return u.servicePrincipals.UpdateServicePrincipal(ctx, scope, command)
+}
+
+func (u *TenantAuthorizationUsecase) RevokeAPIKey(ctx context.Context, scope TenantScope, command RevokeAPIKeyCommand) (RevokeAPIKeyResult, error) {
+	if u.servicePrincipals == nil {
+		return RevokeAPIKeyResult{}, ErrAuthenticationDependency
+	}
+	return u.servicePrincipals.RevokeAPIKey(ctx, scope, command)
 }
 
 func (u *TenantAuthorizationUsecase) UpdateAccess(ctx context.Context, scope TenantScope, command UpdateTenantAccessCommand) (TenantAccessMutationResult, error) {
@@ -221,10 +261,11 @@ func (u *TenantAuthorizationUsecase) UpdateMembership(ctx context.Context, scope
 	now := u.clock.Now().UTC()
 	var result TenantMembershipMutationResult
 	err := u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
-		current, err := tx.GetMembership(txContext, scope, command.MembershipID)
+		currentRecord, err := tx.GetMembershipRecord(txContext, scope, command.MembershipID)
 		if err != nil {
 			return err
 		}
+		current := currentRecord.Membership
 		if current.Version != command.ExpectedVersion {
 			return ErrVersionConflict
 		}
@@ -244,6 +285,23 @@ func (u *TenantAuthorizationUsecase) UpdateMembership(ctx context.Context, scope
 		audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionMembershipUpdated, AuditTargetTypeTenantMembership, updated.ID, updated.Version, now)
 		if err := tx.AppendAudit(txContext, scope, audit); err != nil {
 			return err
+		}
+		if command.Status == MembershipStatusRemoved && currentRecord.PrincipalType == PrincipalTypeService {
+			principal, _, err := tx.DisableServicePrincipalForMembership(txContext, scope, updated.ID, now)
+			if err != nil {
+				return err
+			}
+			disableAuditID, err := u.newID()
+			if err != nil {
+				return err
+			}
+			disableAudit := newTenantAuthorizationAudit(
+				disableAuditID, command.Actor, AuditActionServicePrincipalDisabled,
+				AuditTargetTypeServicePrincipal, principal.ID, principal.Version, now,
+			)
+			if err := tx.AppendAudit(txContext, scope, disableAudit); err != nil {
+				return err
+			}
 		}
 		record, err := tx.GetMembershipRecord(txContext, scope, updated.ID)
 		if err != nil {

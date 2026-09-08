@@ -42,8 +42,7 @@ func TestRequestPasswordActionIsUniformAndPersistsOnlyKnownTargetIntent(t *testi
 				&passwordActionTestTokenCodec{},
 				staticSecretGenerator{},
 				&fixedIDs{values: []uuid.UUID{operationID, outboxID, auditID}},
-				fixedAuthClock{now: now},
-			)
+				fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 			result, err := usecase.RequestPasswordAction(context.Background(), RequestPasswordActionCommand{
 				Account:        " User@Example.COM ",
@@ -104,8 +103,7 @@ func TestRequestPasswordActionPreservesIdempotencyConflict(t *testing.T) {
 			uuid.MustParse("0198f062-b76d-7001-9000-000000000072"),
 			uuid.MustParse("0198f062-b76d-7001-9000-000000000073"),
 		}},
-		fixedAuthClock{now: time.Date(2026, 9, 6, 13, 0, 0, 0, time.UTC)},
-	)
+		fixedAuthClock{now: time.Date(2026, 9, 6, 13, 0, 0, 0, time.UTC)}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.RequestPasswordAction(context.Background(), RequestPasswordActionCommand{
 		Account:        "unknown@example.com",
@@ -145,8 +143,7 @@ func TestCompletePasswordActionHashesBeforeAtomicCompletion(t *testing.T) {
 		codec,
 		staticSecretGenerator{},
 		&fixedIDs{values: []uuid.UUID{identityID, auditID}},
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	result, err := usecase.CompletePasswordAction(context.Background(), CompletePasswordActionCommand{
 		ActionToken:    "opaque-signed-action-token",
@@ -187,8 +184,7 @@ func TestCompletePasswordActionRejectsInvalidTokenBeforeHashing(t *testing.T) {
 		codec,
 		staticSecretGenerator{},
 		&fixedIDs{},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.CompletePasswordAction(context.Background(), CompletePasswordActionCommand{
 		ActionToken:    "invalid-action-token",
@@ -226,8 +222,7 @@ func TestCompletePasswordActionPreservesIdempotencyConflict(t *testing.T) {
 			uuid.MustParse("0198f062-b76d-7001-9000-000000000082"),
 			uuid.MustParse("0198f062-b76d-7001-9000-000000000083"),
 		}},
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.CompletePasswordAction(context.Background(), CompletePasswordActionCommand{
 		ActionToken:    "opaque-action-token",
@@ -280,6 +275,12 @@ func (*passwordActionTestUnitOfWork) CommitLogin(context.Context, TenantScope, L
 	return nil
 }
 func (*passwordActionTestUnitOfWork) RecordLoginFailure(context.Context, TenantScope, LoginFailureMutation) error {
+	return nil
+}
+func (*passwordActionTestUnitOfWork) RecordTenantPrincipalValidation(context.Context, TenantScope, SecurityAuditEvent) error {
+	return nil
+}
+func (*passwordActionTestUnitOfWork) RecordUnboundPrincipalValidation(context.Context, SecurityAuditEvent) error {
 	return nil
 }
 

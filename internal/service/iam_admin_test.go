@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -18,6 +19,93 @@ func TestIAMAdminServiceIsRegisteredButOutsideSliceMethodsStayUnimplemented(t *t
 	_, err := service.GetTenantAccess(context.Background(), &iamv1.GetTenantAccessRequest{})
 	if status.Code(err) != codes.Unimplemented {
 		t.Fatalf("GetTenantAccess() code = %s, want Unimplemented", status.Code(err))
+	}
+}
+
+func TestTenantIAMAdminMapsServicePrincipalAndOneTimeAPIKeySecret(t *testing.T) {
+	tenantID := uuid.MustParse("0199ca10-3000-7001-9000-000000000001")
+	principalID := uuid.MustParse("0199ca10-3000-7001-9000-000000000002")
+	membershipID := uuid.MustParse("0199ca10-3000-7001-9000-000000000003")
+	roleID := uuid.MustParse("0199ca10-3000-7001-9000-000000000004")
+	keyID := uuid.MustParse("0199ca10-3000-7001-9000-000000000005")
+	mutations := &recordingTenantAuthorizationMutations{
+		servicePrincipalResult: biz.CreateServicePrincipalResult{
+			Principal:  biz.ServicePrincipal{ID: principalID, Name: "Build Bot", NormalizedName: "build bot", Status: biz.PrincipalStatusActive, MembershipID: membershipID, Version: 1},
+			Membership: biz.TenantMembershipRecord{Membership: biz.TenantMembership{ID: membershipID, PrincipalID: principalID, Status: biz.MembershipStatusActive, Version: 1}, PrincipalType: biz.PrincipalTypeService, RoleIDs: []uuid.UUID{roleID}},
+		},
+		apiKeyResult: biz.CreateAPIKeyResult{APIKey: biz.APIKey{
+			ID: keyID, PrincipalID: principalID, Status: biz.APIKeyStatusActive,
+			DisplayPrefix: "ani_0199ca10", NeverExpires: true, CreatedAt: time.Date(2026, 9, 8, 15, 0, 0, 0, time.UTC), Version: 1,
+		}, Secret: "ani_0199ca10-secret-once"},
+	}
+	service := NewTenantIAMAdminService(&recordingTenantAuthorizationReader{servicePrincipal: mutations.servicePrincipalResult.Principal}, mutations)
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(
+		"x-ani-principal-id", "0199ca10-3000-7001-9000-000000000099",
+		"x-ani-principal-type", "human", "x-ani-authn-method", "password",
+		"x-ani-tenant-id", tenantID.String(),
+		"x-ani-decision-id", "decision-sp", "x-request-id", "request-sp", "x-correlation-id", "correlation-sp",
+	))
+	created, err := service.CreateServicePrincipal(ctx, &iamv1.CreateServicePrincipalRequest{
+		TenantId: tenantID.String(), Name: " Build Bot ", RoleIds: []string{roleID.String()}, IdempotencyKey: "create-sp-1",
+	})
+	if err != nil {
+		t.Fatalf("CreateServicePrincipal() error = %v", err)
+	}
+	if mutations.createServicePrincipal.Name != "Build Bot" || mutations.createServicePrincipal.RoleIDs[0] != roleID || created.GetPrincipal().GetPrincipalId() != principalID.String() || created.GetMembership().GetPrincipalType() != iamv1.PrincipalType_PRINCIPAL_TYPE_SERVICE {
+		t.Fatalf("service principal mapping = command:%#v response:%#v", mutations.createServicePrincipal, created)
+	}
+	key, err := service.CreateAPIKey(ctx, &iamv1.CreateAPIKeyRequest{
+		PrincipalId: principalID.String(), NeverExpires: true, IdempotencyKey: "create-key-1",
+	})
+	if err != nil {
+		t.Fatalf("CreateAPIKey() error = %v", err)
+	}
+	if mutations.createAPIKey.PrincipalID != principalID || key.GetApiKeySecret() != mutations.apiKeyResult.Secret || key.GetApiKey().GetKeyId() != keyID.String() {
+		t.Fatalf("API key mapping = command:%#v response:%#v", mutations.createAPIKey, key)
+	}
+}
+
+func TestTenantIAMAdminServicePrincipalRoutesUseOnlyTrustedTenantScope(t *testing.T) {
+	trustedTenantID := uuid.MustParse("0199ca10-3100-7001-9000-000000000001")
+	foreignTenantID := uuid.MustParse("0199ca10-3100-7001-9000-000000000002")
+	principalID := uuid.MustParse("0199ca10-3100-7001-9000-000000000003")
+	reader := &recordingTenantAuthorizationReader{servicePrincipal: biz.ServicePrincipal{ID: principalID, Status: biz.PrincipalStatusActive, Version: 1}}
+	mutations := &recordingTenantAuthorizationMutations{}
+	service := NewTenantIAMAdminService(reader, mutations)
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(
+		"x-ani-principal-id", "0199ca10-3100-7001-9000-000000000099",
+		"x-ani-principal-type", "human", "x-ani-authn-method", "password",
+		"x-ani-tenant-id", trustedTenantID.String(),
+		"x-ani-decision-id", "decision-scope", "x-request-id", "request-scope", "x-correlation-id", "correlation-scope",
+	))
+
+	response, err := service.GetServicePrincipal(ctx, &iamv1.GetServicePrincipalRequest{PrincipalId: principalID.String()})
+	if err != nil {
+		t.Fatalf("GetServicePrincipal() error = %v", err)
+	}
+	if reader.servicePrincipalCalls != 1 || reader.servicePrincipalScope != trustedTenantID || response.GetPrincipal().GetTenantId() != trustedTenantID.String() {
+		t.Fatalf("trusted scope = calls:%d scope:%s response:%#v", reader.servicePrincipalCalls, reader.servicePrincipalScope, response)
+	}
+
+	_, err = service.ListServicePrincipals(ctx, &iamv1.ListServicePrincipalsRequest{TenantId: foreignTenantID.String()})
+	if status.Code(err) != codes.PermissionDenied {
+		t.Fatalf("ListServicePrincipals(cross-tenant) code = %s, want PermissionDenied", status.Code(err))
+	}
+	if reader.listPrincipalCalls != 0 {
+		t.Fatalf("cross-tenant list reached repository: %d", reader.listPrincipalCalls)
+	}
+
+	withoutTrustedTenant := metadata.NewIncomingContext(context.Background(), metadata.Pairs(
+		"x-ani-principal-id", "0199ca10-3100-7001-9000-000000000099",
+		"x-ani-principal-type", "human", "x-ani-authn-method", "password",
+		"x-ani-decision-id", "decision-missing", "x-request-id", "request-missing", "x-correlation-id", "correlation-missing",
+	))
+	_, err = service.GetServicePrincipal(withoutTrustedTenant, &iamv1.GetServicePrincipalRequest{PrincipalId: principalID.String()})
+	if status.Code(err) != codes.PermissionDenied {
+		t.Fatalf("GetServicePrincipal(missing trusted tenant) code = %s, want PermissionDenied", status.Code(err))
+	}
+	if reader.servicePrincipalCalls != 1 {
+		t.Fatalf("missing trusted tenant reached repository: %d", reader.servicePrincipalCalls)
 	}
 }
 
@@ -97,7 +185,16 @@ func TestTenantIAMAdminRejectsMissingTrustedActorForMutation(t *testing.T) {
 	}
 }
 
-type recordingTenantAuthorizationReader struct{ access biz.TenantAccess }
+type recordingTenantAuthorizationReader struct {
+	access                biz.TenantAccess
+	servicePrincipal      biz.ServicePrincipal
+	servicePrincipalPage  biz.ServicePrincipalPage
+	apiKeyPage            biz.APIKeyPage
+	servicePrincipalCalls int
+	servicePrincipalScope uuid.UUID
+	listPrincipalCalls    int
+	listAPIKeyCalls       int
+}
 
 func (r *recordingTenantAuthorizationReader) GetAccess(context.Context, biz.TenantScope) (biz.TenantAccess, error) {
 	return r.access, nil
@@ -114,11 +211,31 @@ func (*recordingTenantAuthorizationReader) GetRole(context.Context, biz.TenantSc
 func (*recordingTenantAuthorizationReader) ListRoles(context.Context, biz.TenantScope, uuid.UUID, int32) (biz.TenantRolePage, error) {
 	return biz.TenantRolePage{}, nil
 }
+func (r *recordingTenantAuthorizationReader) GetServicePrincipal(_ context.Context, scope biz.TenantScope, _ uuid.UUID) (biz.ServicePrincipal, error) {
+	r.servicePrincipalCalls++
+	r.servicePrincipalScope, _ = scope.TenantID()
+	if r.servicePrincipal.ID == uuid.Nil {
+		return biz.ServicePrincipal{}, biz.ErrServicePrincipalNotFound
+	}
+	return r.servicePrincipal, nil
+}
+func (r *recordingTenantAuthorizationReader) ListServicePrincipals(context.Context, biz.TenantScope, biz.PrincipalStatus, uuid.UUID, int32) (biz.ServicePrincipalPage, error) {
+	r.listPrincipalCalls++
+	return r.servicePrincipalPage, nil
+}
+func (r *recordingTenantAuthorizationReader) ListAPIKeys(context.Context, biz.TenantScope, uuid.UUID, uuid.UUID, int32) (biz.APIKeyPage, error) {
+	r.listAPIKeyCalls++
+	return r.apiKeyPage, nil
+}
 
 type recordingTenantAuthorizationMutations struct {
-	updateMembership biz.UpdateTenantMembershipCommand
-	membershipResult biz.TenantMembershipMutationResult
-	updateAccessCalls int
+	updateMembership       biz.UpdateTenantMembershipCommand
+	membershipResult       biz.TenantMembershipMutationResult
+	updateAccessCalls      int
+	createServicePrincipal biz.CreateServicePrincipalCommand
+	servicePrincipalResult biz.CreateServicePrincipalResult
+	createAPIKey           biz.CreateAPIKeyCommand
+	apiKeyResult           biz.CreateAPIKeyResult
 }
 
 func (m *recordingTenantAuthorizationMutations) UpdateAccess(context.Context, biz.TenantScope, biz.UpdateTenantAccessCommand) (biz.TenantAccessMutationResult, error) {
@@ -134,4 +251,18 @@ func (*recordingTenantAuthorizationMutations) BindRole(context.Context, biz.Tena
 }
 func (*recordingTenantAuthorizationMutations) UnbindRole(context.Context, biz.TenantScope, biz.UnbindTenantRoleCommand) (biz.TenantMembershipMutationResult, error) {
 	return biz.TenantMembershipMutationResult{}, nil
+}
+func (m *recordingTenantAuthorizationMutations) CreateServicePrincipal(_ context.Context, _ biz.TenantScope, command biz.CreateServicePrincipalCommand) (biz.CreateServicePrincipalResult, error) {
+	m.createServicePrincipal = command
+	return m.servicePrincipalResult, nil
+}
+func (m *recordingTenantAuthorizationMutations) CreateAPIKey(_ context.Context, _ biz.TenantScope, command biz.CreateAPIKeyCommand) (biz.CreateAPIKeyResult, error) {
+	m.createAPIKey = command
+	return m.apiKeyResult, nil
+}
+func (*recordingTenantAuthorizationMutations) UpdateServicePrincipal(context.Context, biz.TenantScope, biz.UpdateServicePrincipalCommand) (biz.UpdateServicePrincipalResult, error) {
+	return biz.UpdateServicePrincipalResult{}, nil
+}
+func (*recordingTenantAuthorizationMutations) RevokeAPIKey(context.Context, biz.TenantScope, biz.RevokeAPIKeyCommand) (biz.RevokeAPIKeyResult, error) {
+	return biz.RevokeAPIKeyResult{}, nil
 }

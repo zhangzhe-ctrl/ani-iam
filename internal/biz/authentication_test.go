@@ -10,6 +10,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type allowingAPIKeyUsageObserver struct{}
+
+func (allowingAPIKeyUsageObserver) ObserveAPIKeyUse(context.Context, TenantScope, uuid.UUID, time.Time) error {
+	return nil
+}
+
 func TestPasswordLoginCreatesActiveTenantSession(t *testing.T) {
 	tenantID := uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")
@@ -42,8 +48,7 @@ func TestPasswordLoginCreatesActiveTenantSession(t *testing.T) {
 		staticTokenIssuer{token: "signed-access-token"},
 		staticSecretGenerator{secret: "opaque-refresh-secret"},
 		ids,
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	result, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        " User@Example.COM ",
@@ -90,8 +95,7 @@ func TestPasswordLoginRequiresSourceIPBeforeThrottle(t *testing.T) {
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -138,8 +142,7 @@ func TestPasswordLoginRecordsUniformInvalidCredentialFailure(t *testing.T) {
 				staticTokenIssuer{},
 				staticSecretGenerator{},
 				&fixedIDs{values: []uuid.UUID{uuid.MustParse("0198f062-b76d-7001-9000-000000000010")}},
-				fixedAuthClock{},
-			)
+				fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 			_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 				Account:        " User@Example.COM ",
@@ -175,8 +178,7 @@ func TestPasswordLoginUsesDummyVerificationForUnknownAccount(t *testing.T) {
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{values: []uuid.UUID{auditID}},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "unknown@example.com",
@@ -225,8 +227,7 @@ func TestPasswordLoginRecordsKnownFailureAndAuditThroughUnitOfWork(t *testing.T)
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{values: []uuid.UUID{auditID}},
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -264,8 +265,7 @@ func TestPasswordLoginFailsClosedWhenThrottleIsUnavailable(t *testing.T) {
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -295,8 +295,7 @@ func TestPasswordLoginClassifiesRecordFailureOutageAsDependencyFailure(t *testin
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{values: []uuid.UUID{uuid.MustParse("0198f062-b76d-7001-9000-000000000012")}},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -342,8 +341,7 @@ func TestPasswordLoginResetOutageAfterCommitDoesNotTurnSuccessIntoFailure(t *tes
 			uuid.MustParse("0198f062-b76d-7002-9000-000000000005"),
 			uuid.MustParse("0198f062-b76d-7002-9000-000000000006"),
 		}},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	result, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -390,8 +388,7 @@ func TestPasswordLoginCommitFailureDoesNotResetThrottle(t *testing.T) {
 			uuid.MustParse("0198f062-b76d-7003-9000-000000000005"),
 			uuid.MustParse("0198f062-b76d-7003-9000-000000000006"),
 		}},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -422,8 +419,7 @@ func TestPasswordLoginPreservesRateLimitClassification(t *testing.T) {
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -467,8 +463,7 @@ func TestPasswordLoginMasksDurableAccountLockWithDummyVerification(t *testing.T)
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{values: []uuid.UUID{auditID}},
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -535,8 +530,7 @@ func TestPasswordLoginDurableLockAuditFailureStopsBeforeRedisMutation(t *testing
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{values: []uuid.UUID{uuid.MustParse("0198f062-b76d-7001-9000-000000000072")}},
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -566,8 +560,7 @@ func TestPasswordLoginClassifiesPostgresFailureAsDependencyUnavailable(t *testin
 		staticTokenIssuer{},
 		staticSecretGenerator{},
 		&fixedIDs{},
-		fixedAuthClock{},
-	)
+		fixedAuthClock{}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.PasswordLogin(context.Background(), PasswordLoginCommand{
 		Account:        "user@example.com",
@@ -592,6 +585,28 @@ func (r staticPasswordLoginReader) LookupPasswordLogin(context.Context, TenantSc
 }
 func (staticPasswordLoginReader) LookupPasswordActionTarget(context.Context, string, Audience) (PasswordActionTarget, bool, error) {
 	return PasswordActionTarget{}, false, nil
+}
+func (staticPasswordLoginReader) Revision() string { return testPolicyRevision }
+func (staticPasswordLoginReader) Lookup(string) (AuthorizationPolicy, bool) {
+	return AuthorizationPolicy{}, false
+}
+func (staticPasswordLoginReader) GetAPIKeyBoundary(context.Context, uuid.UUID) (uuid.UUID, error) {
+	return uuid.Nil, ErrAPIKeyNotFound
+}
+func (staticPasswordLoginReader) LookupAuthorization(context.Context, TenantScope, AuthorizationLookup) (AuthorizationState, error) {
+	return AuthorizationState{}, ErrAuthenticationDependency
+}
+func (staticPasswordLoginReader) RecordDeniedAuthorization(context.Context, TenantScope, SecurityAuditEvent) error {
+	return ErrAuthenticationDependency
+}
+func (staticPasswordLoginReader) RecordUnboundAuthorization(context.Context, SecurityAuditEvent) error {
+	return ErrAuthenticationDependency
+}
+func (staticPasswordLoginReader) LookupAPIKeyCredential(context.Context, TenantScope, uuid.UUID, string) (APIKey, error) {
+	return APIKey{}, ErrAPIKeyNotFound
+}
+func (staticPasswordLoginReader) LookupAPIKeyAuthorization(context.Context, TenantScope, uuid.UUID, string, []string) (APIKeyAuthorizationState, error) {
+	return APIKeyAuthorizationState{}, ErrAPIKeyNotFound
 }
 
 type acceptingPasswordVerifier struct{}
@@ -695,10 +710,13 @@ func (t selectiveFailingLoginThrottle) Reset(context.Context, LoginThrottleAttem
 }
 
 type recordingLoginUnitOfWork struct {
-	committed  *LoginMutation
-	failed     *LoginFailureMutation
-	commitErr  error
-	failureErr error
+	committed                  *LoginMutation
+	failed                     *LoginFailureMutation
+	tenantPrincipalValidation  *SecurityAuditEvent
+	unboundPrincipalValidation *SecurityAuditEvent
+	commitErr                  error
+	failureErr                 error
+	principalValidationErr     error
 }
 
 func (u *recordingLoginUnitOfWork) CommitLogin(_ context.Context, _ TenantScope, mutation LoginMutation) error {
@@ -709,6 +727,14 @@ func (u *recordingLoginUnitOfWork) CommitLogin(_ context.Context, _ TenantScope,
 func (u *recordingLoginUnitOfWork) RecordLoginFailure(_ context.Context, _ TenantScope, mutation LoginFailureMutation) error {
 	u.failed = &mutation
 	return u.failureErr
+}
+func (u *recordingLoginUnitOfWork) RecordTenantPrincipalValidation(_ context.Context, _ TenantScope, event SecurityAuditEvent) error {
+	u.tenantPrincipalValidation = &event
+	return u.principalValidationErr
+}
+func (u *recordingLoginUnitOfWork) RecordUnboundPrincipalValidation(_ context.Context, event SecurityAuditEvent) error {
+	u.unboundPrincipalValidation = &event
+	return u.principalValidationErr
 }
 func (*recordingLoginUnitOfWork) RequestPasswordAction(_ context.Context, mutation PasswordActionRequestMutation) (RequestPasswordActionResult, error) {
 	return RequestPasswordActionResult{OperationID: mutation.OperationID, ExpiresAt: mutation.ExpiresAt}, nil

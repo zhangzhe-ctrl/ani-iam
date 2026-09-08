@@ -20,7 +20,7 @@ type postgresTenantAuthorizationReader struct {
 	data *Data
 }
 
-func NewPostgresTenantAuthorizationReader(data *Data) biz.TenantAuthorizationReader {
+func NewPostgresTenantAuthorizationReader(data *Data) biz.TenantAdminReader {
 	return &postgresTenantAuthorizationReader{data: data}
 }
 

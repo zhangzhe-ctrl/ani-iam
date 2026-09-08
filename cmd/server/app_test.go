@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
@@ -27,8 +28,9 @@ func TestNewTenantIAMAdminRuntimePinsPolicyRevision(t *testing.T) {
 	postgresData := data.NewData(nil)
 	ids := data.NewUUIDv7Generator()
 	clock := data.NewSystemClock()
+	limiter := allowingAppAPIKeyCreationLimiter{}
 
-	adminService, err := newTenantIAMAdminRuntime(postgresData, "sha256:stale", ids, clock)
+	adminService, err := newTenantIAMAdminRuntime(postgresData, "sha256:stale", ids, clock, limiter)
 	if adminService != nil {
 		t.Fatal("newTenantIAMAdminRuntime() returned a service for a stale policy revision")
 	}
@@ -37,13 +39,24 @@ func TestNewTenantIAMAdminRuntimePinsPolicyRevision(t *testing.T) {
 		t.Fatalf("newTenantIAMAdminRuntime() error = %v, want AuthorizationPolicyMismatchError", err)
 	}
 
-	adminService, err = newTenantIAMAdminRuntime(postgresData, data.TargetPolicyRevision, ids, clock)
+	adminService, err = newTenantIAMAdminRuntime(postgresData, data.TargetPolicyRevision, ids, clock, limiter)
 	if err != nil {
 		t.Fatalf("newTenantIAMAdminRuntime() error = %v", err)
 	}
 	if adminService == nil {
 		t.Fatal("newTenantIAMAdminRuntime() returned nil service for the pinned policy revision")
 	}
+
+	adminService, err = newTenantIAMAdminRuntime(postgresData, data.TargetPolicyRevision, ids, clock, nil)
+	if adminService != nil || err == nil {
+		t.Fatalf("newTenantIAMAdminRuntime() without API key creation limiter = %#v, %v", adminService, err)
+	}
+}
+
+type allowingAppAPIKeyCreationLimiter struct{}
+
+func (allowingAppAPIKeyCreationLimiter) Acquire(context.Context, biz.TenantScope, uuid.UUID) error {
+	return nil
 }
 
 func TestBuildAppFailsClosedWhenSigningKeyIsUnavailable(t *testing.T) {
@@ -202,6 +215,247 @@ func TestPasswordActionNotificationWorkerRequiresBoundedConfiguration(t *testing
 			}
 		})
 	}
+}
+
+func TestAPIKeyMaintenanceWorkerFlushesUsageAndPublishesOperationalSnapshot(t *testing.T) {
+	now := time.Date(2026, 9, 9, 1, 2, 3, 0, time.UTC)
+	want := biz.APIKeyOperationalSnapshot{
+		StaleNonExpiringCount:        7,
+		UnusualServicePrincipalCount: 3,
+		ObservedAt:                   now,
+	}
+	flusher := &recordingAPIKeyUsageFlusher{results: []int{256, 256, 12, 0}}
+	reader := &recordingAPIKeyOperationalSnapshotReader{snapshot: want}
+	sink := &recordingAPIKeyOperationalSnapshotSink{published: make(chan biz.APIKeyOperationalSnapshot, 1)}
+	worker, err := newAPIKeyMaintenanceWorker(
+		flusher,
+		reader,
+		sink,
+		fixedAPIKeyMaintenanceClock{now: now},
+		time.Hour,
+		time.Second,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+	if err != nil {
+		t.Fatalf("newAPIKeyMaintenanceWorker() error = %v", err)
+	}
+	runDone := make(chan error, 1)
+	go func() { runDone <- worker.Start(context.Background()) }()
+
+	select {
+	case got := <-sink.published:
+		if got != want {
+			t.Fatalf("published snapshot = %#v, want %#v", got, want)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("worker did not publish its initial operational snapshot")
+	}
+	if flusher.calls != 4 {
+		t.Fatalf("Flush() calls = %d, want 4 to drain every pending batch", flusher.calls)
+	}
+	if reader.calls != 1 || !reader.observedAt.Equal(now) {
+		t.Fatalf("GetAPIKeyOperationalSnapshot() = calls %d, observedAt %v; want 1, %v", reader.calls, reader.observedAt, now)
+	}
+
+	stopContext, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := worker.Stop(stopContext); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+	if err := <-runDone; err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+}
+
+func TestAPIKeyMaintenanceWorkerCancelsInFlightFlushWithoutLoggingErrorText(t *testing.T) {
+	flusher := &blockingAPIKeyUsageFlusher{started: make(chan struct{})}
+	reader := &cancelledAPIKeyOperationalSnapshotReader{}
+	sink := &recordingAPIKeyOperationalSnapshotSink{published: make(chan biz.APIKeyOperationalSnapshot, 1)}
+	var logs bytes.Buffer
+	worker, err := newAPIKeyMaintenanceWorker(
+		flusher,
+		reader,
+		sink,
+		fixedAPIKeyMaintenanceClock{now: time.Date(2026, 9, 9, 1, 2, 3, 0, time.UTC)},
+		time.Hour,
+		time.Second,
+		slog.New(slog.NewTextHandler(&logs, nil)),
+	)
+	if err != nil {
+		t.Fatalf("newAPIKeyMaintenanceWorker() error = %v", err)
+	}
+	runDone := make(chan error, 1)
+	go func() { runDone <- worker.Start(context.Background()) }()
+	select {
+	case <-flusher.started:
+	case <-time.After(time.Second):
+		t.Fatal("worker did not start a usage flush")
+	}
+
+	stopContext, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := worker.Stop(stopContext); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+	if err := <-runDone; err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	if strings.Contains(logs.String(), "test-only-sensitive-api-key") {
+		t.Fatalf("worker logged flusher error text: %s", logs.String())
+	}
+	select {
+	case snapshot := <-sink.published:
+		t.Fatalf("worker published snapshot after cancellation: %#v", snapshot)
+	default:
+	}
+}
+
+func TestAPIKeyMaintenanceWorkerBoundsBusyDrainAndStillRefreshesSnapshot(t *testing.T) {
+	now := time.Date(2026, 9, 9, 1, 3, 0, 0, time.UTC)
+	flusher := &alwaysPendingAPIKeyUsageFlusher{}
+	reader := &recordingAPIKeyOperationalSnapshotReader{snapshot: biz.APIKeyOperationalSnapshot{ObservedAt: now}}
+	sink := &recordingAPIKeyOperationalSnapshotSink{published: make(chan biz.APIKeyOperationalSnapshot, 1)}
+	worker, err := newAPIKeyMaintenanceWorker(
+		flusher,
+		reader,
+		sink,
+		fixedAPIKeyMaintenanceClock{now: now},
+		time.Hour,
+		10*time.Millisecond,
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+	if err != nil {
+		t.Fatalf("newAPIKeyMaintenanceWorker() error = %v", err)
+	}
+	runDone := make(chan error, 1)
+	go func() { runDone <- worker.Start(context.Background()) }()
+
+	select {
+	case snapshot := <-sink.published:
+		if snapshot.ObservedAt != now {
+			t.Fatalf("published snapshot = %#v", snapshot)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("busy drain exceeded its deadline or blocked snapshot refresh")
+	}
+	if flusher.calls < 2 || reader.calls != 1 {
+		t.Fatalf("busy drain/snapshot calls = %d/%d, want multiple/1", flusher.calls, reader.calls)
+	}
+
+	stopContext, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := worker.Stop(stopContext); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+	if err := <-runDone; err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+}
+
+func TestAPIKeyMaintenanceWorkerRequiresBoundedConfiguration(t *testing.T) {
+	flusher := &recordingAPIKeyUsageFlusher{}
+	reader := &recordingAPIKeyOperationalSnapshotReader{}
+	sink := &recordingAPIKeyOperationalSnapshotSink{published: make(chan biz.APIKeyOperationalSnapshot, 1)}
+	clock := fixedAPIKeyMaintenanceClock{now: time.Now()}
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	for _, test := range []struct {
+		name     string
+		flusher  apiKeyUsageFlusher
+		reader   biz.APIKeyOperationalSnapshotReader
+		sink     apiKeyOperationalSnapshotSink
+		clock    biz.Clock
+		interval time.Duration
+		timeout  time.Duration
+		logger   *slog.Logger
+	}{
+		{name: "missing flusher", reader: reader, sink: sink, clock: clock, interval: time.Second, timeout: time.Second, logger: logger},
+		{name: "missing reader", flusher: flusher, sink: sink, clock: clock, interval: time.Second, timeout: time.Second, logger: logger},
+		{name: "missing sink", flusher: flusher, reader: reader, clock: clock, interval: time.Second, timeout: time.Second, logger: logger},
+		{name: "missing clock", flusher: flusher, reader: reader, sink: sink, interval: time.Second, timeout: time.Second, logger: logger},
+		{name: "missing interval", flusher: flusher, reader: reader, sink: sink, clock: clock, timeout: time.Second, logger: logger},
+		{name: "missing timeout", flusher: flusher, reader: reader, sink: sink, clock: clock, interval: time.Second, logger: logger},
+		{name: "missing logger", flusher: flusher, reader: reader, sink: sink, clock: clock, interval: time.Second, timeout: time.Second},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			worker, err := newAPIKeyMaintenanceWorker(test.flusher, test.reader, test.sink, test.clock, test.interval, test.timeout, test.logger)
+			if worker != nil || err == nil {
+				t.Fatalf("newAPIKeyMaintenanceWorker() = %#v, %v", worker, err)
+			}
+		})
+	}
+}
+
+type recordingAPIKeyUsageFlusher struct {
+	results []int
+	calls   int
+}
+
+type blockingAPIKeyUsageFlusher struct {
+	started chan struct{}
+}
+
+type alwaysPendingAPIKeyUsageFlusher struct {
+	calls int
+}
+
+func (f *alwaysPendingAPIKeyUsageFlusher) Flush(ctx context.Context) (int, error) {
+	select {
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	default:
+		f.calls++
+		return apiKeyUsageBatchSize, nil
+	}
+}
+
+func (f *blockingAPIKeyUsageFlusher) Flush(ctx context.Context) (int, error) {
+	close(f.started)
+	<-ctx.Done()
+	return 0, errors.New("test-only-sensitive-api-key")
+}
+
+func (f *recordingAPIKeyUsageFlusher) Flush(context.Context) (int, error) {
+	result := 0
+	if f.calls < len(f.results) {
+		result = f.results[f.calls]
+	}
+	f.calls++
+	return result, nil
+}
+
+type recordingAPIKeyOperationalSnapshotReader struct {
+	snapshot   biz.APIKeyOperationalSnapshot
+	calls      int
+	observedAt time.Time
+}
+
+func (r *recordingAPIKeyOperationalSnapshotReader) GetAPIKeyOperationalSnapshot(_ context.Context, observedAt time.Time) (biz.APIKeyOperationalSnapshot, error) {
+	r.calls++
+	r.observedAt = observedAt
+	return r.snapshot, nil
+}
+
+type cancelledAPIKeyOperationalSnapshotReader struct{}
+
+func (cancelledAPIKeyOperationalSnapshotReader) GetAPIKeyOperationalSnapshot(ctx context.Context, _ time.Time) (biz.APIKeyOperationalSnapshot, error) {
+	return biz.APIKeyOperationalSnapshot{}, ctx.Err()
+}
+
+type recordingAPIKeyOperationalSnapshotSink struct {
+	published chan biz.APIKeyOperationalSnapshot
+}
+
+func (s *recordingAPIKeyOperationalSnapshotSink) SetAPIKeyOperationalSnapshot(snapshot biz.APIKeyOperationalSnapshot) error {
+	s.published <- snapshot
+	return nil
+}
+
+type fixedAPIKeyMaintenanceClock struct {
+	now time.Time
+}
+
+func (c fixedAPIKeyMaintenanceClock) Now() time.Time {
+	return c.now
 }
 
 type blockingPasswordActionNotificationDispatcher struct {

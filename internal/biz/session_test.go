@@ -118,8 +118,7 @@ func TestLogoutSessionBuildsOneCurrentSessionRevocation(t *testing.T) {
 		reader, acceptingPasswordVerifier{}, &recordingSessionThrottle{}, uow,
 		&recordingSessionTokenCodec{}, staticSecretGenerator{},
 		&fixedIDs{values: []uuid.UUID{uuid.MustParse("0199c71e-c000-7003-9000-000000000001")}},
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.LogoutSession(context.Background(), LogoutSessionCommand{
 		RefreshToken:   "old-refresh-secret",
@@ -181,8 +180,7 @@ func TestSwitchTenantCreatesIndependentBoundaryWithinCurrentSession(t *testing.T
 			uuid.MustParse("0199c71e-c000-7201-9000-000000000014"),
 			uuid.MustParse("0199c71e-c000-7201-9000-000000000015"),
 		}},
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	result, err := usecase.SwitchTenant(context.Background(), SwitchTenantCommand{
 		RawCredential:  "source-access-token",
@@ -282,8 +280,7 @@ func TestSwitchTenantRejectsBossAudienceUntilPlatformGrantExists(t *testing.T) {
 	tokens := &recordingSessionTokenCodec{issued: "must-not-be-issued", verified: claims}
 	usecase := NewAuthenticationUsecase(
 		&sessionTestReader{tenantSwitch: state}, acceptingPasswordVerifier{}, &recordingSessionThrottle{}, uow,
-		tokens, staticSecretGenerator{}, &fixedIDs{}, fixedAuthClock{now: now},
-	)
+		tokens, staticSecretGenerator{}, &fixedIDs{}, fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.SwitchTenant(context.Background(), SwitchTenantCommand{
 		RawCredential: "boss-access-token", TargetTenantID: targetTenantID, IdempotencyKey: "boss-switch-1",
@@ -303,8 +300,7 @@ func TestRefreshSessionFailsClosedBeforePersistenceWhenRedisIsUnavailable(t *tes
 	uow := &recordingSessionContinuityUnitOfWork{}
 	usecase := NewAuthenticationUsecase(
 		reader, acceptingPasswordVerifier{}, throttle, uow, &recordingSessionTokenCodec{},
-		staticSecretGenerator{}, &fixedIDs{}, fixedAuthClock{now: now},
-	)
+		staticSecretGenerator{}, &fixedIDs{}, fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	_, err := usecase.RefreshSession(context.Background(), RefreshSessionCommand{
 		RefreshToken: "old-refresh-secret", CSRFToken: "csrf-proof",
@@ -418,8 +414,8 @@ func TestLogoutSessionIsIdempotentWithoutMutationForUnknownOrRevokedSession(t *t
 			usecase := NewAuthenticationUsecase(
 				&sessionTestReader{logout: test.state, logoutFound: test.found}, acceptingPasswordVerifier{},
 				&recordingSessionThrottle{}, uow, &recordingSessionTokenCodec{}, staticSecretGenerator{},
-				&fixedIDs{}, fixedAuthClock{now: now},
-			)
+				&fixedIDs{}, fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
+
 			_, err := usecase.LogoutSession(context.Background(), LogoutSessionCommand{
 				RefreshToken: "old-refresh-secret", CSRFToken: "csrf-proof",
 				Origin: "https://console.test.example", IdempotencyKey: "logout-idempotent",
@@ -471,8 +467,8 @@ func TestSwitchTenantRevalidatesTargetBoundary(t *testing.T) {
 			usecase := NewAuthenticationUsecase(
 				&sessionTestReader{tenantSwitch: state}, acceptingPasswordVerifier{}, &recordingSessionThrottle{},
 				uow, &recordingSessionTokenCodec{verified: claims}, staticSecretGenerator{},
-				&fixedIDs{}, fixedAuthClock{now: now},
-			)
+				&fixedIDs{}, fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
+
 			_, err := usecase.SwitchTenant(context.Background(), SwitchTenantCommand{
 				RawCredential: "source-access", TargetTenantID: targetTenantID, IdempotencyKey: "invalid-switch",
 			})
@@ -516,8 +512,7 @@ func TestSwitchTenantRotatesExistingBoundaryAndGrantVersion(t *testing.T) {
 			uuid.MustParse("0199c71e-c000-7601-9000-000000000011"),
 			uuid.MustParse("0199c71e-c000-7601-9000-000000000012"),
 			uuid.MustParse("0199c71e-c000-7601-9000-000000000013"),
-		}}, fixedAuthClock{now: now},
-	)
+		}}, fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
 
 	result, err := usecase.SwitchTenant(context.Background(), SwitchTenantCommand{
 		RawCredential: "source-access", TargetTenantID: targetTenantID, IdempotencyKey: "rotate-target",
@@ -581,8 +576,8 @@ func newSessionTestUsecase(
 		tokens,
 		staticSecretGenerator{secret: "new-refresh-secret"},
 		&fixedIDs{values: ids},
-		fixedAuthClock{now: now},
-	)
+		fixedAuthClock{now: now}, allowingAPIKeyUsageObserver{})
+
 }
 
 type sessionTestReader struct {
@@ -615,6 +610,29 @@ func (r *sessionTestReader) LookupTenantSwitch(context.Context, TenantScope, Acc
 	return r.tenantSwitch, nil
 }
 
+func (*sessionTestReader) Revision() string { return testPolicyRevision }
+func (*sessionTestReader) Lookup(string) (AuthorizationPolicy, bool) {
+	return AuthorizationPolicy{}, false
+}
+func (*sessionTestReader) GetAPIKeyBoundary(context.Context, uuid.UUID) (uuid.UUID, error) {
+	return uuid.Nil, ErrAPIKeyNotFound
+}
+func (*sessionTestReader) LookupAuthorization(context.Context, TenantScope, AuthorizationLookup) (AuthorizationState, error) {
+	return AuthorizationState{}, ErrAuthenticationDependency
+}
+func (*sessionTestReader) RecordDeniedAuthorization(context.Context, TenantScope, SecurityAuditEvent) error {
+	return ErrAuthenticationDependency
+}
+func (*sessionTestReader) RecordUnboundAuthorization(context.Context, SecurityAuditEvent) error {
+	return ErrAuthenticationDependency
+}
+func (*sessionTestReader) LookupAPIKeyCredential(context.Context, TenantScope, uuid.UUID, string) (APIKey, error) {
+	return APIKey{}, ErrAPIKeyNotFound
+}
+func (*sessionTestReader) LookupAPIKeyAuthorization(context.Context, TenantScope, uuid.UUID, string, []string) (APIKeyAuthorizationState, error) {
+	return APIKeyAuthorizationState{}, ErrAPIKeyNotFound
+}
+
 type recordingSessionContinuityUnitOfWork struct {
 	rotation       *RefreshSessionMutation
 	rotationResult RefreshSessionMutationResult
@@ -629,6 +647,12 @@ func (u *recordingSessionContinuityUnitOfWork) CommitLogin(context.Context, Tena
 }
 
 func (u *recordingSessionContinuityUnitOfWork) RecordLoginFailure(context.Context, TenantScope, LoginFailureMutation) error {
+	return nil
+}
+func (*recordingSessionContinuityUnitOfWork) RecordTenantPrincipalValidation(context.Context, TenantScope, SecurityAuditEvent) error {
+	return nil
+}
+func (*recordingSessionContinuityUnitOfWork) RecordUnboundPrincipalValidation(context.Context, SecurityAuditEvent) error {
 	return nil
 }
 
@@ -752,6 +776,28 @@ func (*passwordActionTestReader) LookupLogoutSession(context.Context, [sha256.Si
 }
 func (*passwordActionTestReader) LookupTenantSwitch(context.Context, TenantScope, AccessTokenClaims) (TenantSwitchState, error) {
 	return TenantSwitchState{}, ErrInvalidCredential
+}
+func (*passwordActionTestReader) Revision() string { return testPolicyRevision }
+func (*passwordActionTestReader) Lookup(string) (AuthorizationPolicy, bool) {
+	return AuthorizationPolicy{}, false
+}
+func (*passwordActionTestReader) GetAPIKeyBoundary(context.Context, uuid.UUID) (uuid.UUID, error) {
+	return uuid.Nil, ErrAPIKeyNotFound
+}
+func (*passwordActionTestReader) LookupAuthorization(context.Context, TenantScope, AuthorizationLookup) (AuthorizationState, error) {
+	return AuthorizationState{}, ErrAuthenticationDependency
+}
+func (*passwordActionTestReader) RecordDeniedAuthorization(context.Context, TenantScope, SecurityAuditEvent) error {
+	return ErrAuthenticationDependency
+}
+func (*passwordActionTestReader) RecordUnboundAuthorization(context.Context, SecurityAuditEvent) error {
+	return ErrAuthenticationDependency
+}
+func (*passwordActionTestReader) LookupAPIKeyCredential(context.Context, TenantScope, uuid.UUID, string) (APIKey, error) {
+	return APIKey{}, ErrAPIKeyNotFound
+}
+func (*passwordActionTestReader) LookupAPIKeyAuthorization(context.Context, TenantScope, uuid.UUID, string, []string) (APIKeyAuthorizationState, error) {
+	return APIKeyAuthorizationState{}, ErrAPIKeyNotFound
 }
 func (*passwordActionTestUnitOfWork) RotateRefreshSession(context.Context, RefreshSessionMutation) (RefreshSessionMutationResult, error) {
 	return RefreshSessionMutationResult{}, nil

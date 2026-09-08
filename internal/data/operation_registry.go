@@ -75,6 +75,8 @@ func (r *targetOperationRegistry) Lookup(operationID string) (biz.AuthorizationP
 	}
 	policy.Actions = append([]string(nil), policy.Actions...)
 	policy.Obligations = append([]biz.AuthorizationObligation(nil), policy.Obligations...)
+	policy.CredentialKinds = append([]biz.CredentialKind(nil), policy.CredentialKinds...)
+	policy.PrincipalKinds = append([]biz.PrincipalType(nil), policy.PrincipalKinds...)
 	return policy, true
 }
 

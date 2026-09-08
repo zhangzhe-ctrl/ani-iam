@@ -63,8 +63,8 @@ func TestSessionContinuityWithRealPostgresAndRedis(t *testing.T) {
 	usecase := biz.NewAuthenticationUsecase(
 		data.NewPostgresPasswordLoginReader(postgresData), acceptingIntegrationPasswordVerifier{}, throttle,
 		data.NewPostgresLoginUnitOfWork(postgresData), tokens, data.NewSecretGenerator(),
-		data.NewUUIDv7Generator(), clock,
-	)
+		data.NewUUIDv7Generator(), clock, allowingAPIKeyUsageObserver{})
+
 	login := func(t *testing.T, key string) biz.LoginResult {
 		t.Helper()
 		result, err := usecase.PasswordLogin(ctx, biz.PasswordLoginCommand{
@@ -164,8 +164,8 @@ func TestSessionContinuityWithRealPostgresAndRedis(t *testing.T) {
 				uuid.MustParse("0199c71e-e000-7002-9000-000000000002"),
 				duplicateAuditID,
 				uuid.MustParse("0199c71e-e000-7002-9000-000000000004"),
-			}}, clock,
-		)
+			}}, clock, allowingAPIKeyUsageObserver{})
+
 		_, err := rollbackUsecase.RefreshSession(ctx, biz.RefreshSessionCommand{
 			RefreshToken: initial.RefreshToken, CSRFToken: "csrf-rollback", Origin: "https://console.test.example",
 			IdempotencyKey: "dp2-08-refresh-audit-rollback",

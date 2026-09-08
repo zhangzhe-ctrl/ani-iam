@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -20,6 +21,7 @@ import (
 
 type authenticationUsecase interface {
 	PasswordLogin(context.Context, biz.PasswordLoginCommand) (biz.PasswordLoginResult, error)
+	ValidatePrincipal(context.Context, biz.ValidatePrincipalCommand) (biz.ValidatePrincipalResult, error)
 	RequestPasswordAction(context.Context, biz.RequestPasswordActionCommand) (biz.RequestPasswordActionResult, error)
 	CompletePasswordAction(context.Context, biz.CompletePasswordActionCommand) (biz.CompletePasswordActionResult, error)
 	RefreshSession(context.Context, biz.RefreshSessionCommand) (biz.RefreshSessionResult, error)
@@ -95,6 +97,48 @@ func NewAuthenticationService(authentication authenticationUsecase, oidc ...oidc
 		service.oidc = oidc[0]
 	}
 	return service
+}
+
+func (s *AuthenticationService) ValidatePrincipal(ctx context.Context, request *iamv1.ValidatePrincipalRequest) (*iamv1.ValidatePrincipalResponse, error) {
+	if request == nil {
+		return nil, invalidArgumentStatus("request", "principal validation request is required")
+	}
+	credential := ""
+	if request.GetCredential() != nil {
+		credential = request.GetCredential().GetValue()
+	}
+	credentialKind := "bearer"
+	if strings.HasPrefix(strings.TrimSpace(credential), "ani_") {
+		credentialKind = "api_key"
+	}
+	requestID, correlationID := principalValidationAuditIdentifiers(ctx)
+	result, err := s.authentication.ValidatePrincipal(ctx, biz.ValidatePrincipalCommand{
+		RawCredential: credential, OperationID: request.GetOperationId(), PolicyRevision: request.GetPolicyRevision(),
+		RequestID: requestID, CorrelationID: correlationID,
+	})
+	if err != nil {
+		tenantID := ""
+		if boundTenantID, ok := biz.TenantIDFromAuthenticationError(err); ok {
+			tenantID = boundTenantID.String()
+		}
+		return nil, mapIAMError(err, errorContext{
+			OperationID: request.GetOperationId(), CredentialKind: credentialKind,
+			Dependency: "authentication", ActualPolicyRevision: request.GetPolicyRevision(), TenantID: tenantID,
+		})
+	}
+	return &iamv1.ValidatePrincipalResponse{
+		Principal: trustedPrincipalToProto(result.Principal), DecisionId: result.DecisionID.String(), PolicyRevision: result.PolicyRevision,
+	}, nil
+}
+
+func principalValidationAuditIdentifiers(ctx context.Context) (string, string) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", ""
+	}
+	requestID, _ := exactlyOneMetadataValue(md, "x-request-id")
+	correlationID, _ := exactlyOneMetadataValue(md, "x-correlation-id")
+	return requestID, correlationID
 }
 
 func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv1.PasswordLoginRequest) (*iamv1.PasswordLoginResponse, error) {
@@ -402,6 +446,8 @@ type errorContext struct {
 	DecisionID             string
 	ExpectedPolicyRevision string
 	ActualPolicyRevision   string
+	ResourceType           string
+	ResourceID             string
 }
 
 func mapIAMError(err error, details errorContext) error {
@@ -445,10 +491,20 @@ func mapIAMError(err error, details errorContext) error {
 			"credential_kind": credentialKind,
 		})
 	}
-	if errors.Is(err, biz.ErrOIDCReauthenticationRequired) || errors.Is(err, biz.ErrOIDCIdentityConflict) || errors.Is(err, biz.ErrOIDCEmailConflict) {
+	if errors.Is(err, biz.ErrOIDCReauthenticationRequired) || errors.Is(err, biz.ErrOIDCIdentityConflict) || errors.Is(err, biz.ErrOIDCEmailConflict) || errors.Is(err, biz.ErrAuthenticationCredentialKindDenied) {
 		return newIAMStatus(codes.PermissionDenied, "PERMISSION_DENIED", "access is denied", map[string]string{
 			"operation_id": details.OperationID,
 			"decision_id":  "not-issued",
+		})
+	}
+	if errors.Is(err, biz.ErrServicePrincipalDisabled) {
+		decisionID := details.DecisionID
+		if decisionID == "" {
+			decisionID = "not-issued"
+		}
+		return newIAMStatus(codes.PermissionDenied, "PERMISSION_DENIED", "access is denied", map[string]string{
+			"operation_id": details.OperationID,
+			"decision_id":  decisionID,
 		})
 	}
 	if errors.Is(err, biz.ErrAuthorizationOperationUnregistered) {
@@ -467,14 +523,28 @@ func mapIAMError(err error, details errorContext) error {
 			"tenant_id": details.TenantID,
 		})
 	}
+	if errors.Is(err, biz.ErrServicePrincipalNotFound) {
+		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{
+			"resource_type": "service_principal",
+			"resource_id":   details.ResourceID,
+		})
+	}
+	if errors.Is(err, biz.ErrAPIKeyNotFound) {
+		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{
+			"resource_type": "api_key",
+			"resource_id":   details.ResourceID,
+		})
+	}
 	if errors.Is(err, biz.ErrMembershipNotFound) || errors.Is(err, biz.ErrRoleNotFound) || errors.Is(err, biz.ErrRoleBindingNotFound) {
 		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{
 			"operation_id": details.OperationID,
 		})
 	}
-	if errors.Is(err, biz.ErrVersionConflict) || errors.Is(err, biz.ErrRoleBindingConflict) {
+	if errors.Is(err, biz.ErrVersionConflict) || errors.Is(err, biz.ErrRoleBindingConflict) || errors.Is(err, biz.ErrServicePrincipalConflict) || errors.Is(err, biz.ErrAPIKeyConflict) {
 		return newIAMStatus(codes.Aborted, "VERSION_CONFLICT", "IAM resource version conflicts with current state", map[string]string{
-			"operation_id": details.OperationID,
+			"resource_id":      details.ResourceID,
+			"expected_version": "not_available",
+			"actual_version":   "not_available",
 		})
 	}
 	if errors.Is(err, biz.ErrLastTenantAdministrator) {
@@ -557,6 +627,12 @@ func invalidArgumentField(err error) string {
 		return "policy_revision"
 	case errors.Is(err, biz.ErrAuthorizationTargetRequired):
 		return "target.resource_id"
+	case errors.Is(err, biz.ErrServicePrincipalNameRequired):
+		return "name"
+	case errors.Is(err, biz.ErrServicePrincipalRolesRequired):
+		return "role_ids"
+	case errors.Is(err, biz.ErrAPIKeyExpiryInvalid):
+		return "expires_at"
 	default:
 		return ""
 	}

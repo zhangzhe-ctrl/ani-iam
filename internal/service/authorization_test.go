@@ -15,6 +15,12 @@ import (
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 )
 
+type allowingAuthorizationServiceAPIKeyUsageObserver struct{}
+
+func (allowingAuthorizationServiceAPIKeyUsageObserver) ObserveAPIKeyUse(context.Context, biz.TenantScope, uuid.UUID, time.Time) error {
+	return nil
+}
+
 func TestCheckPermissionMapsOneFrozenDecision(t *testing.T) {
 	tenantID := uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")
@@ -155,8 +161,8 @@ func TestCheckPermissionMapsPolicyMismatchToStableErrorInfo(t *testing.T) {
 		unusedServiceCredentialVerifier{},
 		unusedServiceAuthorizationReader{},
 		unusedServiceIDGenerator{},
-		serviceClock{},
-	)
+		serviceClock{}, allowingAuthorizationServiceAPIKeyUsageObserver{})
+
 	service := NewAuthorizationService(usecase)
 
 	_, err := service.CheckPermission(context.Background(), &iamv1.CheckPermissionRequest{
@@ -231,6 +237,24 @@ type unusedServiceAuthorizationReader struct{}
 
 func (unusedServiceAuthorizationReader) LookupAuthorization(context.Context, biz.TenantScope, biz.AuthorizationLookup) (biz.AuthorizationState, error) {
 	panic("authorization reader must not run on revision mismatch")
+}
+func (unusedServiceAuthorizationReader) RecordDeniedAuthorization(context.Context, biz.TenantScope, biz.SecurityAuditEvent) error {
+	panic("denied authorization audit must not run on revision mismatch")
+}
+func (unusedServiceAuthorizationReader) RecordUnboundAuthorization(context.Context, biz.SecurityAuditEvent) error {
+	panic("unbound authorization audit must not run on revision mismatch")
+}
+func (unusedServiceAuthorizationReader) GetAPIKeyBoundary(context.Context, uuid.UUID) (uuid.UUID, error) {
+	panic("API key boundary lookup must not run on revision mismatch")
+}
+func (unusedServiceAuthorizationReader) LookupAPIKeyCredential(context.Context, biz.TenantScope, uuid.UUID, string) (biz.APIKey, error) {
+	panic("API key credential lookup must not run on revision mismatch")
+}
+func (unusedServiceAuthorizationReader) LookupAPIKeyAuthorization(context.Context, biz.TenantScope, uuid.UUID, string, []string) (biz.APIKeyAuthorizationState, error) {
+	panic("API key authorization lookup must not run on revision mismatch")
+}
+func (unusedServiceAuthorizationReader) RecordAPIKeyUse(context.Context, biz.TenantScope, uuid.UUID, time.Time) error {
+	panic("API key use must not be recorded on revision mismatch")
 }
 
 type unusedServiceIDGenerator struct{}

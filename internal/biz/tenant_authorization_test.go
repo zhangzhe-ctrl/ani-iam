@@ -17,7 +17,7 @@ func TestTenantAuthorizationUpdateMembershipRejectsLastActiveHumanAdmin(t *testi
 	tx.membership = TenantMembership{ID: membershipID, PrincipalID: uuid.MustParse("0199c85a-1000-7001-9000-000000000003"), Status: MembershipStatusActive, Version: 4}
 	tx.activeHumanAdmin = true
 	tx.activeHumanAdminCount = 1
-	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{}, &fixedIDs{}, fixedAuthClock{})
+	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{}, &fixedIDs{}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
 	_, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{
 		MembershipID: membershipID, Status: MembershipStatusSuspended, ExpectedVersion: 4,
@@ -40,7 +40,7 @@ func TestTenantAuthorizationUnbindRejectsLastActiveHumanAdmin(t *testing.T) {
 	tx.role = TenantRole{ID: roleID, Code: TenantAdminRoleCode, System: true, SystemDefinitionVersion: 1, Version: 1}
 	tx.activeHumanAdmin = true
 	tx.activeHumanAdminCount = 1
-	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{}, &fixedIDs{}, fixedAuthClock{})
+	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{}, &fixedIDs{}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
 	_, err := usecase.UnbindRole(context.Background(), scope, UnbindTenantRoleCommand{
 		MembershipID: membershipID, RoleID: roleID, ExpectedMembershipVersion: 3,
@@ -62,7 +62,7 @@ func TestTenantAuthorizationBindRoleRejectsUncataloguedPermission(t *testing.T) 
 		ID: uuid.MustParse("0199c85a-1000-7001-9000-000000000022"), Code: "invalid-role", Version: 1,
 		Permissions: []Permission{{Scope: PermissionScopeTenant, Resource: "instances", Action: "invented"}},
 	}
-	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, denyAllPermissions{}, &fixedIDs{}, fixedAuthClock{})
+	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, denyAllPermissions{}, &fixedIDs{}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
 	_, err := usecase.BindRole(context.Background(), scope, BindTenantRoleCommand{
 		MembershipID: uuid.MustParse("0199c85a-1000-7001-9000-000000000023"), RoleID: tx.role.ID,
@@ -90,8 +90,7 @@ func TestTenantAuthorizationRoleBindingAuditsUseBindingVersion(t *testing.T) {
 	tx.bindingID = bindingID
 	usecase := NewTenantAuthorizationUsecase(
 		&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{},
-		&fixedIDs{values: []uuid.UUID{bindingID, bindAuditID, unbindAuditID}}, fixedAuthClock{},
-	)
+		&fixedIDs{values: []uuid.UUID{bindingID, bindAuditID, unbindAuditID}}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
 	if _, err := usecase.BindRole(context.Background(), scope, BindTenantRoleCommand{
 		MembershipID: membershipID, RoleID: roleID, ExpectedMembershipVersion: 7,
@@ -127,8 +126,7 @@ func TestTenantAuthorizationUpdateMembershipCommitsMutationAndAudit(t *testing.T
 	tx.membership = TenantMembership{ID: membershipID, PrincipalID: uuid.MustParse("0199c85a-1000-7001-9000-000000000034"), Status: MembershipStatusActive, Version: 7}
 	usecase := NewTenantAuthorizationUsecase(
 		&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{},
-		&fixedIDs{values: []uuid.UUID{auditID}}, fixedAuthClock{now: now},
-	)
+		&fixedIDs{values: []uuid.UUID{auditID}}, fixedAuthClock{now: now}, allowingAPIKeyCreationLimiter{})
 
 	result, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{
 		MembershipID: membershipID, Status: MembershipStatusSuspended, ExpectedVersion: 7,
@@ -142,6 +140,35 @@ func TestTenantAuthorizationUpdateMembershipCommitsMutationAndAudit(t *testing.T
 	}
 	if tx.membershipUpdates != 1 || len(tx.audits) != 1 || tx.audits[0].Action != AuditActionMembershipUpdated || tx.audits[0].TargetVersion != 8 {
 		t.Fatalf("mutation/audit = %d/%#v", tx.membershipUpdates, tx.audits)
+	}
+}
+
+func TestTenantAuthorizationRemoveServiceMembershipDisablesPrincipalAndRevokesKeysAtomically(t *testing.T) {
+	tenantID := uuid.MustParse("0199c85a-1100-7001-9000-000000000001")
+	membershipID := uuid.MustParse("0199c85a-1100-7001-9000-000000000002")
+	principalID := uuid.MustParse("0199c85a-1100-7001-9000-000000000003")
+	membershipAuditID := uuid.MustParse("0199c85a-1100-7001-9000-000000000004")
+	principalAuditID := uuid.MustParse("0199c85a-1100-7001-9000-000000000005")
+	scope, _ := NewTenantScope(tenantID)
+	tx := newFakeTenantAuthorizationTransaction()
+	tx.membership = TenantMembership{ID: membershipID, PrincipalID: principalID, Status: MembershipStatusActive, Version: 2}
+	tx.principalType = PrincipalTypeService
+	usecase := NewTenantAuthorizationUsecase(
+		&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{},
+		&fixedIDs{values: []uuid.UUID{membershipAuditID, principalAuditID}}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
+
+	_, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{
+		MembershipID: membershipID, Status: MembershipStatusRemoved, ExpectedVersion: 2,
+		Actor: validTenantAuthorizationActor(),
+	})
+	if err != nil {
+		t.Fatalf("UpdateMembership() error = %v", err)
+	}
+	if tx.servicePrincipalDisables != 1 || tx.revokedAPIKeys != 3 {
+		t.Fatalf("service principal disables/revoked keys = %d/%d", tx.servicePrincipalDisables, tx.revokedAPIKeys)
+	}
+	if len(tx.audits) != 2 || tx.audits[1].Action != AuditActionServicePrincipalDisabled || tx.audits[1].TargetID != principalID {
+		t.Fatalf("audits = %#v", tx.audits)
 	}
 }
 
@@ -161,18 +188,25 @@ func (u *fakeTenantAuthorizationUnitOfWork) WithinTenantAuthorization(ctx contex
 	return fn(ctx, u.tx)
 }
 
+func (u *fakeTenantAuthorizationUnitOfWork) WithinServicePrincipal(ctx context.Context, _ TenantScope, fn func(context.Context, ServicePrincipalTransaction) error) error {
+	return fn(ctx, &recordingServicePrincipalTransaction{})
+}
+
 type fakeTenantAuthorizationTransaction struct {
-	access                TenantAccess
-	membership            TenantMembership
-	role                  TenantRole
-	activeHumanAdmin      bool
-	activeHumanAdminCount int
-	guardLocks            int
-	membershipUpdates     int
-	binds                 int
-	unbinds               int
-	bindingID             uuid.UUID
-	audits                []SecurityAuditEvent
+	access                   TenantAccess
+	membership               TenantMembership
+	role                     TenantRole
+	activeHumanAdmin         bool
+	activeHumanAdminCount    int
+	guardLocks               int
+	membershipUpdates        int
+	binds                    int
+	unbinds                  int
+	bindingID                uuid.UUID
+	audits                   []SecurityAuditEvent
+	principalType            PrincipalType
+	servicePrincipalDisables int
+	revokedAPIKeys           int64
 }
 
 func newFakeTenantAuthorizationTransaction() *fakeTenantAuthorizationTransaction {
@@ -195,7 +229,11 @@ func (t *fakeTenantAuthorizationTransaction) GetMembership(context.Context, Tena
 	return t.membership, nil
 }
 func (t *fakeTenantAuthorizationTransaction) GetMembershipRecord(context.Context, TenantScope, uuid.UUID) (TenantMembershipRecord, error) {
-	return TenantMembershipRecord{Membership: t.membership, PrincipalType: PrincipalTypeHuman}, nil
+	principalType := t.principalType
+	if principalType == "" {
+		principalType = PrincipalTypeHuman
+	}
+	return TenantMembershipRecord{Membership: t.membership, PrincipalType: principalType}, nil
 }
 func (t *fakeTenantAuthorizationTransaction) UpdateMembershipStatus(_ context.Context, _ TenantScope, _ uuid.UUID, status MembershipStatus, _ int64, updatedAt time.Time) (TenantMembership, error) {
 	t.membershipUpdates++
@@ -228,6 +266,12 @@ func (t *fakeTenantAuthorizationTransaction) UnbindRole(_ context.Context, _ Ten
 func (t *fakeTenantAuthorizationTransaction) AppendAudit(_ context.Context, _ TenantScope, event SecurityAuditEvent) error {
 	t.audits = append(t.audits, event)
 	return nil
+}
+
+func (t *fakeTenantAuthorizationTransaction) DisableServicePrincipalForMembership(_ context.Context, _ TenantScope, _ uuid.UUID, updatedAt time.Time) (ServicePrincipal, int64, error) {
+	t.servicePrincipalDisables++
+	t.revokedAPIKeys = 3
+	return ServicePrincipal{ID: t.membership.PrincipalID, Status: PrincipalStatusDisabled, Version: 2, UpdatedAt: updatedAt}, t.revokedAPIKeys, nil
 }
 
 type allowAllTenantPermissions struct{}

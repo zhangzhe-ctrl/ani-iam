@@ -3,6 +3,8 @@ package data
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"strings"
@@ -22,6 +24,61 @@ type postgresPasswordLoginReader struct {
 
 func NewPostgresPasswordLoginReader(data *Data) biz.AuthenticationReader {
 	return &postgresPasswordLoginReader{data: data}
+}
+
+func (*postgresPasswordLoginReader) Revision() string {
+	return TargetPolicyRevision
+}
+
+func (*postgresPasswordLoginReader) Lookup(operationID string) (biz.AuthorizationPolicy, bool) {
+	registry := targetOperationRegistry{revision: TargetPolicyRevision, policies: generatedTargetPolicies}
+	return registry.Lookup(operationID)
+}
+
+func (r *postgresPasswordLoginReader) GetAPIKeyBoundary(ctx context.Context, keyID uuid.UUID) (uuid.UUID, error) {
+	return (&postgresTenantAuthorizationReader{data: r.data}).GetAPIKeyBoundary(ctx, keyID)
+}
+
+func (r *postgresPasswordLoginReader) LookupAuthorization(
+	ctx context.Context,
+	scope biz.TenantScope,
+	lookup biz.AuthorizationLookup,
+) (biz.AuthorizationState, error) {
+	return (&postgresAuthorizationReader{data: r.data}).LookupAuthorization(ctx, scope, lookup)
+}
+
+func (r *postgresPasswordLoginReader) RecordDeniedAuthorization(
+	ctx context.Context,
+	scope biz.TenantScope,
+	event biz.SecurityAuditEvent,
+) error {
+	return (&postgresAuthorizationReader{data: r.data}).RecordDeniedAuthorization(ctx, scope, event)
+}
+
+func (r *postgresPasswordLoginReader) RecordUnboundAuthorization(
+	ctx context.Context,
+	event biz.SecurityAuditEvent,
+) error {
+	return (&postgresAuthorizationReader{data: r.data}).RecordUnboundAuthorization(ctx, event)
+}
+
+func (r *postgresPasswordLoginReader) LookupAPIKeyCredential(
+	ctx context.Context,
+	scope biz.TenantScope,
+	keyID uuid.UUID,
+	rawCredential string,
+) (biz.APIKey, error) {
+	return (&postgresAuthorizationReader{data: r.data}).LookupAPIKeyCredential(ctx, scope, keyID, rawCredential)
+}
+
+func (r *postgresPasswordLoginReader) LookupAPIKeyAuthorization(
+	ctx context.Context,
+	scope biz.TenantScope,
+	keyID uuid.UUID,
+	resource string,
+	actions []string,
+) (biz.APIKeyAuthorizationState, error) {
+	return (&postgresAuthorizationReader{data: r.data}).LookupAPIKeyAuthorization(ctx, scope, keyID, resource, actions)
 }
 
 func (r *postgresPasswordLoginReader) LookupPasswordLogin(
@@ -99,6 +156,29 @@ type postgresLoginUnitOfWork struct {
 
 func NewPostgresLoginUnitOfWork(data *Data) biz.AuthenticationUnitOfWork {
 	return &postgresLoginUnitOfWork{data: data}
+}
+
+func (u *postgresLoginUnitOfWork) RecordTenantPrincipalValidation(
+	ctx context.Context,
+	scope biz.TenantScope,
+	event biz.SecurityAuditEvent,
+) error {
+	tenantID, err := scope.TenantID()
+	if err != nil {
+		return err
+	}
+	queries := sqlcgen.New(u.data.pool)
+	if event.AuthenticationMethod == biz.AuditAuthenticationMethodAnonymous {
+		return appendAnonymousTenantAudit(ctx, queries, tenantID, event)
+	}
+	return (securityAuditRepository{queries: queries, tenantID: tenantID}).Append(ctx, scope, event)
+}
+
+func (u *postgresLoginUnitOfWork) RecordUnboundPrincipalValidation(
+	ctx context.Context,
+	event biz.SecurityAuditEvent,
+) error {
+	return appendAnonymousPrincipalAudit(ctx, sqlcgen.New(u.data.pool), event)
 }
 
 func (u *postgresLoginUnitOfWork) CommitLogin(
@@ -707,8 +787,131 @@ func (r *postgresAuthorizationReader) LookupAuthorization(
 	}, nil
 }
 
+func (r *postgresAuthorizationReader) RecordDeniedAuthorization(
+	ctx context.Context,
+	scope biz.TenantScope,
+	event biz.SecurityAuditEvent,
+) error {
+	tenantID, err := scope.TenantID()
+	if err != nil {
+		return err
+	}
+	queries := sqlcgen.New(r.data.pool)
+	if event.AuthenticationMethod == biz.AuditAuthenticationMethodAnonymous {
+		return appendAnonymousTenantAudit(ctx, queries, tenantID, event)
+	}
+	return (securityAuditRepository{queries: queries, tenantID: tenantID}).Append(ctx, scope, event)
+}
+
+func (r *postgresAuthorizationReader) RecordUnboundAuthorization(
+	ctx context.Context,
+	event biz.SecurityAuditEvent,
+) error {
+	return appendAnonymousPrincipalAudit(ctx, sqlcgen.New(r.data.pool), event)
+}
+
+func (r *postgresAuthorizationReader) LookupAPIKeyCredential(
+	ctx context.Context,
+	scope biz.TenantScope,
+	keyID uuid.UUID,
+	rawCredential string,
+) (biz.APIKey, error) {
+	tenantID, err := scope.TenantID()
+	if err != nil {
+		return biz.APIKey{}, err
+	}
+	if keyID == uuid.Nil || strings.TrimSpace(rawCredential) == "" {
+		return biz.APIKey{}, biz.ErrInvalidPersistenceState
+	}
+	row, err := sqlcgen.New(r.data.pool).LookupAPIKeyCredential(ctx, sqlcgen.LookupAPIKeyCredentialParams{
+		TenantID: tenantID,
+		KeyID:    keyID,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.APIKey{}, biz.ErrAPIKeyNotFound
+	}
+	if err != nil {
+		return biz.APIKey{}, mapPostgresError("lookup API key credential", err, nil)
+	}
+	apiKey, err := apiKeyFromValues(
+		row.KeyID, row.PrincipalID, row.Status, row.DisplayPrefix, row.SecretDigest,
+		row.NeverExpires, row.ExpiresAt, row.CreatedAt, row.LastUsedAt, row.RevokedAt, row.Version,
+	)
+	if err != nil {
+		return biz.APIKey{}, err
+	}
+	digest := sha256.Sum256([]byte(rawCredential))
+	if subtle.ConstantTimeCompare(apiKey.Digest[:], digest[:]) != 1 {
+		return biz.APIKey{}, biz.ErrAPIKeyNotFound
+	}
+	apiKey.Digest = [sha256.Size]byte{}
+	return apiKey, nil
+}
+
+func (r *postgresAuthorizationReader) LookupAPIKeyAuthorization(
+	ctx context.Context,
+	scope biz.TenantScope,
+	keyID uuid.UUID,
+	resource string,
+	actions []string,
+) (biz.APIKeyAuthorizationState, error) {
+	tenantID, err := scope.TenantID()
+	if err != nil {
+		return biz.APIKeyAuthorizationState{}, err
+	}
+	if keyID == uuid.Nil || strings.TrimSpace(resource) == "" || len(actions) == 0 {
+		return biz.APIKeyAuthorizationState{}, biz.ErrInvalidPersistenceState
+	}
+	queries := sqlcgen.New(r.data.pool)
+	if _, err := queries.GetTenantAccessStatusForAuthorization(ctx, sqlcgen.GetTenantAccessStatusForAuthorizationParams{TenantID: tenantID}); errors.Is(err, pgx.ErrNoRows) {
+		return biz.APIKeyAuthorizationState{}, biz.ErrTenantIAMNotReady
+	} else if err != nil {
+		return biz.APIKeyAuthorizationState{}, mapPostgresError("get tenant access for API key authorization", err, nil)
+	}
+	lifecycleFresh, err := queries.GetTenantLifecycleFreshnessForAuthorization(ctx, sqlcgen.GetTenantLifecycleFreshnessForAuthorizationParams{TenantID: tenantID})
+	if errors.Is(err, pgx.ErrNoRows) || (err == nil && !lifecycleFresh) {
+		return biz.APIKeyAuthorizationState{}, biz.ErrTenantLifecycleStale
+	}
+	if err != nil {
+		return biz.APIKeyAuthorizationState{}, mapPostgresError("get tenant lifecycle for API key authorization", err, nil)
+	}
+	row, err := queries.LookupAPIKeyAuthorization(ctx, sqlcgen.LookupAPIKeyAuthorizationParams{
+		Actions: append([]string(nil), actions...), TenantID: tenantID,
+		Resource: strings.TrimSpace(resource), KeyID: keyID,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return biz.APIKeyAuthorizationState{}, biz.ErrAPIKeyNotFound
+	}
+	if err != nil {
+		return biz.APIKeyAuthorizationState{}, mapPostgresError("lookup API key authorization", err, nil)
+	}
+	if !row.LifecycleFresh {
+		return biz.APIKeyAuthorizationState{}, biz.ErrTenantLifecycleStale
+	}
+	apiKey, err := apiKeyFromValues(
+		row.KeyID, row.PrincipalID, row.ApiKeyStatus, row.DisplayPrefix, row.SecretDigest,
+		row.NeverExpires, row.ExpiresAt, row.CreatedAt, row.LastUsedAt, row.RevokedAt, row.ApiKeyVersion,
+	)
+	if err != nil {
+		return biz.APIKeyAuthorizationState{}, err
+	}
+	apiKey.Digest = [sha256.Size]byte{}
+	return biz.APIKeyAuthorizationState{
+		APIKey: apiKey, TenantID: tenantID, PrincipalStatus: biz.PrincipalStatus(row.PrincipalStatus),
+		MembershipStatus: biz.MembershipStatus(row.MembershipStatus), TenantAccess: biz.TenantAccessStatus(row.TenantAccessStatus),
+		Lifecycle: biz.TenantLifecycleStatus(row.LifecycleStatus), LifecycleFresh: row.LifecycleFresh,
+		PermissionAllowed: row.PermissionAllowed,
+	}, nil
+}
+
+func (r *postgresAuthorizationReader) GetAPIKeyBoundary(ctx context.Context, keyID uuid.UUID) (uuid.UUID, error) {
+	return (&postgresTenantAuthorizationReader{data: r.data}).GetAPIKeyBoundary(ctx, keyID)
+}
+
 var (
-	_ biz.AuthenticationReader     = (*postgresPasswordLoginReader)(nil)
-	_ biz.AuthenticationUnitOfWork = (*postgresLoginUnitOfWork)(nil)
-	_ biz.AuthorizationReader      = (*postgresAuthorizationReader)(nil)
+	_ biz.AuthenticationReader      = (*postgresPasswordLoginReader)(nil)
+	_ biz.PrincipalValidationReader = (*postgresPasswordLoginReader)(nil)
+	_ biz.AuthenticationUnitOfWork  = (*postgresLoginUnitOfWork)(nil)
+	_ biz.AuthorizationReader       = (*postgresAuthorizationReader)(nil)
+	_ biz.APIKeyAuthorizationReader = (*postgresAuthorizationReader)(nil)
 )

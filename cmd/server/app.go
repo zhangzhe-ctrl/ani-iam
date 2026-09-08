@@ -23,10 +23,160 @@ import (
 	"github.com/zhangzhe-ctrl/ani-iam/internal/service"
 )
 
-const startupDependencyTimeout = 5 * time.Second
+const (
+	startupDependencyTimeout  = 5 * time.Second
+	apiKeyUsageBatchSize      = 256
+	apiKeyMaintenanceInterval = biz.APIKeyUsageMaxLag / 15
+	apiKeyMaintenanceTimeout  = 5 * time.Second
+)
 
 type passwordActionNotificationDispatcher interface {
 	DispatchNext(context.Context) (bool, error)
+}
+
+type apiKeyUsageFlusher interface {
+	Flush(context.Context) (int, error)
+}
+
+type apiKeyOperationalSnapshotSink interface {
+	SetAPIKeyOperationalSnapshot(biz.APIKeyOperationalSnapshot) error
+}
+
+type apiKeyMaintenanceWorker struct {
+	flusher             apiKeyUsageFlusher
+	snapshotReader      biz.APIKeyOperationalSnapshotReader
+	snapshotSink        apiKeyOperationalSnapshotSink
+	clock               biz.Clock
+	maintenanceInterval time.Duration
+	operationTimeout    time.Duration
+	logger              *slog.Logger
+	context             context.Context
+	cancel              context.CancelFunc
+	done                chan struct{}
+	mu                  sync.Mutex
+	started             bool
+}
+
+func newAPIKeyMaintenanceWorker(
+	flusher apiKeyUsageFlusher,
+	snapshotReader biz.APIKeyOperationalSnapshotReader,
+	snapshotSink apiKeyOperationalSnapshotSink,
+	clock biz.Clock,
+	maintenanceInterval time.Duration,
+	operationTimeout time.Duration,
+	logger *slog.Logger,
+) (*apiKeyMaintenanceWorker, error) {
+	if flusher == nil || snapshotReader == nil || snapshotSink == nil || clock == nil ||
+		maintenanceInterval <= 0 || operationTimeout <= 0 || logger == nil {
+		return nil, errors.New("API key maintenance worker configuration is required")
+	}
+	workerContext, cancel := context.WithCancel(context.Background())
+	return &apiKeyMaintenanceWorker{
+		flusher:             flusher,
+		snapshotReader:      snapshotReader,
+		snapshotSink:        snapshotSink,
+		clock:               clock,
+		maintenanceInterval: maintenanceInterval,
+		operationTimeout:    operationTimeout,
+		logger:              logger,
+		context:             workerContext,
+		cancel:              cancel,
+		done:                make(chan struct{}),
+	}, nil
+}
+
+func (w *apiKeyMaintenanceWorker) Start(context.Context) error {
+	w.mu.Lock()
+	if w.started {
+		w.mu.Unlock()
+		return errors.New("API key maintenance worker already started")
+	}
+	w.started = true
+	w.mu.Unlock()
+	defer close(w.done)
+
+	for {
+		select {
+		case <-w.context.Done():
+			return nil
+		default:
+		}
+		w.maintain()
+		timer := time.NewTimer(w.maintenanceInterval)
+		select {
+		case <-w.context.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return nil
+		case <-timer.C:
+		}
+	}
+}
+
+func (w *apiKeyMaintenanceWorker) maintain() {
+	flushContext, cancelFlush := context.WithTimeout(w.context, w.operationTimeout)
+	w.flushUsage(flushContext)
+	cancelFlush()
+
+	snapshotContext, cancelSnapshot := context.WithTimeout(w.context, w.operationTimeout)
+	defer cancelSnapshot()
+	snapshot, err := w.snapshotReader.GetAPIKeyOperationalSnapshot(snapshotContext, w.clock.Now().UTC())
+	if err != nil {
+		if !errors.Is(err, context.Canceled) {
+			w.logger.Warn("API key operational snapshot refresh failed")
+		}
+		return
+	}
+	if err := w.snapshotSink.SetAPIKeyOperationalSnapshot(snapshot); err != nil {
+		w.logger.Warn("API key operational snapshot publication failed")
+	}
+}
+
+func (w *apiKeyMaintenanceWorker) flushUsage(ctx context.Context) {
+	// BatchSize bounds each PostgreSQL pass, not the amount drained per
+	// lifecycle iteration. Continue until empty so sustained traffic cannot
+	// turn the batch size into an artificial per-minute throughput ceiling.
+	for {
+		processed, err := w.flusher.Flush(ctx)
+		if err != nil {
+			if !errors.Is(err, context.Canceled) {
+				w.logger.Warn("API key usage flush failed")
+			}
+			return
+		}
+		if processed == 0 {
+			return
+		}
+		if processed < 0 {
+			w.logger.Warn("API key usage flush returned invalid state")
+			return
+		}
+		select {
+		case <-ctx.Done():
+			if !errors.Is(ctx.Err(), context.Canceled) {
+				w.logger.Warn("API key usage flush deadline exceeded")
+			}
+			return
+		default:
+		}
+	}
+}
+
+func (w *apiKeyMaintenanceWorker) Stop(ctx context.Context) error {
+	w.cancel()
+	w.mu.Lock()
+	started := w.started
+	w.mu.Unlock()
+	if !started {
+		return nil
+	}
+	select {
+	case <-w.done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 type passwordActionNotificationWorker struct {
@@ -175,7 +325,11 @@ func newTenantIAMAdminRuntime(
 	expectedPolicyRevision string,
 	ids biz.IDGenerator,
 	clock biz.Clock,
+	apiKeyCreationLimiter biz.APIKeyCreationLimiter,
 ) (*service.IAMAdminService, error) {
+	if apiKeyCreationLimiter == nil {
+		return nil, errors.New("API key creation limiter is required")
+	}
 	permissionCatalog, err := data.NewTargetPermissionCatalog(expectedPolicyRevision)
 	if err != nil {
 		return nil, fmt.Errorf("configure target permission catalog: %w", err)
@@ -185,6 +339,7 @@ func newTenantIAMAdminRuntime(
 		permissionCatalog,
 		ids,
 		clock,
+		apiKeyCreationLimiter,
 	)
 	return service.NewTenantIAMAdminService(
 		data.NewPostgresTenantAuthorizationReader(postgresData),
@@ -275,7 +430,24 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	postgresData := data.NewData(postgresPool)
 	ids := data.NewUUIDv7Generator()
 	secrets := data.NewSecretGenerator()
-	adminService, err := newTenantIAMAdminRuntime(postgresData, runtime.PolicyRevision, ids, clock)
+	apiKeyCreationLimiter, err := data.NewRedisAPIKeyCreationLimiter(redisClient, data.RedisAPIKeyCreationLimiterConfig{
+		Namespace: runtime.Redis.Namespace,
+		Limit:     biz.APIKeyCreationRateLimit,
+		Window:    biz.APIKeyCreationRateWindow,
+	})
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, fmt.Errorf("configure Redis API key creation limiter: %w", err)
+	}
+	apiKeyUsageAggregator, err := data.NewRedisAPIKeyUsageAggregator(redisClient, postgresData, data.RedisAPIKeyUsageConfig{
+		Namespace: runtime.Redis.Namespace,
+		BatchSize: apiKeyUsageBatchSize,
+	})
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, fmt.Errorf("configure Redis API key usage aggregator: %w", err)
+	}
+	adminService, err := newTenantIAMAdminRuntime(postgresData, runtime.PolicyRevision, ids, clock, apiKeyCreationLimiter)
 	if err != nil {
 		_ = closeRuntime(context.Background())
 		return nil, err
@@ -326,6 +498,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		secrets,
 		ids,
 		clock,
+		apiKeyUsageAggregator,
 	)
 	authorization := biz.NewAuthorizationUsecase(
 		registry,
@@ -333,6 +506,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		data.NewPostgresAuthorizationReader(postgresData),
 		ids,
 		clock,
+		apiKeyUsageAggregator,
 	)
 	notificationWorker, notificationClient, err := newPasswordActionNotificationRuntime(
 		runtime.Notification,
@@ -358,8 +532,24 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		_ = closeRuntime(context.Background())
 		return nil, err
 	}
+	apiKeyMaintenanceWorker, err := newAPIKeyMaintenanceWorker(
+		apiKeyUsageAggregator,
+		data.NewPostgresAPIKeyOperationalSnapshotReader(postgresData),
+		observability,
+		clock,
+		apiKeyMaintenanceInterval,
+		apiKeyMaintenanceTimeout,
+		logger,
+	)
+	if err != nil {
+		_ = observability.Shutdown(context.Background())
+		_ = closeNotification(context.Background())
+		_ = closeRuntime(context.Background())
+		return nil, fmt.Errorf("configure API key maintenance worker: %w", err)
+	}
 	workloadIdentity, err := server.NewGatewayWorkloadIdentityMiddleware(bc.Server.Grpc.Tls.GatewayClientDnsName)
 	if err != nil {
+		_ = observability.Shutdown(context.Background())
 		_ = closeNotification(context.Background())
 		_ = closeRuntime(context.Background())
 		return nil, fmt.Errorf("configure Gateway workload identity: %w", err)
@@ -374,6 +564,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		middlewares...,
 	)
 	if err != nil {
+		_ = observability.Shutdown(context.Background())
 		_ = closeNotification(context.Background())
 		_ = closeRuntime(context.Background())
 		return nil, err
@@ -386,6 +577,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		readiness,
 		observability,
 		notificationWorker,
+		apiKeyMaintenanceWorker,
 		closeNotification,
 		closeRuntime,
 		bc.Server.ShutdownTimeout.AsDuration(),
@@ -399,6 +591,7 @@ func newApp(
 	readiness *server.Readiness,
 	observability *server.Observability,
 	notificationWorker *passwordActionNotificationWorker,
+	apiKeyMaintenanceWorker *apiKeyMaintenanceWorker,
 	closeNotification func(context.Context) error,
 	closeRuntime func(context.Context) error,
 	stopTimeout time.Duration,
@@ -409,7 +602,7 @@ func newApp(
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{"runtime.profile": conf.IsolatedProfile}),
 		kratos.Logger(logger),
-		kratos.Server(grpcServer, adminServer, notificationWorker),
+		kratos.Server(grpcServer, adminServer, notificationWorker, apiKeyMaintenanceWorker),
 		kratos.AfterStart(func(context.Context) error {
 			readiness.Set(true)
 			return nil

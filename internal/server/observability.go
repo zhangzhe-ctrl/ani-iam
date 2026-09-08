@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sync/atomic"
 
 	kratosmetrics "github.com/go-kratos/kratos/contrib/otel/v3/metrics"
 	kratostracing "github.com/go-kratos/kratos/contrib/otel/v3/tracing"
@@ -22,14 +23,19 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	traceSdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
+
+	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 )
 
 type Observability struct {
-	registry       *prometheus.Registry
-	meterProvider  *metricSdk.MeterProvider
-	tracerProvider *traceSdk.TracerProvider
-	requests       metric.Int64Counter
-	seconds        metric.Float64Histogram
+	registry                       *prometheus.Registry
+	meterProvider                  *metricSdk.MeterProvider
+	tracerProvider                 *traceSdk.TracerProvider
+	requests                       metric.Int64Counter
+	seconds                        metric.Float64Histogram
+	apiKeyStaleNonExpiring         atomic.Int64
+	apiKeyUnusualServicePrincipals atomic.Int64
+	apiKeySnapshotTimestamp        atomic.Int64
 }
 
 func NewObservability(name, version string, readiness *Readiness) (*Observability, error) {
@@ -76,6 +82,13 @@ func NewObservability(name, version string, readiness *Readiness) (*Observabilit
 	if err != nil {
 		return nil, fmt.Errorf("create Kratos server latency histogram: %w", err)
 	}
+	observability := &Observability{
+		registry:       registry,
+		meterProvider:  meterProvider,
+		tracerProvider: tracerProvider,
+		requests:       requests,
+		seconds:        seconds,
+	}
 	if _, err := meter.Int64ObservableGauge(
 		"ani_iam_runtime_ready",
 		metric.WithDescription("Whether the isolated CP0 runtime is ready to receive traffic."),
@@ -90,6 +103,36 @@ func NewObservability(name, version string, readiness *Readiness) (*Observabilit
 	); err != nil {
 		return nil, fmt.Errorf("create readiness gauge: %w", err)
 	}
+	if _, err := meter.Int64ObservableGauge(
+		"ani_iam_api_key_stale_non_expiring_count",
+		metric.WithDescription("Number of active non-expiring API keys not used within the stale threshold."),
+		metric.WithInt64Callback(func(_ context.Context, observer metric.Int64Observer) error {
+			observer.Observe(observability.apiKeyStaleNonExpiring.Load())
+			return nil
+		}),
+	); err != nil {
+		return nil, fmt.Errorf("create stale non-expiring API key gauge: %w", err)
+	}
+	if _, err := meter.Int64ObservableGauge(
+		"ani_iam_service_principal_unusual_active_api_keys_count",
+		metric.WithDescription("Number of service principals with an unusual active API key count."),
+		metric.WithInt64Callback(func(_ context.Context, observer metric.Int64Observer) error {
+			observer.Observe(observability.apiKeyUnusualServicePrincipals.Load())
+			return nil
+		}),
+	); err != nil {
+		return nil, fmt.Errorf("create unusual active API key gauge: %w", err)
+	}
+	if _, err := meter.Int64ObservableGauge(
+		"ani_iam_api_key_operational_snapshot_timestamp_seconds",
+		metric.WithDescription("Unix timestamp of the latest successful API key operational snapshot; zero means unavailable."),
+		metric.WithInt64Callback(func(_ context.Context, observer metric.Int64Observer) error {
+			observer.Observe(observability.apiKeySnapshotTimestamp.Load())
+			return nil
+		}),
+	); err != nil {
+		return nil, fmt.Errorf("create API key operational snapshot timestamp gauge: %w", err)
+	}
 	otel.SetMeterProvider(meterProvider)
 	otel.SetTracerProvider(tracerProvider)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
@@ -97,13 +140,17 @@ func NewObservability(name, version string, readiness *Readiness) (*Observabilit
 		propagation.Baggage{},
 	))
 
-	return &Observability{
-		registry:       registry,
-		meterProvider:  meterProvider,
-		tracerProvider: tracerProvider,
-		requests:       requests,
-		seconds:        seconds,
-	}, nil
+	return observability, nil
+}
+
+func (o *Observability) SetAPIKeyOperationalSnapshot(snapshot biz.APIKeyOperationalSnapshot) error {
+	if snapshot.StaleNonExpiringCount < 0 || snapshot.UnusualServicePrincipalCount < 0 || snapshot.ObservedAt.IsZero() {
+		return errors.New("API key operational snapshot is invalid")
+	}
+	o.apiKeyStaleNonExpiring.Store(snapshot.StaleNonExpiringCount)
+	o.apiKeyUnusualServicePrincipals.Store(snapshot.UnusualServicePrincipalCount)
+	o.apiKeySnapshotTimestamp.Store(snapshot.ObservedAt.UTC().Unix())
+	return nil
 }
 
 func (o *Observability) Gatherer() prometheus.Gatherer {

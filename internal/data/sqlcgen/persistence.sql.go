@@ -566,6 +566,51 @@ func (q *Queries) CountActiveHumanTenantAdministrators(ctx context.Context, arg 
 	return count, err
 }
 
+const createAPIKey = `-- name: CreateAPIKey :exec
+INSERT INTO api_keys (
+    tenant_id, key_id, principal_id, status, display_prefix, secret_digest,
+    never_expires, expires_at, created_at, last_used_at, revoked_at, version
+) VALUES (
+    $1, $2, $3, $4,
+    $5, $6, $7,
+    $8, $9, $10,
+    $11, $12
+)
+`
+
+type CreateAPIKeyParams struct {
+	TenantID      uuid.UUID
+	KeyID         uuid.UUID
+	PrincipalID   uuid.UUID
+	Status        string
+	DisplayPrefix string
+	SecretDigest  []byte
+	NeverExpires  bool
+	ExpiresAt     pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+	LastUsedAt    pgtype.Timestamptz
+	RevokedAt     pgtype.Timestamptz
+	Version       int64
+}
+
+func (q *Queries) CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error {
+	_, err := q.db.Exec(ctx, createAPIKey,
+		arg.TenantID,
+		arg.KeyID,
+		arg.PrincipalID,
+		arg.Status,
+		arg.DisplayPrefix,
+		arg.SecretDigest,
+		arg.NeverExpires,
+		arg.ExpiresAt,
+		arg.CreatedAt,
+		arg.LastUsedAt,
+		arg.RevokedAt,
+		arg.Version,
+	)
+	return err
+}
+
 const createKnownPasswordActionRequest = `-- name: CreateKnownPasswordActionRequest :exec
 INSERT INTO password_action_requests (
     operation_id, account_digest, audience, principal_id, purpose,
@@ -843,6 +888,70 @@ func (q *Queries) CreateRefreshTokenFamily(ctx context.Context, arg CreateRefres
 	return err
 }
 
+const createServicePrincipalBase = `-- name: CreateServicePrincipalBase :exec
+INSERT INTO principals (
+    id, principal_type, status, version, created_at, updated_at
+) VALUES (
+    $1, 'service', $2, $3,
+    $4, $5
+)
+`
+
+type CreateServicePrincipalBaseParams struct {
+	ID        uuid.UUID
+	Status    string
+	Version   int64
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) CreateServicePrincipalBase(ctx context.Context, arg CreateServicePrincipalBaseParams) error {
+	_, err := q.db.Exec(ctx, createServicePrincipalBase,
+		arg.ID,
+		arg.Status,
+		arg.Version,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
+const createServicePrincipalProfile = `-- name: CreateServicePrincipalProfile :exec
+INSERT INTO service_principals (
+    principal_id, tenant_id, membership_id, name, normalized_name,
+    version, created_at, updated_at
+) VALUES (
+    $1, $2, $3,
+    $4, $5, $6,
+    $7, $8
+)
+`
+
+type CreateServicePrincipalProfileParams struct {
+	PrincipalID    uuid.UUID
+	TenantID       uuid.UUID
+	MembershipID   uuid.UUID
+	Name           string
+	NormalizedName string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) CreateServicePrincipalProfile(ctx context.Context, arg CreateServicePrincipalProfileParams) error {
+	_, err := q.db.Exec(ctx, createServicePrincipalProfile,
+		arg.PrincipalID,
+		arg.TenantID,
+		arg.MembershipID,
+		arg.Name,
+		arg.NormalizedName,
+		arg.Version,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
 const createSession = `-- name: CreateSession :exec
 INSERT INTO sessions (
     id, principal_id, audience, status, authn_methods, device_name, idle_expires_at,
@@ -1065,6 +1174,150 @@ func (q *Queries) DeleteTenantRoleBinding(ctx context.Context, arg DeleteTenantR
 	return i, err
 }
 
+const getAPIKeyBoundary = `-- name: GetAPIKeyBoundary :one
+SELECT tenant_id
+FROM api_keys
+WHERE key_id = $1
+`
+
+type GetAPIKeyBoundaryParams struct {
+	KeyID uuid.UUID
+}
+
+func (q *Queries) GetAPIKeyBoundary(ctx context.Context, arg GetAPIKeyBoundaryParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getAPIKeyBoundary, arg.KeyID)
+	var tenant_id uuid.UUID
+	err := row.Scan(&tenant_id)
+	return tenant_id, err
+}
+
+const getAPIKeyForUpdate = `-- name: GetAPIKeyForUpdate :one
+SELECT key_id, principal_id, status, display_prefix, secret_digest,
+       never_expires, expires_at, created_at, last_used_at, revoked_at, version
+FROM api_keys
+WHERE tenant_id = $1
+  AND key_id = $2
+FOR UPDATE
+`
+
+type GetAPIKeyForUpdateParams struct {
+	TenantID uuid.UUID
+	KeyID    uuid.UUID
+}
+
+type GetAPIKeyForUpdateRow struct {
+	KeyID         uuid.UUID
+	PrincipalID   uuid.UUID
+	Status        string
+	DisplayPrefix string
+	SecretDigest  []byte
+	NeverExpires  bool
+	ExpiresAt     pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+	LastUsedAt    pgtype.Timestamptz
+	RevokedAt     pgtype.Timestamptz
+	Version       int64
+}
+
+func (q *Queries) GetAPIKeyForUpdate(ctx context.Context, arg GetAPIKeyForUpdateParams) (GetAPIKeyForUpdateRow, error) {
+	row := q.db.QueryRow(ctx, getAPIKeyForUpdate, arg.TenantID, arg.KeyID)
+	var i GetAPIKeyForUpdateRow
+	err := row.Scan(
+		&i.KeyID,
+		&i.PrincipalID,
+		&i.Status,
+		&i.DisplayPrefix,
+		&i.SecretDigest,
+		&i.NeverExpires,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.LastUsedAt,
+		&i.RevokedAt,
+		&i.Version,
+	)
+	return i, err
+}
+
+const getAPIKeyOperationalSignals = `-- name: GetAPIKeyOperationalSignals :one
+SELECT
+    count(*) FILTER (
+        WHERE status = 'active'
+          AND (never_expires OR expires_at > $1)
+    ) AS active_count,
+    count(*) FILTER (
+        WHERE status = 'active'
+          AND never_expires
+          AND COALESCE(last_used_at, created_at) <= $2
+    ) AS stale_non_expiring_count
+FROM api_keys
+WHERE tenant_id = $3
+  AND principal_id = $4
+`
+
+type GetAPIKeyOperationalSignalsParams struct {
+	ObservedAt  pgtype.Timestamptz
+	StaleBefore pgtype.Timestamptz
+	TenantID    uuid.UUID
+	PrincipalID uuid.UUID
+}
+
+type GetAPIKeyOperationalSignalsRow struct {
+	ActiveCount           int64
+	StaleNonExpiringCount int64
+}
+
+func (q *Queries) GetAPIKeyOperationalSignals(ctx context.Context, arg GetAPIKeyOperationalSignalsParams) (GetAPIKeyOperationalSignalsRow, error) {
+	row := q.db.QueryRow(ctx, getAPIKeyOperationalSignals,
+		arg.ObservedAt,
+		arg.StaleBefore,
+		arg.TenantID,
+		arg.PrincipalID,
+	)
+	var i GetAPIKeyOperationalSignalsRow
+	err := row.Scan(&i.ActiveCount, &i.StaleNonExpiringCount)
+	return i, err
+}
+
+const getAPIKeyOperationalSnapshot = `-- name: GetAPIKeyOperationalSnapshot :one
+SELECT
+    (
+        SELECT count(*)
+        FROM api_keys AS stale_key
+        WHERE stale_key.status = 'active'
+          AND stale_key.never_expires
+          AND COALESCE(stale_key.last_used_at, stale_key.created_at) <= $1
+    ) AS stale_non_expiring_count,
+    (
+        SELECT count(*)
+        FROM (
+            SELECT active_key.tenant_id, active_key.principal_id
+            FROM api_keys AS active_key
+            WHERE active_key.status = 'active'
+              AND (active_key.never_expires OR active_key.expires_at > $2)
+            GROUP BY active_key.tenant_id, active_key.principal_id
+            HAVING count(*) >= $3
+        ) AS unusual_principals
+    ) AS unusual_service_principal_count
+`
+
+type GetAPIKeyOperationalSnapshotParams struct {
+	StaleBefore                 pgtype.Timestamptz
+	ObservedAt                  pgtype.Timestamptz
+	UnusualActiveCountThreshold interface{}
+}
+
+type GetAPIKeyOperationalSnapshotRow struct {
+	StaleNonExpiringCount        int64
+	UnusualServicePrincipalCount int64
+}
+
+func (q *Queries) GetAPIKeyOperationalSnapshot(ctx context.Context, arg GetAPIKeyOperationalSnapshotParams) (GetAPIKeyOperationalSnapshotRow, error) {
+	row := q.db.QueryRow(ctx, getAPIKeyOperationalSnapshot, arg.StaleBefore, arg.ObservedAt, arg.UnusualActiveCountThreshold)
+	var i GetAPIKeyOperationalSnapshotRow
+	err := row.Scan(&i.StaleNonExpiringCount, &i.UnusualServicePrincipalCount)
+	return i, err
+}
+
 const getPasswordActionCompletionByIdempotencyKey = `-- name: GetPasswordActionCompletionByIdempotencyKey :one
 SELECT operation_id, principal_id, credential_version
 FROM password_action_completions
@@ -1115,6 +1368,151 @@ func (q *Queries) GetPasswordActionRequestByIdempotencyKey(ctx context.Context, 
 		&i.AccountDigest,
 		&i.Audience,
 		&i.ExpiresAt,
+	)
+	return i, err
+}
+
+const getServicePrincipal = `-- name: GetServicePrincipal :one
+SELECT profile.principal_id, profile.membership_id,
+       profile.name, profile.normalized_name, principal.status,
+       profile.version, profile.created_at, profile.updated_at
+FROM service_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = $1
+  AND profile.principal_id = $2
+`
+
+type GetServicePrincipalParams struct {
+	TenantID    uuid.UUID
+	PrincipalID uuid.UUID
+}
+
+type GetServicePrincipalRow struct {
+	PrincipalID    uuid.UUID
+	MembershipID   uuid.UUID
+	Name           string
+	NormalizedName string
+	Status         string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) GetServicePrincipal(ctx context.Context, arg GetServicePrincipalParams) (GetServicePrincipalRow, error) {
+	row := q.db.QueryRow(ctx, getServicePrincipal, arg.TenantID, arg.PrincipalID)
+	var i GetServicePrincipalRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.MembershipID,
+		&i.Name,
+		&i.NormalizedName,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getServicePrincipalBoundary = `-- name: GetServicePrincipalBoundary :one
+SELECT tenant_id
+FROM service_principals
+WHERE principal_id = $1
+`
+
+type GetServicePrincipalBoundaryParams struct {
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) GetServicePrincipalBoundary(ctx context.Context, arg GetServicePrincipalBoundaryParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getServicePrincipalBoundary, arg.PrincipalID)
+	var tenant_id uuid.UUID
+	err := row.Scan(&tenant_id)
+	return tenant_id, err
+}
+
+const getServicePrincipalByMembershipForUpdate = `-- name: GetServicePrincipalByMembershipForUpdate :one
+SELECT profile.principal_id, profile.membership_id, profile.name,
+       profile.normalized_name, principal.status, profile.version,
+       profile.created_at, profile.updated_at
+FROM service_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = $1
+  AND profile.membership_id = $2
+FOR UPDATE OF profile, principal
+`
+
+type GetServicePrincipalByMembershipForUpdateParams struct {
+	TenantID     uuid.UUID
+	MembershipID uuid.UUID
+}
+
+type GetServicePrincipalByMembershipForUpdateRow struct {
+	PrincipalID    uuid.UUID
+	MembershipID   uuid.UUID
+	Name           string
+	NormalizedName string
+	Status         string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) GetServicePrincipalByMembershipForUpdate(ctx context.Context, arg GetServicePrincipalByMembershipForUpdateParams) (GetServicePrincipalByMembershipForUpdateRow, error) {
+	row := q.db.QueryRow(ctx, getServicePrincipalByMembershipForUpdate, arg.TenantID, arg.MembershipID)
+	var i GetServicePrincipalByMembershipForUpdateRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.MembershipID,
+		&i.Name,
+		&i.NormalizedName,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getServicePrincipalForUpdate = `-- name: GetServicePrincipalForUpdate :one
+SELECT profile.principal_id, profile.membership_id, profile.name,
+       profile.normalized_name, principal.status, profile.version,
+       profile.created_at, profile.updated_at
+FROM service_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = $1
+  AND profile.principal_id = $2
+FOR UPDATE OF profile, principal
+`
+
+type GetServicePrincipalForUpdateParams struct {
+	TenantID    uuid.UUID
+	PrincipalID uuid.UUID
+}
+
+type GetServicePrincipalForUpdateRow struct {
+	PrincipalID    uuid.UUID
+	MembershipID   uuid.UUID
+	Name           string
+	NormalizedName string
+	Status         string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) GetServicePrincipalForUpdate(ctx context.Context, arg GetServicePrincipalForUpdateParams) (GetServicePrincipalForUpdateRow, error) {
+	row := q.db.QueryRow(ctx, getServicePrincipalForUpdate, arg.TenantID, arg.PrincipalID)
+	var i GetServicePrincipalForUpdateRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.MembershipID,
+		&i.Name,
+		&i.NormalizedName,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1410,6 +1808,142 @@ func (q *Queries) IsActiveHumanTenantAdministrator(ctx context.Context, arg IsAc
 	var is_active_human_administrator bool
 	err := row.Scan(&is_active_human_administrator)
 	return is_active_human_administrator, err
+}
+
+const listAPIKeys = `-- name: ListAPIKeys :many
+SELECT key_id, principal_id, status, display_prefix, secret_digest,
+       never_expires, expires_at, created_at, last_used_at, revoked_at, version
+FROM api_keys
+WHERE tenant_id = $1
+  AND principal_id = $2
+  AND key_id > $3
+ORDER BY key_id
+LIMIT $4
+`
+
+type ListAPIKeysParams struct {
+	TenantID    uuid.UUID
+	PrincipalID uuid.UUID
+	CursorID    uuid.UUID
+	PageLimit   int32
+}
+
+type ListAPIKeysRow struct {
+	KeyID         uuid.UUID
+	PrincipalID   uuid.UUID
+	Status        string
+	DisplayPrefix string
+	SecretDigest  []byte
+	NeverExpires  bool
+	ExpiresAt     pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+	LastUsedAt    pgtype.Timestamptz
+	RevokedAt     pgtype.Timestamptz
+	Version       int64
+}
+
+func (q *Queries) ListAPIKeys(ctx context.Context, arg ListAPIKeysParams) ([]ListAPIKeysRow, error) {
+	rows, err := q.db.Query(ctx, listAPIKeys,
+		arg.TenantID,
+		arg.PrincipalID,
+		arg.CursorID,
+		arg.PageLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAPIKeysRow{}
+	for rows.Next() {
+		var i ListAPIKeysRow
+		if err := rows.Scan(
+			&i.KeyID,
+			&i.PrincipalID,
+			&i.Status,
+			&i.DisplayPrefix,
+			&i.SecretDigest,
+			&i.NeverExpires,
+			&i.ExpiresAt,
+			&i.CreatedAt,
+			&i.LastUsedAt,
+			&i.RevokedAt,
+			&i.Version,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listServicePrincipals = `-- name: ListServicePrincipals :many
+SELECT profile.tenant_id, profile.principal_id, profile.membership_id,
+       profile.name, profile.normalized_name, principal.status,
+       profile.version, profile.created_at, profile.updated_at
+FROM service_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = $1
+  AND profile.principal_id > $2
+  AND ($3::text = '' OR principal.status = $3::text)
+ORDER BY profile.principal_id
+LIMIT $4
+`
+
+type ListServicePrincipalsParams struct {
+	TenantID  uuid.UUID
+	CursorID  uuid.UUID
+	Status    string
+	PageLimit int32
+}
+
+type ListServicePrincipalsRow struct {
+	TenantID       uuid.UUID
+	PrincipalID    uuid.UUID
+	MembershipID   uuid.UUID
+	Name           string
+	NormalizedName string
+	Status         string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) ListServicePrincipals(ctx context.Context, arg ListServicePrincipalsParams) ([]ListServicePrincipalsRow, error) {
+	rows, err := q.db.Query(ctx, listServicePrincipals,
+		arg.TenantID,
+		arg.CursorID,
+		arg.Status,
+		arg.PageLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListServicePrincipalsRow{}
+	for rows.Next() {
+		var i ListServicePrincipalsRow
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.PrincipalID,
+			&i.MembershipID,
+			&i.Name,
+			&i.NormalizedName,
+			&i.Status,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listTenantAuthorizationMembershipRoleIDs = `-- name: ListTenantAuthorizationMembershipRoleIDs :many
@@ -2324,6 +2858,160 @@ func (q *Queries) LockTenantSwitchBoundary(ctx context.Context, arg LockTenantSw
 	return i, err
 }
 
+const lookupAPIKeyAuthorization = `-- name: LookupAPIKeyAuthorization :one
+SELECT
+    api_key.key_id,
+    api_key.principal_id,
+    api_key.status AS api_key_status,
+    api_key.display_prefix,
+    api_key.secret_digest,
+    api_key.never_expires,
+    api_key.expires_at,
+    api_key.created_at,
+    api_key.last_used_at,
+    api_key.revoked_at,
+    api_key.version AS api_key_version,
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    NOT EXISTS (
+        SELECT 1
+        FROM unnest($1::text[]) AS required_action(action)
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM tenant_role_bindings AS binding
+            JOIN tenant_role_permissions AS permission
+              ON permission.tenant_id = binding.tenant_id
+             AND permission.role_id = binding.role_id
+            WHERE binding.tenant_id = $2
+              AND binding.membership_id = membership.id
+              AND permission.resource = $3
+              AND permission.action = required_action.action
+        )
+    ) AS permission_allowed
+FROM api_keys AS api_key
+JOIN service_principals AS profile
+  ON profile.tenant_id = api_key.tenant_id
+ AND profile.principal_id = api_key.principal_id
+JOIN principals AS principal
+  ON principal.id = profile.principal_id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = profile.tenant_id
+ AND membership.id = profile.membership_id
+ AND membership.principal_id = profile.principal_id
+JOIN tenant_access AS access
+  ON access.tenant_id = profile.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = profile.tenant_id
+WHERE api_key.tenant_id = $2
+  AND api_key.key_id = $4
+`
+
+type LookupAPIKeyAuthorizationParams struct {
+	Actions  []string
+	TenantID uuid.UUID
+	Resource string
+	KeyID    uuid.UUID
+}
+
+type LookupAPIKeyAuthorizationRow struct {
+	KeyID              uuid.UUID
+	PrincipalID        uuid.UUID
+	ApiKeyStatus       string
+	DisplayPrefix      string
+	SecretDigest       []byte
+	NeverExpires       bool
+	ExpiresAt          pgtype.Timestamptz
+	CreatedAt          pgtype.Timestamptz
+	LastUsedAt         pgtype.Timestamptz
+	RevokedAt          pgtype.Timestamptz
+	ApiKeyVersion      int64
+	PrincipalStatus    string
+	MembershipStatus   string
+	TenantAccessStatus string
+	LifecycleStatus    string
+	LifecycleFresh     bool
+	PermissionAllowed  bool
+}
+
+func (q *Queries) LookupAPIKeyAuthorization(ctx context.Context, arg LookupAPIKeyAuthorizationParams) (LookupAPIKeyAuthorizationRow, error) {
+	row := q.db.QueryRow(ctx, lookupAPIKeyAuthorization,
+		arg.Actions,
+		arg.TenantID,
+		arg.Resource,
+		arg.KeyID,
+	)
+	var i LookupAPIKeyAuthorizationRow
+	err := row.Scan(
+		&i.KeyID,
+		&i.PrincipalID,
+		&i.ApiKeyStatus,
+		&i.DisplayPrefix,
+		&i.SecretDigest,
+		&i.NeverExpires,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.LastUsedAt,
+		&i.RevokedAt,
+		&i.ApiKeyVersion,
+		&i.PrincipalStatus,
+		&i.MembershipStatus,
+		&i.TenantAccessStatus,
+		&i.LifecycleStatus,
+		&i.LifecycleFresh,
+		&i.PermissionAllowed,
+	)
+	return i, err
+}
+
+const lookupAPIKeyCredential = `-- name: LookupAPIKeyCredential :one
+SELECT key_id, principal_id, status, display_prefix, secret_digest,
+       never_expires, expires_at, created_at, last_used_at, revoked_at, version
+FROM api_keys
+WHERE tenant_id = $1
+  AND key_id = $2
+`
+
+type LookupAPIKeyCredentialParams struct {
+	TenantID uuid.UUID
+	KeyID    uuid.UUID
+}
+
+type LookupAPIKeyCredentialRow struct {
+	KeyID         uuid.UUID
+	PrincipalID   uuid.UUID
+	Status        string
+	DisplayPrefix string
+	SecretDigest  []byte
+	NeverExpires  bool
+	ExpiresAt     pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+	LastUsedAt    pgtype.Timestamptz
+	RevokedAt     pgtype.Timestamptz
+	Version       int64
+}
+
+func (q *Queries) LookupAPIKeyCredential(ctx context.Context, arg LookupAPIKeyCredentialParams) (LookupAPIKeyCredentialRow, error) {
+	row := q.db.QueryRow(ctx, lookupAPIKeyCredential, arg.TenantID, arg.KeyID)
+	var i LookupAPIKeyCredentialRow
+	err := row.Scan(
+		&i.KeyID,
+		&i.PrincipalID,
+		&i.Status,
+		&i.DisplayPrefix,
+		&i.SecretDigest,
+		&i.NeverExpires,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.LastUsedAt,
+		&i.RevokedAt,
+		&i.Version,
+	)
+	return i, err
+}
+
 const lookupAuthorization = `-- name: LookupAuthorization :one
 SELECT
     principal.status AS principal_status,
@@ -3129,6 +3817,32 @@ func (q *Queries) MarkPasswordActionNotificationDelivered(ctx context.Context, a
 	return version, err
 }
 
+const recordAPIKeyUse = `-- name: RecordAPIKeyUse :one
+UPDATE api_keys
+SET last_used_at = CASE
+        WHEN last_used_at IS NULL OR last_used_at < $1::timestamptz - interval '15 minutes'
+        THEN $1
+        ELSE last_used_at
+    END
+WHERE tenant_id = $2
+  AND key_id = $3
+  AND (never_expires OR expires_at > $1)
+RETURNING key_id
+`
+
+type RecordAPIKeyUseParams struct {
+	ObservedAt pgtype.Timestamptz
+	TenantID   uuid.UUID
+	KeyID      uuid.UUID
+}
+
+func (q *Queries) RecordAPIKeyUse(ctx context.Context, arg RecordAPIKeyUseParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, recordAPIKeyUse, arg.ObservedAt, arg.TenantID, arg.KeyID)
+	var key_id uuid.UUID
+	err := row.Scan(&key_id)
+	return key_id, err
+}
+
 const recordPasswordLoginFailure = `-- name: RecordPasswordLoginFailure :one
 UPDATE password_credentials
 SET failed_attempts = CASE
@@ -3262,6 +3976,100 @@ func (q *Queries) ResetPasswordLoginFailures(ctx context.Context, arg ResetPassw
 	var version int64
 	err := row.Scan(&version)
 	return version, err
+}
+
+const revokeAPIKey = `-- name: RevokeAPIKey :one
+UPDATE api_keys
+SET status = 'revoked',
+    revoked_at = $1,
+    version = version + 1
+WHERE tenant_id = $2
+  AND key_id = $3
+  AND version = $4
+RETURNING key_id, principal_id, status, display_prefix, secret_digest,
+          never_expires, expires_at, created_at, last_used_at, revoked_at, version
+`
+
+type RevokeAPIKeyParams struct {
+	RevokedAt       pgtype.Timestamptz
+	TenantID        uuid.UUID
+	KeyID           uuid.UUID
+	ExpectedVersion int64
+}
+
+type RevokeAPIKeyRow struct {
+	KeyID         uuid.UUID
+	PrincipalID   uuid.UUID
+	Status        string
+	DisplayPrefix string
+	SecretDigest  []byte
+	NeverExpires  bool
+	ExpiresAt     pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+	LastUsedAt    pgtype.Timestamptz
+	RevokedAt     pgtype.Timestamptz
+	Version       int64
+}
+
+func (q *Queries) RevokeAPIKey(ctx context.Context, arg RevokeAPIKeyParams) (RevokeAPIKeyRow, error) {
+	row := q.db.QueryRow(ctx, revokeAPIKey,
+		arg.RevokedAt,
+		arg.TenantID,
+		arg.KeyID,
+		arg.ExpectedVersion,
+	)
+	var i RevokeAPIKeyRow
+	err := row.Scan(
+		&i.KeyID,
+		&i.PrincipalID,
+		&i.Status,
+		&i.DisplayPrefix,
+		&i.SecretDigest,
+		&i.NeverExpires,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+		&i.LastUsedAt,
+		&i.RevokedAt,
+		&i.Version,
+	)
+	return i, err
+}
+
+const revokeActiveAPIKeysForPrincipal = `-- name: RevokeActiveAPIKeysForPrincipal :many
+UPDATE api_keys
+SET status = 'revoked',
+    revoked_at = $1,
+    version = version + 1
+WHERE tenant_id = $2
+  AND principal_id = $3
+  AND status = 'active'
+RETURNING key_id
+`
+
+type RevokeActiveAPIKeysForPrincipalParams struct {
+	RevokedAt   pgtype.Timestamptz
+	TenantID    uuid.UUID
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) RevokeActiveAPIKeysForPrincipal(ctx context.Context, arg RevokeActiveAPIKeysForPrincipalParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, revokeActiveAPIKeysForPrincipal, arg.RevokedAt, arg.TenantID, arg.PrincipalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var key_id uuid.UUID
+		if err := rows.Scan(&key_id); err != nil {
+			return nil, err
+		}
+		items = append(items, key_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const revokeActiveRefreshTokensForFamily = `-- name: RevokeActiveRefreshTokensForFamily :exec
@@ -3528,6 +4336,89 @@ func (q *Queries) UpdatePasswordCredentialForReset(ctx context.Context, arg Upda
 	var version int64
 	err := row.Scan(&version)
 	return version, err
+}
+
+const updateServicePrincipalBaseStatus = `-- name: UpdateServicePrincipalBaseStatus :execrows
+UPDATE principals
+SET status = $1,
+    version = version + 1,
+    updated_at = $2
+WHERE id = $3
+  AND version = $4
+`
+
+type UpdateServicePrincipalBaseStatusParams struct {
+	Status          string
+	UpdatedAt       pgtype.Timestamptz
+	PrincipalID     uuid.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) UpdateServicePrincipalBaseStatus(ctx context.Context, arg UpdateServicePrincipalBaseStatusParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateServicePrincipalBaseStatus,
+		arg.Status,
+		arg.UpdatedAt,
+		arg.PrincipalID,
+		arg.ExpectedVersion,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const updateServicePrincipalProfile = `-- name: UpdateServicePrincipalProfile :one
+UPDATE service_principals
+SET name = $1,
+    normalized_name = $2,
+    version = version + 1,
+    updated_at = $3
+WHERE tenant_id = $4
+  AND principal_id = $5
+  AND version = $6
+RETURNING principal_id, membership_id, name, normalized_name,
+          version, created_at, updated_at
+`
+
+type UpdateServicePrincipalProfileParams struct {
+	Name            string
+	NormalizedName  string
+	UpdatedAt       pgtype.Timestamptz
+	TenantID        uuid.UUID
+	PrincipalID     uuid.UUID
+	ExpectedVersion int64
+}
+
+type UpdateServicePrincipalProfileRow struct {
+	PrincipalID    uuid.UUID
+	MembershipID   uuid.UUID
+	Name           string
+	NormalizedName string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) UpdateServicePrincipalProfile(ctx context.Context, arg UpdateServicePrincipalProfileParams) (UpdateServicePrincipalProfileRow, error) {
+	row := q.db.QueryRow(ctx, updateServicePrincipalProfile,
+		arg.Name,
+		arg.NormalizedName,
+		arg.UpdatedAt,
+		arg.TenantID,
+		arg.PrincipalID,
+		arg.ExpectedVersion,
+	)
+	var i UpdateServicePrincipalProfileRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.MembershipID,
+		&i.Name,
+		&i.NormalizedName,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateSessionIdleExpiry = `-- name: UpdateSessionIdleExpiry :one

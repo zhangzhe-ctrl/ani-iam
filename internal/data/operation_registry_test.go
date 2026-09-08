@@ -61,3 +61,37 @@ func TestTargetOperationRegistryRejectsRevisionDrift(t *testing.T) {
 		t.Fatalf("NewTargetOperationRegistry() error = %v", err)
 	}
 }
+
+func TestTargetOperationRegistryKeepsSensitiveOperationsOffAPIKeys(t *testing.T) {
+	registry, err := NewTargetOperationRegistry(TargetPolicyRevision)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, operationID := range []string{"passwordLogin", "requestPasswordAction", "completePasswordAction"} {
+		if _, ok := registry.Lookup(operationID); ok {
+			t.Fatalf("non-authorization operation %q received a CheckPermission policy", operationID)
+		}
+	}
+	for _, operationID := range []string{
+		"createIAMAPIKey",
+		"createServicePrincipal",
+		"createTenantIAMRole",
+		"bindTenantIAMRole",
+		"approveRecoveryBootstrap",
+		"createPlatformIAMRole",
+	} {
+		policy, ok := registry.Lookup(operationID)
+		if !ok {
+			t.Fatalf("sensitive operation %q is missing", operationID)
+		}
+		if len(policy.CredentialKinds) != 1 || policy.CredentialKinds[0] != biz.CredentialKindAccessToken ||
+			len(policy.PrincipalKinds) != 1 || policy.PrincipalKinds[0] != biz.PrincipalTypeHuman {
+			t.Fatalf("sensitive operation %q authentication = %#v/%#v", operationID, policy.CredentialKinds, policy.PrincipalKinds)
+		}
+	}
+	policy, ok := registry.Lookup("applyPlatformWorkloadLifecycle")
+	if !ok || len(policy.CredentialKinds) != 1 || policy.CredentialKinds[0] != biz.CredentialKindServiceToken ||
+		len(policy.PrincipalKinds) != 1 || policy.PrincipalKinds[0] != biz.PrincipalTypeService {
+		t.Fatalf("platform-workload authentication = %#v, present=%t", policy, ok)
+	}
+}

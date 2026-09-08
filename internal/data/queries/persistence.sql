@@ -17,6 +17,188 @@ INSERT INTO tenant_memberships (
     sqlc.arg(updated_at)
 );
 
+-- name: CreateServicePrincipalBase :exec
+INSERT INTO principals (
+    id, principal_type, status, version, created_at, updated_at
+) VALUES (
+    sqlc.arg(id), 'service', sqlc.arg(status), sqlc.arg(version),
+    sqlc.arg(created_at), sqlc.arg(updated_at)
+);
+
+-- name: CreateServicePrincipalProfile :exec
+INSERT INTO service_principals (
+    principal_id, tenant_id, membership_id, name, normalized_name,
+    version, created_at, updated_at
+) VALUES (
+    sqlc.arg(principal_id), sqlc.arg(tenant_id), sqlc.arg(membership_id),
+    sqlc.arg(name), sqlc.arg(normalized_name), sqlc.arg(version),
+    sqlc.arg(created_at), sqlc.arg(updated_at)
+);
+
+-- name: GetServicePrincipalForUpdate :one
+SELECT profile.principal_id, profile.membership_id, profile.name,
+       profile.normalized_name, principal.status, profile.version,
+       profile.created_at, profile.updated_at
+FROM service_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = sqlc.arg(tenant_id)
+  AND profile.principal_id = sqlc.arg(principal_id)
+FOR UPDATE OF profile, principal;
+
+-- name: GetServicePrincipalBoundary :one
+SELECT tenant_id
+FROM service_principals
+WHERE principal_id = sqlc.arg(principal_id);
+
+-- name: GetServicePrincipal :one
+SELECT profile.principal_id, profile.membership_id,
+       profile.name, profile.normalized_name, principal.status,
+       profile.version, profile.created_at, profile.updated_at
+FROM service_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = sqlc.arg(tenant_id)
+  AND profile.principal_id = sqlc.arg(principal_id);
+
+-- name: ListServicePrincipals :many
+SELECT profile.tenant_id, profile.principal_id, profile.membership_id,
+       profile.name, profile.normalized_name, principal.status,
+       profile.version, profile.created_at, profile.updated_at
+FROM service_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = sqlc.arg(tenant_id)
+  AND profile.principal_id > sqlc.arg(cursor_id)
+  AND (sqlc.arg(status)::text = '' OR principal.status = sqlc.arg(status)::text)
+ORDER BY profile.principal_id
+LIMIT sqlc.arg(page_limit);
+
+-- name: ListAPIKeys :many
+SELECT key_id, principal_id, status, display_prefix, secret_digest,
+       never_expires, expires_at, created_at, last_used_at, revoked_at, version
+FROM api_keys
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND principal_id = sqlc.arg(principal_id)
+  AND key_id > sqlc.arg(cursor_id)
+ORDER BY key_id
+LIMIT sqlc.arg(page_limit);
+
+-- name: GetAPIKeyBoundary :one
+SELECT tenant_id
+FROM api_keys
+WHERE key_id = sqlc.arg(key_id);
+
+-- name: LookupAPIKeyCredential :one
+SELECT key_id, principal_id, status, display_prefix, secret_digest,
+       never_expires, expires_at, created_at, last_used_at, revoked_at, version
+FROM api_keys
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND key_id = sqlc.arg(key_id);
+
+-- name: GetAPIKeyOperationalSignals :one
+SELECT
+    count(*) FILTER (
+        WHERE status = 'active'
+          AND (never_expires OR expires_at > sqlc.arg(observed_at))
+    ) AS active_count,
+    count(*) FILTER (
+        WHERE status = 'active'
+          AND never_expires
+          AND COALESCE(last_used_at, created_at) <= sqlc.arg(stale_before)
+    ) AS stale_non_expiring_count
+FROM api_keys
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND principal_id = sqlc.arg(principal_id);
+
+-- name: GetAPIKeyOperationalSnapshot :one
+SELECT
+    (
+        SELECT count(*)
+        FROM api_keys AS stale_key
+        WHERE stale_key.status = 'active'
+          AND stale_key.never_expires
+          AND COALESCE(stale_key.last_used_at, stale_key.created_at) <= sqlc.arg(stale_before)
+    ) AS stale_non_expiring_count,
+    (
+        SELECT count(*)
+        FROM (
+            SELECT active_key.tenant_id, active_key.principal_id
+            FROM api_keys AS active_key
+            WHERE active_key.status = 'active'
+              AND (active_key.never_expires OR active_key.expires_at > sqlc.arg(observed_at))
+            GROUP BY active_key.tenant_id, active_key.principal_id
+            HAVING count(*) >= sqlc.arg(unusual_active_count_threshold)
+        ) AS unusual_principals
+    ) AS unusual_service_principal_count;
+
+-- name: GetServicePrincipalByMembershipForUpdate :one
+SELECT profile.principal_id, profile.membership_id, profile.name,
+       profile.normalized_name, principal.status, profile.version,
+       profile.created_at, profile.updated_at
+FROM service_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = sqlc.arg(tenant_id)
+  AND profile.membership_id = sqlc.arg(membership_id)
+FOR UPDATE OF profile, principal;
+
+-- name: UpdateServicePrincipalBaseStatus :execrows
+UPDATE principals
+SET status = sqlc.arg(status),
+    version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE id = sqlc.arg(principal_id)
+  AND version = sqlc.arg(expected_version);
+
+-- name: UpdateServicePrincipalProfile :one
+UPDATE service_principals
+SET name = sqlc.arg(name),
+    normalized_name = sqlc.arg(normalized_name),
+    version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND principal_id = sqlc.arg(principal_id)
+  AND version = sqlc.arg(expected_version)
+RETURNING principal_id, membership_id, name, normalized_name,
+          version, created_at, updated_at;
+
+-- name: RevokeActiveAPIKeysForPrincipal :many
+UPDATE api_keys
+SET status = 'revoked',
+    revoked_at = sqlc.arg(revoked_at),
+    version = version + 1
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND principal_id = sqlc.arg(principal_id)
+  AND status = 'active'
+RETURNING key_id;
+
+-- name: CreateAPIKey :exec
+INSERT INTO api_keys (
+    tenant_id, key_id, principal_id, status, display_prefix, secret_digest,
+    never_expires, expires_at, created_at, last_used_at, revoked_at, version
+) VALUES (
+    sqlc.arg(tenant_id), sqlc.arg(key_id), sqlc.arg(principal_id), sqlc.arg(status),
+    sqlc.arg(display_prefix), sqlc.arg(secret_digest), sqlc.arg(never_expires),
+    sqlc.narg(expires_at), sqlc.arg(created_at), sqlc.narg(last_used_at),
+    sqlc.narg(revoked_at), sqlc.arg(version)
+);
+
+-- name: GetAPIKeyForUpdate :one
+SELECT key_id, principal_id, status, display_prefix, secret_digest,
+       never_expires, expires_at, created_at, last_used_at, revoked_at, version
+FROM api_keys
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND key_id = sqlc.arg(key_id)
+FOR UPDATE;
+
+-- name: RevokeAPIKey :one
+UPDATE api_keys
+SET status = 'revoked',
+    revoked_at = sqlc.arg(revoked_at),
+    version = version + 1
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND key_id = sqlc.arg(key_id)
+  AND version = sqlc.arg(expected_version)
+RETURNING key_id, principal_id, status, display_prefix, secret_digest,
+          never_expires, expires_at, created_at, last_used_at, revoked_at, version;
+
 -- name: GetTenantMembership :one
 SELECT id, principal_id, status, version, created_at, updated_at
 FROM tenant_memberships
@@ -820,6 +1002,68 @@ JOIN tenant_access AS access
 JOIN tenant_lifecycle_projections AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = sqlc.arg(principal_id);
+
+-- name: LookupAPIKeyAuthorization :one
+SELECT
+    api_key.key_id,
+    api_key.principal_id,
+    api_key.status AS api_key_status,
+    api_key.display_prefix,
+    api_key.secret_digest,
+    api_key.never_expires,
+    api_key.expires_at,
+    api_key.created_at,
+    api_key.last_used_at,
+    api_key.revoked_at,
+    api_key.version AS api_key_version,
+    principal.status AS principal_status,
+    membership.status AS membership_status,
+    access.status AS tenant_access_status,
+    lifecycle.status AS lifecycle_status,
+    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    NOT EXISTS (
+        SELECT 1
+        FROM unnest(sqlc.arg(actions)::text[]) AS required_action(action)
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM tenant_role_bindings AS binding
+            JOIN tenant_role_permissions AS permission
+              ON permission.tenant_id = binding.tenant_id
+             AND permission.role_id = binding.role_id
+            WHERE binding.tenant_id = sqlc.arg(tenant_id)
+              AND binding.membership_id = membership.id
+              AND permission.resource = sqlc.arg(resource)
+              AND permission.action = required_action.action
+        )
+    ) AS permission_allowed
+FROM api_keys AS api_key
+JOIN service_principals AS profile
+  ON profile.tenant_id = api_key.tenant_id
+ AND profile.principal_id = api_key.principal_id
+JOIN principals AS principal
+  ON principal.id = profile.principal_id
+JOIN tenant_memberships AS membership
+  ON membership.tenant_id = profile.tenant_id
+ AND membership.id = profile.membership_id
+ AND membership.principal_id = profile.principal_id
+JOIN tenant_access AS access
+  ON access.tenant_id = profile.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle
+  ON lifecycle.tenant_id = profile.tenant_id
+WHERE api_key.tenant_id = sqlc.arg(tenant_id)
+  AND api_key.key_id = sqlc.arg(key_id);
+
+-- name: RecordAPIKeyUse :one
+UPDATE api_keys
+SET last_used_at = CASE
+        WHEN last_used_at IS NULL OR last_used_at < sqlc.arg(observed_at)::timestamptz - interval '15 minutes'
+        THEN sqlc.arg(observed_at)
+        ELSE last_used_at
+    END
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND key_id = sqlc.arg(key_id)
+  AND (never_expires OR expires_at > sqlc.arg(observed_at))
+RETURNING key_id;
 
 -- name: GetTenantAccessStatusForAuthorization :one
 SELECT status

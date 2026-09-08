@@ -15,6 +15,12 @@ import (
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 )
 
+type allowingServiceAPIKeyUsageObserver struct{}
+
+func (allowingServiceAPIKeyUsageObserver) ObserveAPIKeyUse(context.Context, biz.TenantScope, uuid.UUID, time.Time) error {
+	return nil
+}
+
 func TestPasswordLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 	tenantID := uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")
@@ -75,6 +81,71 @@ func TestPasswordLoginMapsFrozenContractWithoutBusinessLogic(t *testing.T) {
 	}
 	if response.GetSession().GetSessionId() != sessionID.String() || response.GetGrant().GetGrantId() != grantID.String() {
 		t.Fatalf("session/grant response = %#v / %#v", response.GetSession(), response.GetGrant())
+	}
+}
+
+func TestValidatePrincipalMapsAPIKeyContextWithoutHumanSessionFields(t *testing.T) {
+	tenantID := uuid.MustParse("0199d080-2000-7001-9000-000000000001")
+	principalID := uuid.MustParse("0199d080-2000-7001-9000-000000000002")
+	decisionID := uuid.MustParse("0199d080-2000-7001-9000-000000000003")
+	usecase := &recordingAuthenticationUsecase{validateResult: biz.ValidatePrincipalResult{
+		Principal: biz.TrustedPrincipalContext{
+			ID: principalID, Type: biz.PrincipalTypeService, Status: biz.PrincipalStatusActive,
+			TenantID: tenantID, AuthnMethods: []biz.AuditAuthenticationMethod{biz.AuditAuthenticationMethodAPIKey},
+		},
+		DecisionID: decisionID, PolicyRevision: "sha256:test-revision",
+	}}
+
+	response, err := NewAuthenticationService(usecase).ValidatePrincipal(context.Background(), &iamv1.ValidatePrincipalRequest{
+		Credential:  &iamv1.BearerCredential{Value: "ani_key_secret"},
+		OperationId: "createInstance", PolicyRevision: "sha256:test-revision",
+	})
+	if err != nil {
+		t.Fatalf("ValidatePrincipal() error = %v", err)
+	}
+	if usecase.validateCommand.RawCredential != "ani_key_secret" || usecase.validateCommand.OperationID != "createInstance" ||
+		usecase.validateCommand.PolicyRevision != "sha256:test-revision" {
+		t.Fatalf("ValidatePrincipal() command = %#v", usecase.validateCommand)
+	}
+	if response.GetDecisionId() != decisionID.String() || response.GetPolicyRevision() != "sha256:test-revision" {
+		t.Fatalf("ValidatePrincipal() response identity = %#v", response)
+	}
+	principal := response.GetPrincipal()
+	if principal.GetPrincipalId() != principalID.String() || principal.GetPrincipalType() != iamv1.PrincipalType_PRINCIPAL_TYPE_SERVICE ||
+		principal.GetBoundary().GetTenant().GetTenantId() != tenantID.String() || principal.GetSessionId() != "" || principal.GetGrantId() != "" ||
+		len(principal.GetAuthnMethods()) != 1 || principal.GetAuthnMethods()[0] != iamv1.AuthnMethod_AUTHN_METHOD_API_KEY {
+		t.Fatalf("ValidatePrincipal() principal = %#v", principal)
+	}
+}
+
+func TestValidatePrincipalMapsAPIKeyFailureClassesToFrozenErrorInfo(t *testing.T) {
+	tenantID := uuid.MustParse("0199d080-2100-7001-9000-000000000001")
+	request := &iamv1.ValidatePrincipalRequest{
+		Credential:  &iamv1.BearerCredential{Value: "ani_0199d080-2100-7001-9000-000000000002_secret"},
+		OperationId: "createInstance", PolicyRevision: "sha256:test-revision",
+	}
+	tests := []struct {
+		name         string
+		domainErr    error
+		wantCode     codes.Code
+		wantReason   string
+		wantMetadata map[string]string
+	}{
+		{name: "malformed unknown expired or revoked", domainErr: biz.ErrInvalidCredential, wantCode: codes.Unauthenticated, wantReason: "CREDENTIAL_INVALID", wantMetadata: map[string]string{"credential_kind": "api_key"}},
+		{name: "valid key with inactive boundary", domainErr: &biz.TenantBoundAuthenticationError{TenantID: tenantID, Cause: biz.ErrMembershipInactive}, wantCode: codes.PermissionDenied, wantReason: "PERMISSION_DENIED", wantMetadata: map[string]string{"operation_id": "createInstance", "decision_id": "not-issued"}},
+		{name: "tenant IAM not ready", domainErr: &biz.TenantBoundAuthenticationError{TenantID: tenantID, Cause: biz.ErrTenantIAMNotReady}, wantCode: codes.Unavailable, wantReason: "TENANT_IAM_NOT_READY", wantMetadata: map[string]string{"tenant_id": tenantID.String()}},
+		{name: "lifecycle stale", domainErr: &biz.TenantBoundAuthenticationError{TenantID: tenantID, Cause: biz.ErrTenantLifecycleStale}, wantCode: codes.Unavailable, wantReason: "TENANT_LIFECYCLE_STALE", wantMetadata: map[string]string{"tenant_id": tenantID.String(), "expected_version": "not_available", "observed_version": "not_available"}},
+		{name: "IAM unavailable", domainErr: biz.ErrAuthenticationDependency, wantCode: codes.Unavailable, wantReason: "IAM_UNAVAILABLE", wantMetadata: map[string]string{"dependency": "authentication"}},
+		{name: "timeout", domainErr: context.DeadlineExceeded, wantCode: codes.DeadlineExceeded, wantReason: "IAM_TIMEOUT", wantMetadata: map[string]string{"operation_id": "createInstance"}},
+		{name: "credential kind denied", domainErr: biz.ErrAuthenticationCredentialKindDenied, wantCode: codes.PermissionDenied, wantReason: "PERMISSION_DENIED", wantMetadata: map[string]string{"operation_id": "createInstance", "decision_id": "not-issued"}},
+		{name: "policy mismatch", domainErr: &biz.AuthorizationPolicyMismatchError{Expected: "sha256:expected", Actual: "sha256:test-revision"}, wantCode: codes.Unavailable, wantReason: "AUTHZ_POLICY_MISMATCH", wantMetadata: map[string]string{"expected_policy_revision": "sha256:expected", "actual_policy_revision": "sha256:test-revision"}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			service := NewAuthenticationService(&recordingAuthenticationUsecase{validateErr: test.domainErr})
+			_, err := service.ValidatePrincipal(context.Background(), request)
+			assertFrozenErrorInfo(t, err, test.wantCode, test.wantReason, test.wantMetadata)
+		})
 	}
 }
 
@@ -784,8 +855,8 @@ func newServiceAuthenticationUsecase(throttle biz.LoginThrottle, uow biz.Authent
 			uuid.MustParse("0198f062-b76d-7101-9000-000000000005"),
 			uuid.MustParse("0198f062-b76d-7101-9000-000000000006"),
 		}},
-		serviceAuthenticationClock{},
-	)
+		serviceAuthenticationClock{}, allowingServiceAPIKeyUsageObserver{})
+
 }
 
 type servicePasswordLoginReader struct{ state biz.PasswordLoginState }
@@ -804,6 +875,31 @@ func (servicePasswordLoginReader) LookupLogoutSession(context.Context, [32]byte)
 }
 func (servicePasswordLoginReader) LookupTenantSwitch(context.Context, biz.TenantScope, biz.AccessTokenClaims) (biz.TenantSwitchState, error) {
 	return biz.TenantSwitchState{}, biz.ErrInvalidCredential
+}
+func (servicePasswordLoginReader) Revision() string { return "test-policy-revision" }
+func (servicePasswordLoginReader) Lookup(string) (biz.AuthorizationPolicy, bool) {
+	return biz.AuthorizationPolicy{}, false
+}
+func (servicePasswordLoginReader) GetAPIKeyBoundary(context.Context, uuid.UUID) (uuid.UUID, error) {
+	return uuid.Nil, biz.ErrAPIKeyNotFound
+}
+func (servicePasswordLoginReader) LookupAuthorization(context.Context, biz.TenantScope, biz.AuthorizationLookup) (biz.AuthorizationState, error) {
+	return biz.AuthorizationState{}, biz.ErrAuthenticationDependency
+}
+func (servicePasswordLoginReader) RecordDeniedAuthorization(context.Context, biz.TenantScope, biz.SecurityAuditEvent) error {
+	return biz.ErrAuthenticationDependency
+}
+func (servicePasswordLoginReader) RecordUnboundAuthorization(context.Context, biz.SecurityAuditEvent) error {
+	return biz.ErrAuthenticationDependency
+}
+func (servicePasswordLoginReader) LookupAPIKeyCredential(context.Context, biz.TenantScope, uuid.UUID, string) (biz.APIKey, error) {
+	return biz.APIKey{}, biz.ErrAPIKeyNotFound
+}
+func (servicePasswordLoginReader) LookupAPIKeyAuthorization(context.Context, biz.TenantScope, uuid.UUID, string, []string) (biz.APIKeyAuthorizationState, error) {
+	return biz.APIKeyAuthorizationState{}, biz.ErrAPIKeyNotFound
+}
+func (servicePasswordLoginReader) RecordAPIKeyUse(context.Context, biz.TenantScope, uuid.UUID, time.Time) error {
+	return biz.ErrAuthenticationDependency
 }
 
 type servicePasswordVerifier struct{}
@@ -848,6 +944,12 @@ func (u failingServiceLoginUnitOfWork) CommitLogin(context.Context, biz.TenantSc
 	return u.err
 }
 func (u failingServiceLoginUnitOfWork) RecordLoginFailure(context.Context, biz.TenantScope, biz.LoginFailureMutation) error {
+	return u.err
+}
+func (u failingServiceLoginUnitOfWork) RecordTenantPrincipalValidation(context.Context, biz.TenantScope, biz.SecurityAuditEvent) error {
+	return u.err
+}
+func (u failingServiceLoginUnitOfWork) RecordUnboundPrincipalValidation(context.Context, biz.SecurityAuditEvent) error {
 	return u.err
 }
 func (u failingServiceLoginUnitOfWork) RequestPasswordAction(context.Context, biz.PasswordActionRequestMutation) (biz.RequestPasswordActionResult, error) {
@@ -943,6 +1045,14 @@ type recordingAuthenticationUsecase struct {
 	switchResult    biz.SwitchTenantResult
 	switchErr       error
 	switchCommand   biz.SwitchTenantCommand
+	validateResult  biz.ValidatePrincipalResult
+	validateErr     error
+	validateCommand biz.ValidatePrincipalCommand
+}
+
+func (u *recordingAuthenticationUsecase) ValidatePrincipal(_ context.Context, command biz.ValidatePrincipalCommand) (biz.ValidatePrincipalResult, error) {
+	u.validateCommand = command
+	return u.validateResult, u.validateErr
 }
 
 func (u *recordingAuthenticationUsecase) RefreshSession(_ context.Context, command biz.RefreshSessionCommand) (biz.RefreshSessionResult, error) {

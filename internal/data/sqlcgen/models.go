@@ -9,6 +9,21 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type ApiKey struct {
+	TenantID      uuid.UUID
+	KeyID         uuid.UUID
+	PrincipalID   uuid.UUID
+	Status        string
+	DisplayPrefix string
+	SecretDigest  []byte
+	NeverExpires  bool
+	ExpiresAt     pgtype.Timestamptz
+	CreatedAt     pgtype.Timestamptz
+	LastUsedAt    pgtype.Timestamptz
+	RevokedAt     pgtype.Timestamptz
+	Version       int64
+}
+
 type IamAuditEvent struct {
 	TenantID             pgtype.UUID
 	EventID              uuid.UUID
@@ -137,6 +152,17 @@ type RefreshTokenFamily struct {
 	Version   int64
 	CreatedAt pgtype.Timestamptz
 	UpdatedAt pgtype.Timestamptz
+}
+
+type ServicePrincipal struct {
+	PrincipalID    uuid.UUID
+	TenantID       uuid.UUID
+	MembershipID   uuid.UUID
+	Name           string
+	NormalizedName string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type Session struct {

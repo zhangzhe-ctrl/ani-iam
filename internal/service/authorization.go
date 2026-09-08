@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -34,18 +35,25 @@ func (s *AuthorizationService) CheckPermission(ctx context.Context, request *iam
 	if request.GetCredential() != nil {
 		credential = request.GetCredential().GetValue()
 	}
+	credentialKind := "bearer"
+	if strings.HasPrefix(strings.TrimSpace(credential), "ani_") {
+		credentialKind = "api_key"
+	}
+	requestID, correlationID := principalValidationAuditIdentifiers(ctx)
 	decision, err := s.authorization.CheckPermission(ctx, biz.CheckPermissionCommand{
 		RawCredential:    credential,
 		OperationID:      request.GetOperationId(),
 		PolicyRevision:   request.GetPolicyRevision(),
 		TargetTenantID:   tenantID,
 		TargetResourceID: request.GetTarget().GetResourceId(),
+		RequestID:        requestID,
+		CorrelationID:    correlationID,
 	})
 	if err != nil {
 		return nil, mapIAMError(err, errorContext{
 			OperationID:          request.GetOperationId(),
 			TenantID:             tenantID.String(),
-			CredentialKind:       "bearer",
+			CredentialKind:       credentialKind,
 			Dependency:           "authorization",
 			ActualPolicyRevision: request.GetPolicyRevision(),
 		})
@@ -84,13 +92,21 @@ func authorizationObligationsToProto(values []biz.AuthorizationObligation) []*ia
 
 func trustedPrincipalToProto(principal biz.TrustedPrincipalContext) *iamv1.PrincipalContext {
 	authnMethods := authnMethodsToProto(principal.AuthnMethods)
+	sessionID := ""
+	if principal.SessionID != uuid.Nil {
+		sessionID = principal.SessionID.String()
+	}
+	grantID := ""
+	if principal.GrantID != uuid.Nil {
+		grantID = principal.GrantID.String()
+	}
 	return &iamv1.PrincipalContext{
 		PrincipalId:     principal.ID.String(),
-		PrincipalType:   iamv1.PrincipalType_PRINCIPAL_TYPE_HUMAN,
+		PrincipalType:   principalTypeDTO(principal.Type),
 		PrincipalStatus: principalStatusToProto(principal.Status),
 		Boundary:        tenantBoundary(principal.TenantID),
-		SessionId:       principal.SessionID.String(),
-		GrantId:         principal.GrantID.String(),
+		SessionId:       sessionID,
+		GrantId:         grantID,
 		AuthnMethods:    authnMethods,
 	}
 }
