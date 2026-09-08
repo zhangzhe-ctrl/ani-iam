@@ -32,6 +32,12 @@ func TestCheckPermissionMapsOneFrozenDecision(t *testing.T) {
 			AuthnMethods: []biz.AuditAuthenticationMethod{biz.AuditAuthenticationMethodPassword},
 		},
 		PolicyRevision: testIntegrationPolicyRevision,
+		Obligations: []biz.AuthorizationObligation{{
+			Type:             biz.AuthorizationObligationResourceTenantMatch,
+			Handler:          "core.resource_tenant",
+			ResourceID:       "instance-1",
+			ExpectedTenantID: tenantID,
+		}},
 	}}
 	service := NewAuthorizationService(usecase)
 
@@ -53,6 +59,9 @@ func TestCheckPermissionMapsOneFrozenDecision(t *testing.T) {
 	}
 	if decision.GetPrincipal().GetPrincipalId() != principalID.String() || decision.GetPrincipal().GetBoundary().GetTenant().GetTenantId() != tenantID.String() {
 		t.Fatalf("mapped principal = %#v", decision.GetPrincipal())
+	}
+	if len(decision.GetObligations()) != 1 || decision.GetObligations()[0].GetType() != iamv1.AuthorizationObligationType_AUTHORIZATION_OBLIGATION_TYPE_RESOURCE_TENANT_MATCH || decision.GetObligations()[0].GetHandler() != "core.resource_tenant" || decision.GetObligations()[0].GetResourceId() != "instance-1" || decision.GetObligations()[0].GetExpectedTenantId() != tenantID.String() {
+		t.Fatalf("mapped obligations = %#v", decision.GetObligations())
 	}
 }
 
@@ -85,11 +94,25 @@ func TestCheckPermissionMapsDependencyAndTimeoutFailures(t *testing.T) {
 		metadata   map[string]string
 	}{
 		{
+			name:       "tenant IAM is not ready",
+			domainErr:  biz.ErrTenantIAMNotReady,
+			wantCode:   codes.Unavailable,
+			wantReason: "TENANT_IAM_NOT_READY",
+			metadata:   map[string]string{"tenant_id": tenantID.String()},
+		},
+		{
 			name:       "dependency unavailable",
 			domainErr:  errors.Join(biz.ErrAuthorizationDependency, errors.New("postgres unavailable")),
 			wantCode:   codes.Unavailable,
 			wantReason: "IAM_UNAVAILABLE",
 			metadata:   map[string]string{"dependency": "authorization"},
+		},
+		{
+			name:       "tenant lifecycle projection stale",
+			domainErr:  errors.Join(biz.ErrAuthorizationDependency, biz.ErrTenantLifecycleStale),
+			wantCode:   codes.Unavailable,
+			wantReason: "TENANT_LIFECYCLE_STALE",
+			metadata:   map[string]string{"tenant_id": tenantID.String()},
 		},
 		{
 			name:       "deadline exceeded",

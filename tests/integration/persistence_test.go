@@ -125,15 +125,16 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 			  AND c.relname IN (
 				'principals', 'tenant_access', 'tenant_memberships', 'tenant_roles',
 				'tenant_role_bindings', 'iam_audit_events', 'password_action_requests',
-				'password_actions', 'notification_outbox', 'password_action_completions'
+				'password_actions', 'notification_outbox', 'password_action_completions',
+				'permission_catalog'
 			  )
 			  AND r.rolname = 'ani_iam_migrator'
 		`).Scan(&migrationOwns)
 		if err != nil {
 			t.Fatalf("query migration-owned tables: %v", err)
 		}
-		if migrationOwns != 10 {
-			t.Fatalf("migration role owns %d target tables, want 10", migrationOwns)
+		if migrationOwns != 11 {
+			t.Fatalf("migration role owns %d target tables, want 11", migrationOwns)
 		}
 
 		rows, err := environment.runtimePool.Query(ctx, `
@@ -167,6 +168,7 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 		for _, privilege := range []string{"INSERT", "SELECT"} {
 			expectedGrants["iam_audit_events/"+privilege] = struct{}{}
 		}
+		expectedGrants["tenant_role_bindings/DELETE"] = struct{}{}
 		for _, tableName := range []string{"verified_emails", "tenant_lifecycle_projections", "tenant_role_permissions"} {
 			expectedGrants[tableName+"/SELECT"] = struct{}{}
 		}

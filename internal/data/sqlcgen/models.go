@@ -102,6 +102,12 @@ type PasswordCredential struct {
 	UpdatedAt      pgtype.Timestamptz
 }
 
+type PermissionCatalog struct {
+	Scope    string
+	Resource string
+	Action   string
+}
+
 type Principal struct {
 	ID            uuid.UUID
 	PrincipalType string
@@ -213,6 +219,7 @@ type TenantRolePermission struct {
 	Resource  string
 	Action    string
 	CreatedAt pgtype.Timestamptz
+	Scope     string
 }
 
 type VerifiedEmail struct {

@@ -27,6 +27,16 @@ var gatewayDP2AllowedRPCs = map[string]struct{}{
 	"/iam.v1.AuthenticationService/BeginOIDCIdentityLink":    {},
 	"/iam.v1.AuthenticationService/CompleteOIDCIdentityLink": {},
 	"/iam.v1.AuthorizationService/CheckPermission":           {},
+	"/iam.v1.IAMAdminService/GetTenantAccess":                {},
+	"/iam.v1.IAMAdminService/UpdateTenantAccess":             {},
+	"/iam.v1.IAMAdminService/GetTenantMembership":            {},
+	"/iam.v1.IAMAdminService/ListTenantMemberships":          {},
+	"/iam.v1.IAMAdminService/UpdateTenantMembership":         {},
+	"/iam.v1.IAMAdminService/RemoveTenantMembership":         {},
+	"/iam.v1.IAMAdminService/GetTenantRole":                  {},
+	"/iam.v1.IAMAdminService/ListTenantRoles":                {},
+	"/iam.v1.IAMAdminService/BindTenantRole":                 {},
+	"/iam.v1.IAMAdminService/UnbindTenantRole":               {},
 }
 
 func NewGatewayWorkloadIdentityMiddleware(gatewayDNSName string) (middleware.Middleware, error) {

@@ -65,6 +65,73 @@ func TestCheckPermissionAllowsRegisteredOperationOnce(t *testing.T) {
 	}
 }
 
+func TestCheckPermissionReturnsRegisteredTypedObligationsOnAllow(t *testing.T) {
+	tenantID := uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")
+	registry := staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
+		OperationID: "getInstance",
+		Resource:    "instances",
+		Actions:     []string{"get"},
+		Scope:       PermissionScopeTenant,
+		Obligations: []AuthorizationObligation{{Type: AuthorizationObligationResourceTenantMatch, Handler: "core.resource_tenant"}},
+	}}
+	usecase := NewAuthorizationUsecase(
+		registry,
+		&staticAccessTokenVerifier{claims: AccessTokenClaims{
+			Subject:      uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17"),
+			SessionID:    uuid.MustParse("0198f062-b76d-7001-9000-000000000001"),
+			GrantID:      uuid.MustParse("0198f062-b76d-7001-9000-000000000002"),
+			GrantVersion: 1, TenantID: tenantID,
+			ExpiresAt: time.Date(2026, 9, 4, 7, 0, 0, 0, time.UTC),
+		}},
+		&recordingAuthorizationReader{state: AuthorizationState{
+			PrincipalStatus: PrincipalStatusActive, MembershipStatus: MembershipStatusActive,
+			TenantAccess: TenantAccessStatusActive, Lifecycle: TenantLifecycleStatusActive,
+			LifecycleFresh: true, SessionStatus: SessionStatusActive, GrantStatus: GrantStatusActive,
+			GrantVersion: 1, PermissionAllowed: true,
+		}},
+		&fixedIDs{values: []uuid.UUID{uuid.MustParse("0198f062-b76d-7001-9000-000000000007")}},
+		fixedAuthClock{now: time.Date(2026, 9, 4, 6, 50, 0, 0, time.UTC)},
+	)
+
+	decision, err := usecase.CheckPermission(context.Background(), CheckPermissionCommand{
+		RawCredential: "signed-access-token", OperationID: "getInstance",
+		PolicyRevision: testPolicyRevision, TargetTenantID: tenantID, TargetResourceID: "instance-1",
+	})
+	if err != nil {
+		t.Fatalf("CheckPermission() error = %v", err)
+	}
+	if len(decision.Obligations) != 1 || decision.Obligations[0].Type != AuthorizationObligationResourceTenantMatch || decision.Obligations[0].Handler != "core.resource_tenant" || decision.Obligations[0].ResourceID != "instance-1" || decision.Obligations[0].ExpectedTenantID != tenantID {
+		t.Fatalf("decision obligations = %#v", decision.Obligations)
+	}
+	decision.Obligations[0].Handler = "mutated"
+	policy, _ := registry.Lookup("getInstance")
+	if policy.Obligations[0].Handler != "core.resource_tenant" {
+		t.Fatalf("decision leaked registry obligation storage = %#v", policy.Obligations)
+	}
+}
+
+func TestCheckPermissionRejectsNonTenantPolicyBeforeCredentialOrStorage(t *testing.T) {
+	verifier := &staticAccessTokenVerifier{}
+	reader := &recordingAuthorizationReader{}
+	usecase := NewAuthorizationUsecase(
+		staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
+			OperationID: "getPlatformUser", Resource: "iam.platform-memberships",
+			Actions: []string{"read"}, Scope: PermissionScopePlatform,
+		}}, verifier, reader, &fixedIDs{}, fixedAuthClock{},
+	)
+
+	_, err := usecase.CheckPermission(context.Background(), CheckPermissionCommand{
+		RawCredential: "signed-access-token", OperationID: "getPlatformUser",
+		PolicyRevision: testPolicyRevision, TargetTenantID: uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70"),
+	})
+	if !errors.Is(err, ErrAuthorizationOperationUnregistered) {
+		t.Fatalf("CheckPermission() error = %v, want fail-closed %v", err, ErrAuthorizationOperationUnregistered)
+	}
+	if verifier.calls != 0 || reader.calls != 0 {
+		t.Fatalf("non-tenant policy reached dependencies: verifier=%d reader=%d", verifier.calls, reader.calls)
+	}
+}
+
 func TestCheckPermissionFailsClosedOnPolicyRevisionMismatch(t *testing.T) {
 	verifier := &staticAccessTokenVerifier{}
 	reader := &recordingAuthorizationReader{}
@@ -90,15 +157,27 @@ func TestCheckPermissionFailsClosedOnPolicyRevisionMismatch(t *testing.T) {
 	}
 }
 
-type staticPolicyRegistry struct{ revision string }
+type staticPolicyRegistry struct {
+	revision string
+	policy   AuthorizationPolicy
+}
 
 func (r staticPolicyRegistry) Revision() string { return r.revision }
 
 func (r staticPolicyRegistry) Lookup(operationID string) (AuthorizationPolicy, bool) {
+	if r.policy.OperationID != "" {
+		if operationID != r.policy.OperationID {
+			return AuthorizationPolicy{}, false
+		}
+		policy := r.policy
+		policy.Actions = append([]string(nil), r.policy.Actions...)
+		policy.Obligations = append([]AuthorizationObligation(nil), r.policy.Obligations...)
+		return policy, true
+	}
 	if operationID != "listInstances" {
 		return AuthorizationPolicy{}, false
 	}
-	return AuthorizationPolicy{OperationID: operationID, Resource: "instances", Actions: []string{"read"}}, true
+	return AuthorizationPolicy{OperationID: operationID, Resource: "instances", Actions: []string{"read"}, Scope: PermissionScopeTenant}, true
 }
 
 type staticAccessTokenVerifier struct {

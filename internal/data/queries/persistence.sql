@@ -33,6 +33,147 @@ WHERE tenant_id = sqlc.arg(tenant_id)
   AND version = sqlc.arg(expected_version)
 RETURNING id, principal_id, status, version, created_at, updated_at;
 
+-- name: LockTenantAdministrationGuard :exec
+SELECT pg_advisory_xact_lock(
+    hashtextextended(sqlc.arg(tenant_id)::uuid::text, 9)
+);
+
+-- name: GetTenantAuthorizationAccess :one
+SELECT status, version, created_at, updated_at
+FROM tenant_access
+WHERE tenant_id = sqlc.arg(tenant_id);
+
+-- name: UpdateTenantAuthorizationAccessStatus :one
+UPDATE tenant_access
+SET status = sqlc.arg(status),
+    version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND version = sqlc.arg(expected_version)
+RETURNING status, version, created_at, updated_at;
+
+-- name: LockTenantAuthorizationMembership :one
+SELECT id, principal_id, status, version, created_at, updated_at
+FROM tenant_memberships
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND id = sqlc.arg(id)
+  AND version = sqlc.arg(expected_version)
+FOR UPDATE;
+
+-- name: BumpTenantMembershipVersion :one
+UPDATE tenant_memberships
+SET version = version + 1,
+    updated_at = sqlc.arg(updated_at)
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND id = sqlc.arg(id)
+  AND version = sqlc.arg(expected_version)
+RETURNING id, principal_id, status, version, created_at, updated_at;
+
+-- name: GetTenantAuthorizationRole :one
+SELECT id, code, system_role, system_definition_version,
+       version, created_at, updated_at
+FROM tenant_roles
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND id = sqlc.arg(id);
+
+-- name: ListTenantAuthorizationRolePermissions :many
+SELECT resource, action
+FROM tenant_role_permissions
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND role_id = sqlc.arg(role_id)
+ORDER BY resource, action;
+
+-- name: GetTenantAuthorizationMembership :one
+SELECT membership.id, membership.principal_id, principal.principal_type,
+       membership.status, membership.version, membership.created_at, membership.updated_at
+FROM tenant_memberships AS membership
+JOIN principals AS principal
+  ON principal.id = membership.principal_id
+WHERE membership.tenant_id = sqlc.arg(tenant_id)
+  AND membership.id = sqlc.arg(id);
+
+-- name: ListTenantAuthorizationMemberships :many
+SELECT membership.id, membership.principal_id, principal.principal_type,
+       membership.status, membership.version, membership.created_at, membership.updated_at
+FROM tenant_memberships AS membership
+JOIN principals AS principal
+  ON principal.id = membership.principal_id
+WHERE membership.tenant_id = sqlc.arg(tenant_id)
+  AND membership.id > sqlc.arg(cursor_id)
+  AND (sqlc.arg(status)::text = '' OR membership.status = sqlc.arg(status)::text)
+ORDER BY membership.id
+LIMIT sqlc.arg(page_limit);
+
+-- name: ListTenantAuthorizationMembershipRoleIDs :many
+SELECT role_id
+FROM tenant_role_bindings
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND membership_id = sqlc.arg(membership_id)
+ORDER BY role_id;
+
+-- name: ListTenantAuthorizationRoles :many
+SELECT id, code, system_role, system_definition_version,
+       version, created_at, updated_at
+FROM tenant_roles
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND id > sqlc.arg(cursor_id)
+ORDER BY id
+LIMIT sqlc.arg(page_limit);
+
+-- name: IsActiveHumanTenantAdministrator :one
+SELECT EXISTS (
+    SELECT 1
+    FROM tenant_memberships AS membership
+    JOIN principals AS principal
+      ON principal.id = membership.principal_id
+    JOIN tenant_role_bindings AS binding
+      ON binding.tenant_id = membership.tenant_id
+     AND binding.membership_id = membership.id
+    JOIN tenant_roles AS role
+      ON role.tenant_id = binding.tenant_id
+     AND role.id = binding.role_id
+    WHERE membership.tenant_id = sqlc.arg(tenant_id)
+      AND membership.id = sqlc.arg(membership_id)
+      AND membership.status = 'active'
+      AND principal.principal_type = 'human'
+      AND principal.status = 'active'
+      AND role.system_role
+      AND role.code = 'tenant-admin'
+) AS is_active_human_administrator;
+
+-- name: CountActiveHumanTenantAdministrators :one
+SELECT count(DISTINCT membership.id)
+FROM tenant_memberships AS membership
+JOIN principals AS principal
+  ON principal.id = membership.principal_id
+JOIN tenant_role_bindings AS binding
+  ON binding.tenant_id = membership.tenant_id
+ AND binding.membership_id = membership.id
+JOIN tenant_roles AS role
+  ON role.tenant_id = binding.tenant_id
+ AND role.id = binding.role_id
+WHERE membership.tenant_id = sqlc.arg(tenant_id)
+  AND membership.status = 'active'
+  AND principal.principal_type = 'human'
+  AND principal.status = 'active'
+  AND role.system_role
+  AND role.code = 'tenant-admin';
+
+-- name: CreateTenantRoleBinding :exec
+INSERT INTO tenant_role_bindings (
+    tenant_id, id, membership_id, role_id, version, created_at, updated_at
+) VALUES (
+    sqlc.arg(tenant_id), sqlc.arg(id), sqlc.arg(membership_id),
+    sqlc.arg(role_id), sqlc.arg(version), sqlc.arg(created_at), sqlc.arg(updated_at)
+);
+
+-- name: DeleteTenantRoleBinding :one
+DELETE FROM tenant_role_bindings
+WHERE tenant_id = sqlc.arg(tenant_id)
+  AND membership_id = sqlc.arg(membership_id)
+  AND role_id = sqlc.arg(role_id)
+RETURNING id, membership_id, role_id, version, created_at, updated_at;
+
 -- name: AppendSecurityAuditEvent :exec
 INSERT INTO iam_audit_events (
     tenant_id,
@@ -679,6 +820,16 @@ JOIN tenant_access AS access
 JOIN tenant_lifecycle_projections AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = sqlc.arg(principal_id);
+
+-- name: GetTenantAccessStatusForAuthorization :one
+SELECT status
+FROM tenant_access
+WHERE tenant_id = sqlc.arg(tenant_id);
+
+-- name: GetTenantLifecycleFreshnessForAuthorization :one
+SELECT fresh_until > statement_timestamp() AS lifecycle_fresh
+FROM tenant_lifecycle_projections
+WHERE tenant_id = sqlc.arg(tenant_id);
 
 -- name: LookupRefreshSession :one
 SELECT

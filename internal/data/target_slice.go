@@ -664,7 +664,20 @@ func (r *postgresAuthorizationReader) LookupAuthorization(
 	if len(lookup.Actions) == 0 {
 		return biz.AuthorizationState{}, fmt.Errorf("lookup authorization: %w", biz.ErrInvalidPersistenceState)
 	}
-	row, err := sqlcgen.New(r.data.pool).LookupAuthorization(ctx, sqlcgen.LookupAuthorizationParams{
+	queries := sqlcgen.New(r.data.pool)
+	if _, err := queries.GetTenantAccessStatusForAuthorization(ctx, sqlcgen.GetTenantAccessStatusForAuthorizationParams{TenantID: tenantID}); errors.Is(err, pgx.ErrNoRows) {
+		return biz.AuthorizationState{}, biz.ErrTenantIAMNotReady
+	} else if err != nil {
+		return biz.AuthorizationState{}, mapPostgresError("get tenant access for authorization", err, nil)
+	}
+	lifecycleFresh, err := queries.GetTenantLifecycleFreshnessForAuthorization(ctx, sqlcgen.GetTenantLifecycleFreshnessForAuthorizationParams{TenantID: tenantID})
+	if errors.Is(err, pgx.ErrNoRows) || (err == nil && !lifecycleFresh) {
+		return biz.AuthorizationState{}, biz.ErrTenantLifecycleStale
+	}
+	if err != nil {
+		return biz.AuthorizationState{}, mapPostgresError("get tenant lifecycle for authorization", err, nil)
+	}
+	row, err := queries.LookupAuthorization(ctx, sqlcgen.LookupAuthorizationParams{
 		Actions:     append([]string(nil), lookup.Actions...),
 		TenantID:    tenantID,
 		Resource:    lookup.Resource,
@@ -677,6 +690,9 @@ func (r *postgresAuthorizationReader) LookupAuthorization(
 	}
 	if err != nil {
 		return biz.AuthorizationState{}, mapPostgresError("lookup authorization", err, nil)
+	}
+	if !row.LifecycleFresh {
+		return biz.AuthorizationState{}, biz.ErrTenantLifecycleStale
 	}
 	return biz.AuthorizationState{
 		PrincipalStatus:   biz.PrincipalStatus(row.PrincipalStatus),

@@ -303,6 +303,51 @@ func (q *Queries) AppendSecurityAuditEvent(ctx context.Context, arg AppendSecuri
 	return err
 }
 
+const bumpTenantMembershipVersion = `-- name: BumpTenantMembershipVersion :one
+UPDATE tenant_memberships
+SET version = version + 1,
+    updated_at = $1
+WHERE tenant_id = $2
+  AND id = $3
+  AND version = $4
+RETURNING id, principal_id, status, version, created_at, updated_at
+`
+
+type BumpTenantMembershipVersionParams struct {
+	UpdatedAt       pgtype.Timestamptz
+	TenantID        uuid.UUID
+	ID              uuid.UUID
+	ExpectedVersion int64
+}
+
+type BumpTenantMembershipVersionRow struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	Status      string
+	Version     int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+func (q *Queries) BumpTenantMembershipVersion(ctx context.Context, arg BumpTenantMembershipVersionParams) (BumpTenantMembershipVersionRow, error) {
+	row := q.db.QueryRow(ctx, bumpTenantMembershipVersion,
+		arg.UpdatedAt,
+		arg.TenantID,
+		arg.ID,
+		arg.ExpectedVersion,
+	)
+	var i BumpTenantMembershipVersionRow
+	err := row.Scan(
+		&i.ID,
+		&i.PrincipalID,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const cancelPasswordActionNotification = `-- name: CancelPasswordActionNotification :exec
 UPDATE notification_outbox
 SET status = 'cancelled',
@@ -489,6 +534,36 @@ func (q *Queries) ConsumeRefreshToken(ctx context.Context, arg ConsumeRefreshTok
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
+}
+
+const countActiveHumanTenantAdministrators = `-- name: CountActiveHumanTenantAdministrators :one
+SELECT count(DISTINCT membership.id)
+FROM tenant_memberships AS membership
+JOIN principals AS principal
+  ON principal.id = membership.principal_id
+JOIN tenant_role_bindings AS binding
+  ON binding.tenant_id = membership.tenant_id
+ AND binding.membership_id = membership.id
+JOIN tenant_roles AS role
+  ON role.tenant_id = binding.tenant_id
+ AND role.id = binding.role_id
+WHERE membership.tenant_id = $1
+  AND membership.status = 'active'
+  AND principal.principal_type = 'human'
+  AND principal.status = 'active'
+  AND role.system_role
+  AND role.code = 'tenant-admin'
+`
+
+type CountActiveHumanTenantAdministratorsParams struct {
+	TenantID uuid.UUID
+}
+
+func (q *Queries) CountActiveHumanTenantAdministrators(ctx context.Context, arg CountActiveHumanTenantAdministratorsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countActiveHumanTenantAdministrators, arg.TenantID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const createKnownPasswordActionRequest = `-- name: CreateKnownPasswordActionRequest :exec
@@ -890,6 +965,38 @@ func (q *Queries) CreateTenantMembership(ctx context.Context, arg CreateTenantMe
 	return err
 }
 
+const createTenantRoleBinding = `-- name: CreateTenantRoleBinding :exec
+INSERT INTO tenant_role_bindings (
+    tenant_id, id, membership_id, role_id, version, created_at, updated_at
+) VALUES (
+    $1, $2, $3,
+    $4, $5, $6, $7
+)
+`
+
+type CreateTenantRoleBindingParams struct {
+	TenantID     uuid.UUID
+	ID           uuid.UUID
+	MembershipID uuid.UUID
+	RoleID       uuid.UUID
+	Version      int64
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) CreateTenantRoleBinding(ctx context.Context, arg CreateTenantRoleBindingParams) error {
+	_, err := q.db.Exec(ctx, createTenantRoleBinding,
+		arg.TenantID,
+		arg.ID,
+		arg.MembershipID,
+		arg.RoleID,
+		arg.Version,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
 const createUnknownPasswordActionRequest = `-- name: CreateUnknownPasswordActionRequest :exec
 INSERT INTO password_action_requests (
     operation_id, account_digest, audience, expires_at,
@@ -919,6 +1026,43 @@ func (q *Queries) CreateUnknownPasswordActionRequest(ctx context.Context, arg Cr
 		arg.CreatedAt,
 	)
 	return err
+}
+
+const deleteTenantRoleBinding = `-- name: DeleteTenantRoleBinding :one
+DELETE FROM tenant_role_bindings
+WHERE tenant_id = $1
+  AND membership_id = $2
+  AND role_id = $3
+RETURNING id, membership_id, role_id, version, created_at, updated_at
+`
+
+type DeleteTenantRoleBindingParams struct {
+	TenantID     uuid.UUID
+	MembershipID uuid.UUID
+	RoleID       uuid.UUID
+}
+
+type DeleteTenantRoleBindingRow struct {
+	ID           uuid.UUID
+	MembershipID uuid.UUID
+	RoleID       uuid.UUID
+	Version      int64
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+func (q *Queries) DeleteTenantRoleBinding(ctx context.Context, arg DeleteTenantRoleBindingParams) (DeleteTenantRoleBindingRow, error) {
+	row := q.db.QueryRow(ctx, deleteTenantRoleBinding, arg.TenantID, arg.MembershipID, arg.RoleID)
+	var i DeleteTenantRoleBindingRow
+	err := row.Scan(
+		&i.ID,
+		&i.MembershipID,
+		&i.RoleID,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getPasswordActionCompletionByIdempotencyKey = `-- name: GetPasswordActionCompletionByIdempotencyKey :one
@@ -973,6 +1117,147 @@ func (q *Queries) GetPasswordActionRequestByIdempotencyKey(ctx context.Context, 
 		&i.ExpiresAt,
 	)
 	return i, err
+}
+
+const getTenantAccessStatusForAuthorization = `-- name: GetTenantAccessStatusForAuthorization :one
+SELECT status
+FROM tenant_access
+WHERE tenant_id = $1
+`
+
+type GetTenantAccessStatusForAuthorizationParams struct {
+	TenantID uuid.UUID
+}
+
+func (q *Queries) GetTenantAccessStatusForAuthorization(ctx context.Context, arg GetTenantAccessStatusForAuthorizationParams) (string, error) {
+	row := q.db.QueryRow(ctx, getTenantAccessStatusForAuthorization, arg.TenantID)
+	var status string
+	err := row.Scan(&status)
+	return status, err
+}
+
+const getTenantAuthorizationAccess = `-- name: GetTenantAuthorizationAccess :one
+SELECT status, version, created_at, updated_at
+FROM tenant_access
+WHERE tenant_id = $1
+`
+
+type GetTenantAuthorizationAccessParams struct {
+	TenantID uuid.UUID
+}
+
+type GetTenantAuthorizationAccessRow struct {
+	Status    string
+	Version   int64
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) GetTenantAuthorizationAccess(ctx context.Context, arg GetTenantAuthorizationAccessParams) (GetTenantAuthorizationAccessRow, error) {
+	row := q.db.QueryRow(ctx, getTenantAuthorizationAccess, arg.TenantID)
+	var i GetTenantAuthorizationAccessRow
+	err := row.Scan(
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTenantAuthorizationMembership = `-- name: GetTenantAuthorizationMembership :one
+SELECT membership.id, membership.principal_id, principal.principal_type,
+       membership.status, membership.version, membership.created_at, membership.updated_at
+FROM tenant_memberships AS membership
+JOIN principals AS principal
+  ON principal.id = membership.principal_id
+WHERE membership.tenant_id = $1
+  AND membership.id = $2
+`
+
+type GetTenantAuthorizationMembershipParams struct {
+	TenantID uuid.UUID
+	ID       uuid.UUID
+}
+
+type GetTenantAuthorizationMembershipRow struct {
+	ID            uuid.UUID
+	PrincipalID   uuid.UUID
+	PrincipalType string
+	Status        string
+	Version       int64
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
+func (q *Queries) GetTenantAuthorizationMembership(ctx context.Context, arg GetTenantAuthorizationMembershipParams) (GetTenantAuthorizationMembershipRow, error) {
+	row := q.db.QueryRow(ctx, getTenantAuthorizationMembership, arg.TenantID, arg.ID)
+	var i GetTenantAuthorizationMembershipRow
+	err := row.Scan(
+		&i.ID,
+		&i.PrincipalID,
+		&i.PrincipalType,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTenantAuthorizationRole = `-- name: GetTenantAuthorizationRole :one
+SELECT id, code, system_role, system_definition_version,
+       version, created_at, updated_at
+FROM tenant_roles
+WHERE tenant_id = $1
+  AND id = $2
+`
+
+type GetTenantAuthorizationRoleParams struct {
+	TenantID uuid.UUID
+	ID       uuid.UUID
+}
+
+type GetTenantAuthorizationRoleRow struct {
+	ID                      uuid.UUID
+	Code                    string
+	SystemRole              bool
+	SystemDefinitionVersion int64
+	Version                 int64
+	CreatedAt               pgtype.Timestamptz
+	UpdatedAt               pgtype.Timestamptz
+}
+
+func (q *Queries) GetTenantAuthorizationRole(ctx context.Context, arg GetTenantAuthorizationRoleParams) (GetTenantAuthorizationRoleRow, error) {
+	row := q.db.QueryRow(ctx, getTenantAuthorizationRole, arg.TenantID, arg.ID)
+	var i GetTenantAuthorizationRoleRow
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.SystemRole,
+		&i.SystemDefinitionVersion,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTenantLifecycleFreshnessForAuthorization = `-- name: GetTenantLifecycleFreshnessForAuthorization :one
+SELECT fresh_until > statement_timestamp() AS lifecycle_fresh
+FROM tenant_lifecycle_projections
+WHERE tenant_id = $1
+`
+
+type GetTenantLifecycleFreshnessForAuthorizationParams struct {
+	TenantID uuid.UUID
+}
+
+func (q *Queries) GetTenantLifecycleFreshnessForAuthorization(ctx context.Context, arg GetTenantLifecycleFreshnessForAuthorizationParams) (bool, error) {
+	row := q.db.QueryRow(ctx, getTenantLifecycleFreshnessForAuthorization, arg.TenantID)
+	var lifecycle_fresh bool
+	err := row.Scan(&lifecycle_fresh)
+	return lifecycle_fresh, err
 }
 
 const getTenantMembership = `-- name: GetTenantMembership :one
@@ -1091,6 +1376,228 @@ func (q *Queries) IncrementSessionGrantVersionForSwitch(ctx context.Context, arg
 	var version int64
 	err := row.Scan(&version)
 	return version, err
+}
+
+const isActiveHumanTenantAdministrator = `-- name: IsActiveHumanTenantAdministrator :one
+SELECT EXISTS (
+    SELECT 1
+    FROM tenant_memberships AS membership
+    JOIN principals AS principal
+      ON principal.id = membership.principal_id
+    JOIN tenant_role_bindings AS binding
+      ON binding.tenant_id = membership.tenant_id
+     AND binding.membership_id = membership.id
+    JOIN tenant_roles AS role
+      ON role.tenant_id = binding.tenant_id
+     AND role.id = binding.role_id
+    WHERE membership.tenant_id = $1
+      AND membership.id = $2
+      AND membership.status = 'active'
+      AND principal.principal_type = 'human'
+      AND principal.status = 'active'
+      AND role.system_role
+      AND role.code = 'tenant-admin'
+) AS is_active_human_administrator
+`
+
+type IsActiveHumanTenantAdministratorParams struct {
+	TenantID     uuid.UUID
+	MembershipID uuid.UUID
+}
+
+func (q *Queries) IsActiveHumanTenantAdministrator(ctx context.Context, arg IsActiveHumanTenantAdministratorParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isActiveHumanTenantAdministrator, arg.TenantID, arg.MembershipID)
+	var is_active_human_administrator bool
+	err := row.Scan(&is_active_human_administrator)
+	return is_active_human_administrator, err
+}
+
+const listTenantAuthorizationMembershipRoleIDs = `-- name: ListTenantAuthorizationMembershipRoleIDs :many
+SELECT role_id
+FROM tenant_role_bindings
+WHERE tenant_id = $1
+  AND membership_id = $2
+ORDER BY role_id
+`
+
+type ListTenantAuthorizationMembershipRoleIDsParams struct {
+	TenantID     uuid.UUID
+	MembershipID uuid.UUID
+}
+
+func (q *Queries) ListTenantAuthorizationMembershipRoleIDs(ctx context.Context, arg ListTenantAuthorizationMembershipRoleIDsParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listTenantAuthorizationMembershipRoleIDs, arg.TenantID, arg.MembershipID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var role_id uuid.UUID
+		if err := rows.Scan(&role_id); err != nil {
+			return nil, err
+		}
+		items = append(items, role_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTenantAuthorizationMemberships = `-- name: ListTenantAuthorizationMemberships :many
+SELECT membership.id, membership.principal_id, principal.principal_type,
+       membership.status, membership.version, membership.created_at, membership.updated_at
+FROM tenant_memberships AS membership
+JOIN principals AS principal
+  ON principal.id = membership.principal_id
+WHERE membership.tenant_id = $1
+  AND membership.id > $2
+  AND ($3::text = '' OR membership.status = $3::text)
+ORDER BY membership.id
+LIMIT $4
+`
+
+type ListTenantAuthorizationMembershipsParams struct {
+	TenantID  uuid.UUID
+	CursorID  uuid.UUID
+	Status    string
+	PageLimit int32
+}
+
+type ListTenantAuthorizationMembershipsRow struct {
+	ID            uuid.UUID
+	PrincipalID   uuid.UUID
+	PrincipalType string
+	Status        string
+	Version       int64
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
+func (q *Queries) ListTenantAuthorizationMemberships(ctx context.Context, arg ListTenantAuthorizationMembershipsParams) ([]ListTenantAuthorizationMembershipsRow, error) {
+	rows, err := q.db.Query(ctx, listTenantAuthorizationMemberships,
+		arg.TenantID,
+		arg.CursorID,
+		arg.Status,
+		arg.PageLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTenantAuthorizationMembershipsRow{}
+	for rows.Next() {
+		var i ListTenantAuthorizationMembershipsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.PrincipalID,
+			&i.PrincipalType,
+			&i.Status,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTenantAuthorizationRolePermissions = `-- name: ListTenantAuthorizationRolePermissions :many
+SELECT resource, action
+FROM tenant_role_permissions
+WHERE tenant_id = $1
+  AND role_id = $2
+ORDER BY resource, action
+`
+
+type ListTenantAuthorizationRolePermissionsParams struct {
+	TenantID uuid.UUID
+	RoleID   uuid.UUID
+}
+
+type ListTenantAuthorizationRolePermissionsRow struct {
+	Resource string
+	Action   string
+}
+
+func (q *Queries) ListTenantAuthorizationRolePermissions(ctx context.Context, arg ListTenantAuthorizationRolePermissionsParams) ([]ListTenantAuthorizationRolePermissionsRow, error) {
+	rows, err := q.db.Query(ctx, listTenantAuthorizationRolePermissions, arg.TenantID, arg.RoleID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTenantAuthorizationRolePermissionsRow{}
+	for rows.Next() {
+		var i ListTenantAuthorizationRolePermissionsRow
+		if err := rows.Scan(&i.Resource, &i.Action); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTenantAuthorizationRoles = `-- name: ListTenantAuthorizationRoles :many
+SELECT id, code, system_role, system_definition_version,
+       version, created_at, updated_at
+FROM tenant_roles
+WHERE tenant_id = $1
+  AND id > $2
+ORDER BY id
+LIMIT $3
+`
+
+type ListTenantAuthorizationRolesParams struct {
+	TenantID  uuid.UUID
+	CursorID  uuid.UUID
+	PageLimit int32
+}
+
+type ListTenantAuthorizationRolesRow struct {
+	ID                      uuid.UUID
+	Code                    string
+	SystemRole              bool
+	SystemDefinitionVersion int64
+	Version                 int64
+	CreatedAt               pgtype.Timestamptz
+	UpdatedAt               pgtype.Timestamptz
+}
+
+func (q *Queries) ListTenantAuthorizationRoles(ctx context.Context, arg ListTenantAuthorizationRolesParams) ([]ListTenantAuthorizationRolesRow, error) {
+	rows, err := q.db.Query(ctx, listTenantAuthorizationRoles, arg.TenantID, arg.CursorID, arg.PageLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTenantAuthorizationRolesRow{}
+	for rows.Next() {
+		var i ListTenantAuthorizationRolesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Code,
+			&i.SystemRole,
+			&i.SystemDefinitionVersion,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const lockActiveRefreshFamily = `-- name: LockActiveRefreshFamily :one
@@ -1631,6 +2138,59 @@ type LockSessionContinuityParams struct {
 func (q *Queries) LockSessionContinuity(ctx context.Context, arg LockSessionContinuityParams) error {
 	_, err := q.db.Exec(ctx, lockSessionContinuity, arg.SessionID)
 	return err
+}
+
+const lockTenantAdministrationGuard = `-- name: LockTenantAdministrationGuard :exec
+SELECT pg_advisory_xact_lock(
+    hashtextextended($1::uuid::text, 9)
+)
+`
+
+type LockTenantAdministrationGuardParams struct {
+	TenantID uuid.UUID
+}
+
+func (q *Queries) LockTenantAdministrationGuard(ctx context.Context, arg LockTenantAdministrationGuardParams) error {
+	_, err := q.db.Exec(ctx, lockTenantAdministrationGuard, arg.TenantID)
+	return err
+}
+
+const lockTenantAuthorizationMembership = `-- name: LockTenantAuthorizationMembership :one
+SELECT id, principal_id, status, version, created_at, updated_at
+FROM tenant_memberships
+WHERE tenant_id = $1
+  AND id = $2
+  AND version = $3
+FOR UPDATE
+`
+
+type LockTenantAuthorizationMembershipParams struct {
+	TenantID        uuid.UUID
+	ID              uuid.UUID
+	ExpectedVersion int64
+}
+
+type LockTenantAuthorizationMembershipRow struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	Status      string
+	Version     int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+func (q *Queries) LockTenantAuthorizationMembership(ctx context.Context, arg LockTenantAuthorizationMembershipParams) (LockTenantAuthorizationMembershipRow, error) {
+	row := q.db.QueryRow(ctx, lockTenantAuthorizationMembership, arg.TenantID, arg.ID, arg.ExpectedVersion)
+	var i LockTenantAuthorizationMembershipRow
+	err := row.Scan(
+		&i.ID,
+		&i.PrincipalID,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const lockTenantSwitchBoundary = `-- name: LockTenantSwitchBoundary :one
@@ -3000,6 +3560,47 @@ func (q *Queries) UpdateSessionIdleExpiry(ctx context.Context, arg UpdateSession
 	var version int64
 	err := row.Scan(&version)
 	return version, err
+}
+
+const updateTenantAuthorizationAccessStatus = `-- name: UpdateTenantAuthorizationAccessStatus :one
+UPDATE tenant_access
+SET status = $1,
+    version = version + 1,
+    updated_at = $2
+WHERE tenant_id = $3
+  AND version = $4
+RETURNING status, version, created_at, updated_at
+`
+
+type UpdateTenantAuthorizationAccessStatusParams struct {
+	Status          string
+	UpdatedAt       pgtype.Timestamptz
+	TenantID        uuid.UUID
+	ExpectedVersion int64
+}
+
+type UpdateTenantAuthorizationAccessStatusRow struct {
+	Status    string
+	Version   int64
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) UpdateTenantAuthorizationAccessStatus(ctx context.Context, arg UpdateTenantAuthorizationAccessStatusParams) (UpdateTenantAuthorizationAccessStatusRow, error) {
+	row := q.db.QueryRow(ctx, updateTenantAuthorizationAccessStatus,
+		arg.Status,
+		arg.UpdatedAt,
+		arg.TenantID,
+		arg.ExpectedVersion,
+	)
+	var i UpdateTenantAuthorizationAccessStatusRow
+	err := row.Scan(
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateTenantMembershipStatus = `-- name: UpdateTenantMembershipStatus :one

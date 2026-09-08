@@ -16,6 +16,8 @@ var (
 	ErrAuthorizationOperationUnregistered  = errors.New("authorization operation is unregistered")
 	ErrAuthorizationPolicyRevisionRequired = errors.New("authorization policy revision is required")
 	ErrAuthorizationPolicyMismatch         = errors.New("authorization policy revision mismatches registry")
+	ErrAuthorizationTargetRequired         = errors.New("authorization target resource is required")
+	ErrTenantIAMNotReady                   = errors.New("tenant IAM access is not ready")
 	ErrAuthorizationDependency             = errors.New("authorization dependency is unavailable")
 )
 
@@ -52,6 +54,38 @@ type AuthorizationPolicy struct {
 	OperationID string
 	Resource    string
 	Actions     []string
+	Scope       PermissionScope
+	Obligations []AuthorizationObligation
+}
+
+type PermissionScope string
+
+const (
+	PermissionScopeTenant   PermissionScope = "tenant"
+	PermissionScopePlatform PermissionScope = "platform"
+	PermissionScopeOwn      PermissionScope = "own"
+)
+
+type Permission struct {
+	Scope    PermissionScope
+	Resource string
+	Action   string
+}
+
+type PermissionCatalog interface {
+	Contains(Permission) bool
+	Permissions(PermissionScope) []Permission
+}
+
+type AuthorizationObligationType string
+
+const AuthorizationObligationResourceTenantMatch AuthorizationObligationType = "resource_tenant_match"
+
+type AuthorizationObligation struct {
+	Type             AuthorizationObligationType
+	Handler          string
+	ResourceID       string
+	ExpectedTenantID uuid.UUID
 }
 
 type AuthorizationPolicyRegistry interface {
@@ -102,14 +136,16 @@ type AuthorizationDecision struct {
 	Reason         AuthorizationReason
 	DecisionID     uuid.UUID
 	Principal      TrustedPrincipalContext
+	Obligations    []AuthorizationObligation
 	PolicyRevision string
 }
 
 type CheckPermissionCommand struct {
-	RawCredential  string
-	OperationID    string
-	PolicyRevision string
-	TargetTenantID uuid.UUID
+	RawCredential    string
+	OperationID      string
+	PolicyRevision   string
+	TargetTenantID   uuid.UUID
+	TargetResourceID string
 }
 
 type AuthorizationUsecase struct {
@@ -147,6 +183,15 @@ func (u *AuthorizationUsecase) CheckPermission(ctx context.Context, command Chec
 	policy, ok := u.registry.Lookup(operationID)
 	if !ok || policy.OperationID != operationID || strings.TrimSpace(policy.Resource) == "" || len(policy.Actions) == 0 {
 		return AuthorizationDecision{}, ErrAuthorizationOperationUnregistered
+	}
+	// This use case is intentionally the ordinary Tenant boundary evaluator.
+	// Platform and own-scope operations require their distinct DP2 slices and
+	// must never be interpreted through tenant role bindings.
+	if policy.Scope != PermissionScopeTenant {
+		return AuthorizationDecision{}, ErrAuthorizationOperationUnregistered
+	}
+	if len(policy.Obligations) > 0 && strings.TrimSpace(command.TargetResourceID) == "" {
+		return AuthorizationDecision{}, ErrAuthorizationTargetRequired
 	}
 	credential := strings.TrimSpace(command.RawCredential)
 	if credential == "" {
@@ -203,8 +248,23 @@ func (u *AuthorizationUsecase) CheckPermission(ctx context.Context, command Chec
 		Reason:         AuthorizationReasonAllowed,
 		DecisionID:     decisionID,
 		Principal:      principal,
+		Obligations:    authorizationObligations(policy.Obligations, command.TargetResourceID, command.TargetTenantID),
 		PolicyRevision: command.PolicyRevision,
 	}, nil
+}
+
+func authorizationObligations(policies []AuthorizationObligation, resourceID string, tenantID uuid.UUID) []AuthorizationObligation {
+	if len(policies) == 0 {
+		return nil
+	}
+	obligations := make([]AuthorizationObligation, len(policies))
+	for index, policy := range policies {
+		obligations[index] = AuthorizationObligation{
+			Type: policy.Type, Handler: policy.Handler,
+			ResourceID: strings.TrimSpace(resourceID), ExpectedTenantID: tenantID,
+		}
+	}
+	return obligations
 }
 
 func authorizationDenialReason(state AuthorizationState, expectedGrantVersion int64) AuthorizationReason {

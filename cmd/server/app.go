@@ -170,6 +170,28 @@ func newPasswordActionNotificationRuntime(
 	return worker, client, nil
 }
 
+func newTenantIAMAdminRuntime(
+	postgresData *data.Data,
+	expectedPolicyRevision string,
+	ids biz.IDGenerator,
+	clock biz.Clock,
+) (*service.IAMAdminService, error) {
+	permissionCatalog, err := data.NewTargetPermissionCatalog(expectedPolicyRevision)
+	if err != nil {
+		return nil, fmt.Errorf("configure target permission catalog: %w", err)
+	}
+	mutations := biz.NewTenantAuthorizationUsecase(
+		data.NewPostgresTenantAuthorizationUnitOfWork(postgresData),
+		permissionCatalog,
+		ids,
+		clock,
+	)
+	return service.NewTenantIAMAdminService(
+		data.NewPostgresTenantAuthorizationReader(postgresData),
+		mutations,
+	), nil
+}
+
 func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	if err := bc.Validate(); err != nil {
 		return nil, err
@@ -253,6 +275,11 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	postgresData := data.NewData(postgresPool)
 	ids := data.NewUUIDv7Generator()
 	secrets := data.NewSecretGenerator()
+	adminService, err := newTenantIAMAdminRuntime(postgresData, runtime.PolicyRevision, ids, clock)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
 	oidcProvider, err := data.NewCoreOSOIDCProvider(startupContext, data.CoreOSOIDCProviderConfig{
 		Name:         runtime.Oidc.Provider,
 		IssuerURL:    runtime.Oidc.IssuerUrl,
@@ -323,7 +350,6 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	}
 	authenticationService := service.NewAuthenticationService(authentication, oidcUsecase)
 	authorizationService := service.NewAuthorizationService(authorization)
-	adminService := service.NewIAMAdminService()
 
 	readiness := server.NewReadiness()
 	observability, err := server.NewObservability(Name, Version, readiness)

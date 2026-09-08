@@ -18,9 +18,33 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/conf"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/data"
 )
+
+func TestNewTenantIAMAdminRuntimePinsPolicyRevision(t *testing.T) {
+	postgresData := data.NewData(nil)
+	ids := data.NewUUIDv7Generator()
+	clock := data.NewSystemClock()
+
+	adminService, err := newTenantIAMAdminRuntime(postgresData, "sha256:stale", ids, clock)
+	if adminService != nil {
+		t.Fatal("newTenantIAMAdminRuntime() returned a service for a stale policy revision")
+	}
+	var mismatch *biz.AuthorizationPolicyMismatchError
+	if !errors.As(err, &mismatch) {
+		t.Fatalf("newTenantIAMAdminRuntime() error = %v, want AuthorizationPolicyMismatchError", err)
+	}
+
+	adminService, err = newTenantIAMAdminRuntime(postgresData, data.TargetPolicyRevision, ids, clock)
+	if err != nil {
+		t.Fatalf("newTenantIAMAdminRuntime() error = %v", err)
+	}
+	if adminService == nil {
+		t.Fatal("newTenantIAMAdminRuntime() returned nil service for the pinned policy revision")
+	}
+}
 
 func TestBuildAppFailsClosedWhenSigningKeyIsUnavailable(t *testing.T) {
 	bootstrap := buildAppTestBootstrap()

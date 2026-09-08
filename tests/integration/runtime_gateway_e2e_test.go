@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -13,6 +14,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,7 +23,12 @@ import (
 	"testing"
 	"time"
 
+	iamv1 "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/data"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 func TestRealIAMGatewayProcessVerticalSlice(t *testing.T) {
@@ -40,6 +47,7 @@ func TestRealIAMGatewayProcessVerticalSlice(t *testing.T) {
 	redisAddress := normalizeProcessE2ELoopbackAddress(t, redisClient.Options().Addr)
 
 	runtime := startIAMProcessForGatewayE2E(t, environment, redisAddress)
+	verifyTenantAdminProcessMTLS(t, runtime)
 	output := runGatewayProcessE2E(t, runtime, redisAddress)
 	if !strings.Contains(output, "DP2_GATEWAY_PROCESS_E2E_PASS") {
 		t.Fatalf("Gateway process did not emit success marker:\n%s", output)
@@ -68,6 +76,50 @@ func TestRealIAMGatewayProcessVerticalSlice(t *testing.T) {
 	}
 	if sessions != 1 || grants != 1 || audits != 1 {
 		t.Fatalf("process E2E atomic rows = Sessions:%d Grants:%d Audit:%d, want 1/1/1", sessions, grants, audits)
+	}
+}
+
+func verifyTenantAdminProcessMTLS(t *testing.T, runtime iamGatewayProcessRuntime) {
+	t.Helper()
+	caPEM, err := os.ReadFile(runtime.caFile)
+	if err != nil {
+		t.Fatalf("read process E2E CA: %v", err)
+	}
+	roots := x509.NewCertPool()
+	if !roots.AppendCertsFromPEM(caPEM) {
+		t.Fatal("parse process E2E CA: no certificates found")
+	}
+	certificate, err := tls.LoadX509KeyPair(runtime.clientCertFile, runtime.clientKeyFile)
+	if err != nil {
+		t.Fatalf("load Gateway process E2E key pair: %v", err)
+	}
+	connection, err := grpc.NewClient(runtime.address, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+		MinVersion:   tls.VersionTLS13,
+		ServerName:   runtime.serverName,
+		RootCAs:      roots,
+		Certificates: []tls.Certificate{certificate},
+	})), grpc.WithDisableRetry())
+	if err != nil {
+		t.Fatalf("create Tenant Admin process client: %v", err)
+	}
+	defer connection.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	client := iamv1.NewIAMAdminServiceClient(connection)
+	response, err := client.GetTenantAccess(ctx, &iamv1.GetTenantAccessRequest{TenantId: tenantA.String()})
+	if err != nil {
+		t.Fatalf("Gateway workload GetTenantAccess: %v", err)
+	}
+	if response.GetTenantAccess().GetTenantId() != tenantA.String() ||
+		response.GetTenantAccess().GetStatus() != iamv1.TenantAccessStatus_TENANT_ACCESS_STATUS_ACTIVE ||
+		response.GetTenantAccess().GetVersion() != 1 {
+		t.Fatalf("Gateway workload GetTenantAccess response = %#v", response.GetTenantAccess())
+	}
+
+	_, err = client.CreateTenantRole(ctx, &iamv1.CreateTenantRoleRequest{TenantId: tenantA.String()})
+	if status.Code(err) != codes.PermissionDenied {
+		t.Fatalf("Gateway workload CreateTenantRole code = %s, want PermissionDenied", status.Code(err))
 	}
 }
 
@@ -119,6 +171,11 @@ func startIAMProcessForGatewayE2E(t *testing.T, environment *postgresEnvironment
 		t, directory, "notification-client", "ani-iam", x509.ExtKeyUsageClientAuth, caCertificate, caKey,
 	)
 	accessTokenKeyFile := writeProcessE2EAccessTokenKey(t, directory)
+	oidcIssuer := startProcessE2EOIDCDiscovery(t)
+	oidcClientSecretFile := filepath.Join(directory, "oidc-client-secret")
+	if err := os.WriteFile(oidcClientSecretFile, []byte("process-e2e-oidc-secret"), 0o600); err != nil {
+		t.Fatalf("write process E2E OIDC client secret: %v", err)
+	}
 	grpcAddress := reserveIAMProcessLoopbackAddress(t)
 	adminAddress := reserveIAMProcessLoopbackAddress(t)
 	configFile := filepath.Join(directory, "runtime.yaml")
@@ -164,10 +221,20 @@ runtime:
     locale: en-US
     dispatch_interval: 0.25s
     submission_timeout: 1s
+  oidc:
+    provider: dex
+    issuer_url: %q
+    client_id: ani-console
+    client_secret_file: %q
+    login_redirect_uri: https://console.example.test/auth/oidc/callback
+    identity_link_redirect_uri: https://console.example.test/auth/oidc/link/callback
+    recent_reauthentication: 900s
+    http_timeout: 1s
   policy_revision: %s
 `, grpcAddress, serverCertFile, serverKeyFile, caFile, adminAddress,
 		postgresDSN(runtimeRole, environment.runtimePass, normalizeProcessE2ELoopbackAddress(t, environment.host), primaryDB, "ani-iam-dp2-05-process-e2e"), redisAddress,
-		accessTokenKeyFile, notificationClientCertFile, notificationClientKeyFile, caFile, testIntegrationPolicyRevision)
+		accessTokenKeyFile, notificationClientCertFile, notificationClientKeyFile, caFile,
+		oidcIssuer, oidcClientSecretFile, data.TargetPolicyRevision)
 	if err := os.WriteFile(configFile, []byte(configDocument), 0o600); err != nil {
 		t.Fatalf("write IAM process config: %v", err)
 	}
@@ -238,6 +305,22 @@ runtime:
 	logs, _ := os.ReadFile(logFilePath)
 	t.Fatalf("IAM process did not become ready at %s\n%s", readinessURL, logs)
 	return iamGatewayProcessRuntime{}
+}
+
+func startProcessE2EOIDCDiscovery(t *testing.T) string {
+	t.Helper()
+	var provider *httptest.Server
+	provider = httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if request.URL.Path != "/.well-known/openid-configuration" {
+			http.NotFound(response, request)
+			return
+		}
+		response.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprintf(response, `{"issuer":%q,"authorization_endpoint":%q,"token_endpoint":%q,"jwks_uri":%q,"id_token_signing_alg_values_supported":["RS256"]}`,
+			provider.URL, provider.URL+"/authorize", provider.URL+"/token", provider.URL+"/keys")
+	}))
+	t.Cleanup(provider.Close)
+	return provider.URL
 }
 
 func runGatewayProcessE2E(t *testing.T, runtime iamGatewayProcessRuntime, redisAddress string) string {

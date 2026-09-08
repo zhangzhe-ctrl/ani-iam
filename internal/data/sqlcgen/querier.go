@@ -17,11 +17,13 @@ type Querier interface {
 	AppendPrincipalSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSecurityAuditEventParams) error
 	AppendPrincipalSessionSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSessionSecurityAuditEventParams) error
 	AppendSecurityAuditEvent(ctx context.Context, arg AppendSecurityAuditEventParams) error
+	BumpTenantMembershipVersion(ctx context.Context, arg BumpTenantMembershipVersionParams) (BumpTenantMembershipVersionRow, error)
 	CancelPasswordActionNotification(ctx context.Context, arg CancelPasswordActionNotificationParams) error
 	CancelReplacedPasswordActionNotifications(ctx context.Context, arg CancelReplacedPasswordActionNotificationsParams) error
 	ClaimPasswordActionNotification(ctx context.Context, arg ClaimPasswordActionNotificationParams) (ClaimPasswordActionNotificationRow, error)
 	ConsumePasswordAction(ctx context.Context, arg ConsumePasswordActionParams) (int64, error)
 	ConsumeRefreshToken(ctx context.Context, arg ConsumeRefreshTokenParams) (uuid.UUID, error)
+	CountActiveHumanTenantAdministrators(ctx context.Context, arg CountActiveHumanTenantAdministratorsParams) (int64, error)
 	CreateKnownPasswordActionRequest(ctx context.Context, arg CreateKnownPasswordActionRequestParams) error
 	CreateOIDCIdentity(ctx context.Context, arg CreateOIDCIdentityParams) error
 	CreatePasswordAction(ctx context.Context, arg CreatePasswordActionParams) error
@@ -34,13 +36,25 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateSessionGrant(ctx context.Context, arg CreateSessionGrantParams) error
 	CreateTenantMembership(ctx context.Context, arg CreateTenantMembershipParams) error
+	CreateTenantRoleBinding(ctx context.Context, arg CreateTenantRoleBindingParams) error
 	CreateUnknownPasswordActionRequest(ctx context.Context, arg CreateUnknownPasswordActionRequestParams) error
+	DeleteTenantRoleBinding(ctx context.Context, arg DeleteTenantRoleBindingParams) (DeleteTenantRoleBindingRow, error)
 	GetPasswordActionCompletionByIdempotencyKey(ctx context.Context, arg GetPasswordActionCompletionByIdempotencyKeyParams) (GetPasswordActionCompletionByIdempotencyKeyRow, error)
 	GetPasswordActionRequestByIdempotencyKey(ctx context.Context, arg GetPasswordActionRequestByIdempotencyKeyParams) (GetPasswordActionRequestByIdempotencyKeyRow, error)
+	GetTenantAccessStatusForAuthorization(ctx context.Context, arg GetTenantAccessStatusForAuthorizationParams) (string, error)
+	GetTenantAuthorizationAccess(ctx context.Context, arg GetTenantAuthorizationAccessParams) (GetTenantAuthorizationAccessRow, error)
+	GetTenantAuthorizationMembership(ctx context.Context, arg GetTenantAuthorizationMembershipParams) (GetTenantAuthorizationMembershipRow, error)
+	GetTenantAuthorizationRole(ctx context.Context, arg GetTenantAuthorizationRoleParams) (GetTenantAuthorizationRoleRow, error)
+	GetTenantLifecycleFreshnessForAuthorization(ctx context.Context, arg GetTenantLifecycleFreshnessForAuthorizationParams) (bool, error)
 	GetTenantMembership(ctx context.Context, arg GetTenantMembershipParams) (GetTenantMembershipRow, error)
 	GetVerifiedAccountForPrincipal(ctx context.Context, arg GetVerifiedAccountForPrincipalParams) (string, error)
 	IncrementSessionGrantVersionForReuse(ctx context.Context, arg IncrementSessionGrantVersionForReuseParams) (int64, error)
 	IncrementSessionGrantVersionForSwitch(ctx context.Context, arg IncrementSessionGrantVersionForSwitchParams) (int64, error)
+	IsActiveHumanTenantAdministrator(ctx context.Context, arg IsActiveHumanTenantAdministratorParams) (bool, error)
+	ListTenantAuthorizationMembershipRoleIDs(ctx context.Context, arg ListTenantAuthorizationMembershipRoleIDsParams) ([]uuid.UUID, error)
+	ListTenantAuthorizationMemberships(ctx context.Context, arg ListTenantAuthorizationMembershipsParams) ([]ListTenantAuthorizationMembershipsRow, error)
+	ListTenantAuthorizationRolePermissions(ctx context.Context, arg ListTenantAuthorizationRolePermissionsParams) ([]ListTenantAuthorizationRolePermissionsRow, error)
+	ListTenantAuthorizationRoles(ctx context.Context, arg ListTenantAuthorizationRolesParams) ([]ListTenantAuthorizationRolesRow, error)
 	LockActiveRefreshFamily(ctx context.Context, arg LockActiveRefreshFamilyParams) (LockActiveRefreshFamilyRow, error)
 	LockActiveRefreshToken(ctx context.Context, arg LockActiveRefreshTokenParams) (LockActiveRefreshTokenRow, error)
 	LockActiveTargetGrant(ctx context.Context, arg LockActiveTargetGrantParams) (LockActiveTargetGrantRow, error)
@@ -55,6 +69,8 @@ type Querier interface {
 	// do not broaden runtime privileges merely to obtain a row lock on the projection.
 	LockRefreshSession(ctx context.Context, arg LockRefreshSessionParams) (LockRefreshSessionRow, error)
 	LockSessionContinuity(ctx context.Context, arg LockSessionContinuityParams) error
+	LockTenantAdministrationGuard(ctx context.Context, arg LockTenantAdministrationGuardParams) error
+	LockTenantAuthorizationMembership(ctx context.Context, arg LockTenantAuthorizationMembershipParams) (LockTenantAuthorizationMembershipRow, error)
 	// tenant_lifecycle_projections is a read-only projection for the IAM runtime.
 	LockTenantSwitchBoundary(ctx context.Context, arg LockTenantSwitchBoundaryParams) (LockTenantSwitchBoundaryRow, error)
 	LookupAuthorization(ctx context.Context, arg LookupAuthorizationParams) (LookupAuthorizationRow, error)
@@ -85,6 +101,7 @@ type Querier interface {
 	RevokeSessionsForPrincipal(ctx context.Context, arg RevokeSessionsForPrincipalParams) error
 	UpdatePasswordCredentialForReset(ctx context.Context, arg UpdatePasswordCredentialForResetParams) (int64, error)
 	UpdateSessionIdleExpiry(ctx context.Context, arg UpdateSessionIdleExpiryParams) (int64, error)
+	UpdateTenantAuthorizationAccessStatus(ctx context.Context, arg UpdateTenantAuthorizationAccessStatusParams) (UpdateTenantAuthorizationAccessStatusRow, error)
 	UpdateTenantMembershipStatus(ctx context.Context, arg UpdateTenantMembershipStatusParams) (UpdateTenantMembershipStatusRow, error)
 }
 

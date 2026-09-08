@@ -35,10 +35,11 @@ func (s *AuthorizationService) CheckPermission(ctx context.Context, request *iam
 		credential = request.GetCredential().GetValue()
 	}
 	decision, err := s.authorization.CheckPermission(ctx, biz.CheckPermissionCommand{
-		RawCredential:  credential,
-		OperationID:    request.GetOperationId(),
-		PolicyRevision: request.GetPolicyRevision(),
-		TargetTenantID: tenantID,
+		RawCredential:    credential,
+		OperationID:      request.GetOperationId(),
+		PolicyRevision:   request.GetPolicyRevision(),
+		TargetTenantID:   tenantID,
+		TargetResourceID: request.GetTarget().GetResourceId(),
 	})
 	if err != nil {
 		return nil, mapIAMError(err, errorContext{
@@ -58,8 +59,27 @@ func authorizationDecisionToProto(decision biz.AuthorizationDecision) *iamv1.Aut
 		Reason:         string(decision.Reason),
 		DecisionId:     decision.DecisionID.String(),
 		Principal:      trustedPrincipalToProto(decision.Principal),
+		Obligations:    authorizationObligationsToProto(decision.Obligations),
 		PolicyRevision: decision.PolicyRevision,
 	}
+}
+
+func authorizationObligationsToProto(values []biz.AuthorizationObligation) []*iamv1.AuthorizationObligation {
+	obligations := make([]*iamv1.AuthorizationObligation, 0, len(values))
+	for _, value := range values {
+		var obligationType iamv1.AuthorizationObligationType
+		switch value.Type {
+		case biz.AuthorizationObligationResourceTenantMatch:
+			obligationType = iamv1.AuthorizationObligationType_AUTHORIZATION_OBLIGATION_TYPE_RESOURCE_TENANT_MATCH
+		default:
+			continue
+		}
+		obligations = append(obligations, &iamv1.AuthorizationObligation{
+			Type: obligationType, Handler: value.Handler, ResourceId: value.ResourceID,
+			ExpectedTenantId: value.ExpectedTenantID.String(),
+		})
+	}
+	return obligations
 }
 
 func trustedPrincipalToProto(principal biz.TrustedPrincipalContext) *iamv1.PrincipalContext {

@@ -457,6 +457,32 @@ func mapIAMError(err error, details errorContext) error {
 			"policy_revision": details.ActualPolicyRevision,
 		})
 	}
+	if errors.Is(err, biz.ErrTenantIAMNotReady) {
+		return newIAMStatus(codes.Unavailable, "TENANT_IAM_NOT_READY", "tenant IAM access is not ready", map[string]string{
+			"tenant_id": details.TenantID,
+		})
+	}
+	if errors.Is(err, biz.ErrTenantAccessNotFound) {
+		return newIAMStatus(codes.Unavailable, "TENANT_IAM_NOT_READY", "tenant IAM access is not ready", map[string]string{
+			"tenant_id": details.TenantID,
+		})
+	}
+	if errors.Is(err, biz.ErrMembershipNotFound) || errors.Is(err, biz.ErrRoleNotFound) || errors.Is(err, biz.ErrRoleBindingNotFound) {
+		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{
+			"operation_id": details.OperationID,
+		})
+	}
+	if errors.Is(err, biz.ErrVersionConflict) || errors.Is(err, biz.ErrRoleBindingConflict) {
+		return newIAMStatus(codes.Aborted, "VERSION_CONFLICT", "IAM resource version conflicts with current state", map[string]string{
+			"operation_id": details.OperationID,
+		})
+	}
+	if errors.Is(err, biz.ErrLastTenantAdministrator) {
+		return newIAMStatus(codes.PermissionDenied, "PERMISSION_DENIED", "access is denied", map[string]string{
+			"operation_id": details.OperationID,
+			"decision_id":  details.DecisionID,
+		})
+	}
 	var policyMismatch *biz.AuthorizationPolicyMismatchError
 	if errors.As(err, &policyMismatch) {
 		return newIAMStatus(codes.Unavailable, "AUTHZ_POLICY_MISMATCH", "authorization policy revision mismatch", map[string]string{
@@ -529,6 +555,8 @@ func invalidArgumentField(err error) string {
 		return "operation_id"
 	case errors.Is(err, biz.ErrAuthorizationPolicyRevisionRequired):
 		return "policy_revision"
+	case errors.Is(err, biz.ErrAuthorizationTargetRequired):
+		return "target.resource_id"
 	default:
 		return ""
 	}

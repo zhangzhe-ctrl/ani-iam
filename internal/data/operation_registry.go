@@ -2,14 +2,9 @@ package data
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
-)
-
-const (
-	TargetPolicyRevision          = "sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa"
-	TargetOperationRegistrySHA256 = "319bd3746098b79d29da18141872b97263c1d899da0306654eda9fad736c2ad2"
-	TargetOpenAPISHA256           = "2466982a7e8f904c6bb6f7790588359c6faf9b230a39a0e28939fcbedc72d0e5"
 )
 
 type targetOperationRegistry struct {
@@ -26,14 +21,47 @@ func NewTargetOperationRegistry(expectedRevision string) (biz.AuthorizationPolic
 	}
 	return &targetOperationRegistry{
 		revision: TargetPolicyRevision,
-		policies: map[string]biz.AuthorizationPolicy{
-			"listInstances": {
-				OperationID: "listInstances",
-				Resource:    "instances",
-				Actions:     []string{"read"},
-			},
-		},
+		policies: generatedTargetPolicies,
 	}, nil
+}
+
+type targetPermissionCatalog struct {
+	permissions map[biz.Permission]struct{}
+}
+
+func NewTargetPermissionCatalog(expectedRevision string) (biz.PermissionCatalog, error) {
+	registry, err := NewTargetOperationRegistry(expectedRevision)
+	if err != nil {
+		return nil, err
+	}
+	permissions := make(map[biz.Permission]struct{})
+	for _, policy := range registry.(*targetOperationRegistry).policies {
+		for _, action := range policy.Actions {
+			permissions[biz.Permission{Scope: policy.Scope, Resource: policy.Resource, Action: action}] = struct{}{}
+		}
+	}
+	return &targetPermissionCatalog{permissions: permissions}, nil
+}
+
+func (c *targetPermissionCatalog) Contains(permission biz.Permission) bool {
+	_, ok := c.permissions[permission]
+	return ok
+}
+
+func (c *targetPermissionCatalog) Permissions(scope biz.PermissionScope) []biz.Permission {
+	permissions := make([]biz.Permission, 0, len(c.permissions))
+	for permission := range c.permissions {
+		if permission.Scope == scope {
+			permissions = append(permissions, permission)
+		}
+	}
+	sort.Slice(permissions, func(i, j int) bool {
+		if permissions[i].Resource != permissions[j].Resource {
+			return permissions[i].Resource < permissions[j].Resource
+		}
+		return permissions[i].Action < permissions[j].Action
+	})
+	return permissions
 }
 
 func (r *targetOperationRegistry) Revision() string {
@@ -46,11 +74,15 @@ func (r *targetOperationRegistry) Lookup(operationID string) (biz.AuthorizationP
 		return biz.AuthorizationPolicy{}, false
 	}
 	policy.Actions = append([]string(nil), policy.Actions...)
+	policy.Obligations = append([]biz.AuthorizationObligation(nil), policy.Obligations...)
 	return policy, true
 }
 
 func TargetRegistryIdentity() string {
-	return fmt.Sprintf("policy=%s registry_sha256=%s openapi_sha256=%s", TargetPolicyRevision, TargetOperationRegistrySHA256, TargetOpenAPISHA256)
+	return fmt.Sprintf("policy=%s registry_sha256=%s core_openapi_sha256=%s services_openapi_sha256=%s", TargetPolicyRevision, TargetOperationRegistrySHA256, TargetCoreOpenAPISHA256, TargetServicesOpenAPISHA256)
 }
 
-var _ biz.AuthorizationPolicyRegistry = (*targetOperationRegistry)(nil)
+var (
+	_ biz.AuthorizationPolicyRegistry = (*targetOperationRegistry)(nil)
+	_ biz.PermissionCatalog           = (*targetPermissionCatalog)(nil)
+)

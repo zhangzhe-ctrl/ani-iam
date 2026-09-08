@@ -375,7 +375,7 @@ func seedTargetLoginFixture(t *testing.T, ctx context.Context, environment *post
 		{`INSERT INTO password_credentials (principal_id, identity_id, password_hash, algorithm, version, created_at, updated_at) VALUES ($1, $2, $3, 'argon2id', 1, now(), now())`, []any{actorID, identityID, passwordHash}},
 		{`INSERT INTO tenant_roles (tenant_id, id, code, system_role, system_definition_version, version, created_at, updated_at) VALUES ($1, $2, 'tenant-admin', true, 1, 1, now(), now())`, []any{tenantA, roleID}},
 		{`INSERT INTO tenant_role_bindings (tenant_id, id, membership_id, role_id, version, created_at, updated_at) VALUES ($1, $2, $3, $4, 1, now(), now())`, []any{tenantA, bindingID, fixture.membershipID, roleID}},
-		{`INSERT INTO tenant_role_permissions (tenant_id, role_id, resource, action, created_at) VALUES ($1, $2, 'instances', 'read', now())`, []any{tenantA, roleID}},
+		{`INSERT INTO tenant_role_permissions (tenant_id, role_id, scope, resource, action, created_at) VALUES ($1, $2, 'tenant', 'instances', 'read', now())`, []any{tenantA, roleID}},
 	}
 	for _, statement := range statements {
 		if _, err := seedPool.Exec(ctx, statement.query, statement.args...); err != nil {
@@ -442,7 +442,7 @@ func (targetPolicyRegistry) Lookup(operationID string) (biz.AuthorizationPolicy,
 	if operationID != "listInstances" {
 		return biz.AuthorizationPolicy{}, false
 	}
-	return biz.AuthorizationPolicy{OperationID: operationID, Resource: "instances", Actions: []string{"read"}}, true
+	return biz.AuthorizationPolicy{OperationID: operationID, Resource: "instances", Actions: []string{"read"}, Scope: biz.PermissionScopeTenant}, true
 }
 
 func newVerticalSliceRedisClient(t *testing.T, ctx context.Context) *redis.Client {
