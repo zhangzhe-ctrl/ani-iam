@@ -4,7 +4,7 @@
 
 **Blocked by:** DP2-10 pause checkpoint accepted on 2026-09-08
 
-**Status:** ready-for-human
+**Status:** claimed
 
 **Type:** bug
 
@@ -36,3 +36,4 @@
 ## Comments
 
 - 2026-09-08：恢复提交 `fd4ede316f3734300381884908ebaa8bc8aaa925` 已推送并创建 ANI PR #152；Actions run `34202658984` 在原基线 `caa2a5e72fad98215a5ea26696e453e5c2ef6523` 上全部通过。CI 运行期间 ANI main 前进到 `804db51a5f93605f9bbd4ac407f0489ecb1d187c`，PR 随后变为 `CONFLICTING`。按 baseline-drift stop condition 转为 `ready-for-human`；未经人工接受新基线不得 merge/rebase 或继续改动。
+- 2026-09-08：用户确认 `804db51a5f93605f9bbd4ac407f0489ecb1d187c` 是其 rebase 后的预期 main，并要求修复 PR 冲突。该精确 SHA 作为新的已接受 reconciliation baseline，本事项重新进入 `claimed`；必须保留其 observability API/handlers，只移除 #145 IAM 语义。
