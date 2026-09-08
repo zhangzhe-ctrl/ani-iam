@@ -55,4 +55,11 @@ This audit treats the current worktrees and executable gates as authoritative. A
 
 ## Completion decision
 
-All in-scope numbered requirements are `pass`; item 15 remains explicitly `not_verified` because the unified ledger belongs to DP2-16 and was neither required nor claimed here. DP2-10 remains `claimed` only until the final independent Standards/Spec re-review, complete gates, exact staging audit, evidence finalization, and the two local commits finish. No `api/**`, `configs/**`, `internal/conf/**`, `deploy/**`, ANI OpenAPI/registry, or other ANI path was required or modified.
+All in-scope numbered requirements are `pass`; item 15 remains explicitly `not_verified` because the unified ledger belongs to DP2-16 and was neither required nor claimed here. No `api/**`, `configs/**`, `internal/conf/**`, `deploy/**`, ANI OpenAPI/registry, or other ANI path was required or modified.
+
+The DP2-10 implementation commit pair is:
+
+- IAM: `78c5265bcd9eddb97ed7525fe4756db03abc5c50` (`feat: deliver service principal API key runtime`; tree `2ec15ab7d51dcc8d66c60f5d5678b034c3721f00`).
+- ANI: `f4af3902e346d15e69bdeceda725730edec3542f` (`feat: authorize envoy requests through IAM`; tree `5ac109556ea94592401b6b3bdd7cd409b9206d43`).
+
+Both implementation worktrees were clean immediately after these commits. This follow-up evidence/status change deliberately records the already-created immutable SHAs without amend. DP2-10 is `resolved`; DP2-11 was not claimed before this closure.

@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 / 建立无 RLS 持久化基础；09 / 交付 Tenant Access、Membership 与目标授权
 
-**Status:** claimed
+**Status:** resolved
 
 **Type:** enhancement
 
@@ -45,3 +45,4 @@
 - 2026-09-09：第二轮独立复核发现的两个 Allowed-path blocker 已修复并复核为 `pass`：API Key secret/status/expiry 现在先于 Tenant Access/lifecycle/permission 查询，真实 PostgreSQL+Redis 证明 stale lifecycle 下 wrong-secret/expired/revoked 仍为 `401`、有效 Key 为 `503`；未认证 `CheckPermission` 失败改写 unbound anonymous-principal audit，不再信任请求 `TargetTenantID` 选择审计 Tenant。整体仍仅因同一四路径 production-wiring 人工检查点为 `fail`，事项保持 `claimed`。
 - 2026-09-09：逐项完成性审计又补齐 real PostgreSQL missing-lifecycle、重新 enable 不复活旧 Key、管理 RPC 正向 Get/Update/Revoke，以及 frozen registry 敏感 operation 分类回归，聚焦真实门禁 `pass`。审计结论仍不放宽：事项 1/8/9 的生产 runtime 证明因同一四路径 wiring 缺口为 `fail`，完整矩阵见 `../evidence/10-deliver-service-principal-api-key/completion-audit-20260909.md`；未 stage、未 commit、未 resolve。
 - 2026-09-09：用户回复“批准修改”，精确批准上一条人工检查点列出的四个文件；没有批准配置、契约、部署或其他路径扩展。生产 runtime 已显式注入 Redis create limiter 与共享 usage aggregator，Kratos lifecycle 启动/停止 deadline-bounded multi-batch flusher，指标公开无 Tenant/Principal/Credential 标签的 stale/unusual 聚合值及采样时间。实现与聚焦真实依赖门禁为 `pass`；事项保持 `claimed`，等待最终双轴复核、完整门禁、证据和本地提交收口。
+- 2026-09-09：最终 Standards/Spec 双轴复核均无 blocker；IAM unit/race/vet、完整受限真实依赖 integration、独立 real-IAM/mTLS/Envoy 进程、ANI Adapter race/vet、冻结哈希、secret scan 和 staged-path audit 均为 `pass`。DP2-10 commit pair：IAM `78c5265bcd9eddb97ed7525fe4756db03abc5c50`，ANI `f4af3902e346d15e69bdeceda725730edec3542f`。未 push、未建 PR、未部署、未切流、未失效 Credential、未修改共享基础设施、未删除数据；事项现收口为 `resolved`。
