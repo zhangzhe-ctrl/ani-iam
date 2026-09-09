@@ -1,0 +1,35 @@
+{
+  "cluster_uid": "f5cafbf1-5246-4f8f-b9da-742182f37528",
+  "finished_at": "2026-09-09T02:04:00Z",
+  "current": {
+    "deployment_available": 1,
+    "login_status": 200,
+    "pod": "cf01-current-runtime-846659f5d5-grzwg",
+    "pod_containers_ready": "6/6",
+    "protected_status": 200,
+    "ready_status": 200,
+    "refresh_token_rows_after_smoke": 1,
+    "result": "pass",
+    "token_obtained": true
+  },
+  "environment_established": "pass",
+  "run_id": "20260909t013439z",
+  "started_at": "2026-09-09T01:34:39Z",
+  "target": {
+    "authorization_check_permission_after": 1,
+    "authorization_check_permission_before": 0,
+    "authorization_check_permission_delta": 1,
+    "authorization_check_permission_status": 200,
+    "deployment_available": 1,
+    "iam_audit_rows_after_smoke": 1,
+    "login_status": 200,
+    "pod": "cf01-target-runtime-79cb49b955-qwxch",
+    "pod_containers_ready": "6/6",
+    "protected_status": 200,
+    "ready_status": 200,
+    "result": "pass",
+    "session_grant_rows_after_smoke": 1,
+    "session_rows_after_smoke": 1,
+    "token_obtained": true
+  }
+}

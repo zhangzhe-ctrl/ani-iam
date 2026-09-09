@@ -1,0 +1,23 @@
+{
+  "cluster_uid": "f5cafbf1-5246-4f8f-b9da-742182f37528",
+  "current": {
+    "deployment_uid": "8e9f62c4-2650-46e7-b171-c3e6c41fc9a1",
+    "namespace": "ani-cutover-current",
+    "namespace_uid": "aeae0faf-8764-4d74-8e50-2f7ab34e57a0",
+    "pod_uid": "9e051899-5287-4fd9-9293-df112928528c",
+    "pvc": "cf01-current-postgres-data",
+    "pvc_uid": "022b7c33-4f93-4eb0-8e22-528e232ccea0"
+  },
+  "no_cross_lane_endpoint_reference": "pass",
+  "no_image_pull_secret": "pass",
+  "run_id": "20260909t013439z",
+  "no_service_ingress_nodeport_or_loadbalancer": "pass",
+  "target": {
+    "deployment_uid": "e91b1c62-9e9d-4cce-ae5e-ed172372dc06",
+    "namespace": "ani-cutover-target",
+    "namespace_uid": "86a86f83-71e2-4c75-bb50-d81d83a73b90",
+    "pod_uid": "7a4aecb4-5cfa-4638-a25f-3b8106c49655",
+    "pvc": "cf01-target-postgres-data",
+    "pvc_uid": "9c76730e-0a13-4dd3-be3c-3ad3660b0536"
+  }
+}

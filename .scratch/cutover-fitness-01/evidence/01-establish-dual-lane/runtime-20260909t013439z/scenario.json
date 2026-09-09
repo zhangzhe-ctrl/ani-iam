@@ -1,0 +1,17 @@
+{
+  "current_login_contract": {
+    "fields": ["tenant_name", "username", "password"],
+    "path": "/api/v1/auth/password/login"
+  },
+  "ordered_steps": [
+    "GET /readyz",
+    "POST /api/v1/auth/password/login",
+    "GET /api/v1/instances"
+  ],
+  "scenario_id": "CF01-HUMAN-PASSWORD-PROTECTED-READ-V1",
+  "target_login_contract": {
+    "fields": ["account", "password", "audience", "boundary", "device_name"],
+    "idempotency_key_header": true,
+    "path": "/api/v1/auth/password/login"
+  }
+}

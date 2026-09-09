@@ -1,0 +1,21 @@
+{
+  "accepted_breaking_differences": [
+    {
+      "current": "tenant_name plus username plus password",
+      "surface": "password login request",
+      "target": "account plus password plus console audience plus tenant boundary plus device_name and Idempotency-Key"
+    },
+    {
+      "current": "legacy Auth gRPC over lane-local loopback",
+      "surface": "authentication and authorization owner",
+      "target": "ani-iam gRPC over TLS 1.3 mutual TLS on lane-local loopback"
+    },
+    {
+      "current": "role permissions evaluated by current Auth",
+      "surface": "GET instances authorization",
+      "target": "generated operation registry revision sha256:1d5c80b83635e9a152c0edd9e8d1c9b66f5f8962e84cdd4f4701ecc486dd969c and exactly one CheckPermission"
+    }
+  ],
+  "result": "pass",
+  "run_id": "20260909t013439z"
+}

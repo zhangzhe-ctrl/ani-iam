@@ -1,0 +1,15 @@
+2026-09-09T01:31:00Z read-only cluster/namespace/PVC/PV/workload/Secret/NetworkPolicy preflight: exit 0
+2026-09-09T01:39:00Z probe contract tests, RED before implementation: exit 1
+2026-09-09T01:41:00Z probe contract tests, GREEN after implementation: exit 0
+2026-09-09T01:45:00Z build and push target Gateway from ANI 4ff73e09 detached archive: exit 0
+2026-09-09T01:45:00Z build and push target IAM from 78c5265b detached archive: exit 0
+2026-09-09T01:48:00Z build and push task-owned probe: exit 0
+2026-09-09T01:57:00Z create namespace-local runtime Secret/ConfigMap without emitting values: exit 0
+2026-09-09T01:58:00Z apply digest-only dual-lane runtime manifest: exit 0
+2026-09-09T02:01:00Z correct environment-only Redis/OIDC/POD_UID startup assembly and re-apply: exit 0
+2026-09-09T02:02:00Z wait for current and target 6/6 Ready: exit 0
+2026-09-09T02:03:00Z read target CheckPermission metric baseline: exit 0, no series (0)
+2026-09-09T02:03:00Z execute current fixed HTTP chain exactly once: exit 0, 200/200/200
+2026-09-09T02:03:00Z execute target fixed HTTP chain exactly once: exit 0, 200/200/200
+2026-09-09T02:03:00Z read target CheckPermission metric after smoke: exit 0, code 200 total 1
+2026-09-09T02:04:00Z repository Secret scan: exit 0

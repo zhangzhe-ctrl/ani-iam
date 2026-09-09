@@ -4,7 +4,7 @@
 
 **Blocked by:** 00 / 固化 CUTOVER-FITNESS-01 环境与证据方案
 
-**Status:** claimed
+**Status:** resolved
 
 **Type:** enhancement
 
@@ -69,3 +69,4 @@
 - 2026-09-08T11:48:31Z：用户接受简化后的 current build 口径并要求继续：事项 01 已固定 ANI `main@56a5f0b493c8404a024a92647d93f2ba2f7daf35`，且远端 `main` 仍指向该提交，因此不得切换动态 ref；允许在 `deploy/cutover-fitness/**` 新增 task-owned Dockerfile，基于该 detached source 完成 current Auth 镜像并记录 source commit/tree、Dockerfile/base image、build command 与最终 OCI digest。该明确决定取代“必须使用 tree 内既有 Auth Dockerfile原样成功”的停止条件，但不授权修改 ANI checkout/ref/source、把当前工作树作为 context、读取/复制 Credential、扩大 cluster/registry/path 范围或放松其他门禁。事项 01 重新成为唯一 `claimed`；复用 foundation 前必须重验资源归属、无运行中写动作和 cluster UID。
 - 2026-09-08T12:18:01Z：按用户最新口径仅收口 fixed-source current Auth 镜像，结果 `pass`。使用事项 01 已固定的 ANI `main@56a5f0b493c8404a024a92647d93f2ba2f7daf35`（tree `4ba6a15ad0cddf0db66a25d695b082d47346aff1`）detached archive 与 task-owned Dockerfile 构建；远端 `main` 验证时仍为同一提交。镜像固定为 `docker.changqingyun.cn/ani/cf01-auth-service-current@sha256:8e5d4d11662d7fdfab92f3732b07e9b0999c2de2b4bcf50af52a86cd83d1c018`，完整记录位于 `../evidence/01-establish-dual-lane/current-auth-fixed-build-20260908t114831z/`。未修改 ANI checkout/ref/source；按用户要求不继续 runtime/smoke 扩展，因此事项 01 的 broader environment 仍未完成并转为 `ready-for-human`，DP2-10 恢复为唯一 `claimed`。
 - 2026-09-09T01:34:39Z：用户授权恢复事项 01 且只完成环境。只读复核确认 cluster UID、两个 namespace UID、PVC/PV UID 与既有记录一致；两个 storage Job 均 `active=0`/`succeeded=1`，唯一挂载 PVC 的 Pod 均已 `Succeeded`，Running echo/network/registry-canary Pod 不挂载 PVC；未发现未知 namespace 对象或活动数据写入。registry canary 使用上一轮已构建的 probe digest `sha256:36ff3463579a46479b1ac1719ef62f9d6ab003db040376384ae95a9b63694376`，记录为已知 CF-01 自有变更。current 保持 `56a5f0b...`；target IAM product 更新为 DP2-10 `78c5265...`，target Gateway 使用 policy revision 匹配的 ANI `4ff73e09...`，不得复用旧 `28eb050...` target Gateway。只部署最小 current Auth/Gateway 与 target IAM/Gateway，并各执行一次固定 `readyz → password login → instances`；target 必须恰好一次 authorization decision。仅全部通过才可 `resolved`，否则停止且不进入 DP2-10 对比。
+- 2026-09-09T02:04:00Z：环境恢复 `pass`，事项 01 `resolved`。current 固定链路与 target 固定链路均仅执行一次且都是 `200 → 200 → 200`；两边都取得 access token。target IAM `CheckPermission` 的成功请求计数从 0 增至 1，delta 恰好为 1；target 数据库同时产生 1 个 Session、1 个 Session Grant 和 1 条登录 Audit。current/target Deployment 最终均 `available=1`、Pod 均 `6/6 Ready`，只挂载各自 PVC，不存在 task-owned Service/Ingress/NodePort/LoadBalancer/imagePullSecret。target Gateway 固定为 ANI `4ff73e09...` 与 IAM `78c5265...` 的 policy revision `sha256:1d5c80...` 一致；harness commit `13e709f4359b81f51444b9875c430b6ba98d00ec`；OCI digests、启动装配修正与脱敏证据见 `../evidence/01-establish-dual-lane/runtime-20260909t013439z/`。未进入 DP2-10 对比。

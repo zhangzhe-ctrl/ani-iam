@@ -1,0 +1,9 @@
+{
+  "comparison_not_executed": "pass",
+  "dp2_10_baseline": "78c5265bcd9eddb97ed7525fe4756db03abc5c50",
+  "dp2_10_issue_status_after_cf01": "resolved",
+  "dp2_10_issue_status_before_cf01": "resolved",
+  "dp2_10_product_unchanged_by_cf01": "pass",
+  "note": "The latest user instruction limited this turn to CF-01 environment establishment and prohibited entering DP2-10 comparison. The already-resolved DP2-10 issue was not reopened or changed.",
+  "result": "pass"
+}

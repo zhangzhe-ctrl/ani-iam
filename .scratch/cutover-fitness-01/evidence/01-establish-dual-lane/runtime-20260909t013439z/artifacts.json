@@ -1,0 +1,21 @@
+{
+  "current": {
+    "ani_commit": "56a5f0b493c8404a024a92647d93f2ba2f7daf35",
+    "ani_tree": "4ba6a15ad0cddf0db66a25d695b082d47346aff1",
+    "auth_image": "docker.changqingyun.cn/ani/cf01-auth-service-current@sha256:8e5d4d11662d7fdfab92f3732b07e9b0999c2de2b4bcf50af52a86cd83d1c018",
+    "gateway_image": "docker.changqingyun.cn/ani/cf01-ani-gateway-current@sha256:a5513ab4dad4ca1b01c02d9ebd1d9260c98af3a016494ba623afd7fdf5f374d0"
+  },
+  "harness_commit": "13e709f4359b81f51444b9875c430b6ba98d00ec",
+  "harness_tree": "73d3987561b2a6eea8589187c493bf03538eb499",
+  "probe_image": "docker.changqingyun.cn/ani/cf01-probe@sha256:f06f2ea4ac8f29e1bb74d0ed7924c972a566af9d50e1fafc8ecac83290797551",
+  "run_id": "20260909t013439z",
+  "target": {
+    "ani_gateway_commit": "4ff73e09c16df706af2aacdff6d763ed4aeaa873",
+    "ani_gateway_tree": "bc0ddb3ba1a449bc30b7815f9047aeb4390e8eff",
+    "gateway_image": "docker.changqingyun.cn/ani/cf01-ani-gateway-target@sha256:156369738bac9df857a69df9b9ec3b7c03a2fe84c9725ee026fa06a5f4bd16fb",
+    "iam_commit": "78c5265bcd9eddb97ed7525fe4756db03abc5c50",
+    "iam_image": "docker.changqingyun.cn/ani/cf01-ani-iam-target@sha256:ce3a0d4865a7764c44d58c26efe9c1b6fceb58acc013541eaac8235d7ffc087d",
+    "iam_tree": "2ec15ab7d51dcc8d66c60f5d5678b034c3721f00",
+    "policy_revision": "sha256:1d5c80b83635e9a152c0edd9e8d1c9b66f5f8962e84cdd4f4701ecc486dd969c"
+  }
+}
