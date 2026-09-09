@@ -2,6 +2,7 @@ import json
 import tempfile
 import threading
 import unittest
+from unittest import mock
 from pathlib import Path
 
 import cf01
@@ -116,6 +117,74 @@ class ProbeTests(unittest.TestCase):
         finally:
             server.close()
             thread.join(2)
+
+    def test_current_http_smoke_uses_fixed_gateway_chain(self):
+        calls = []
+
+        def request(method, url, body=None, token="", headers=None):
+            calls.append((method, url, body, token, headers or {}))
+            if url.endswith("/auth/password/login"):
+                return 200, {"access_token": "opaque-current-token"}
+            return 200, {}
+
+        with mock.patch.object(probe, "_json_request", side_effect=request):
+            result = probe.http_smoke(
+                "http://gateway:9200/readyz",
+                "http://gateway:8080/api/v1",
+                "current",
+                "user@example.com",
+                "correct horse",
+                "tenant-a",
+                "0198f062-b76d-7f2a-b0ad-50a417bf1f70",
+            )
+
+        self.assertEqual(result, {
+            "ready_status": 200,
+            "login_status": 200,
+            "protected_status": 200,
+            "token_obtained": True,
+        })
+        self.assertEqual(calls[0][:2], ("GET", "http://gateway:9200/readyz"))
+        self.assertEqual(calls[1][2], {
+            "tenant_name": "tenant-a",
+            "username": "user@example.com",
+            "password": "correct horse",
+        })
+        self.assertEqual(calls[2][:2], ("GET", "http://gateway:8080/api/v1/instances"))
+        self.assertEqual(calls[2][3], "opaque-current-token")
+
+    def test_target_http_smoke_uses_frozen_contract_and_one_idempotency_key(self):
+        calls = []
+
+        def request(method, url, body=None, token="", headers=None):
+            calls.append((method, url, body, token, headers or {}))
+            if url.endswith("/auth/password/login"):
+                return 200, {"access_token": "opaque-target-token"}
+            return 200, {}
+
+        with mock.patch.object(probe, "_json_request", side_effect=request):
+            result = probe.http_smoke(
+                "http://gateway:9200/readyz",
+                "http://gateway:8080/api/v1",
+                "target",
+                "user@example.com",
+                "correct horse",
+                "tenant-a",
+                "0198f062-b76d-7f2a-b0ad-50a417bf1f70",
+            )
+
+        self.assertEqual(result["protected_status"], 200)
+        self.assertEqual(calls[1][2], {
+            "account": "user@example.com",
+            "password": "correct horse",
+            "audience": "console",
+            "boundary": {
+                "type": "tenant",
+                "tenant_id": "0198f062-b76d-7f2a-b0ad-50a417bf1f70",
+            },
+            "device_name": "cf01-fixed-smoke",
+        })
+        self.assertEqual(calls[1][4], {"Idempotency-Key": "cf01-target-password-login-v1"})
 
 
 if __name__ == "__main__":

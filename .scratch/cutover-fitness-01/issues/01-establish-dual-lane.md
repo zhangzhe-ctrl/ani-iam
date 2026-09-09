@@ -4,13 +4,13 @@
 
 **Blocked by:** 00 / 固化 CUTOVER-FITNESS-01 环境与证据方案
 
-**Status:** ready-for-human
+**Status:** claimed
 
 **Type:** enhancement
 
 **Plan mapping:** Direct P2 verification companion / half-day foundation
 
-**Baseline:** current 与 target ANI base 均为 `56a5f0b493c8404a024a92647d93f2ba2f7daf35` tree `4ba6a15ad0cddf0db66a25d695b082d47346aff1`；target 在 detached tree 应用 SHA-256 `542084f3e06be1d454cd99eb0114a76b8e06a52f9cbf5a9d661e749fb678edc2` 的反 containment overlay 后，projected tree 必须为 `28eb0508c93aab28e86e044a88ada9e19bf16830`；target ani-iam product `a56a332834967603eb47a3824727982032bc4f5e` tree `ef84bfb6382eaa73f13a68754f506edeb17f2206`；cluster UID `f5cafbf1-5246-4f8f-b9da-742182f37528`。
+**Baseline:** current ANI 固定为 `56a5f0b493c8404a024a92647d93f2ba2f7daf35` tree `4ba6a15ad0cddf0db66a25d695b082d47346aff1`；target Gateway 固定为与 DP2-10 registry revision 匹配的 ANI `4ff73e09c16df706af2aacdff6d763ed4aeaa873` tree `bc0ddb3ba1a449bc30b7815f9047aeb4390e8eff`；target ani-iam product 固定为 DP2-10 `78c5265bcd9eddb97ed7525fe4756db03abc5c50` tree `2ec15ab7d51dcc8d66c60f5d5678b034c3721f00`；`fb862d75854e2a31d60ac5a40182dc678ae88c44` 只关闭 `.scratch` 证据且不改变该 product tree；cluster UID `f5cafbf1-5246-4f8f-b9da-742182f37528`。
 
 **Scope:** detached source archives；task-only Dockerfiles/scripts/manifests；local build and push to the exact CF-01 repositories；`ani-cutover-current` and `ani-cutover-target` resources；current Auth/Dex/API canary；target DP2-05 API canary；JSON/Markdown evidence。
 
@@ -68,3 +68,4 @@
 - 2026-09-08T11:27:14Z：`environment-established=fail`，事项转为 `ready-for-human`。Registry、Storage、Network 三项 foundation gate 均为 `pass`，但固定 current ANI Auth Dockerfile 在 fixed source 上构建失败：`go build` 要求更新 `go.mod`/运行 `go mod tidy`；修改 ANI Dockerfile、module 或 detached source 均越界，因此按 immutable build stop condition 停止，current/target runtime 与固定 smoke 保持 `not_verified`。完整证据在 `../evidence/01-establish-dual-lane/`。未创建 Secret/Credential，未发生跨 lane 泄露或共享环境写入，storage Job 已结束且无运行中的写入动作；foundation namespace、probe/echo/runner、两个 PVC/PV 按授权保留，不执行删除。DP2-10 protected porcelain SHA-256 仍为 `02fe876c9e4a3e2f49c43a864864d62230a548e641fda790b7e5549752aedff6`，tracked binary diff SHA-256 仍为 `e1387ff7898b606ceaf4f524346525fc2e3b6df0a0eb0ae064b7389882a4371c`。
 - 2026-09-08T11:48:31Z：用户接受简化后的 current build 口径并要求继续：事项 01 已固定 ANI `main@56a5f0b493c8404a024a92647d93f2ba2f7daf35`，且远端 `main` 仍指向该提交，因此不得切换动态 ref；允许在 `deploy/cutover-fitness/**` 新增 task-owned Dockerfile，基于该 detached source 完成 current Auth 镜像并记录 source commit/tree、Dockerfile/base image、build command 与最终 OCI digest。该明确决定取代“必须使用 tree 内既有 Auth Dockerfile原样成功”的停止条件，但不授权修改 ANI checkout/ref/source、把当前工作树作为 context、读取/复制 Credential、扩大 cluster/registry/path 范围或放松其他门禁。事项 01 重新成为唯一 `claimed`；复用 foundation 前必须重验资源归属、无运行中写动作和 cluster UID。
 - 2026-09-08T12:18:01Z：按用户最新口径仅收口 fixed-source current Auth 镜像，结果 `pass`。使用事项 01 已固定的 ANI `main@56a5f0b493c8404a024a92647d93f2ba2f7daf35`（tree `4ba6a15ad0cddf0db66a25d695b082d47346aff1`）detached archive 与 task-owned Dockerfile 构建；远端 `main` 验证时仍为同一提交。镜像固定为 `docker.changqingyun.cn/ani/cf01-auth-service-current@sha256:8e5d4d11662d7fdfab92f3732b07e9b0999c2de2b4bcf50af52a86cd83d1c018`，完整记录位于 `../evidence/01-establish-dual-lane/current-auth-fixed-build-20260908t114831z/`。未修改 ANI checkout/ref/source；按用户要求不继续 runtime/smoke 扩展，因此事项 01 的 broader environment 仍未完成并转为 `ready-for-human`，DP2-10 恢复为唯一 `claimed`。
+- 2026-09-09T01:34:39Z：用户授权恢复事项 01 且只完成环境。只读复核确认 cluster UID、两个 namespace UID、PVC/PV UID 与既有记录一致；两个 storage Job 均 `active=0`/`succeeded=1`，唯一挂载 PVC 的 Pod 均已 `Succeeded`，Running echo/network/registry-canary Pod 不挂载 PVC；未发现未知 namespace 对象或活动数据写入。registry canary 使用上一轮已构建的 probe digest `sha256:36ff3463579a46479b1ac1719ef62f9d6ab003db040376384ae95a9b63694376`，记录为已知 CF-01 自有变更。current 保持 `56a5f0b...`；target IAM product 更新为 DP2-10 `78c5265...`，target Gateway 使用 policy revision 匹配的 ANI `4ff73e09...`，不得复用旧 `28eb050...` target Gateway。只部署最小 current Auth/Gateway 与 target IAM/Gateway，并各执行一次固定 `readyz → password login → instances`；target 必须恰好一次 authorization decision。仅全部通过才可 `resolved`，否则停止且不进入 DP2-10 对比。

@@ -82,15 +82,21 @@ class EchoServer:
         self.udp.close()
 
 
-def _json_request(method: str, url: str, body: dict | None = None, token: str = "") -> tuple[int, dict]:
-    headers = {"Accept": "application/json"}
+def _json_request(
+    method: str,
+    url: str,
+    body: dict | None = None,
+    token: str = "",
+    headers: dict[str, str] | None = None,
+) -> tuple[int, dict]:
+    request_headers = {"Accept": "application/json", **(headers or {})}
     payload = None
     if body is not None:
         payload = json.dumps(body).encode()
-        headers["Content-Type"] = "application/json"
+        request_headers["Content-Type"] = "application/json"
     if token:
-        headers["Authorization"] = "Bearer " + token
-    request = urllib.request.Request(url, data=payload, headers=headers, method=method)
+        request_headers["Authorization"] = "Bearer " + token
+    request = urllib.request.Request(url, data=payload, headers=request_headers, method=method)
     try:
         with urllib.request.urlopen(request, timeout=5) as response:
             raw = response.read()
@@ -120,15 +126,40 @@ def _find_access_token(value: object) -> str:
     return ""
 
 
-def http_smoke(base_url: str, email: str, password: str) -> dict:
-    ready_status, _ = _json_request("GET", base_url.rstrip("/") + "/readyz")
+def http_smoke(
+    ready_url: str,
+    api_base_url: str,
+    lane: str,
+    account: str,
+    password: str,
+    tenant_name: str,
+    tenant_id: str,
+) -> dict:
+    ready_status, _ = _json_request("GET", ready_url)
+    if lane == "current":
+        login_body = {"tenant_name": tenant_name, "username": account, "password": password}
+        login_headers = None
+    elif lane == "target":
+        login_body = {
+            "account": account,
+            "password": password,
+            "audience": "console",
+            "boundary": {"type": "tenant", "tenant_id": tenant_id},
+            "device_name": "cf01-fixed-smoke",
+        }
+        login_headers = {"Idempotency-Key": "cf01-target-password-login-v1"}
+    else:
+        raise ValueError("lane must be current or target")
     login_status, login = _json_request(
-        "POST", base_url.rstrip("/") + "/auth/password/login", {"email": email, "password": password}
+        "POST",
+        api_base_url.rstrip("/") + "/auth/password/login",
+        login_body,
+        headers=login_headers,
     )
     token = _find_access_token(login)
     protected_status = 0
     if token:
-        protected_status, _ = _json_request("GET", base_url.rstrip("/") + "/instances", token=token)
+        protected_status, _ = _json_request("GET", api_base_url.rstrip("/") + "/instances", token=token)
     return {
         "ready_status": ready_status,
         "login_status": login_status,
@@ -157,8 +188,12 @@ def main() -> int:
     dns = sub.add_parser("dns")
     dns.add_argument("--host", required=True)
     smoke = sub.add_parser("http-smoke")
-    smoke.add_argument("--base-url", required=True)
-    smoke.add_argument("--email", required=True)
+    smoke.add_argument("--ready-url", required=True)
+    smoke.add_argument("--api-base-url", required=True)
+    smoke.add_argument("--lane", choices=("current", "target"), required=True)
+    smoke.add_argument("--account", required=True)
+    smoke.add_argument("--tenant-name", required=True)
+    smoke.add_argument("--tenant-id", required=True)
     sleep = sub.add_parser("sleep")
     sleep.add_argument("--seconds", type=int, default=3600)
     args = parser.parse_args()
@@ -192,7 +227,15 @@ def main() -> int:
         password = os.environ.get("CF01_PASSWORD", "")
         if not password:
             raise SystemExit("CF01_PASSWORD is required")
-        result = http_smoke(args.base_url, args.email, password)
+        result = http_smoke(
+            args.ready_url,
+            args.api_base_url,
+            args.lane,
+            args.account,
+            password,
+            args.tenant_name,
+            args.tenant_id,
+        )
         print(json.dumps(result, sort_keys=True))
         return 0 if all((result["ready_status"] == 200, result["login_status"] == 200, result["protected_status"] == 200)) else 1
     time.sleep(args.seconds)

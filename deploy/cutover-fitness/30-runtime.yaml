@@ -1,0 +1,331 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cf01-current-runtime
+  namespace: ani-cutover-current
+  labels: &current-labels
+    app: cf01-current-runtime
+    app.kubernetes.io/part-of: cf01-runtime
+    cutover-fitness-id: CF-01
+    run-id: 20260909t013439z
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: cf01-current-runtime
+  template:
+    metadata:
+      labels: *current-labels
+      annotations:
+        cf01/runtime-material-revision: "3"
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: postgres
+          image: docker.io/library/postgres@sha256:5660c2cbfea50c7a9127d17dc4e48543eedd3d7a41a595a2dfa572471e37e64c
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_DB
+              value: ani
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-current-runtime
+                  key: postgres-password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/cf01-current-20260909t013439z
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-d", "ani"]
+            periodSeconds: 2
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-init
+              mountPath: /docker-entrypoint-initdb.d
+        - name: redis
+          image: docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args: ["exec redis-server --save '' --appendonly no --requirepass \"$REDIS_PASSWORD\""]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-current-runtime
+                  key: redis-password
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
+            periodSeconds: 2
+        - name: nats
+          image: docker.io/library/nats@sha256:b83efabe3e7def1e0a4a31ec6e078999bb17c80363f881df35edc70fcb6bb927
+          imagePullPolicy: IfNotPresent
+          args: ["-js", "-sd", "/tmp/nats"]
+          readinessProbe:
+            tcpSocket:
+              port: 4222
+            periodSeconds: 2
+        - name: auth
+          image: docker.changqingyun.cn/ani/cf01-auth-service-current@sha256:8e5d4d11662d7fdfab92f3732b07e9b0999c2de2b4bcf50af52a86cd83d1c018
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-current-runtime
+                  key: database-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-current-runtime
+                  key: redis-url
+            - name: NATS_URL
+              value: nats://127.0.0.1:4222
+            - name: AUTH_JWT_ISSUER
+              value: cf01-current-auth
+            - name: AUTH_JWT_PRIVATE_KEY_FILE
+              value: /run/secrets/jwt-private.pem
+            - name: AUTH_JWT_PUBLIC_KEY_FILE
+              value: /run/secrets/jwt-public.pem
+          readinessProbe:
+            tcpSocket:
+              port: 9101
+            periodSeconds: 2
+          volumeMounts:
+            - name: runtime-secret
+              mountPath: /run/secrets
+              readOnly: true
+        - name: gateway
+          image: docker.changqingyun.cn/ani/cf01-ani-gateway-current@sha256:a5513ab4dad4ca1b01c02d9ebd1d9260c98af3a016494ba623afd7fdf5f374d0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-current-runtime
+                  key: database-url
+            - name: GATEWAY_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-current-runtime
+                  key: redis-url
+            - name: AUTH_SERVICE_ADDR
+              value: 127.0.0.1:9101
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            periodSeconds: 2
+        - name: probe
+          image: docker.changqingyun.cn/ani/cf01-probe@sha256:f06f2ea4ac8f29e1bb74d0ed7924c972a566af9d50e1fafc8ecac83290797551
+          imagePullPolicy: IfNotPresent
+          args: ["sleep", "--seconds", "86400"]
+          env:
+            - name: CF01_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-current-runtime
+                  key: smoke-password
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: cf01-current-postgres-data
+        - name: postgres-init
+          projected:
+            defaultMode: 0444
+            sources:
+              - configMap:
+                  name: cf01-current-schema
+              - secret:
+                  name: cf01-current-runtime
+                  items:
+                    - key: 99-seed.sql
+                      path: 99-seed.sql
+        - name: runtime-secret
+          secret:
+            secretName: cf01-current-runtime
+            defaultMode: 0444
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cf01-target-runtime
+  namespace: ani-cutover-target
+  labels: &target-labels
+    app: cf01-target-runtime
+    app.kubernetes.io/part-of: cf01-runtime
+    cutover-fitness-id: CF-01
+    run-id: 20260909t013439z
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: cf01-target-runtime
+  template:
+    metadata:
+      labels: *target-labels
+      annotations:
+        cf01/runtime-material-revision: "3"
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: postgres
+          image: docker.io/library/postgres@sha256:5660c2cbfea50c7a9127d17dc4e48543eedd3d7a41a595a2dfa572471e37e64c
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_DB
+              value: ani_iam
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-target-runtime
+                  key: postgres-password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/cf01-target-20260909t013439z
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-d", "ani_iam"]
+            periodSeconds: 2
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-init
+              mountPath: /docker-entrypoint-initdb.d
+        - name: redis
+          image: docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args: ["exec redis-server --save '' --appendonly no --requirepass \"$REDIS_PASSWORD\""]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-target-runtime
+                  key: redis-password
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
+            periodSeconds: 2
+        - name: oidc-discovery
+          image: docker.changqingyun.cn/ani/cf01-probe@sha256:f06f2ea4ac8f29e1bb74d0ed7924c972a566af9d50e1fafc8ecac83290797551
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "-m", "http.server", "5556", "--bind", "127.0.0.1", "--directory", "/oidc"]
+          readinessProbe:
+            exec:
+              command: ["python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5556/.well-known/openid-configuration', timeout=1).read()"]
+            periodSeconds: 2
+          volumeMounts:
+            - name: oidc-discovery
+              mountPath: /oidc
+              readOnly: true
+        - name: iam
+          image: docker.changqingyun.cn/ani/cf01-ani-iam-target@sha256:ce3a0d4865a7764c44d58c26efe9c1b6fceb58acc013541eaac8235d7ffc087d
+          imagePullPolicy: IfNotPresent
+          args: ["-conf", "/run/secrets/config.yaml"]
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "wget -qO- http://127.0.0.1:19091/readyz >/dev/null"]
+            periodSeconds: 2
+          volumeMounts:
+            - name: runtime-secret
+              mountPath: /run/secrets
+              readOnly: true
+        - name: gateway
+          image: docker.changqingyun.cn/ani/cf01-ani-gateway-target@sha256:156369738bac9df857a69df9b9ec3b7c03a2fe84c9725ee026fa06a5f4bd16fb
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-target-runtime
+                  key: gateway-database-url
+            - name: GATEWAY_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-target-runtime
+                  key: gateway-redis-url
+            - name: AUTH_SERVICE_ADDR
+              value: 127.0.0.1:1
+            - name: IAM_TARGET_MODE
+              value: dp2_05
+            - name: IAM_TARGET_GRPC_ADDR
+              value: 127.0.0.1:19090
+            - name: IAM_TARGET_TLS_SERVER_NAME
+              value: ani-iam
+            - name: IAM_TARGET_TLS_CA_FILE
+              value: /run/secrets/ca.pem
+            - name: IAM_TARGET_TLS_CERT_FILE
+              value: /run/secrets/gateway-client.pem
+            - name: IAM_TARGET_TLS_KEY_FILE
+              value: /run/secrets/gateway-client.key
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            periodSeconds: 2
+          volumeMounts:
+            - name: runtime-secret
+              mountPath: /run/secrets
+              readOnly: true
+        - name: probe
+          image: docker.changqingyun.cn/ani/cf01-probe@sha256:f06f2ea4ac8f29e1bb74d0ed7924c972a566af9d50e1fafc8ecac83290797551
+          imagePullPolicy: IfNotPresent
+          args: ["sleep", "--seconds", "86400"]
+          env:
+            - name: CF01_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cf01-target-runtime
+                  key: smoke-password
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: cf01-target-postgres-data
+        - name: postgres-init
+          projected:
+            defaultMode: 0444
+            sources:
+              - secret:
+                  name: cf01-target-runtime
+                  items:
+                    - key: 00-bootstrap.sql
+                      path: 00-bootstrap.sql
+              - configMap:
+                  name: cf01-target-migrations
+              - secret:
+                  name: cf01-target-runtime
+                  items:
+                    - key: 99-seed.sql
+                      path: 99-seed.sql
+        - name: runtime-secret
+          secret:
+            secretName: cf01-target-runtime
+            defaultMode: 0444
+        - name: oidc-discovery
+          configMap:
+            name: cf01-target-oidc
+            defaultMode: 0444
+            items:
+              - key: openid-configuration
+                path: .well-known/openid-configuration
