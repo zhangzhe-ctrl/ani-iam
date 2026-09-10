@@ -1,0 +1,23 @@
+{
+  "accepted_at": "2026-09-10T07:21:51.715301+00:00",
+  "source": "User annotations and continue in current task",
+  "kubernetes": {
+    "manifest": "k8s-proposal-v2.json",
+    "sha256": "75872bb74d664e4d9fab3a58433d00a9e6e1cc246404a2ea671038a79aafe976",
+    "objects": 16,
+    "authorized": "create exact isolated topology and perform bounded WR19 tests",
+    "retention": "retain reusable namespaces, deployments, NetworkPolicies, Roles, RoleBindings and ServiceAccounts; record actual UIDs and current state; fresh restricted short-lived access tokens expire; no automatic fixture deletion"
+  },
+  "lifecycle": {
+    "status": "accepted",
+    "checks": [
+      "creation",
+      "ticket redemption",
+      "established connection every 30 seconds"
+    ],
+    "timeout_seconds": 2,
+    "failure": "close on revocation, denial or IAM failure; no offline fallback"
+  },
+  "issue_status": "claimed",
+  "full_chain": "not_verified"
+}

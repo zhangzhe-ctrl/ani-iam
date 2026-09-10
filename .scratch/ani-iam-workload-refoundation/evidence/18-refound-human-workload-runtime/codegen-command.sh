@@ -1,0 +1,1 @@
+bash tools/wr17-18/generate.sh

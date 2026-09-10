@@ -20,7 +20,7 @@ service IAMAdminService {
   rpc CreateAPIKey(CreateAPIKeyRequest) returns (CreateAPIKeyResponse);
   rpc CreatePlatformInvitation(CreatePlatformInvitationRequest) returns (CreatePlatformInvitationResponse);
   rpc CreatePlatformRole(CreatePlatformRoleRequest) returns (CreatePlatformRoleResponse);
-  rpc CreateServicePrincipal(CreateServicePrincipalRequest) returns (CreateServicePrincipalResponse);
+  rpc CreateTenantWorkload(CreateTenantWorkloadRequest) returns (CreateTenantWorkloadResponse);
   rpc CreateTenantInvitation(CreateTenantInvitationRequest) returns (CreateTenantInvitationResponse);
   rpc CreateTenantRole(CreateTenantRoleRequest) returns (CreateTenantRoleResponse);
   rpc DeletePlatformRole(DeletePlatformRoleRequest) returns (DeletePlatformRoleResponse);
@@ -32,7 +32,7 @@ service IAMAdminService {
   rpc GetPlatformInvitation(GetPlatformInvitationRequest) returns (GetPlatformInvitationResponse);
   rpc GetPlatformMembership(GetPlatformMembershipRequest) returns (GetPlatformMembershipResponse);
   rpc GetPlatformRole(GetPlatformRoleRequest) returns (GetPlatformRoleResponse);
-  rpc GetServicePrincipal(GetServicePrincipalRequest) returns (GetServicePrincipalResponse);
+  rpc GetTenantWorkload(GetTenantWorkloadRequest) returns (GetTenantWorkloadResponse);
   rpc GetTenantAccess(GetTenantAccessRequest) returns (GetTenantAccessResponse);
   rpc GetTenantInvitation(GetTenantInvitationRequest) returns (GetTenantInvitationResponse);
   rpc GetTenantMembership(GetTenantMembershipRequest) returns (GetTenantMembershipResponse);
@@ -43,7 +43,7 @@ service IAMAdminService {
   rpc ListPlatformInvitations(ListPlatformInvitationsRequest) returns (ListPlatformInvitationsResponse);
   rpc ListPlatformMemberships(ListPlatformMembershipsRequest) returns (ListPlatformMembershipsResponse);
   rpc ListPlatformRoles(ListPlatformRolesRequest) returns (ListPlatformRolesResponse);
-  rpc ListServicePrincipals(ListServicePrincipalsRequest) returns (ListServicePrincipalsResponse);
+  rpc ListTenantWorkloads(ListTenantWorkloadsRequest) returns (ListTenantWorkloadsResponse);
   rpc ListTenantInvitations(ListTenantInvitationsRequest) returns (ListTenantInvitationsResponse);
   rpc ListTenantMemberships(ListTenantMembershipsRequest) returns (ListTenantMembershipsResponse);
   rpc ListTenantRoles(ListTenantRolesRequest) returns (ListTenantRolesResponse);
@@ -58,7 +58,7 @@ service IAMAdminService {
   rpc UnbindTenantRole(UnbindTenantRoleRequest) returns (UnbindTenantRoleResponse);
   rpc UpdatePlatformMembership(UpdatePlatformMembershipRequest) returns (UpdatePlatformMembershipResponse);
   rpc UpdatePlatformRole(UpdatePlatformRoleRequest) returns (UpdatePlatformRoleResponse);
-  rpc UpdateServicePrincipal(UpdateServicePrincipalRequest) returns (UpdateServicePrincipalResponse);
+  rpc UpdateTenantWorkload(UpdateTenantWorkloadRequest) returns (UpdateTenantWorkloadResponse);
   rpc UpdateTenantAccess(UpdateTenantAccessRequest) returns (UpdateTenantAccessResponse);
   rpc UpdateTenantMembership(UpdateTenantMembershipRequest) returns (UpdateTenantMembershipResponse);
   rpc UpdateTenantRole(UpdateTenantRoleRequest) returns (UpdateTenantRoleResponse);
@@ -116,8 +116,8 @@ message Invitation {
   string bootstrap_operation_id = 8;
 }
 
-// ServicePrincipal is fixed to one Core-owned Tenant ID.
-message ServicePrincipal {
+// TenantWorkload is fixed to one Core-owned Tenant ID.
+message TenantWorkload {
   string principal_id = 1;
   string tenant_id = 2;
   string name = 3;
@@ -282,6 +282,8 @@ message CreateAPIKeyRequest {
 message CreateAPIKeyResponse {
   APIKey api_key = 1;
   string api_key_secret = 2;
+  // A committed replay returns metadata only; the secret is revealed once.
+  bool replayed = 3;
 }
 
 message CreatePlatformInvitationRequest {
@@ -309,7 +311,7 @@ message CreatePlatformRoleResponse {
   Role role = 1;
 }
 
-message CreateServicePrincipalRequest {
+message CreateTenantWorkloadRequest {
   BearerCredential credential = 1;
   string tenant_id = 2;
   string name = 3;
@@ -317,8 +319,8 @@ message CreateServicePrincipalRequest {
   string idempotency_key = 5;
 }
 
-message CreateServicePrincipalResponse {
-  ServicePrincipal principal = 1;
+message CreateTenantWorkloadResponse {
+  TenantWorkload principal = 1;
   Membership membership = 2;
 }
 
@@ -446,13 +448,13 @@ message GetPlatformRoleResponse {
   Role role = 1;
 }
 
-message GetServicePrincipalRequest {
+message GetTenantWorkloadRequest {
   BearerCredential credential = 1;
   string principal_id = 2;
 }
 
-message GetServicePrincipalResponse {
-  ServicePrincipal principal = 1;
+message GetTenantWorkloadResponse {
+  TenantWorkload principal = 1;
 }
 
 message GetTenantAccessRequest {
@@ -562,15 +564,15 @@ message ListPlatformRolesResponse {
   string next_cursor = 2;
 }
 
-message ListServicePrincipalsRequest {
+message ListTenantWorkloadsRequest {
   BearerCredential credential = 1;
   string tenant_id = 2;
   PrincipalStatus status = 3;
   CursorPageRequest page = 4;
 }
 
-message ListServicePrincipalsResponse {
-  repeated ServicePrincipal principals = 1;
+message ListTenantWorkloadsResponse {
+  repeated TenantWorkload principals = 1;
   string next_cursor = 2;
 }
 
@@ -747,17 +749,18 @@ message UpdatePlatformRoleResponse {
   Role role = 1;
 }
 
-message UpdateServicePrincipalRequest {
+message UpdateTenantWorkloadRequest {
   BearerCredential credential = 1;
   string principal_id = 2;
-  string name = 3;
+  reserved 3;
+  reserved "name";
   PrincipalStatus status = 4;
   uint64 expected_version = 5;
   string idempotency_key = 6;
 }
 
-message UpdateServicePrincipalResponse {
-  ServicePrincipal principal = 1;
+message UpdateTenantWorkloadResponse {
+  TenantWorkload principal = 1;
 }
 
 message UpdateTenantAccessRequest {

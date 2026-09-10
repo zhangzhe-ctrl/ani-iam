@@ -1,0 +1,43 @@
+{
+  "checked_at": "2026-09-10T05:14:42.545656+00:00",
+  "previous_goal_turn_classification": "progress: required ANI owner gates completed and documentation verified",
+  "consecutive_goal_turns_with_same_pending_decisions": 3,
+  "blockers": [
+    {
+      "id": "exact-kubernetes-operations",
+      "authority": "User Goal section five",
+      "proposal": "k8s-proposal-v2.json",
+      "sha256": "75872bb74d664e4d9fab3a58433d00a9e6e1cc246404a2ea671038a79aafe976",
+      "status": "awaiting explicit user acceptance; automatic Goal continuation is not acceptance"
+    },
+    {
+      "id": "established-connection-policy",
+      "authority": "User Goal section three",
+      "proposal": "Online checks at creation/ticket redemption; established connections checked every 30 seconds with 2-second timeout, close on revocation/denial/IAM failure",
+      "status": "awaiting explicit user decision; D01/D02 do not decide established connection behavior"
+    }
+  ],
+  "remote_revalidation": {
+    "runs": [
+      "wr19-20260910T045819Z-886165e6",
+      "wr19-20260910T050810Z-73666686",
+      "wr19-20260910T051141Z-40d1a6aa"
+    ],
+    "all_command_exit_codes": 0,
+    "runner_pids_present": false,
+    "active_owned_binary_pids": [],
+    "remaining_registered_containers": []
+  },
+  "next_dependent_work": [
+    "finish formal Session lifecycle and mTLS wiring under accepted policy",
+    "execute exact accepted isolated Kubernetes topology",
+    "complete formal IAM/Gateway/Session real exec, ticket, replay, revocation and outage gates",
+    "final source/evidence/recovery checks"
+  ],
+  "reason_for_no_more_independent_runs": "Completed independent bootstrap/invocation/SDK/example and affected regressions plus repository gates; repeating those gates cannot prove the missing real resource/lifecycle requirements. Dependent paths remain disabled as required by the Goal.",
+  "issue_status": "claimed; not resolved",
+  "goal_action": "mark blocked pending user input; preserve full objective and all worktrees/evidence",
+  "resolved_by": "user-acceptance-20260910.json",
+  "resolved_at": "2026-09-10T07:21:51.715301+00:00",
+  "historical_record": true
+}

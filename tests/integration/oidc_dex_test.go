@@ -18,6 +18,7 @@ import (
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/html"
 
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
@@ -27,17 +28,17 @@ import (
 const (
 	dexImage = "ghcr.io/dexidp/dex:v2.40.0@sha256:3e35d5d0f7dbd33fbadc36a71ff58cf4097ab98d73d22f6cb9a6471a32e028af"
 
-	dexClientID     = "ani-console"
-	dexClientSecret = "test-only-client-secret"
-	dexRedirectURI  = "https://console.test.example/auth/oidc/callback"
-	dexLogin        = "admin@example.com"
-	dexPassword     = "password"
-	dexVerifier     = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+	dexClientID    = "ani-console"
+	dexRedirectURI = "https://console.test.example/auth/oidc/callback"
+	dexLogin       = "admin@example.com"
+	dexVerifier    = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 )
 
 func TestCoreOSOIDCProviderCompletesAuthorizationCodePKCEAgainstPinnedDex(t *testing.T) {
 	ctx := context.Background()
-	issuerURL, dexHTTPClient, dexContainer := startPinnedDex(t, ctx)
+	dexClientSecret, dexPassword := randomPassword(t), randomPassword(t)
+	recordFixtureSecrets(t, map[string]string{"dex-client": dexClientSecret, "dex-user": dexPassword})
+	issuerURL, dexHTTPClient, dexContainer := startPinnedDex(t, ctx, dexClientSecret, dexPassword)
 	t.Cleanup(func() {
 		terminateContext, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
@@ -71,7 +72,7 @@ func TestCoreOSOIDCProviderCompletesAuthorizationCodePKCEAgainstPinnedDex(t *tes
 			if err != nil {
 				t.Fatalf("AuthorizationURL() error = %v", err)
 			}
-			code, returnedState := completeDexPasswordLogin(t, dexHTTPClient.Transport, authorizationURL)
+			code, returnedState := completeDexPasswordLogin(t, dexHTTPClient.Transport, authorizationURL, dexPassword)
 			if returnedState != test.state {
 				t.Fatalf("returned state does not match submitted state")
 			}
@@ -95,13 +96,17 @@ func TestCoreOSOIDCProviderCompletesAuthorizationCodePKCEAgainstPinnedDex(t *tes
 	}
 }
 
-func startPinnedDex(t *testing.T, ctx context.Context) (string, *http.Client, testcontainers.Container) {
+func startPinnedDex(t *testing.T, ctx context.Context, clientSecret, password string) (string, *http.Client, testcontainers.Container) {
 	t.Helper()
 	// Keep the issuer stable inside Dex while allowing Docker to allocate an
 	// atomic random host port. The test clients below map only this logical
 	// loopback authority to that task-owned port, avoiding a reserve/close/bind
 	// race when integration suites run concurrently.
 	const issuerURL = "http://127.0.0.1:5556/dex"
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatal(err)
+	}
 	config := fmt.Sprintf(`issuer: %s
 storage:
   type: memory
@@ -121,11 +126,11 @@ staticClients:
 enablePasswordDB: true
 staticPasswords:
 - email: %s
-  hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+  hash: %q
   username: admin
   emailVerified: true
   userID: 08a8684b-db88-4b73-90a9-3cd1661f5466
-`, issuerURL, dexClientID, dexClientSecret, dexRedirectURI, dexLogin)
+`, issuerURL, dexClientID, clientSecret, dexRedirectURI, dexLogin, string(passwordHash))
 	configPath := filepath.Join(t.TempDir(), "dex.yaml")
 	if err := os.WriteFile(configPath, []byte(config), 0o600); err != nil {
 		t.Fatalf("write isolated Dex config: %v", err)
@@ -140,6 +145,7 @@ staticPasswords:
 			HostFilePath: configPath, ContainerFilePath: "/etc/dex/config.yaml", FileMode: 0o644,
 		}),
 		testcontainers.WithExposedPorts("5556/tcp"),
+		isolatedContainer(t, "dex", "5556/tcp"),
 		testcontainers.WithWaitStrategy(
 			wait.ForHTTP("/dex/.well-known/openid-configuration").WithPort("5556/tcp").WithStartupTimeout(time.Minute),
 		),
@@ -162,7 +168,7 @@ staticPasswords:
 	return issuerURL, &http.Client{Timeout: 5 * time.Second, Transport: transport}, dexContainer
 }
 
-func completeDexPasswordLogin(t *testing.T, transport http.RoundTripper, authorizationURL string) (string, string) {
+func completeDexPasswordLogin(t *testing.T, transport http.RoundTripper, authorizationURL, password string) (string, string) {
 	t.Helper()
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -186,7 +192,7 @@ func completeDexPasswordLogin(t *testing.T, transport http.RoundTripper, authori
 	defer response.Body.Close()
 	formAction := passwordFormAction(t, response.Body, response.Request.URL)
 
-	form := url.Values{"login": {dexLogin}, "password": {dexPassword}}
+	form := url.Values{"login": {dexLogin}, "password": {password}}
 	request, err := http.NewRequest(http.MethodPost, formAction, strings.NewReader(form.Encode()))
 	if err != nil {
 		t.Fatalf("build Dex password request: %v", err)

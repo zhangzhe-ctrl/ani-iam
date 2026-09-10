@@ -1,0 +1,8 @@
+{
+  "run_id": "wr19-20260910T073430Z-3f4a2f92",
+  "exit_code": 76,
+  "stage": "preflight",
+  "tests_started": false,
+  "reason": "another remote go test -count=1 -race ./... active; no user workload interrupted",
+  "next": "resume serial tests on a new verified source snapshot after remote heavy workload exits"
+}

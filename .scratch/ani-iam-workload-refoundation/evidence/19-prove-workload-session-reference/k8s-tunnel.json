@@ -1,0 +1,65 @@
+{
+  "started_at": "2026-09-10T07:50:48.559323+00:00",
+  "local_socks_port": 39257,
+  "remote_loopback_proxy": "socks5://127.0.0.1:60741",
+  "processes": [
+    {
+      "name": "ani-socks",
+      "pid": 241573,
+      "command": [
+        "ssh",
+        "-F",
+        "/home/chabking/.ssh/config",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=12",
+        "-o",
+        "ExitOnForwardFailure=yes",
+        "-o",
+        "ServerAliveInterval=15",
+        "-o",
+        "ServerAliveCountMax=3",
+        "-o",
+        "ControlMaster=no",
+        "-o",
+        "ControlPath=none",
+        "-N",
+        "-D",
+        "127.0.0.1:39257",
+        "ani"
+      ],
+      "start_ticks": "2548441"
+    },
+    {
+      "name": "ubuntu-reverse",
+      "pid": 241581,
+      "command": [
+        "ssh",
+        "-F",
+        "/home/chabking/.ssh/config",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=12",
+        "-o",
+        "ExitOnForwardFailure=yes",
+        "-o",
+        "ServerAliveInterval=15",
+        "-o",
+        "ServerAliveCountMax=3",
+        "-o",
+        "ControlMaster=no",
+        "-o",
+        "ControlPath=none",
+        "-N",
+        "-R",
+        "127.0.0.1:60741:127.0.0.1:39257",
+        "ubuntu"
+      ],
+      "start_ticks": "2548541"
+    }
+  ],
+  "purpose": "only WR19 Kubernetes calls; original API hostname/CA verification retained",
+  "cleanup": "close only these registered local SSH PIDs after the real-chain runs; retained cluster fixtures stay"
+}

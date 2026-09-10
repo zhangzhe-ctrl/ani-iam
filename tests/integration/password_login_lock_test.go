@@ -13,9 +13,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/data"
@@ -470,28 +467,8 @@ func TestPasswordLoginPostgresFailurePreservesRealRedisThrottleState(t *testing.
 		t.Fatalf("seed conflicting Audit identity: %v", err)
 	}
 
-	redisContainer, err := testcontainers.Run(
-		ctx,
-		redisImage,
-		testcontainers.WithExposedPorts("6379/tcp"),
-		testcontainers.WithWaitStrategy(wait.ForLog("Ready to accept connections").WithStartupTimeout(time.Minute)),
-	)
-	if err != nil {
-		t.Fatalf("start pinned Redis container: %v", err)
-	}
-	t.Cleanup(func() {
-		terminateContext, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
-		if err := testcontainers.TerminateContainer(redisContainer, testcontainers.StopContext(terminateContext)); err != nil {
-			t.Errorf("terminate Redis container: %v", err)
-		}
-	})
-	redisEndpoint, err := redisContainer.Endpoint(ctx, "")
-	if err != nil {
-		t.Fatalf("Redis endpoint: %v", err)
-	}
-	redisClient := redis.NewClient(&redis.Options{Addr: redisEndpoint, MaxRetries: -1})
-	t.Cleanup(func() { _ = redisClient.Close() })
+	redisClient, _ := newIsolatedRedis(t, ctx)
+
 	const namespace = "ani-iam:dp2-06:postgres-failure"
 	throttle, err := data.NewRedisLoginThrottle(redisClient, data.RedisLoginThrottleConfig{
 		Namespace: namespace,

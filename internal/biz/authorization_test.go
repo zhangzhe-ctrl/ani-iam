@@ -65,7 +65,7 @@ func TestCheckPermissionAllowsRegisteredOperationOnce(t *testing.T) {
 	}
 }
 
-func TestCheckPermissionAuthenticatesAPIKeyAsServicePrincipalWithoutSession(t *testing.T) {
+func TestCheckPermissionAuthenticatesAPIKeyAsTenantWorkloadWithoutSession(t *testing.T) {
 	tenantID := uuid.MustParse("0199ca10-4000-7001-9000-000000000001")
 	principalID := uuid.MustParse("0199ca10-4000-7001-9000-000000000002")
 	keyID := uuid.MustParse("0199ca10-4000-7001-9000-000000000003")
@@ -81,7 +81,7 @@ func TestCheckPermissionAuthenticatesAPIKeyAsServicePrincipalWithoutSession(t *t
 	usecase := NewAuthorizationUsecase(
 		staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
 			OperationID: "createInstance", Resource: "instances", Actions: []string{"create"}, Scope: PermissionScopeTenant,
-			CredentialKinds: []CredentialKind{CredentialKindAccessToken, CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeHuman, PrincipalTypeService},
+			CredentialKinds: []CredentialKind{CredentialKindAccessToken, CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeHuman, PrincipalTypeWorkload},
 		}}, &staticAccessTokenVerifier{}, reader, &fixedIDs{values: []uuid.UUID{decisionID}}, fixedAuthClock{now: time.Date(2026, 9, 8, 16, 0, 0, 0, time.UTC)}, reader,
 	)
 
@@ -91,7 +91,7 @@ func TestCheckPermissionAuthenticatesAPIKeyAsServicePrincipalWithoutSession(t *t
 	if err != nil {
 		t.Fatalf("CheckPermission() error = %v", err)
 	}
-	if !decision.Allowed || decision.Principal.ID != principalID || decision.Principal.Type != PrincipalTypeService || decision.Principal.SessionID != uuid.Nil || decision.Principal.GrantID != uuid.Nil || reader.apiKeyCalls != 1 || reader.apiKeyUseCalls != 1 {
+	if !decision.Allowed || decision.Principal.ID != principalID || decision.Principal.Type != PrincipalTypeWorkload || decision.Principal.SessionID != uuid.Nil || decision.Principal.GrantID != uuid.Nil || reader.apiKeyCalls != 1 || reader.apiKeyUseCalls != 1 {
 		t.Fatalf("API key decision = %#v lookup/use calls=%d/%d", decision, reader.apiKeyCalls, reader.apiKeyUseCalls)
 	}
 }
@@ -110,7 +110,7 @@ func TestCheckPermissionFailsClosedWhenRequiredAPIKeyUsageObserverIsMissing(t *t
 	usecase := NewAuthorizationUsecase(
 		staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
 			OperationID: "createInstance", Resource: "instances", Actions: []string{"create"}, Scope: PermissionScopeTenant,
-			CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeService},
+			CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeWorkload},
 		}},
 		&staticAccessTokenVerifier{},
 		reader,
@@ -143,7 +143,7 @@ func TestCheckPermissionAuthenticatesAPIKeyBeforeCrossTenantDenial(t *testing.T)
 	usecase := NewAuthorizationUsecase(
 		staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
 			OperationID: "createInstance", Resource: "instances", Actions: []string{"create"}, Scope: PermissionScopeTenant,
-			CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeService},
+			CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeWorkload},
 		}}, &staticAccessTokenVerifier{}, reader, &fixedIDs{values: []uuid.UUID{
 			decisionID, auditID, uuid.MustParse("0199ca10-4050-7001-9000-000000000007"),
 		}}, fixedAuthClock{now: time.Date(2026, 9, 8, 16, 0, 0, 0, time.UTC)}, allowingAPIKeyUsageObserver{})
@@ -222,7 +222,7 @@ func TestCheckPermissionRejectsInvalidAPIKeyBeforeLifecycleLookup(t *testing.T) 
 	}
 	registry := staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
 		OperationID: "createInstance", Resource: "instances", Actions: []string{"create"}, Scope: PermissionScopeTenant,
-		CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeService},
+		CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeWorkload},
 	}}
 
 	t.Run("wrong secret", func(t *testing.T) {

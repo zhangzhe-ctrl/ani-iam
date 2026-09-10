@@ -1,0 +1,10 @@
+{
+  "run_id": "wr19-20260910T082134Z-2c35dca1",
+  "command_exit": 0,
+  "created_containers": 0,
+  "registered_containers_still_present": [],
+  "registered_processes_still_running": [],
+  "private_logs_scanned": [],
+  "secret_leak_findings": [],
+  "scan_scope": "named public evidence plus task-private formal process logs; JWT/ticket/terminal patterns and concrete fixture secrets; values never exported"
+}

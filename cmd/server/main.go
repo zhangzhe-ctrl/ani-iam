@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -31,6 +32,13 @@ func init() {
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "provision-workloads" {
+		if err := runWorkloadProvisioner(context.Background(), os.Args[2:], os.Stdout); err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+		return
+	}
 	flag.Parse()
 	logger := newRuntimeLogger(os.Stdout)
 	log.SetDefault(logger)

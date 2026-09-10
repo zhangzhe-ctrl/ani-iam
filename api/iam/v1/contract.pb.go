@@ -5,8 +5,8 @@
 // source: contract.proto
 
 // Package iam.v1 is the immutable major-version contract for the target IAM.
-// Changes within v1 are additive and backward compatible. A breaking change
-// requires a new versioned package and an explicit dual-consume retirement gate.
+// ADR-0022 authorizes the pre-launch Human/Workload refoundation in place.
+// Removed enum names and numbers remain reserved, never accepted aliases.
 
 package iamv1
 
@@ -80,13 +80,12 @@ func (Audience) EnumDescriptor() ([]byte, []int) {
 	return file_contract_proto_rawDescGZIP(), []int{0}
 }
 
-// PrincipalType distinguishes humans from single-Tenant service principals.
+// PrincipalType distinguishes a person from a stable software actor.
 type PrincipalType int32
 
 const (
 	PrincipalType_PRINCIPAL_TYPE_UNSPECIFIED PrincipalType = 0
 	PrincipalType_PRINCIPAL_TYPE_HUMAN       PrincipalType = 1
-	PrincipalType_PRINCIPAL_TYPE_SERVICE     PrincipalType = 2
 	PrincipalType_PRINCIPAL_TYPE_WORKLOAD    PrincipalType = 3
 )
 
@@ -95,13 +94,11 @@ var (
 	PrincipalType_name = map[int32]string{
 		0: "PRINCIPAL_TYPE_UNSPECIFIED",
 		1: "PRINCIPAL_TYPE_HUMAN",
-		2: "PRINCIPAL_TYPE_SERVICE",
 		3: "PRINCIPAL_TYPE_WORKLOAD",
 	}
 	PrincipalType_value = map[string]int32{
 		"PRINCIPAL_TYPE_UNSPECIFIED": 0,
 		"PRINCIPAL_TYPE_HUMAN":       1,
-		"PRINCIPAL_TYPE_SERVICE":     2,
 		"PRINCIPAL_TYPE_WORKLOAD":    3,
 	}
 )
@@ -187,11 +184,11 @@ func (PrincipalStatus) EnumDescriptor() ([]byte, []int) {
 type AuthnMethod int32
 
 const (
-	AuthnMethod_AUTHN_METHOD_UNSPECIFIED   AuthnMethod = 0
-	AuthnMethod_AUTHN_METHOD_PASSWORD      AuthnMethod = 1
-	AuthnMethod_AUTHN_METHOD_OIDC          AuthnMethod = 2
-	AuthnMethod_AUTHN_METHOD_API_KEY       AuthnMethod = 3
-	AuthnMethod_AUTHN_METHOD_SERVICE_TOKEN AuthnMethod = 4
+	AuthnMethod_AUTHN_METHOD_UNSPECIFIED    AuthnMethod = 0
+	AuthnMethod_AUTHN_METHOD_PASSWORD       AuthnMethod = 1
+	AuthnMethod_AUTHN_METHOD_OIDC           AuthnMethod = 2
+	AuthnMethod_AUTHN_METHOD_API_KEY        AuthnMethod = 3
+	AuthnMethod_AUTHN_METHOD_WORKLOAD_TOKEN AuthnMethod = 5
 )
 
 // Enum value maps for AuthnMethod.
@@ -201,14 +198,14 @@ var (
 		1: "AUTHN_METHOD_PASSWORD",
 		2: "AUTHN_METHOD_OIDC",
 		3: "AUTHN_METHOD_API_KEY",
-		4: "AUTHN_METHOD_SERVICE_TOKEN",
+		5: "AUTHN_METHOD_WORKLOAD_TOKEN",
 	}
 	AuthnMethod_value = map[string]int32{
-		"AUTHN_METHOD_UNSPECIFIED":   0,
-		"AUTHN_METHOD_PASSWORD":      1,
-		"AUTHN_METHOD_OIDC":          2,
-		"AUTHN_METHOD_API_KEY":       3,
-		"AUTHN_METHOD_SERVICE_TOKEN": 4,
+		"AUTHN_METHOD_UNSPECIFIED":    0,
+		"AUTHN_METHOD_PASSWORD":       1,
+		"AUTHN_METHOD_OIDC":           2,
+		"AUTHN_METHOD_API_KEY":        3,
+		"AUTHN_METHOD_WORKLOAD_TOKEN": 5,
 	}
 )
 
@@ -1533,22 +1530,21 @@ const file_contract_proto_rawDesc = "" +
 	"\x14AUDIENCE_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10AUDIENCE_CONSOLE\x10\x01\x12\x11\n" +
 	"\rAUDIENCE_BOSS\x10\x02\x12\x15\n" +
-	"\x11AUDIENCE_INTERNAL\x10\x03*\x82\x01\n" +
+	"\x11AUDIENCE_INTERNAL\x10\x03*\x84\x01\n" +
 	"\rPrincipalType\x12\x1e\n" +
 	"\x1aPRINCIPAL_TYPE_UNSPECIFIED\x10\x00\x12\x18\n" +
-	"\x14PRINCIPAL_TYPE_HUMAN\x10\x01\x12\x1a\n" +
-	"\x16PRINCIPAL_TYPE_SERVICE\x10\x02\x12\x1b\n" +
-	"\x17PRINCIPAL_TYPE_WORKLOAD\x10\x03*o\n" +
+	"\x14PRINCIPAL_TYPE_HUMAN\x10\x01\x12\x1b\n" +
+	"\x17PRINCIPAL_TYPE_WORKLOAD\x10\x03\"\x04\b\x02\x10\x02*\x16PRINCIPAL_TYPE_SERVICE*o\n" +
 	"\x0fPrincipalStatus\x12 \n" +
 	"\x1cPRINCIPAL_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17PRINCIPAL_STATUS_ACTIVE\x10\x01\x12\x1d\n" +
-	"\x19PRINCIPAL_STATUS_DISABLED\x10\x02*\x97\x01\n" +
+	"\x19PRINCIPAL_STATUS_DISABLED\x10\x02*\xba\x01\n" +
 	"\vAuthnMethod\x12\x1c\n" +
 	"\x18AUTHN_METHOD_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15AUTHN_METHOD_PASSWORD\x10\x01\x12\x15\n" +
 	"\x11AUTHN_METHOD_OIDC\x10\x02\x12\x18\n" +
-	"\x14AUTHN_METHOD_API_KEY\x10\x03\x12\x1e\n" +
-	"\x1aAUTHN_METHOD_SERVICE_TOKEN\x10\x04*\x82\x01\n" +
+	"\x14AUTHN_METHOD_API_KEY\x10\x03\x12\x1f\n" +
+	"\x1bAUTHN_METHOD_WORKLOAD_TOKEN\x10\x05\"\x04\b\x04\x10\x04*\x1aAUTHN_METHOD_SERVICE_TOKEN*\x82\x01\n" +
 	"\rSessionStatus\x12\x1e\n" +
 	"\x1aSESSION_STATUS_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15SESSION_STATUS_ACTIVE\x10\x01\x12\x1a\n" +

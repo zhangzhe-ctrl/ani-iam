@@ -1,0 +1,18 @@
+{
+  "static_preparation": "pass",
+  "protected_original_files": 522,
+  "before_snapshots": 67,
+  "declared_rpc": 69,
+  "implemented_handlers": 29,
+  "wr18_usable_set": 27,
+  "scope_files": 118,
+  "initial_source_files": 154,
+  "claimed": [],
+  "decisions": {
+    "D01": "accepted",
+    "D02": "sync accepted / async pending"
+  },
+  "freeze_completion": "pass",
+  "future_core_async": "pending_WR23",
+  "runtime": "not_verified"
+}

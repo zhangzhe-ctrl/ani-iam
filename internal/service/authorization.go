@@ -17,6 +17,7 @@ type authorizationUsecase interface {
 type AuthorizationService struct {
 	iamv1.UnimplementedAuthorizationServiceServer
 	authorization authorizationUsecase
+	workload      workloadInvocationUsecase
 }
 
 func NewAuthorizationService(authorization authorizationUsecase) *AuthorizationService {
@@ -121,8 +122,8 @@ func authnMethodsToProto(methods []biz.AuditAuthenticationMethod) []iamv1.AuthnM
 			authnMethods = append(authnMethods, iamv1.AuthnMethod_AUTHN_METHOD_OIDC)
 		case biz.AuditAuthenticationMethodAPIKey:
 			authnMethods = append(authnMethods, iamv1.AuthnMethod_AUTHN_METHOD_API_KEY)
-		case biz.AuditAuthenticationMethodServiceToken:
-			authnMethods = append(authnMethods, iamv1.AuthnMethod_AUTHN_METHOD_SERVICE_TOKEN)
+		case biz.AuditAuthenticationMethodWorkloadToken:
+			authnMethods = append(authnMethods, iamv1.AuthnMethod_AUTHN_METHOD_WORKLOAD_TOKEN)
 		}
 	}
 	return authnMethods

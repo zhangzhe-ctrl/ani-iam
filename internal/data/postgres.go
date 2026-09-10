@@ -153,6 +153,10 @@ func (r securityAuditRepository) Append(ctx context.Context, scope biz.TenantSco
 		return err
 	}
 	err = r.queries.AppendSecurityAuditEvent(ctx, sqlcgen.AppendSecurityAuditEventParams{
+		CallerPrincipalID:    optionalPGUUID(event.DirectCaller.Identity.PrincipalID),
+		CallerBindingID:      optionalPGUUID(event.DirectCaller.Identity.BindingID),
+		CallerBindingVersion: optionalPositiveInt64(event.DirectCaller.Identity.BindingVersion),
+		CallerGrantVersion:   optionalPositiveInt64(event.DirectCaller.GrantVersion),
 		TenantID:             requiredPGUUID(tenantID),
 		EventID:              event.ID,
 		ActorID:              requiredPGUUID(event.ActorID),
@@ -189,6 +193,9 @@ func tenantIDForScope(transactionTenantID uuid.UUID, scope biz.TenantScope) (uui
 }
 
 func mapPostgresError(operation string, err error, uniqueConflict error) error {
+	if err == nil {
+		return nil
+	}
 	if errors.Is(err, context.Canceled) {
 		return fmt.Errorf("%s: %w", operation, context.Canceled)
 	}
@@ -262,3 +269,10 @@ var (
 	_ biz.TenantMembershipRepository = membershipRepository{}
 	_ biz.SecurityAuditRepository    = securityAuditRepository{}
 )
+
+func optionalPGUUID(value uuid.UUID) pgtype.UUID {
+	return pgtype.UUID{Bytes: value, Valid: value != uuid.Nil}
+}
+func optionalPositiveInt64(value int64) pgtype.Int8 {
+	return pgtype.Int8{Int64: value, Valid: value > 0}
+}

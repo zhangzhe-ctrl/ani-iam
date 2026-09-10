@@ -42,6 +42,17 @@ type IamAuditEvent struct {
 	SourceService        string
 	OccurredAt           pgtype.Timestamptz
 	RecordedAt           pgtype.Timestamptz
+	CallerPrincipalID    pgtype.UUID
+	CallerBindingID      pgtype.UUID
+	CallerBindingVersion pgtype.Int8
+	CallerGrantVersion   pgtype.Int8
+	ProvisionerRole      pgtype.Text
+	BootstrapManifestID  pgtype.UUID
+}
+
+type IamSchemaRevision struct {
+	Singleton bool
+	Revision  string
 }
 
 type Identity struct {
@@ -154,17 +165,6 @@ type RefreshTokenFamily struct {
 	UpdatedAt pgtype.Timestamptz
 }
 
-type ServicePrincipal struct {
-	PrincipalID    uuid.UUID
-	TenantID       uuid.UUID
-	MembershipID   uuid.UUID
-	Name           string
-	NormalizedName string
-	Version        int64
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
 type Session struct {
 	ID                uuid.UUID
 	PrincipalID       uuid.UUID
@@ -218,6 +218,18 @@ type TenantMembership struct {
 	UpdatedAt   pgtype.Timestamptz
 }
 
+type TenantMutationResult struct {
+	TenantID          uuid.UUID
+	ActorID           uuid.UUID
+	Operation         string
+	IdempotencyKey    string
+	IntentDigest      []byte
+	CallerPrincipalID pgtype.UUID
+	Result            []byte
+	CreatedAt         pgtype.Timestamptz
+	ExpiresAt         pgtype.Timestamptz
+}
+
 type TenantRole struct {
 	TenantID                uuid.UUID
 	ID                      uuid.UUID
@@ -254,4 +266,56 @@ type VerifiedEmail struct {
 	VerifiedAt      pgtype.Timestamptz
 	CreatedAt       pgtype.Timestamptz
 	UpdatedAt       pgtype.Timestamptz
+}
+
+type WorkloadBootstrapReceipt struct {
+	ManifestID   uuid.UUID
+	Environment  string
+	TrustDomain  string
+	CaSha256     []byte
+	IntentSha256 []byte
+	Receipt      []byte
+	AuditEventID uuid.UUID
+	CompletedAt  pgtype.Timestamptz
+}
+
+type WorkloadGrant struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	Environment string
+	TrustDomain string
+	Audience    string
+	Operation   string
+	Scope       string
+	Status      string
+	Version     int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type WorkloadIdentityBinding struct {
+	ID            uuid.UUID
+	PrincipalID   uuid.UUID
+	Environment   string
+	TrustDomain   string
+	IdentityKind  string
+	IdentityValue string
+	Status        string
+	Version       int64
+	CreatedAt     pgtype.Timestamptz
+	UpdatedAt     pgtype.Timestamptz
+}
+
+type WorkloadPrincipal struct {
+	PrincipalID    uuid.UUID
+	OwnerType      string
+	TenantID       pgtype.UUID
+	MembershipID   pgtype.UUID
+	Environment    pgtype.Text
+	TrustDomain    pgtype.Text
+	Name           string
+	NormalizedName string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
 }

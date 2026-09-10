@@ -91,24 +91,24 @@ func TestEnvoyAdapterIndependentProcessUsesRealIAMRestrictedPostgresAndRedis(t *
 	if err != nil {
 		t.Fatalf("NewRedisAPIKeyUsageAggregator() error = %v", err)
 	}
-	principals := biz.NewServicePrincipalUsecase(
-		data.NewPostgresServicePrincipalUnitOfWork(dataSet), data.NewUUIDv7Generator(), data.NewSystemClock(), limiter,
+	principals := biz.NewTenantWorkloadUsecase(
+		data.NewPostgresTenantWorkloadUnitOfWork(dataSet), data.NewUUIDv7Generator(), data.NewSystemClock(), limiter,
 	)
 	actor := biz.TenantAuthorizationActor{
 		PrincipalID: actorID, AuthenticationMethod: biz.AuditAuthenticationMethodPassword,
 		RequestID: "envoy-real-iam", CorrelationID: "envoy-real-iam", DecisionID: "envoy-real-iam",
 	}
-	createPrincipal := func(name string, roleID uuid.UUID) biz.ServicePrincipal {
+	createPrincipal := func(name string, roleID uuid.UUID) biz.TenantWorkload {
 		t.Helper()
-		result, createErr := principals.CreateServicePrincipal(ctx, mustTenantScope(t, tenantID), biz.CreateServicePrincipalCommand{
+		result, createErr := principals.CreateTenantWorkload(ctx, mustTenantScope(t, tenantID), biz.CreateTenantWorkloadCommand{IdempotencyKey: uuid.NewString(),
 			Name: name, RoleIDs: []uuid.UUID{roleID}, Actor: actor,
 		})
 		if createErr != nil {
-			t.Fatalf("CreateServicePrincipal(%s) error = %v", name, createErr)
+			t.Fatalf("CreateTenantWorkload(%s) error = %v", name, createErr)
 		}
 		return result.Principal
 	}
-	createKey := func(usecase *biz.ServicePrincipalUsecase, principalID uuid.UUID, key string, expiresAt time.Time) biz.CreateAPIKeyResult {
+	createKey := func(usecase *biz.TenantWorkloadUsecase, principalID uuid.UUID, key string, expiresAt time.Time) biz.CreateAPIKeyResult {
 		t.Helper()
 		result, createErr := usecase.CreateAPIKey(ctx, mustTenantScope(t, tenantID), biz.CreateAPIKeyCommand{
 			PrincipalID: principalID, NeverExpires: expiresAt.IsZero(), ExpiresAt: expiresAt,
@@ -123,8 +123,8 @@ func TestEnvoyAdapterIndependentProcessUsesRealIAMRestrictedPostgresAndRedis(t *
 	allowedPrincipal := createPrincipal("Envoy Allowed", allowedRoleID)
 	deniedPrincipal := createPrincipal("Envoy Denied", deniedRoleID)
 	validKey := createKey(principals, allowedPrincipal.ID, "envoy-valid", time.Time{})
-	pastPrincipals := biz.NewServicePrincipalUsecase(
-		data.NewPostgresServicePrincipalUnitOfWork(dataSet), data.NewUUIDv7Generator(),
+	pastPrincipals := biz.NewTenantWorkloadUsecase(
+		data.NewPostgresTenantWorkloadUnitOfWork(dataSet), data.NewUUIDv7Generator(),
 		fixedClock{now: now.Add(-2 * time.Hour)}, limiter,
 	)
 	expiredKey := createKey(pastPrincipals, allowedPrincipal.ID, "envoy-expired", now.Add(-time.Hour))

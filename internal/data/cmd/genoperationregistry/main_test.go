@@ -11,7 +11,7 @@ func TestRenderGoPreservesCredentialAndPrincipalRestrictions(t *testing.T) {
 	document.Operations = []registryOperation{{
 		OperationID: "createInstance", IAMDecision: "check_permission",
 		Permission: &registryPermission{Scope: "tenant", Resource: "instances", Actions: []string{"create"}},
-		Authn:      registryAuthentication{CredentialKinds: []string{"access_token", "api_key"}, PrincipalKinds: []string{"human", "service"}},
+		Authn:      registryAuthentication{CredentialKinds: []string{"access_token", "api_key"}, PrincipalKinds: []string{"human", "workload"}},
 	}}
 	policies, permissions, err := validateAndCollect(document)
 	if err != nil {
@@ -24,7 +24,7 @@ func TestRenderGoPreservesCredentialAndPrincipalRestrictions(t *testing.T) {
 	source := string(generated)
 	for _, expected := range []string{
 		`CredentialKinds: []biz.CredentialKind{biz.CredentialKindAccessToken, biz.CredentialKindAPIKey}`,
-		`PrincipalKinds: []biz.PrincipalType{biz.PrincipalTypeHuman, biz.PrincipalTypeService}`,
+		`PrincipalKinds: []biz.PrincipalType{biz.PrincipalTypeHuman, biz.PrincipalTypeWorkload}`,
 	} {
 		if !strings.Contains(source, expected) {
 			t.Fatalf("generated source does not contain %q:\n%s", expected, source)

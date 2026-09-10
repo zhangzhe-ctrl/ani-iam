@@ -119,6 +119,7 @@ func buildAppTestBootstrap() *conf.Bootstrap {
 			ShutdownTimeout: durationpb.New(time.Second),
 		},
 		Runtime: &conf.Runtime{
+			Environment: "wr17-18-isolated", TrustDomain: "iam.wr17-18.test",
 			Postgresql: &conf.PostgreSQL{Dsn: "postgresql://ani_iam_runtime@127.0.0.1:1/ani_iam?sslmode=disable"},
 			Redis: &conf.Redis{
 				Addr:         "127.0.0.1:1",
@@ -220,9 +221,9 @@ func TestPasswordActionNotificationWorkerRequiresBoundedConfiguration(t *testing
 func TestAPIKeyMaintenanceWorkerFlushesUsageAndPublishesOperationalSnapshot(t *testing.T) {
 	now := time.Date(2026, 9, 9, 1, 2, 3, 0, time.UTC)
 	want := biz.APIKeyOperationalSnapshot{
-		StaleNonExpiringCount:        7,
-		UnusualServicePrincipalCount: 3,
-		ObservedAt:                   now,
+		StaleNonExpiringCount:      7,
+		UnusualTenantWorkloadCount: 3,
+		ObservedAt:                 now,
 	}
 	flusher := &recordingAPIKeyUsageFlusher{results: []int{256, 256, 12, 0}}
 	reader := &recordingAPIKeyOperationalSnapshotReader{snapshot: want}

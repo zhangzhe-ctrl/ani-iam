@@ -1,0 +1,6 @@
+go test ./...
+go vet ./...
+export DP2_ATLAS_BIN=/home/ubuntu/.local/share/ani-iam/bin/atlas
+go test -json -tags integration ./tests/integration -run '^(TestNoRLSPersistenceFoundation|TestWorkloadRuntimeFoundationUsesCurrentOwnerTrustAndEnforcesRelations|TestFormalIAMWorkloadAndHumanRuntime|TestFormalIAMRejectsInvalidConfiguration|TestSessionContinuityWithRealPostgresAndRedis|TestTenantAuthorizationAuditFailureRollsBackMembershipMutation|TestRemovingTenantWorkloadMembershipDisablesPrincipalAndRevokesEveryKey)$' -count=1 -timeout=15m > ../regression-tests.jsonl
+go test -race ./internal/biz ./cmd/server -run 'Bootstrap|Provisioner' -count=1
+go test -json -race -tags integration ./tests/integration -run '^TestWorkloadBootstrapTransactions$' -count=1 -timeout=10m > ../bootstrap-race.jsonl

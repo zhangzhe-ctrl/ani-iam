@@ -7,11 +7,11 @@ import (
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 )
 
-func TestTargetOperationRegistryPinsAcceptedANIArtifact(t *testing.T) {
-	if TargetPolicyRevision != "sha256:1d5c80b83635e9a152c0edd9e8d1c9b66f5f8962e84cdd4f4701ecc486dd969c" {
+func TestTargetOperationRegistryPinsWorkloadCandidateDerivedFromANI(t *testing.T) {
+	if TargetPolicyRevision != "sha256:655690090ed17bf49e0eab57baad643f90ec69ef3a412aa092fd3a24671a0e62" {
 		t.Fatalf("TargetPolicyRevision = %q", TargetPolicyRevision)
 	}
-	if TargetOperationRegistrySHA256 != "742147f0b370b565667748a0c8194a49f79677aa192fc3262a24c2de8eae6f80" {
+	if TargetOperationRegistrySHA256 != "135196cdc34b858a9236ccb47ec94b918abc9dce8c6c1a1332ff9712da6fc570" {
 		t.Fatalf("TargetOperationRegistrySHA256 = %q", TargetOperationRegistrySHA256)
 	}
 	registry, err := NewTargetOperationRegistry(TargetPolicyRevision)
@@ -74,7 +74,7 @@ func TestTargetOperationRegistryKeepsSensitiveOperationsOffAPIKeys(t *testing.T)
 	}
 	for _, operationID := range []string{
 		"createIAMAPIKey",
-		"createServicePrincipal",
+		"createTenantWorkload",
 		"createTenantIAMRole",
 		"bindTenantIAMRole",
 		"approveRecoveryBootstrap",
@@ -90,8 +90,8 @@ func TestTargetOperationRegistryKeepsSensitiveOperationsOffAPIKeys(t *testing.T)
 		}
 	}
 	policy, ok := registry.Lookup("applyPlatformWorkloadLifecycle")
-	if !ok || len(policy.CredentialKinds) != 1 || policy.CredentialKinds[0] != biz.CredentialKindServiceToken ||
-		len(policy.PrincipalKinds) != 1 || policy.PrincipalKinds[0] != biz.PrincipalTypeService {
+	if !ok || len(policy.CredentialKinds) != 1 || policy.CredentialKinds[0] != biz.CredentialKindWorkloadToken ||
+		len(policy.PrincipalKinds) != 1 || policy.PrincipalKinds[0] != biz.PrincipalTypeWorkload {
 		t.Fatalf("platform-workload authentication = %#v, present=%t", policy, ok)
 	}
 }

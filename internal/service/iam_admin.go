@@ -27,9 +27,9 @@ type tenantAuthorizationMutations interface {
 	UpdateMembership(context.Context, biz.TenantScope, biz.UpdateTenantMembershipCommand) (biz.TenantMembershipMutationResult, error)
 	BindRole(context.Context, biz.TenantScope, biz.BindTenantRoleCommand) (biz.TenantMembershipMutationResult, error)
 	UnbindRole(context.Context, biz.TenantScope, biz.UnbindTenantRoleCommand) (biz.TenantMembershipMutationResult, error)
-	CreateServicePrincipal(context.Context, biz.TenantScope, biz.CreateServicePrincipalCommand) (biz.CreateServicePrincipalResult, error)
+	CreateTenantWorkload(context.Context, biz.TenantScope, biz.CreateTenantWorkloadCommand) (biz.CreateTenantWorkloadResult, error)
 	CreateAPIKey(context.Context, biz.TenantScope, biz.CreateAPIKeyCommand) (biz.CreateAPIKeyResult, error)
-	UpdateServicePrincipal(context.Context, biz.TenantScope, biz.UpdateServicePrincipalCommand) (biz.UpdateServicePrincipalResult, error)
+	UpdateTenantWorkload(context.Context, biz.TenantScope, biz.UpdateTenantWorkloadCommand) (biz.UpdateTenantWorkloadResult, error)
 	RevokeAPIKey(context.Context, biz.TenantScope, biz.RevokeAPIKeyCommand) (biz.RevokeAPIKeyResult, error)
 }
 
@@ -38,28 +38,38 @@ type tenantAuthorizationMutations interface {
 // the composition-root wiring is explicitly authorized.
 type IAMAdminService struct {
 	iamv1.UnimplementedIAMAdminServiceServer
-	reader            biz.TenantAdminReader
-	mutations         tenantAuthorizationMutations
-	servicePrincipals biz.ServicePrincipalReader
+	reader          biz.TenantAdminReader
+	mutations       tenantAuthorizationMutations
+	tenantWorkloads biz.TenantWorkloadReader
+	authorization   *AdminAuthorization
 }
 
 func NewIAMAdminService() *IAMAdminService {
 	return &IAMAdminService{}
 }
 
-func NewTenantIAMAdminService(reader biz.TenantAdminReader, mutations tenantAuthorizationMutations) *IAMAdminService {
-	return &IAMAdminService{reader: reader, mutations: mutations, servicePrincipals: reader}
+func NewTenantIAMAdminService(reader biz.TenantAdminReader, mutations tenantAuthorizationMutations, authorization ...*AdminAuthorization) *IAMAdminService {
+	result := &IAMAdminService{reader: reader, mutations: mutations, tenantWorkloads: reader}
+	if len(authorization) == 1 {
+		result.authorization = authorization[0]
+	}
+	return result
 }
 
-func (s *IAMAdminService) CreateServicePrincipal(ctx context.Context, request *iamv1.CreateServicePrincipalRequest) (*iamv1.CreateServicePrincipalResponse, error) {
+func (s *IAMAdminService) CreateTenantWorkload(ctx context.Context, request *iamv1.CreateTenantWorkloadRequest) (*iamv1.CreateTenantWorkloadResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "CreateTenantWorkload", "createTenantWorkload", request.GetTenantId(), "")
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
 	if s.mutations == nil {
-		return nil, status.Error(codes.Unimplemented, "method CreateServicePrincipal not implemented")
+		return nil, status.Error(codes.Unimplemented, "method CreateTenantWorkload not implemented")
 	}
 	scope, tenantID, err := tenantScope(request.GetTenantId())
 	if err != nil {
 		return nil, err
 	}
-	if err := requireTrustedTenant(ctx, tenantID, "createServicePrincipal"); err != nil {
+	if err := requireTrustedTenant(ctx, tenantID, "createTenantWorkload"); err != nil {
 		return nil, err
 	}
 	roleIDs := make([]uuid.UUID, len(request.GetRoleIds()))
@@ -75,21 +85,26 @@ func (s *IAMAdminService) CreateServicePrincipal(ctx context.Context, request *i
 	}
 	actor, err := tenantAuthorizationActor(ctx)
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "createServicePrincipal", TenantID: tenantID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "createTenantWorkload", TenantID: tenantID.String()})
 	}
-	result, err := s.mutations.CreateServicePrincipal(ctx, scope, biz.CreateServicePrincipalCommand{
-		Name: strings.TrimSpace(request.GetName()), RoleIDs: roleIDs, Actor: actor,
+	result, err := s.mutations.CreateTenantWorkload(ctx, scope, biz.CreateTenantWorkloadCommand{
+		Name: strings.TrimSpace(request.GetName()), RoleIDs: roleIDs, IdempotencyKey: idempotencyKey, Actor: actor,
 	})
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "createServicePrincipal", TenantID: tenantID.String(), IdempotencyKey: idempotencyKey, DecisionID: actor.DecisionID})
+		return nil, mapIAMError(err, errorContext{OperationID: "createTenantWorkload", TenantID: tenantID.String(), IdempotencyKey: idempotencyKey, DecisionID: actor.DecisionID})
 	}
-	return &iamv1.CreateServicePrincipalResponse{
-		Principal: servicePrincipalDTO(tenantID, result.Principal), Membership: membershipRecordDTO(tenantID, result.Membership),
+	return &iamv1.CreateTenantWorkloadResponse{
+		Principal: tenantWorkloadDTO(tenantID, result.Principal), Membership: membershipRecordDTO(tenantID, result.Membership),
 	}, nil
 }
 
 func (s *IAMAdminService) CreateAPIKey(ctx context.Context, request *iamv1.CreateAPIKeyRequest) (*iamv1.CreateAPIKeyResponse, error) {
-	if s.mutations == nil || s.servicePrincipals == nil {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "CreateAPIKey", "createIAMAPIKey", "", request.GetPrincipalId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
+	if s.mutations == nil || s.tenantWorkloads == nil {
 		return nil, status.Error(codes.Unimplemented, "method CreateAPIKey not implemented")
 	}
 	principalID, err := requiredUUID(request.GetPrincipalId(), "principal_id")
@@ -120,39 +135,49 @@ func (s *IAMAdminService) CreateAPIKey(ctx context.Context, request *iamv1.Creat
 		IdempotencyKey: idempotencyKey, Actor: actor,
 	})
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "createIAMAPIKey", TenantID: tenantID.String(), IdempotencyKey: idempotencyKey, DecisionID: actor.DecisionID, ResourceType: "service_principal", ResourceID: principalID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "createIAMAPIKey", TenantID: tenantID.String(), IdempotencyKey: idempotencyKey, DecisionID: actor.DecisionID, ResourceType: "tenant_workload", ResourceID: principalID.String()})
 	}
-	return &iamv1.CreateAPIKeyResponse{ApiKey: apiKeyDTO(result.APIKey, time.Now().UTC()), ApiKeySecret: result.Secret}, nil
+	return &iamv1.CreateAPIKeyResponse{ApiKey: apiKeyDTO(result.APIKey, time.Now().UTC()), ApiKeySecret: result.Secret, Replayed: result.Replayed}, nil
 }
 
-func (s *IAMAdminService) GetServicePrincipal(ctx context.Context, request *iamv1.GetServicePrincipalRequest) (*iamv1.GetServicePrincipalResponse, error) {
-	if s.servicePrincipals == nil {
-		return nil, status.Error(codes.Unimplemented, "method GetServicePrincipal not implemented")
+func (s *IAMAdminService) GetTenantWorkload(ctx context.Context, request *iamv1.GetTenantWorkloadRequest) (*iamv1.GetTenantWorkloadResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "GetTenantWorkload", "getTenantWorkload", "", request.GetPrincipalId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
+	if s.tenantWorkloads == nil {
+		return nil, status.Error(codes.Unimplemented, "method GetTenantWorkload not implemented")
 	}
 	principalID, err := requiredUUID(request.GetPrincipalId(), "principal_id")
 	if err != nil {
 		return nil, err
 	}
-	scope, tenantID, err := trustedTenantScope(ctx, "getServicePrincipal")
+	scope, tenantID, err := trustedTenantScope(ctx, "getTenantWorkload")
 	if err != nil {
 		return nil, err
 	}
-	principal, err := s.servicePrincipals.GetServicePrincipal(ctx, scope, principalID)
+	principal, err := s.tenantWorkloads.GetTenantWorkload(ctx, scope, principalID)
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "getServicePrincipal", TenantID: tenantID.String(), ResourceType: "service_principal", ResourceID: principalID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "getTenantWorkload", TenantID: tenantID.String(), ResourceType: "tenant_workload", ResourceID: principalID.String()})
 	}
-	return &iamv1.GetServicePrincipalResponse{Principal: servicePrincipalDTO(tenantID, principal)}, nil
+	return &iamv1.GetTenantWorkloadResponse{Principal: tenantWorkloadDTO(tenantID, principal)}, nil
 }
 
-func (s *IAMAdminService) ListServicePrincipals(ctx context.Context, request *iamv1.ListServicePrincipalsRequest) (*iamv1.ListServicePrincipalsResponse, error) {
-	if s.servicePrincipals == nil {
-		return nil, status.Error(codes.Unimplemented, "method ListServicePrincipals not implemented")
+func (s *IAMAdminService) ListTenantWorkloads(ctx context.Context, request *iamv1.ListTenantWorkloadsRequest) (*iamv1.ListTenantWorkloadsResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "ListTenantWorkloads", "listTenantWorkloads", request.GetTenantId(), "")
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
+	if s.tenantWorkloads == nil {
+		return nil, status.Error(codes.Unimplemented, "method ListTenantWorkloads not implemented")
 	}
 	scope, tenantID, err := tenantScope(request.GetTenantId())
 	if err != nil {
 		return nil, err
 	}
-	if err := requireTrustedTenant(ctx, tenantID, "listServicePrincipals"); err != nil {
+	if err := requireTrustedTenant(ctx, tenantID, "listTenantWorkloads"); err != nil {
 		return nil, err
 	}
 	filter, err := optionalPrincipalStatus(request.GetStatus())
@@ -163,19 +188,24 @@ func (s *IAMAdminService) ListServicePrincipals(ctx context.Context, request *ia
 	if err != nil {
 		return nil, err
 	}
-	page, err := s.servicePrincipals.ListServicePrincipals(ctx, scope, filter, cursor, pageSize)
+	page, err := s.tenantWorkloads.ListTenantWorkloads(ctx, scope, filter, cursor, pageSize)
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "listServicePrincipals", TenantID: tenantID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "listTenantWorkloads", TenantID: tenantID.String()})
 	}
-	items := make([]*iamv1.ServicePrincipal, 0, len(page.Items))
+	items := make([]*iamv1.TenantWorkload, 0, len(page.Items))
 	for _, record := range page.Items {
-		items = append(items, servicePrincipalDTO(record.TenantID, record.Principal))
+		items = append(items, tenantWorkloadDTO(record.TenantID, record.Principal))
 	}
-	return &iamv1.ListServicePrincipalsResponse{Principals: items, NextCursor: cursorString(page.NextCursor)}, nil
+	return &iamv1.ListTenantWorkloadsResponse{Principals: items, NextCursor: cursorString(page.NextCursor)}, nil
 }
 
 func (s *IAMAdminService) ListAPIKeys(ctx context.Context, request *iamv1.ListAPIKeysRequest) (*iamv1.ListAPIKeysResponse, error) {
-	if s.servicePrincipals == nil {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "ListAPIKeys", "listIAMAPIKeys", "", request.GetPrincipalId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
+	if s.tenantWorkloads == nil {
 		return nil, status.Error(codes.Unimplemented, "method ListAPIKeys not implemented")
 	}
 	principalID, err := requiredUUID(request.GetPrincipalId(), "principal_id")
@@ -190,9 +220,9 @@ func (s *IAMAdminService) ListAPIKeys(ctx context.Context, request *iamv1.ListAP
 	if err != nil {
 		return nil, err
 	}
-	page, err := s.servicePrincipals.ListAPIKeys(ctx, scope, principalID, cursor, pageSize)
+	page, err := s.tenantWorkloads.ListAPIKeys(ctx, scope, principalID, cursor, pageSize)
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "listIAMAPIKeys", TenantID: tenantID.String(), ResourceType: "service_principal", ResourceID: principalID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "listIAMAPIKeys", TenantID: tenantID.String(), ResourceType: "tenant_workload", ResourceID: principalID.String()})
 	}
 	now := time.Now().UTC()
 	items := make([]*iamv1.APIKey, 0, len(page.Items))
@@ -202,15 +232,20 @@ func (s *IAMAdminService) ListAPIKeys(ctx context.Context, request *iamv1.ListAP
 	return &iamv1.ListAPIKeysResponse{ApiKeys: items, NextCursor: cursorString(page.NextCursor)}, nil
 }
 
-func (s *IAMAdminService) UpdateServicePrincipal(ctx context.Context, request *iamv1.UpdateServicePrincipalRequest) (*iamv1.UpdateServicePrincipalResponse, error) {
-	if s.mutations == nil || s.servicePrincipals == nil {
-		return nil, status.Error(codes.Unimplemented, "method UpdateServicePrincipal not implemented")
+func (s *IAMAdminService) UpdateTenantWorkload(ctx context.Context, request *iamv1.UpdateTenantWorkloadRequest) (*iamv1.UpdateTenantWorkloadResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "UpdateTenantWorkload", "updateTenantWorkload", "", request.GetPrincipalId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
+	if s.mutations == nil || s.tenantWorkloads == nil {
+		return nil, status.Error(codes.Unimplemented, "method UpdateTenantWorkload not implemented")
 	}
 	principalID, err := requiredUUID(request.GetPrincipalId(), "principal_id")
 	if err != nil {
 		return nil, err
 	}
-	scope, tenantID, err := trustedTenantScope(ctx, "updateServicePrincipal")
+	scope, tenantID, err := trustedTenantScope(ctx, "updateTenantWorkload")
 	if err != nil {
 		return nil, err
 	}
@@ -228,20 +263,25 @@ func (s *IAMAdminService) UpdateServicePrincipal(ctx context.Context, request *i
 	}
 	actor, err := tenantAuthorizationActor(ctx)
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "updateServicePrincipal", TenantID: tenantID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "updateTenantWorkload", TenantID: tenantID.String()})
 	}
-	result, err := s.mutations.UpdateServicePrincipal(ctx, scope, biz.UpdateServicePrincipalCommand{
-		PrincipalID: principalID, Name: strings.TrimSpace(request.GetName()), Status: statusValue,
+	result, err := s.mutations.UpdateTenantWorkload(ctx, scope, biz.UpdateTenantWorkloadCommand{
+		PrincipalID: principalID, Status: statusValue,
 		ExpectedVersion: expectedVersion, IdempotencyKey: idempotencyKey, Actor: actor,
 	})
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "updateServicePrincipal", TenantID: tenantID.String(), IdempotencyKey: idempotencyKey, DecisionID: actor.DecisionID, ResourceType: "service_principal", ResourceID: principalID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "updateTenantWorkload", TenantID: tenantID.String(), IdempotencyKey: idempotencyKey, DecisionID: actor.DecisionID, ResourceType: "tenant_workload", ResourceID: principalID.String()})
 	}
-	return &iamv1.UpdateServicePrincipalResponse{Principal: servicePrincipalDTO(tenantID, result.Principal)}, nil
+	return &iamv1.UpdateTenantWorkloadResponse{Principal: tenantWorkloadDTO(tenantID, result.Principal)}, nil
 }
 
 func (s *IAMAdminService) RevokeAPIKey(ctx context.Context, request *iamv1.RevokeAPIKeyRequest) (*iamv1.RevokeAPIKeyResponse, error) {
-	if s.mutations == nil || s.servicePrincipals == nil {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "RevokeAPIKey", "revokeIAMAPIKey", "", request.GetKeyId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
+	if s.mutations == nil || s.tenantWorkloads == nil {
 		return nil, status.Error(codes.Unimplemented, "method RevokeAPIKey not implemented")
 	}
 	keyID, err := requiredUUID(request.GetKeyId(), "key_id")
@@ -268,51 +308,19 @@ func (s *IAMAdminService) RevokeAPIKey(ctx context.Context, request *iamv1.Revok
 }
 
 func (s *IAMAdminService) GetTenantAccess(ctx context.Context, request *iamv1.GetTenantAccessRequest) (*iamv1.GetTenantAccessResponse, error) {
-	if s.reader == nil {
-		return nil, status.Error(codes.Unimplemented, "method GetTenantAccess not implemented")
-	}
-	scope, tenantID, err := tenantScope(request.GetTenantId())
-	if err != nil {
-		return nil, err
-	}
-	access, err := s.reader.GetAccess(ctx, scope)
-	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "getTenantIAMAccess", TenantID: tenantID.String()})
-	}
-	return &iamv1.GetTenantAccessResponse{TenantAccess: tenantAccessDTO(tenantID, access)}, nil
+	return nil, status.Error(codes.Unimplemented, "Platform Human administration requires WR-22")
 }
 
 func (s *IAMAdminService) UpdateTenantAccess(ctx context.Context, request *iamv1.UpdateTenantAccessRequest) (*iamv1.UpdateTenantAccessResponse, error) {
-	if s.mutations == nil {
-		return nil, status.Error(codes.Unimplemented, "method UpdateTenantAccess not implemented")
-	}
-	scope, tenantID, err := tenantScope(request.GetTenantId())
-	if err != nil {
-		return nil, err
-	}
-	statusValue, err := tenantAccessStatus(request.GetStatus())
-	if err != nil {
-		return nil, invalidArgumentStatus("status", "IAM request is invalid")
-	}
-	expectedVersion, err := mutationVersion(request.GetExpectedVersion())
-	if err != nil {
-		return nil, err
-	}
-	if strings.TrimSpace(request.GetIdempotencyKey()) == "" {
-		return nil, invalidArgumentStatus("idempotency_key", "IAM request is invalid")
-	}
-	actor, err := tenantAuthorizationActor(ctx)
-	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "updateTenantIAMAccess", TenantID: tenantID.String()})
-	}
-	result, err := s.mutations.UpdateAccess(ctx, scope, biz.UpdateTenantAccessCommand{Status: statusValue, ExpectedVersion: expectedVersion, Actor: actor})
-	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "updateTenantIAMAccess", TenantID: tenantID.String(), IdempotencyKey: strings.TrimSpace(request.GetIdempotencyKey()), DecisionID: actor.DecisionID})
-	}
-	return &iamv1.UpdateTenantAccessResponse{TenantAccess: tenantAccessDTO(tenantID, result.Access)}, nil
+	return nil, status.Error(codes.Unimplemented, "Platform Human administration requires WR-22")
 }
 
 func (s *IAMAdminService) GetTenantMembership(ctx context.Context, request *iamv1.GetTenantMembershipRequest) (*iamv1.GetTenantMembershipResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "GetTenantMembership", "getTenantIAMMember", request.GetTenantId(), request.GetMembershipId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
 	if s.reader == nil {
 		return nil, status.Error(codes.Unimplemented, "method GetTenantMembership not implemented")
 	}
@@ -326,12 +334,17 @@ func (s *IAMAdminService) GetTenantMembership(ctx context.Context, request *iamv
 	}
 	record, err := s.reader.GetMembership(ctx, scope, membershipID)
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "getTenantIAMMembership", TenantID: tenantID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "getTenantIAMMember", TenantID: tenantID.String()})
 	}
 	return &iamv1.GetTenantMembershipResponse{Membership: membershipRecordDTO(tenantID, record)}, nil
 }
 
 func (s *IAMAdminService) ListTenantMemberships(ctx context.Context, request *iamv1.ListTenantMembershipsRequest) (*iamv1.ListTenantMembershipsResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "ListTenantMemberships", "listTenantIAMMembers", request.GetTenantId(), "")
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
 	if s.reader == nil {
 		return nil, status.Error(codes.Unimplemented, "method ListTenantMemberships not implemented")
 	}
@@ -349,7 +362,7 @@ func (s *IAMAdminService) ListTenantMemberships(ctx context.Context, request *ia
 	}
 	page, err := s.reader.ListMemberships(ctx, scope, filter, cursor, pageSize)
 	if err != nil {
-		return nil, mapIAMError(err, errorContext{OperationID: "listTenantIAMMemberships", TenantID: tenantID.String()})
+		return nil, mapIAMError(err, errorContext{OperationID: "listTenantIAMMembers", TenantID: tenantID.String()})
 	}
 	items := make([]*iamv1.Membership, 0, len(page.Items))
 	for _, record := range page.Items {
@@ -359,7 +372,15 @@ func (s *IAMAdminService) ListTenantMemberships(ctx context.Context, request *ia
 }
 
 func (s *IAMAdminService) UpdateTenantMembership(ctx context.Context, request *iamv1.UpdateTenantMembershipRequest) (*iamv1.UpdateTenantMembershipResponse, error) {
-	result, tenantID, err := s.updateMembership(ctx, request.GetTenantId(), request.GetMembershipId(), request.GetStatus(), request.GetExpectedVersion(), request.GetIdempotencyKey(), "updateTenantIAMMembership")
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "UpdateTenantMembership", "updateTenantIAMMember", request.GetTenantId(), request.GetMembershipId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
+	if request.GetStatus() == iamv1.MembershipStatus_MEMBERSHIP_STATUS_REMOVED {
+		return nil, invalidArgumentStatus("status", "removal requires RemoveTenantMembership")
+	}
+	result, tenantID, err := s.updateMembership(ctx, request.GetTenantId(), request.GetMembershipId(), request.GetStatus(), request.GetExpectedVersion(), request.GetIdempotencyKey(), "updateTenantIAMMember")
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +388,12 @@ func (s *IAMAdminService) UpdateTenantMembership(ctx context.Context, request *i
 }
 
 func (s *IAMAdminService) RemoveTenantMembership(ctx context.Context, request *iamv1.RemoveTenantMembershipRequest) (*iamv1.RemoveTenantMembershipResponse, error) {
-	result, tenantID, err := s.updateMembership(ctx, request.GetTenantId(), request.GetMembershipId(), iamv1.MembershipStatus_MEMBERSHIP_STATUS_REMOVED, request.GetExpectedVersion(), request.GetIdempotencyKey(), "removeTenantIAMMembership")
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "RemoveTenantMembership", "removeTenantIAMMember", request.GetTenantId(), request.GetMembershipId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
+	result, tenantID, err := s.updateMembership(ctx, request.GetTenantId(), request.GetMembershipId(), iamv1.MembershipStatus_MEMBERSHIP_STATUS_REMOVED, request.GetExpectedVersion(), request.GetIdempotencyKey(), "removeTenantIAMMember")
 	if err != nil {
 		return nil, err
 	}
@@ -401,7 +427,7 @@ func (s *IAMAdminService) updateMembership(ctx context.Context, rawTenantID, raw
 	if err != nil {
 		return biz.TenantMembershipMutationResult{}, uuid.Nil, mapIAMError(err, errorContext{OperationID: operationID, TenantID: tenantID.String()})
 	}
-	result, err := s.mutations.UpdateMembership(ctx, scope, biz.UpdateTenantMembershipCommand{MembershipID: membershipID, Status: statusValue, ExpectedVersion: expectedVersion, Actor: actor})
+	result, err := s.mutations.UpdateMembership(ctx, scope, biz.UpdateTenantMembershipCommand{MembershipID: membershipID, Status: statusValue, ExpectedVersion: expectedVersion, IdempotencyKey: strings.TrimSpace(idempotencyKey), Actor: actor})
 	if err != nil {
 		return biz.TenantMembershipMutationResult{}, uuid.Nil, mapIAMError(err, errorContext{OperationID: operationID, TenantID: tenantID.String(), IdempotencyKey: strings.TrimSpace(idempotencyKey), DecisionID: actor.DecisionID})
 	}
@@ -409,6 +435,11 @@ func (s *IAMAdminService) updateMembership(ctx context.Context, rawTenantID, raw
 }
 
 func (s *IAMAdminService) GetTenantRole(ctx context.Context, request *iamv1.GetTenantRoleRequest) (*iamv1.GetTenantRoleResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "GetTenantRole", "getTenantIAMRole", request.GetTenantId(), request.GetRoleId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
 	if s.reader == nil {
 		return nil, status.Error(codes.Unimplemented, "method GetTenantRole not implemented")
 	}
@@ -428,6 +459,11 @@ func (s *IAMAdminService) GetTenantRole(ctx context.Context, request *iamv1.GetT
 }
 
 func (s *IAMAdminService) ListTenantRoles(ctx context.Context, request *iamv1.ListTenantRolesRequest) (*iamv1.ListTenantRolesResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "ListTenantRoles", "listTenantIAMRoles", request.GetTenantId(), "")
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
 	if s.reader == nil {
 		return nil, status.Error(codes.Unimplemented, "method ListTenantRoles not implemented")
 	}
@@ -451,6 +487,11 @@ func (s *IAMAdminService) ListTenantRoles(ctx context.Context, request *iamv1.Li
 }
 
 func (s *IAMAdminService) BindTenantRole(ctx context.Context, request *iamv1.BindTenantRoleRequest) (*iamv1.BindTenantRoleResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "BindTenantRole", "bindTenantIAMRole", request.GetTenantId(), request.GetMembershipId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
 	result, tenantID, err := s.mutateRoleBinding(ctx, request.GetTenantId(), request.GetMembershipId(), request.GetRoleId(), request.GetExpectedMembershipVersion(), request.GetIdempotencyKey(), true)
 	if err != nil {
 		return nil, err
@@ -459,6 +500,11 @@ func (s *IAMAdminService) BindTenantRole(ctx context.Context, request *iamv1.Bin
 }
 
 func (s *IAMAdminService) UnbindTenantRole(ctx context.Context, request *iamv1.UnbindTenantRoleRequest) (*iamv1.UnbindTenantRoleResponse, error) {
+	verifiedContext, authErr := s.authorizeTenantAdmin(ctx, request.GetCredential(), "UnbindTenantRole", "unbindTenantIAMRole", request.GetTenantId(), request.GetMembershipId())
+	if authErr != nil {
+		return nil, authErr
+	}
+	ctx = verifiedContext
 	result, tenantID, err := s.mutateRoleBinding(ctx, request.GetTenantId(), request.GetMembershipId(), request.GetRoleId(), request.GetExpectedMembershipVersion(), request.GetIdempotencyKey(), false)
 	if err != nil {
 		return nil, err
@@ -497,7 +543,7 @@ func (s *IAMAdminService) mutateRoleBinding(ctx context.Context, rawTenantID, ra
 	if err != nil {
 		return biz.TenantMembershipMutationResult{}, uuid.Nil, mapIAMError(err, errorContext{OperationID: operationID, TenantID: tenantID.String()})
 	}
-	command := biz.BindTenantRoleCommand{MembershipID: membershipID, RoleID: roleID, ExpectedMembershipVersion: expectedVersion, Actor: actor}
+	command := biz.BindTenantRoleCommand{MembershipID: membershipID, RoleID: roleID, ExpectedMembershipVersion: expectedVersion, IdempotencyKey: strings.TrimSpace(idempotencyKey), Actor: actor}
 	var result biz.TenantMembershipMutationResult
 	if bind {
 		result, err = s.mutations.BindRole(ctx, scope, command)
@@ -557,69 +603,6 @@ func tenantAdminPage(page *iamv1.CursorPageRequest) (uuid.UUID, int32, error) {
 		}
 	}
 	return cursor, pageSize, nil
-}
-
-func tenantAuthorizationActor(ctx context.Context) (biz.TenantAuthorizationActor, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditActorRequired
-	}
-	principal, err := exactlyOneMetadataValue(md, "x-ani-principal-id")
-	if err != nil {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditActorRequired
-	}
-	principalID, err := uuid.Parse(principal)
-	if err != nil || principalID == uuid.Nil {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditActorRequired
-	}
-	principalType, err := exactlyOneMetadataValue(md, "x-ani-principal-type")
-	if err != nil || principalType != "human" {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditActorRequired
-	}
-	authn, err := exactlyOneMetadataValue(md, "x-ani-authn-method")
-	if err != nil {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditAuthenticationMethodRequired
-	}
-	method, ok := map[string]biz.AuditAuthenticationMethod{
-		"password": biz.AuditAuthenticationMethodPassword, "oidc": biz.AuditAuthenticationMethodOIDC,
-		"api_key": biz.AuditAuthenticationMethodAPIKey, "service_token": biz.AuditAuthenticationMethodServiceToken,
-	}[authn]
-	if !ok {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditAuthenticationMethodRequired
-	}
-	requestID, err := exactlyOneMetadataValue(md, "x-request-id")
-	if err != nil {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditRequestIDRequired
-	}
-	correlationID, err := exactlyOneMetadataValue(md, "x-correlation-id")
-	if err != nil {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditCorrelationIDRequired
-	}
-	decisionID, err := exactlyOneMetadataValue(md, "x-ani-decision-id")
-	if err != nil {
-		return biz.TenantAuthorizationActor{}, biz.ErrAuditDecisionIDRequired
-	}
-	return biz.TenantAuthorizationActor{PrincipalID: principalID, AuthenticationMethod: method, RequestID: requestID, CorrelationID: correlationID, DecisionID: decisionID}, nil
-}
-
-func trustedTenantScope(ctx context.Context, operationID string) (biz.TenantScope, uuid.UUID, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return biz.TenantScope{}, uuid.Nil, permissionDeniedStatus(operationID, "not-issued")
-	}
-	rawTenantID, err := exactlyOneMetadataValue(md, "x-ani-tenant-id")
-	if err != nil {
-		return biz.TenantScope{}, uuid.Nil, permissionDeniedStatus(operationID, metadataDecisionID(md))
-	}
-	tenantID, err := uuid.Parse(rawTenantID)
-	if err != nil || tenantID == uuid.Nil {
-		return biz.TenantScope{}, uuid.Nil, permissionDeniedStatus(operationID, metadataDecisionID(md))
-	}
-	scope, err := biz.NewTenantScope(tenantID)
-	if err != nil {
-		return biz.TenantScope{}, uuid.Nil, permissionDeniedStatus(operationID, metadataDecisionID(md))
-	}
-	return scope, tenantID, nil
 }
 
 func requireTrustedTenant(ctx context.Context, expected uuid.UUID, operationID string) error {
@@ -697,10 +680,10 @@ func roleDTO(tenantID uuid.UUID, role biz.TenantRole) *iamv1.Role {
 	}
 }
 
-func servicePrincipalDTO(tenantID uuid.UUID, principal biz.ServicePrincipal) *iamv1.ServicePrincipal {
-	return &iamv1.ServicePrincipal{
+func tenantWorkloadDTO(tenantID uuid.UUID, principal biz.TenantWorkload) *iamv1.TenantWorkload {
+	return &iamv1.TenantWorkload{
 		PrincipalId: principal.ID.String(), TenantId: tenantID.String(), Name: principal.Name,
-		Status: principalStatusDTO(principal.Status), MembershipId: principal.MembershipID.String(), Version: uint64(principal.Version),
+		Status: principalStatusDTO(principal.Status), MembershipId: cursorString(principal.MembershipID), Version: uint64(principal.Version),
 	}
 }
 
@@ -828,8 +811,8 @@ func principalTypeDTO(value biz.PrincipalType) iamv1.PrincipalType {
 	switch value {
 	case biz.PrincipalTypeHuman:
 		return iamv1.PrincipalType_PRINCIPAL_TYPE_HUMAN
-	case biz.PrincipalTypeService:
-		return iamv1.PrincipalType_PRINCIPAL_TYPE_SERVICE
+	case biz.PrincipalTypeWorkload:
+		return iamv1.PrincipalType_PRINCIPAL_TYPE_WORKLOAD
 	default:
 		return iamv1.PrincipalType_PRINCIPAL_TYPE_UNSPECIFIED
 	}

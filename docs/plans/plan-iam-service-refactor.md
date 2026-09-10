@@ -1,34 +1,18 @@
-# ANI IAM Service 重构方案
+# ANI IAM 已接受领域规则与替换能力
 
-> 状态：**Accepted target design / Direct P2 计划已接受并发布；DP2-00 已解决，DP2-01 未启动**
+> 文档角色：accepted base design 的领域职责、完整替换能力和安全不变量；不是当前事项图。
 >
-> 编制日期：2026-09-01
+> 当前唯一执行入口：[WR spec](../../.scratch/ani-iam-workload-refoundation/spec.md) + [ticket graph](../../.scratch/ani-iam-workload-refoundation/ticket-plan.md)。[能力矩阵](../../.scratch/ani-iam-workload-refoundation/capability-matrix.md) 定义 M1 接口替换就绪与 M2 实际替换完成的验收分母；[待决定项](../../.scratch/ani-iam-workload-refoundation/decisions.md) 区分 accepted/pending。
 >
-> 适用环境：项目未上线、没有真实用户、当前只有测试和演示环境
->
-> Direct P2 ANI 来源候选：Git object `0cedae825a489d936cf41815dc27f278f6d3213c`
->
-> 来源验证状态：**Git identity verified / Direct P2 contract inventory pending**。该对象已确认存在且验证时对应远端 `main`；动态 `HEAD`、`main`、当前分支和工作树不得替代。事项04已证明旧 Auth RLS 对受限 runtime role 的正向访问失败，因此该对象不是可运行兼容 Oracle。
->
-> 配套文档：`plan-iam-kratos-phased.md`、`../../.scratch/ani-iam-p2-direct/spec.md`、`../../.scratch/ani-iam-p2-direct/ticket-plan.md`
->
-> 决策索引：`plan-iam-decision-traceability.md`
+> 用户已明确：先隔离接口验证，M1 后裁剪 Core 旧身份代码并开始前端对接。旧 writer 和 UI 尚存不是 M1 前的失败条件；M2 必须核验其退出与接入。实际切流、Credential 失效和删除仍是精确范围的后续动作。
 
 ## 1. 权威关系与执行边界
 
-本方案完整整合 Q1-Q300 已接受决策。决策优先级固定为：
+已接受决定的优先级为：用户当前明确决定 > accepted ADR > 未被修订的 accepted base decisions；当前实现和测试只证明现状。本文保留 Q1–Q300 中仍有效的职责、状态、时间、事务、错误、重试与安全规则，ADR-0022 修订 Human/Workload 分类。候选 receiver、非固定 Tenant evidence、first-admin 和 administration-recovery 机制不能因为出现在文档中就覆盖 accepted 决定。
 
-```text
-用户当前明确决定
-  > 当前规格
-  > 本方案、分阶段方案和决策追踪矩阵
-  > accepted ADR
-  > 当前实现与测试
-```
+[Workload 模块设计](plan-workload-principal-refoundation.md) 解释必要 seams 与尚待冻结的接口，不维护另一张执行图；[历史阶段索引](plan-iam-kratos-phased.md) 不提供 frontier。整理前的完整 base 文本保存在[WR-16 before 快照](../../.scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/plans/plan-iam-service-refactor.md)，其中混入的未接受机制只作非规范历史草案。
 
-本方案即使单独阅读，也足以判断目标边界、契约、数据、迁移、安全、验证和延期范围。若实现与本文冲突，必须记录并解决差异，不得从已删除材料补入默认规则。
-
-批准本文不等于批准实现。任何改变代码、数据、契约或外部状态的工作都必须由一个状态为 `claimed` 的本地事项承载；删除、Credential 失效、数据重建和切流还需在执行前获得针对精确目标和动作的人工确认。CP0/P1 已停止；Direct P2 ticket plan、Core 拆分、NATS 基础设施、数据库迁移和部署均未因本文生成而自动获得授权。
+批准文档不等于批准实现。改变代码、契约、数据或外部状态必须由唯一 `claimed` 事项承载；删除、Credential 失效、数据重建和切流须在执行前取得针对精确目标和动作的人工确认。CP0/P1 已停止，Direct P2 到 DP2-10 的历史结果保留；WR-01–15 旧候选原位 superseded，后续工作只从当前 WR spec/graph 领取。
 
 ## 2. 目标、动机与非目标
 
@@ -36,7 +20,7 @@
 
 1. 在独立项目中用 go-kratos 建立边界明确、可删除旧实现的 `iam-service`。
 2. 最终删除并替换旧 `auth-service`、旧 Auth Proto、双轨授权、旧身份表和重叠 Tenant Admin 能力，而不是长期兼容它们。
-3. 由 IAM 统一拥有 Human/Service Principal、Identity、Credential、Session、Tenant Access、Membership、Role、Invitation、API Key 和安全审计。
+3. 由 IAM 统一拥有 Human/Workload Principal、Workload Owner/Identity Binding/Grant、Credential、Session、Tenant Access、Membership、Role、Invitation、API Key 和安全审计。
 4. 由 Core Control 独占 Tenant Lifecycle，IAM 只持有生命周期投影并用于早期拒绝。
 5. 保持 Gateway 为唯一公网入口和薄边缘；授权策略由 OpenAPI operation registry 生成。
 6. 在 P2 删除 PostgreSQL RLS，以显式 TenantScope、复合约束、窄仓储和负向测试承担应用隔离。
@@ -44,7 +28,7 @@
 
 ### 2.2 为什么允许破坏性替换
 
-系统尚未上线、没有真实用户，现有数据属于测试和 Demo 数据。删除旧接口、旧表、旧 Token 和旧 Credential 是重构目标，不以保持 Core v1 或旧 IAM 数据兼容为前提。P2 切换前只需对明确列出的测试数据做可恢复快照和重新 seed，不设计逐行线上迁移、双写或兼容视图。
+系统尚未上线、没有真实用户，现有数据属于测试和 Demo 数据。删除旧接口、旧表、旧 Token 和旧 Credential 是重构目标，不以保持 Core v1 或旧 IAM 数据兼容为前提。M1 在隔离环境证明目标接口，不要求先失效现有 Credential 或裁剪现有 Core。后续切换只处理精确列出的测试数据、快照和重新 seed；恢复前置须接受并真实验证，不设计逐行线上迁移、双写或兼容视图。
 
 ### 2.3 当前不做
 
@@ -57,7 +41,7 @@
 - 不实现 Support Session；
 - 不提供公共 IAM HTTP 服务或公共 JWKS；
 - 不为未来消费者预建通用 IAM Integration Outbox；
-- 不在当前工作包拆分 Core Control；该工作必须另行启动；
+- 不因本文自动授权 Core 产品拆分或其他仓库变更；M1 所需 Core 配套实现由当前事项明确允许路径与真实 owner；
 - 不把性能、Race、Fuzz 或 HA 缺失描述成已经验证。
 
 ## 3. 系统与领域边界
@@ -68,12 +52,13 @@
 | --- | --- | --- | --- |
 | Tenant ID、Tenant Lifecycle | Core Control | 保存外部 ID 与只读投影 | IAM 永不生成 Tenant ID，也不写 Lifecycle |
 | Tenant Access | IAM | 权威 | `bootstrap_pending/active/suspended` |
-| Human/Service Principal、Identity、Credential | IAM | 权威 | Human 全局；Service Principal 单 Tenant |
+| Human/Workload Principal、Identity、Credential | IAM | 权威 | Human 全局；Workload owner 为 Tenant 或 Platform |
 | Tenant/Platform Membership | IAM | 权威 | 两类表分离，Platform 仅 Human |
 | Permission、Role、Role Binding | IAM + 生成契约 | 权威 | Tenant/Platform 分表，绑定 Membership 而非 Principal |
 | Invitation | IAM | 权威 | Pending Invitation 不是 Membership |
 | Session、Grant、Refresh Family/Token | IAM | 权威 | PostgreSQL 是在线授权事实源 |
-| API Key | IAM | 权威 | Service Principal 的 Credential |
+| Workload Owner/Identity Binding/Grant | IAM | 权威 | Owner、认证绑定与 Authority 正交 |
+| API Key | IAM | 权威 | Tenant-owned Workload 的 Credential |
 | Quota Policy/Assignment/Account/Reservation | Core Control Quota | 不保存 | 当前不含 member_count |
 | 资源真实 Tenant/Owner | Core/Services | 不复制为授权事实 | 由 typed obligation 在资源 Handler 强制检查 |
 | IAM Security Audit | IAM | 权威 | 状态变更同事务、应用级 append-only |
@@ -102,7 +87,7 @@ envoy-authz-adapter ------> iam-service
 inference-service --------> iam-service
 ```
 
-Gateway 不连接业务数据库，不执行 Tenant/Quota Saga，也不本地验证 ANI JWT。Core 和 Services 只在第一跳 mTLS 连接上信任 Gateway 注入的最小上下文；后续服务调用改用工作负载身份，用户 Header 不可转发成授权凭证。
+Gateway 不连接业务数据库，不执行 Tenant/Quota Saga，也不本地验证 ANI Human JWT。Gateway 的 ingress IAM decision context 只留在本地。每个业务 hop 必须认证当前直接 caller Workload、检查其目标 Authority，并与可选的被服务主体分开；用户 Header/Token、上一跳 context 不能替代本跳 caller 身份。具体 receiver 和 delegation evidence 合同仍按 decisions 中的 accepted/pending 状态处理，未接受路径不可用。
 
 ### 3.3 独立 IAM 项目
 
@@ -112,7 +97,8 @@ IAM 使用当前独立 Git 项目和事项02已验证的 scaffold；事项03/04�
 
 - ANI 拥有唯一公网 REST OpenAPI；
 - IAM 拥有内部 gRPC Proto 并发布不可变 descriptor/digest；
-- Core 拥有 Tenant Lifecycle/Bootstrap Protobuf 事件和版本化 Snapshot REST 契约；
+- Core 拥有 Tenant Lifecycle/Bootstrap Protobuf 事件；Snapshot 继续采用 accepted REST/OpenAPI，现有 gRPC Proto 仅属未接受变更，差异按 decisions D06 在真实链前处理；修改 transport 需明确修订决定；
+- Core 后续独立时，内部请求建议优先收敛为 gRPC；公网仍由 Gateway 提供 HTTP，Lifecycle 事实仍走 NATS。该后续方向不把物理拆分或协议迁移加入 M1 前置；具体合同、调用方迁移和旧接口退出由对应事项验证；
 - 双方消费固定 Commit、Tag 或 Digest，不解析 `main` 或 `latest`。
 
 ## 4. IAM 进程、Kratos 结构与依赖
@@ -123,9 +109,9 @@ IAM 使用当前独立 Git 项目和事项02已验证的 scaffold；事项03/04�
 
 | gRPC Service | 责任 |
 | --- | --- |
-| `AuthenticationService` | Password/OIDC、Session、Refresh、Logout、Password Action、Service Token、ValidatePrincipal |
-| `AuthorizationService` | 唯一 `CheckPermission` |
-| `IAMAdminService` | Principal、Tenant Access、Membership、Role、Invitation、Service Principal/API Key、Platform Account、Audit |
+| `AuthenticationService` | Password/OIDC、Session、Refresh、Logout、Password Action、Workload Access Token、ValidatePrincipal |
+| `AuthorizationService` | `CheckPermission` 与必要的 Workload invocation 授权；具体新增 RPC/receipt wire 由当前 contract 事项冻结，不在此预先接受 |
+| `IAMAdminService` | Principal、Tenant Access、Membership、Role、Invitation、owner-specific Workload/API Key/Binding/Grant、Platform Membership/Role administration、Audit |
 
 不建立公共 `TokenService`，不注册 Kratos HTTP 业务转码。独立内部管理 Listener 只允许 health、readiness 和 metrics。
 
@@ -182,10 +168,10 @@ OpenAPI + x-ani-authz/x-ani-exposure
 
 一个 `operationId` 只能有一个 Gateway Handler 和一个后端 Owner。旧 Core `/admin/tenants/*/users*`、Services `/svc/tenant-admins*`、旧 Tenant Plan/Bind Plan 重叠入口在 P2 删除；`TransferOwnership` 和 `tenant-owner` 不进入目标契约。
 
-目标路径族：
+目标路径族表达职责归属；Human/Workload 重冻涉及的精确 operation/path 由当前合同冻结，不从通配写法生成接口：
 
 - `/auth/*`：登录、OIDC、refresh、logout、password action；
-- `/auth/service-principals*`、`/auth/api-keys*`：Service Principal 与 API Key；
+- `/auth/workloads*`、`/auth/api-keys*`：Tenant-owned Workload 与 API Key；Platform-owned Workload 使用独立平台管理入口；
 - `/iam/tenants/{tenant_id}/access*`：Tenant Access；
 - `/iam/tenants/{tenant_id}/members*`、`roles*`、`invitations*`：租户 IAM；
 - `/iam/platform/*`：平台人员和角色；
@@ -193,7 +179,9 @@ OpenAPI + x-ani-authz/x-ani-exposure
 - `/admin/tenants*`：Core Control Tenant Lifecycle；
 - `/admin/plans*`、`/admin/tenants/{tenant_id}/plan|quota|reservations*`：Core Control Quota。
 
-所有公开状态变更要求 Idempotency Key。IAM 保存 24 小时 ledger，作用域为 boundary、actor、operation、key、request hash 和 serialized result。同 Key/同请求重放结果；同 Key/异请求返回 `409`；逻辑过期后复用返回 `409 IDEMPOTENCY_KEY_EXPIRED`。
+重试不得改变已有状态机语义。适用 idempotency ledger 的操作保证 24 小时 scoped-key replay；同 key 不同意图稳定冲突，逻辑过期后返回 `409 IDEMPOTENCY_KEY_EXPIRED` 并要求新 key，物理行保留不延长 replay。Mutation、对应 ledger outcome 和 Audit 必须在同库原子提交；不在 replay 数据中保存 raw Credential/Secret。Secret 只返回一次，丢失响应的可恢复结果须由其 owner 合同明确，不能靠重新发放或恢复旧 Secret 猜测。
+
+每个 endpoint 都须冻结 retry/response-loss/recovery 行为。五类 `safe_read | ledger_replay | ledger_one_time_secret | owner_state_machine | ephemeral_mint` 的 exhaustive catalog、旧字段删除/保留号和 one-time-secret terminal 结果仍是待冻结方案，不能仅从本文接受全部 endpoint 分类。已有 Refresh reuse、OIDC one-time、Invitation race、API Key 一次返回和消息去重规则继续有效。
 
 公开调用者只接收 ANI 稳定 `ErrorResponse`；内部 gRPC 使用稳定 status 和 `google.rpc.ErrorInfo` 等结构化 details。Gateway 维护显式映射，Kratos、数据库和第三方库原始错误不得穿透边界。
 
@@ -205,13 +193,13 @@ OpenAPI + x-ani-authz/x-ani-exposure
 | Authenticated-only | 一次 `ValidatePrincipal(raw credential)` |
 | Authorized | 一次 `CheckPermission(raw credential, operation_id, policy_revision, target attributes)` |
 
-Authorized 路由不先调用 Validate。Gateway 使用专用 mTLS/SPIFFE 身份访问 IAM；IAM listener 不公开。每次 IAM 热路径 deadline 为 500 ms，Gateway 不自动重试。
+Authorized 路由不先调用 Validate。Gateway 以独立 Workload 的可信身份和当前有效 Authority 访问 IAM，IAM listener 不公开；具体 mint/receiver 机制由当前合同 checkpoint 冻结。每次 IAM 热路径 deadline 为 500 ms，Gateway 不自动重试。
 
 OpenAPI 授权标注生成不可变 registry 和 `policy_revision`。Gateway 与 IAM Digest 不同返回 `503 AUTHZ_POLICY_MISMATCH`；缺标注或未知 operation 在 CI 失败，若运行时到达则 `503 AUTHZ_OPERATION_UNREGISTERED`。没有默认 allow 或字符串推导 fallback。
 
 稳定映射：无效 Credential `401`；有效身份但状态/权限拒绝 `403`；认证/授权限流 `429`；依赖或投影不可用 `503`；IAM deadline `504`。
 
-Gateway 先删除所有客户端 `x-ani-*` Header，仅在 allow 后注入 Principal ID/type、boundary、Tenant ID、Session/Grant ID、authn method、decision ID。绝不注入 Role 或 Permission 列表。
+Gateway 先删除所有客户端 `x-ani-*` Header，并只在本进程保留 allow 后的 typed Principal ID/type、boundary、Tenant ID、Session/Grant ID、authn method 与 decision ID。它不向下游注入可信 Principal Header；需要代表主体时，只有相应 evidence 合同被接受并验证后才能构造独立 Delegated Subject。绝不传播 Role 或 Permission 列表。
 
 ### 5.3 Typed obligation
 
@@ -222,13 +210,14 @@ IAM 不读取 Core/Services 业务数据库。需要权威 Owner/Tenant 检查�
 ### 6.1 Principal 与边界
 
 - Human Principal：全局唯一，可有多个 Tenant Membership 和一个可选 Platform Membership；
-- Service Principal：固定一个 Core Tenant，只能有该 Tenant 的唯一有效 Membership，无 Platform Membership；
-- Internal Workload：mTLS/SPIFFE 身份，不伪造成 Platform Service Principal；
+- Workload Principal：稳定软件 actor，owner 为 Tenant 或 Platform，不等于 Pod、SPIFFE ID 或 Credential；
+- Tenant-owned Workload：固定一个 Core Tenant；active 时恰有一个匹配的 current non-removed Membership（active/suspended），仅 active 提供 Authority，无 Platform Membership/Workload Grant；
+- Platform-owned Workload：通过 Identity Binding 识别稳定主体，Authority 只来自有效 Workload Grant，不制造 Tenant/Platform Membership；
 - Principal 状态：`active/disabled`。
 
 Verified email 先 trim，再统一大小写并规范化 IDNA domain；不移除 plus tag、不折叠 dot、不实现 Provider 特例。一个 normalized verified email 只属于一个 Human Principal。相同 email 不自动合并账号；若 Link Identity 的邮箱已属于其他 Principal，操作失败而不是数据库修复。
 
-不开放自由注册。Human Principal 只由 Tenant Invitation、Platform Invitation 或首管理员 Bootstrap 建立。新邀请者先证明 Invitation 和邮箱所有权，再设置本地密码或通过 trusted OIDC；证明完成前不创建 Principal/Identity。Console 与 BOSS 有独立登录入口并共享 Credential verifier；BOSS 还必须有 active Platform Membership，前端路由不能把 Tenant 身份提升为 Platform 身份。
+不开放自由注册。Human Principal 只由 Tenant Invitation、Platform Invitation 或受控首管理员 Bootstrap 建立。邀请先证明 Invitation 与邮箱所有权，再建立 Principal/Identity；不得创建未验证的 active Human。Console/BOSS 共享 Credential verifier，但 BOSS 还需 active Platform Membership，前端路由不能提升 Authority。首管理员的具体机制仍待当前 contract/provisioning 决定；旧候选 ceremony/flow/ReadyClaim/lineage 状态机不属于本段已接受规则。
 
 普通租户授权要求：
 
@@ -236,12 +225,12 @@ Verified email 先 trim，再统一大小写并规范化 IDNA domain；不移除
 principal.active
 AND tenant_access.active
 AND tenant_membership.active
-AND tenant_lifecycle_projection.active and fresh
+AND tenant_lifecycle_projections.active and fresh
 AND required tenant permission
 AND every typed resource obligation satisfied
 ```
 
-Platform 授权使用独立 Platform Membership、Role、Binding 和 Repository。空 Tenant ID、全零 UUID、特殊 Tenant 或 `is_admin` Boolean 都不能表达 Platform 能力。
+Human 的 Platform 授权使用独立 Platform Membership、Role、Binding 和 Repository；Platform-owned Workload 的 Platform 授权只来自其 exact Workload Grant。两者都不能由 owner/credential 自动推导。空 Tenant ID、全零 UUID、特殊 Tenant 或 `is_admin` Boolean 都不能表达 Platform 能力。
 
 ### 6.2 Tenant Lifecycle、Access 与 Bootstrap
 
@@ -253,7 +242,7 @@ IAM 幂等消费 Bootstrap，先建立 `tenant_access=bootstrap_pending` 和 ope
 
 原 operation 可重放；原意图丢失时只能使用 Recovery Bootstrap：独立 Platform Permission、不同 requester/approver、单次 approval reference、绑定 Tenant/目标身份/payload hash、一小时有效、执行前 15 分钟内重新认证、完整审计。不得直接插库。
 
-Tenant Lifecycle 投影按 Tenant version 更新；旧版本/重复消息幂等忽略，版本 gap 只冻结受影响 Tenant并触发 Core Snapshot 修复。Pipeline 健康由独立 consumer watermark/heartbeat 判断：Core 每 10 秒通过相同 outbox/stream 路径发送 heartbeat，正常传播目标 p99 5 秒，30 秒无进展视为 stale。普通授权不回调 Core。
+Tenant Lifecycle 投影按 Tenant version 更新；旧版本/重复消息幂等忽略，版本 gap 只冻结受影响 Tenant 并触发 Core Snapshot 修复。Pipeline 健康由独立 consumer watermark/heartbeat 判断：Core 每 10 秒通过相同 outbox/stream 路径发送 heartbeat，正常传播目标 p99 5 秒，30 秒无进展视为 stale。普通授权不回调 Core。
 
 全量重建先取得一致 snapshot cursor，再订阅 cursor 后增量，加载分页快照，原子激活新投影并追平 buffered events，不在 snapshot 和订阅之间留 gap。
 
@@ -265,7 +254,7 @@ Tenant/Platform Membership、Role、Permission Join、Role Binding 分表。Role
 
 Permission Catalog 来自 OpenAPI/operation registry，未知 Permission fail closed。Tenant built-in Role 按 Tenant 实例化并带 `system_definition_version`；系统 code 和 Permission 集不可由租户修改。自定义 Role 更新要求 `expected_version`，冲突返回 `409`；有 active Binding 或 unfinished Invitation 时删除返回 `409 ROLE_IN_USE`，不 cascade。
 
-初版仅 `tenant-admin` 管理 Role 和 Binding。最后管理员只计算 active Human Principal + active Membership + active `tenant-admin` Binding；Service Principal 不计入。相关变更在 Tenant guard lock 或窄 serializable transaction 中重算，禁止降到零。丢失所有管理员使用双人审批的 `RestoreTenantAdmin`，不复用 Bootstrap。
+初版仅 `tenant-admin` 管理 Role 和 Binding。最后管理员只计算 active Human Principal + active Membership + active `tenant-admin` Binding；Workload Principal 不计入。相关变更在 Tenant guard lock 或窄 serializable transaction 中重算，禁止降到零。丢失所有管理员使用双人审批的 `RestoreTenantAdmin`，不复用 Bootstrap。
 
 System Role definition 通过显式 schema/seed migration 按 `system_definition_version` 升级全部 Tenant，并保留 before/after 审计，不让每个 Tenant 永久停留在 Bootstrap 时的权限快照。
 
@@ -279,13 +268,13 @@ Tenant/Platform Invitation 分表。一个 Tenant + normalized email 最多一�
 
 Accept、Cancel、Resend 均锁定 Invitation 并以 version 条件迁移，首个提交者获胜；后续重复返回保存的幂等结果或稳定冲突。Invitation 保存 Role ID 而不是 Permission snapshot，接受时使用这些 Role 当前的 Permission 集。
 
-移除 Human Membership 只撤销该 Tenant boundary 的 Session Grant/Family/Token，不影响其其他 Tenant 或 Platform。移除 Service Principal 的唯一 Membership 会 disable 该 Principal 并不可逆 revoke 全部 API Key。
+移除 Human Membership 只撤销该 Tenant boundary 的 Session Grant/Family/Token，不影响其其他 Tenant 或 Platform。移除 Tenant-owned Workload 的唯一 Membership 会 disable 该 Principal 并不可逆 revoke 全部 API Key。
 
 ### 6.5 TenantScope 与 Repository
 
 Gateway 删除客户端上下文后，IAM 从 Principal、Tenant Access、Membership 和 Permission 建立非空 TenantScope。普通 Tenant Repository 必须接收 TenantScope，不提供 unscoped `FindByID`、可空 Tenant、Platform Boolean bypass 或客户端 Tenant ID 直接构造入口。
 
-Platform Repository 独立，要求 Platform Capability、专用身份、reason code 和 Audit。Worker 使用由服务身份、注册命令类型和消息 Tenant ID 建立的 TenantExecutionScope；不冒充 Human。
+Platform Repository 独立，要求 Platform Capability，以及 Platform-owned Workload Principal 的 matching active Workload Grant 或 Human Principal 的 active Platform Membership/Role Binding，并带 reason code 和 Audit；Owner 或已验证 Identity 本身不授予 Capability。Worker 只能依据自身当前有效 Authority 和经认证、可验证的业务事实建立单 Tenant 执行边界；消息 Tenant ID 不能自行创建 Authority。Worker 不冒充 Human，不把自主执行伪装成 Delegated Subject。非固定 Tenant scope、producer provenance 和具体 evidence wire 仍须冻结，不使用旧候选的表名或组合自动授权。
 
 ## 7. Credential、Session 与浏览器模型
 
@@ -293,7 +282,7 @@ Platform Repository 独立，要求 Platform Capability、专用身份、reason 
 
 历史 CP0/P1 原计划保留基线 bcrypt 行为，但该路线已停止。Direct P2 新密码使用 Argon2id：64 MiB、t=3、p=4、16-byte salt、32-byte tag，并保存算法和参数。只有显式导入 bcrypt 可在成功登录后 rehash；seed 不保存明文默认密码，只产生一次性 30 分钟设置动作。
 
-Password 登录按 normalized account 和 IP 限流，连续 5 次失败锁定 15 分钟，响应不枚举账号。
+Password 登录按 normalized account 和 IP 限流；失败产生递增延迟，连续 5 次失败锁定 15 分钟，成功清除失败状态，响应不枚举账号。Password setup/reset 动作均为 30 分钟、single-use，绑定 Principal/purpose/origin operation；创建替代动作立即失效前一动作，reset 完成撤销该 Human 全部 Session/Family/Access Token，不删除其 OIDC Identity 或影响其他 Principal。
 
 OIDC 使用 Authorization Code + PKCE S256；state、nonce、verifier 10 分钟单次使用。只有 trusted issuer/audience/signature/nonce 和 `email_verified=true` 全部验证后才能建立 verified email。相同 email 不自动合并 Principal；Link Identity 需要已登录、近期重认证和完整 state/nonce/PKCE。
 
@@ -301,7 +290,7 @@ OIDC 使用 Authorization Code + PKCE S256；state、nonce、verifier 10 分钟�
 
 Console Access Token 15 分钟，Session idle 7 天/absolute 30 天；BOSS Access Token 10 分钟，Session idle 30 分钟/absolute 8 小时。
 
-Token 只包含 issuer、subject、audience、iat/exp、jti、Session/Grant ID、Grant version、Principal type、boundary、可选 Tenant ID 和 authn methods；不含 Role、Permission 或全部 Membership。
+Human Access Token 只包含 issuer、subject、audience、iat/exp、jti、Session/Grant ID、Grant version、Principal type、boundary、可选 Tenant ID 和 authn methods；不含 Role、Permission 或全部 Membership。Workload Access Token 使用独立 claims profile，以已验证身份、当前 Authority 和 exact target 限制能力，不携带 Role/Permission 集合；具体 binding/version/authority anchors 与 wire 字段由当前合同冻结。
 
 Session 是 Principal-wide；Session Grant 是单 Tenant/Platform boundary。每个 Session + boundary 最多一个 active Refresh Family。Refresh Token 单次旋转，reuse 撤销 Family 并增加 Grant version，使该 boundary Access Token 失效；其他 boundary Grant 不受影响。Consumed hash 保留到 Session absolute expiry。
 
@@ -313,7 +302,7 @@ Session 只保存用户命名或规范化 device type、authn methods、创建�
 
 `SwitchTenant` 必须重新校验 Principal、目标 Tenant Access、Lifecycle projection、Membership 和 Session，再创建或旋转该 boundary Grant/Family；客户端 Header 不能自行切换 Token boundary。
 
-Service Token 只给 mTLS/SPIFFE allowlisted 内部 workload，audience-bound、permission subset、最长 5 分钟、不可 refresh、无 Session。API Key 不用于内部工作负载替代 Service Token。
+Workload Access Token 只在已验证 mTLS/SPIFFE Workload Identity 和 owner-specific Authority 下签发，audience-bound、operation subset、最长 5 分钟、不可 refresh、无 Session。首期 Platform-owned Workload 使用 WAT；API Key 只允许 Tenant-owned Workload，不能作为内部平台调用 fallback。
 
 ### 7.3 Browser
 
@@ -325,31 +314,31 @@ Refresh、Logout、SwitchTenant、OIDC 校验精确 Origin/Referer、独立 CSRF
 
 前端在 Access Token 到期前约一分钟 single-flight refresh；401 后只补一次 refresh 并只重试原请求一次。多 Tab 用 Web Locks/BroadcastChannel 协调。丢失旋转响应时旧 Token 再用仍视为 reuse，用户重新登录。
 
-测试环境只允许无 Cookie 的 Bearer/API Key 路由使用宽 CORS；Cookie/OIDC 路由始终 exact allowlist。非浏览器 SDK 使用 API Key，内部服务使用 Service Token，P2 不返回 JSON Refresh Token 给 CLI。
+测试环境只允许无 Cookie 的 Bearer/API Key 路由使用宽 CORS；Cookie/OIDC 路由始终 exact allowlist。非浏览器 SDK 使用 Tenant-owned Workload API Key，内部服务使用 Workload Identity/WAT，P2 不返回 JSON Refresh Token 给 CLI。
 
-OIDC 使用固定 Gateway callback：Gateway 交换 code、创建 Session、设置 Refresh Cookie，并以 `303` 跳到固定 Console/BOSS 页面；Token 和 authorization code 不进入 URL。Refresh `401` 清空内存 Access Token 并回登录，`503` 显示暂态错误且不无限重试，reuse 只显示通用 Session expired，不泄漏检测细节。
+OIDC ownership 已由用户接受并记入 decisions D08 / ADR-0015：IAM 统一拥有服务端 flow、verifier、Provider code exchange、Identity 与 Session；Gateway 仅承接固定 callback 和 Cookie 转发。Exact redirect、10 分钟 one-time state/nonce/PKCE、issuer/audience/signature/email_verified 与失败/重放规则继续有效，最终 redirect URL 不携带 authorization code 或 Token。相关 M1 链按该所有权使用真实 Provider 和正式进程验证，不要求实际前端先行。
 
 ### 7.4 Signing Key
 
-Access/Service JWT 使用 Secret Manager/KMS 中的非对称密钥和 `kid`。Retired public key 至少保留到其可能签发 Token 全部过期。IAM 内部 verifier 直接使用 Key Ring/KMS；OIDC verifier 消费 Provider JWKS。没有已批准的离线 ANI JWT 消费方，因此不发布公共 ANI JWKS。
+Human Access/WAT JWT 使用 Secret Manager/KMS 中的非对称密钥和 `kid`。Retired public key 至少保留到其可能签发 Token 全部过期。IAM 内部 verifier 直接使用 Key Ring/KMS；OIDC verifier 消费 Provider JWKS。没有已批准的离线 ANI JWT 消费方，因此不发布公共 ANI JWKS；WAT receiver 首期在线/离线验证按 decisions 的 pending/accepted 记录处理，本文不代替用户选择。
 
-## 8. Service Principal 与 API Key
+## 8. Tenant-owned Workload 与 API Key
 
-Service Principal 创建时原子提交 base/profile、唯一 active Tenant Membership、初始 Role Bindings 和 Audit；Key 创建是随后独立操作。名称在 Tenant 内 normalized unique，disabled 后不释放。
+Tenant-owned Workload 创建时原子提交 base/owner profile、唯一 active Tenant Membership、初始 Role Bindings 和 Audit；Key 创建是随后独立操作。canonical name 按 `lower(btrim(name))` 规范化、非空且 immutable；Tenant owner 内唯一，disabled 后不释放。Principal type、owner type 与 owner Tenant ID immutable；转换或转移需新 Principal 和显式重建授权，不能原地将 Membership Authority 改成 Grant。
 
-API Key 是 Service Principal Credential：
+API Key 是 Tenant-owned Workload Credential：
 
 - P2 只接受 `Authorization: Bearer <api-key>`；
 - 由非 Secret key ID + 高熵 Secret 组成，数据库只存 Secret Hash 与安全显示前后缀；
 - Secret 只在创建响应返回一次；
 - `never_expires=true` 或 `expires_at` 必须二选一，默认 Console 为 never expires；
-- 一个 Service Principal 可有无限 active Key，但创建限流、列表游标分页、异常数量告警；
+- 一个 Tenant-owned Workload 可有无限 active Key，但创建限流、列表游标分页、异常数量告警；
 - 90 天未使用仅 stale 告警，不自动 revoke；
 - 不保存 `permissions_json` 或 `rate_limit_rpm`，权限来自当前 Membership Role Binding；
 - `last_used_at` 异步采样，不是安全审计事实；
 - invalid/expired/revoked 返回 401；Key 有效但 Principal/Membership/Access/Lifecycle blocked 返回 403；投影或依赖不可用返回 503；
 - 禁止 API Key 执行密码、Credential、Role、Recovery Bootstrap 和 Platform 管理等高风险 operation，除非未来明确开放；
-- disable Service Principal 同事务不可逆 revoke 全部 Key，重新 enable 不复活旧 Secret。
+- disable Tenant-owned Workload 同事务不可逆 revoke 全部 Key，重新 enable 不复活旧 Secret。
 
 创建者只是 Audit actor，没有永久绕过。初版由 `tenant-admin` 管理；未来 delegated manager 另立决策。
 
@@ -372,9 +361,11 @@ API Key 是 Service Principal Credential：
 
 | 表 | 关键内容与约束 |
 | --- | --- |
-| `principals` | UUIDv7、type human/service、status、version |
-| `human_principals` | Human profile；无 Service nullable 字段 |
-| `service_principals` | 固定 tenant_id、normalized name tenant-unique |
+| `principals` | UUIDv7、type human/workload、status、version |
+| `human_principals` | Human profile；无 Workload nullable 字段 |
+| `workload_principals` | owner tenant/platform；Tenant owner 固定 tenant_id，Platform owner 无 tenant_id |
+| `workload_identity_bindings` | Principal、canonical SPIFFE ID、status/version；不保存证书/私钥 |
+| `workload_grants` 与 operation/scope 关系 | Platform-owned Workload 的明确 audience/operation/TTL 与 Authority；空 Tenant 不代表 wildcard，具体非固定 Tenant 模型待合同接受 |
 | `verified_emails` | normalized email 全局唯一，仅 Human |
 | `identities` | provider/issuer/subject unique，显式 Link |
 | `password_credentials` | PHC hash、algorithm/params、lock state |
@@ -387,7 +378,7 @@ API Key 是 Service Principal Credential：
 | `tenant_roles` | per-Tenant，包括 system role 和 definition version；code tenant-unique |
 | `tenant_role_permissions` | role + generated Permission，same boundary |
 | `tenant_role_bindings` | tenant_id + membership + role 复合 FK |
-| `platform_memberships/roles/role_permissions/role_bindings` | 与 Tenant 关系完全分离，仅 Human Membership |
+| `platform_memberships/roles/role_permissions/role_bindings` | 与 Tenant 关系完全分离，Platform Membership 仅 Human；系统 Role 定义和变更受权限与审计约束 |
 | `tenant_invitations/platform_invitations` | 分表；token hash、role IDs、state/version/expiry |
 | `notification_outbox` | 仅 Invitation/password action 通知 |
 | `sessions` | Human、authn methods、device、idle/absolute expiry |
@@ -395,15 +386,15 @@ API Key 是 Service Principal Credential：
 | `refresh_token_families` | one active per Session+boundary |
 | `refresh_tokens` | hash、issued/consumed/replaced/revoked evidence |
 | `password_action_tokens` | purpose-bound、30m、single use |
-| `api_keys` | Service Principal、hash、never/expiry、revoked、sampled usage |
-| `idempotency_ledger` | 24h logical replay result |
-| `iam_audit_events` | allowlisted append-only security event |
+| `api_keys` | Tenant-owned Workload、hash、never/expiry、revoked、sampled usage |
+| `idempotency_ledger` | 已冻结适用操作的 24h key/hash/non-secret outcome；与 mutation/Audit 同事务；endpoint 分类不由表的存在推导 |
+| `iam_audit_events` | allowlisted append-only security event；认证后的 actor 与中介/执行方归因不混淆，具体新增 actor union/字段按当前合同冻结 |
 
 每个 Tenant-owned 表都有 non-null `tenant_id`。Tenant-local关系使用 `(tenant_id,id)` 复合键/FK，索引以 `tenant_id` 开头。Platform/global table 不用 NULL Tenant 模拟边界。结构化 JSONB 只允许 schema/allowlist 非敏感 metadata，不保存 Permission、Role Binding、状态或所有权。
 
 Atlas migration 由预部署 Job 执行并校验 `atlas.sum`；runtime 只验证 schema revision，不自动迁移。Custom Role 在无 Binding/unfinished Invitation 后可物理删除；被删除 code 可由新 UUID Role 重用。
 
-Service Principal profile、唯一非 removed Tenant Membership 和固定 tenant_id 由 unique constraint 与 constraint trigger 或等价数据库约束共同保护，拒绝第二个有效 Membership 或跨 Tenant Membership。首管理员 Invitation 保存 `bootstrap_operation_id`；接受时恢复同一个 operation，不按 email 猜测关联。
+Tenant-owned Workload profile、唯一 current non-removed Tenant Membership 和固定 tenant_id 由 unique constraint 与 constraint trigger 或等价数据库约束共同保护，拒绝第二个 non-removed Membership 或跨 Tenant Membership。active Principal 恰有一个 active/suspended Membership，disabled 最多一个；只有 active Membership 提供 Authority。移除后可为同 owner Tenant 原子建立新 Membership identity，但不能复活 removed Membership 或 revoked Key。Platform-owned canonical name 在当前 environment/trust domain 唯一且 immutable，disabled 后继续保留。Platform-owned Workload 必须无 Membership，Tenant-owned Workload 必须无 Workload Grant；API Key 只能引用 Tenant-owned Workload。Tenant IAM Bootstrap initial-admin Invitation保存`bootstrap_operation_id`；接受时恢复同一个operation，不按email猜测关联；它不是Platform First Administrator Ceremony。
 
 ## 10. Lifecycle/Bootstrap 消息可靠性
 
@@ -421,61 +412,51 @@ ani.integration.tenant.lifecycle-heartbeat.v1
 ani.integration.tenant.iam-bootstrap.v1
 ```
 
-Lifecycle Stream limits retention 30 天；Bootstrap work-queue 在 IAM durable accept 前不按年龄过期；consumer DLQ 90 天。Core Control 尚未拆分，因此这些是 P2 目标，不是当前 CP0 已有事实。未来 Core canonical contract 可以与 prototype fixture 不兼容，IAM 必须重新 pin 和适配。
+异步消息不能把发布方 TLS peer 透明传播给订阅方。请求/payload/header 中的 producer 或 Tenant 不能自行成为可信身份与 Authority，必须由独立且受约束的 producer/consumer identity 和 accepted integration contract 校验；不能用共享 superuser 或 broad ACL 代替。Broker Workload Binding、subject-owner registration、Grant projection 和 retained-message revoke 的精确模型仍是候选设计，需在真实消息链之前冻结。旧候选细节已移至 Workload 设计的历史索引，不是所有 M1 接口统一前置，也不是许可匿名消息链。
+
+Lifecycle Stream limits retention 30 天；Bootstrap work-queue 在 IAM durable accept 前不按年龄过期；consumer DLQ 90 天。Core 生产通路是否完成由实际 owner/正式进程证据确认，不能把上述目标当作已有事实。未来 Core canonical contract 可以与 prototype fixture 不兼容，IAM 必须重新 pin 和适配。
 
 ## 11. Audit、保留与删除
 
-IAM 状态变更和 Audit 同 PostgreSQL 事务；必需 Audit 不可写时 mutation 返回 503 并回滚。覆盖认证、OIDC、Identity Link、Password Action、Session/Token、Refresh reuse、Invitation、Membership、Role、API Key、Service Principal、Tenant Access、Recovery 和 Service Token。
+IAM 状态变更和 Audit 同 PostgreSQL 事务；必需 Audit 不可写时 mutation 返回 503 并回滚。覆盖认证、OIDC、Identity Link、Password Action、Session/Token、Refresh reuse、Invitation、Membership、Role、API Key、Workload Principal/Identity Binding/Grant、Tenant Access、Recovery 和 WAT。
 
 Audit 固定包含 event/time、actor/authn、boundary/Tenant、action/target/result/reason、request/correlation/decision、source/version；details 仅 allowlisted redacted diff。不得保存 Password、Token、Key Secret/Hash、完整邮件、任意请求响应。
 
 Tenant auditor/admin 仅查本 Tenant allowlisted event；Platform recovery/internal 仅 Platform Auditor。初版只有 List/Get 和 cursor pagination，无 export。
 
-至少在线可查 180 天，没有自动删除上限。P2 初版无清理 Job；监控表行数、DB growth 和 oldest record。测试环境磁盘压力下 DBA 可手动删超过 180 天 Audit，以及不再参与 reuse detection 的 expired/revoked/consumed 临时数据；不得删 active、pending、unpublished 或 attention_required。用户已接受该测试操作不要求 snapshot/change record，因此它不是可审计保留机制或生产先例。
+至少在线可查 180 天，没有自动删除上限或第 181 天删除承诺。初版无自动 retention cleanup，过期/已消费状态会保留；监控表行数、DB size/growth rate 与 oldest record。Normal runtime 对 Audit 无 update/delete 能力。历史手工删 Audit 行的例外已不能授权当前工作；具体 retention/cleanup 合同仍须独立接受，不能在 active/shared 数据库借测试清理删除 Audit。未来非 Audit 临时状态清理也须由其 owner 冻结规则。旧候选的 179d23:59:59/exact 180d/181d 查询测试与 disposable 整库清理方案保留在 before 快照，不把候选细节写成接受记录。
 
 Purge 不在当前范围，禁止为未设计的物理删除加入广泛 cascade。
 
 ## 12. 验证与证据
 
-### 12.1 当前功能门禁
+### 12.1 M1 与 M2 的不同证据
 
-1. Unit + Proto/OpenAPI contract；
-2. 真实依赖 Adapter Integration；
-3. 历史 CP0 证据与旧 oracle 的 differential（不得替代 Direct P2 门禁）；
-4. Gateway、Envoy、Inference 三调用方独立 E2E；
-5. lint/staticcheck、`govulncheck`、Buf lint/breaking、sqlc clean diff、Atlas empty-DB replay/checksum、SBOM、License inventory。
+M1 按当前 capability matrix 验收替换必需接口，使用正式 `cmd/server` 和固定消费方：Unit/Proto/OpenAPI、真实依赖 Adapter Integration、正式进程端点、Gateway/Envoy/Inference/Session 等独立 caller 与真实 owner 业务链。Gateway→Session 是 ADR-0022 指定的首条跨服务参考链。Cookie/CSRF/Origin/refresh/retry 用 HTTP/gRPC 黑盒验证，不等待尚未开始的 UI；M2 再验证真实 Console/BOSS 接入、Core 旧身份 writer 裁剪和实际替换。
 
-本地资源不足时可用共享测试基础设施，但状态必须隔离：独立 PostgreSQL DB/role、Redis namespace、NATS Account 或完整隔离 subject/Stream/Consumer、Dex Client/identity 和测试 Credential。不能共享 mutable fixture、全局 flush 或依赖残留数据；无法隔离即 `not_verified`。
+真实依赖使用固定镜像/digest，empty isolated PostgreSQL 从 Atlas 迁移并以受限 runtime role 执行业务/两 Tenant/query-mutation；Redis、NATS、Dex 等按被测能力真实接入。历史 CP0 真实旧 role/RLS 负向、Direct P2 无 RLS 证据与新 Human/Workload 验证不能互换，历史 differential 不作为恢复旧兼容行为的当前前置。
 
-历史 CP0/P1 使用真实旧 PostgreSQL role/RLS、Redis、Dex 和签名/Token 语义；事项04已记录旧 RLS 失败。Direct P2 使用无 RLS 新库、两 Tenant 负向测试、复合约束和 query mutation。两类证据不能互换。
+资源不足可使用共享测试基础设施，但工作树、数据库/owner/runtime role、Redis namespace、NATS Account 或完整隔离 subject/Stream/Consumer、Dex Client/identity、Workload trust/Credential 与 evidence 都要独立。不共享 mutable fixture，不做全局 flush，不依赖残留状态。应用验证预期基础设施，不能擅改现有 lane。无法隔离或缺少真实 owner 则对应 gate 为 `not_verified`。
 
-Differential 只归一化随机 ID、时间、Token/Secret；必须比较 gRPC/public error、Claim、PostgreSQL/Redis state 和 side effect，预期差异进入显式 allowlist。
+静态/供应链门禁保留 lint/staticcheck、govulncheck、Buf lint/breaking、sqlc clean diff、Atlas empty-DB replay/checksum、SBOM、License inventory。任何 differential 只归一化随机 ID、时间、Token/Secret，比较 gRPC/public error、claims、PostgreSQL/Redis state 与 side effect；有意差异要逐项映射 accepted 决定。
 
-### 12.2 当前延期门禁
+### 12.2 仍有效的延期与停止边界
 
-Argon2 latency/memory、CheckPermission load、`go test -race`、Fuzz 和专项并发 suite 暂不阻塞第一版功能实现，状态保持 `not_verified`。它们与 HA、备份恢复、生产 NATS、正式 CORS、生产 retention/WORM 一样，在未来声称 production-ready 或创建正式环境前必须完成。
+Argon2 latency/memory、CheckPermission load、全仓 race、广泛 Fuzz、production-scale 并发及 HA 等依 ADR-0021 留到生产硬化，缺失为 `not_verified`，不能宣称通过。当前事项点名的 ledger、Credential rotation、Authority version、Invitation/last-admin、recovery 单次状态迁移、outbox/consumer 并发和对应 package race 是功能正确性门禁，不能被广泛测试延期覆盖；跨服务交付仍是 at least once，不声称 distributed exactly once。
 
-缺少真实依赖、工具或证据只能记 `not_verified`，不能记 pass。当前 2026-09-30 只可能是测试环境交付，不是 Production。
+曾被用户判定有问题的 Gateway authz drift/protected Core path 旧门禁保留失败与理由，不能要求恢复旧断言，也不能静默改名为 pass。当前合同事项生成与 accepted 目标一致的可复现替代检查。缺少工具、依赖、caller 或必需证据时不通过对应 Gate；测试环境功能成功不等于 Production Ready。
 
-### 12.3 旧问题门禁
+## 13. 后续实际替换、切换与恢复约束
 
-现有 Gateway authz drift 和受保护 Core path 检查被用户判定为门禁本身有问题，因此不再要求“旧脚本必须变绿”，也不能被记作已通过。Direct P2 的 DP2-01/02 草案必须逐项记录旧 assertion、失效理由、对应目标契约和可复现的新检查；人工接受并发布事项后才能开始实现。
+M1 不裁剪现有 Core writer、不要求前端已开始，也不失效现有 Credential。M1 后 Core 旧身份裁剪与前端接入是后续工作，可在各自隔离分支按明确范围推进，不互相虚构先后前置；实际流量切换和不可恢复删除另立精确范围。
 
-## 13. P2 数据重建与破坏性切换
+实际替换按所有权拆事务：IAM 只写 IAM 数据库；Core 通过自身 seed/API/outbox 写 Tenant/Quota truth；基础设施 owner 管 trust registration/Credential/ACL；deployment owner 管流量/selector。不得跨 IAM/Core 数据库写入、双写、共享业务事务，或把 seed 当通用 fixture loader。Core 自有治理能力不能因为旧 tenant-service 曾管理身份就一并删除。
 
-P2 使用测试维护窗口：
+破坏性目标仍包括旧 Auth runtime/Proto/client、重叠身份入口、旧 Session/Refresh/blocklist/API Key 和 signing material 的退出，目标使用新 key 并只重发明确批准的 Credential。操作前必须冻结 owner/输入/目标/范围、恢复条件、固定 artifact、验收与停止条件，并取得 exact action 人工确认。整组切换前验证 target、新旧 Credential 正负向和完整 Audit，不能发布只有新 client 或只有删除旧 server 的中间态；不保留长期代码 fallback/兼容 shim。
 
-1. 冻结相关管理写入，记录 in-flight；
-2. 对明确 IAM/Core 数据和 Redis 做可恢复快照；
-3. 生成新非对称签名 Key；旧 Session、Refresh、Blocklist、API Key 全部失效；
-4. 在独立 IAM/Core 数据库从空库运行 Atlas migration；
-5. 先由 Core seed/generate Tenant ID，再由 IAM seed system roles、明确批准 Principal/Invitation/Bootstrap；
-6. 部署目标 IAM/Core 与同时切换的 Gateway、Envoy、Inference；
-7. 运行三调用方、登录/OIDC、API Key、Service Token、Tenant Access、Membership/Role/Invitation、Audit、Lifecycle projection 冒烟；
-8. 失败时人工使用 snapshot/reseed 和固定镜像恢复；当前 rollback rehearsal 可为 `not_verified`；
-9. 成功后删除旧 runtime、契约、配置、表和重叠入口，不保留双轨。
+已有恢复审批、snapshot/恢复演练及删除前恢复要求继续有效，必须在其保护的动作前满足。旧候选的外部 Lineage Registry、ReadyClaim/Receipt、CommitPONR 和长期 DR package 具体机制尚未接受；其全文保存在 Workload 设计指向的 before 快照，不再作为全部 M1 接口统一前置。将候选移出不恢复历史未演练 snapshot 的执行权限，也不允许失效 Credential 后靠恢复旧 key/trust 绕过失效。
 
-切换是整组测试环境变更，不把“新 client 已提交但旧 server 已删”等中间状态单独发布。
+任何实际切换、失效或删除所需恢复合同尚未接受/验证时，该动作保持不可执行；独立接口工作可继续。持续维护的长期 DR 和生产灾备依其真实保护范围另交付，不能把未接受扩展提前变成 M1 Gate，也不能把既有删除前恢复要求挪到删除后。
 
 ## 14. 明确延期清单
 
@@ -483,9 +464,9 @@ P2 使用测试维护窗口：
 
 - Argon2 profile benchmark、并发内存上限；
 - CheckPermission 固定 workload load gate；
-- Race、Fuzz、Refresh/Invitation/Last-admin/Idempotency 并发 suite；
+- 全仓 Race、广泛 Fuzz、负载与 production-scale 并发 suite；当前 accepted 事项点名的安全状态机定向 race/concurrency 门禁不在此延期项内；
 - IAM/Core HA、NATS 三副本持久化/TLS/ACL/failover/backup restore；
-- rollback rehearsal、生产 soak、正式 CORS、Secret/KMS rotation 演练；
+- production-scale disaster/rollback rehearsal、生产 soak、正式 CORS、Secret/KMS rotation 演练；具体部署/失效/删除动作前已有恢复前置不因生产硬化延期而取消。尚未接受的长期 DR/lineage/break-glass 机制另按目标动作决策；
 - 审计/临时表保留删除机制和生产合规决策；
 - 生产观测 SLO、容量、告警和故障演练。
 
@@ -501,23 +482,19 @@ P2 使用测试维护窗口：
 - IAM 通用领域事件 Outbox；
 - 固定 API Key 数量/强制过期策略。
 
-## 15. 完成定义
+## 15. 完整替换能力与里程碑
 
-只有以下全部满足，才能称为“IAM 重构功能完成”：
+本文不另行给票号或执行顺序，范围与分母以当前 spec/ticket graph/capability matrix 为准。完整替换仍覆盖：
 
-- 独立 `iam-service` 只注册目标三个 gRPC Service；
-- Gateway、Envoy、Inference 全部使用目标契约，三者独立 E2E 通过；
-- `auth-service` runtime、旧 Auth Proto/client、`CheckPermissionV2`、旧地址变量和 compatibility facade 已删除；
-- Gateway 无业务 DB/Runtime，operation registry/owner/obligation 一致；
-- Tenant Lifecycle 只由 Core Control 写，Tenant Access 只由 IAM 写；
-- Core/Services authoritative Lifecycle/Owner guard 存在；
-- Tenant/Platform authorization 分表，Permission catalog 生成，Role 与 Invitation 约束生效；
-- P2 无 RLS、无通用 soft delete、无 member_count quota、无 jwt_blocklist；
-- Password/OIDC/Session/Refresh/API Key/Service Token 只有一个目标实现；
-- 新数据库可从空库迁移和 seed，受限 runtime role 集成测试通过；
-- Audit 与 mutation 同事务，180 天查询语义和手工测试清理边界明确；
-- 当前规格、两份核心计划、Q1-Q300 追踪矩阵和 accepted ADR 一致；
-- 所有必需功能门禁为 pass，缺失项明确为 `not_verified`；
-- 没有把功能完成描述为 Production Ready。
+- 独立 IAM 三服务与薄 Gateway、固定 OpenAPI/Proto/registry、唯一 operation/handler/owner、typed obligation；
+- Human/Workload、Password/OIDC、Session/Refresh/logout、边界切换、API Key/必要 Workload 身份和 owner-specific Authority；
+- Tenant/Platform Membership/Role/Binding、Permission catalog、Invitation、TenantAccess、Core Lifecycle/bootstrap 和已接受恢复能力；
+- 独立数据库/no-RLS、明确状态与复合 Tenant 约束、空库迁移、受限 role；无 generic soft delete、member_count TCC、jwt_blocklist 或双写；
+- Audit/mutation 原子、至少 180 天可查与增长监控；每个 state-changing endpoint 的重试/冲突/失效/response-loss 合同；
+- 当前能力矩阵要求的独立 caller、真实 owner 正反向与故障恢复证据，不能用一个 caller 或 fixture backend 代替其他消费者。
 
-实现按本地 Markdown 事项推进：改变状态的事项必须先进入 `claimed`，同一时间只推进一个；高风险或难以恢复的动作需要精确人工确认。本文完成不自动启动实现。
+**M1 API 替换就绪**：全部必需接口在精确最终版本组合的隔离正式进程与真实依赖上通过；Cookie/CSRF 等协议可黑盒验收，Core 旧 writer/UI 尚未裁剪或接入不单独阻断 M1。能力不得以缩票为由漏掉，也不把尚未接受的全部高级新增能力混作前置；争议项先在 capability matrix/decisions 决定。
+
+**M2 实际替换完成**：在后续精确范围内完成 Core 旧身份 writer 退出、真实前端/消费者接入与实际替换验收。旧 runtime/contract/config/schema 和 Credential/流量的删除或失效按独立动作范围与前置办理，不能从 M1 或 M2 标签自动推出授权。所有必要功能结果为 pass，缺失为 not_verified；两者均不等于 Production Ready。
+
+改变状态的事项先 claimed、同一时间只推进一个；文档整理本身不启动产品实现。本文与 spec、能力矩阵和 accepted ADR 冲突时显式记录差异，不使用历史候选正文补入默认值。

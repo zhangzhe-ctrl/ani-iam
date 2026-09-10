@@ -1,0 +1,85 @@
+{
+  "run_id": "wr19-20260910T080445Z-be0b89ea",
+  "command_exit": 0,
+  "sources": {
+    "IAM": "c092ea9e40aef50aa9b47986b329d00f4ef0e44dff07e6bc7d51bd09a6d8f872",
+    "Session": "4cf3cedeb36af286cc8d47069a86fe16b4bf270f4eaf20bcc6afc65707ef605b",
+    "ANI": "f1e716bcaed5fadb616d4ae2d2795755de1e2b16b87e154d10ed266b511b8ba7"
+  },
+  "named_passes": [
+    {
+      "test": "TestFormalGatewaySessionKubernetesReference/lost_response_retries_the_existing_owner_session_with_current_authorization",
+      "elapsed_seconds": 1.95
+    },
+    {
+      "test": "TestFormalGatewaySessionKubernetesReference/two_tenants_real_REST_IAM_Session_Redis_Kubernetes_exec_and_close",
+      "elapsed_seconds": 3
+    },
+    {
+      "test": "TestFormalGatewaySessionKubernetesReference/cross_tenant_and_missing_identity_never_reach_Session_issuance",
+      "elapsed_seconds": 0.01
+    },
+    {
+      "test": "TestFormalGatewaySessionKubernetesReference/revocation_denies_replay_and_ticket_redemption_before_runtime",
+      "elapsed_seconds": 0.11
+    },
+    {
+      "test": "TestFormalGatewaySessionKubernetesReference/established_exec_closes_on_current_permission_revocation",
+      "elapsed_seconds": 30.16
+    },
+    {
+      "test": "TestFormalGatewaySessionKubernetesReference/IAM_outage_closes_established_exec_and_fresh_admission_recovers",
+      "elapsed_seconds": 33.68
+    },
+    {
+      "test": "TestFormalGatewaySessionKubernetesReference/normal_Gateway_certificate_renewal_preserves_bound_Workload_authority",
+      "elapsed_seconds": 1.78
+    },
+    {
+      "test": "TestFormalGatewaySessionKubernetesReference",
+      "elapsed_seconds": 88.98
+    }
+  ],
+  "failures": 0,
+  "skips": 0,
+  "evidence_level": "formal IAM + Gateway + Session + real PostgreSQL/Redis + real Kubernetes exec in two isolated Tenants",
+  "lifecycle": "30-second interval / 2-second deadline; tested <=32.5s assertion including scheduling tolerance; outage subtest total also includes recovery",
+  "cleanup_and_logs": {
+    "run_id": "wr19-20260910T080445Z-be0b89ea",
+    "command_exit": 0,
+    "created_containers": 5,
+    "registered_containers_still_present": [],
+    "registered_processes_still_running": [],
+    "private_logs_scanned": [
+      {
+        "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080445Z-be0b89ea/private/session-gateway.log",
+        "sha256": "9d89ce616067350f75327f3426b43103f59063c75950c291c56fc710beadf926",
+        "bytes": 9987
+      },
+      {
+        "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080445Z-be0b89ea/private/ani-gateway.log",
+        "sha256": "762ef9064b6d2b59b2e60268777dc7887d1e10422e9c00eed8268dc4e5600ae2",
+        "bytes": 102889
+      },
+      {
+        "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080445Z-be0b89ea/private/ani-gateway-renewed.log",
+        "sha256": "a796dcd990cc8705fed4b48786b822fcff6df699500b7330ffcdd980d1ca8700",
+        "bytes": 96314
+      },
+      {
+        "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080445Z-be0b89ea/private/formal-b62e1924-e980-4b02-a0a2-8308a3ad0a0c/process.log",
+        "sha256": "7e1d5821e742b514921e7c59eaf3b593b99e2d32ad5cdba5ed9bc3a88184cdeb",
+        "bytes": 51884
+      }
+    ],
+    "secret_leak_findings": [],
+    "scan_scope": "named public evidence plus task-private formal process logs; JWT/ticket/terminal patterns and concrete fixture secrets; values never exported"
+  },
+  "not_verified": [
+    "real serial/VNC",
+    "all callers",
+    "full M1",
+    "shared deployment",
+    "production readiness"
+  ]
+}

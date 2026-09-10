@@ -13,8 +13,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -452,36 +450,7 @@ func (targetPolicyRegistry) Lookup(operationID string) (biz.AuthorizationPolicy,
 
 func newVerticalSliceRedisClient(t *testing.T, ctx context.Context) *redis.Client {
 	t.Helper()
-	container, err := testcontainers.Run(
-		ctx,
-		redisImage,
-		testcontainers.WithExposedPorts("6379/tcp"),
-		testcontainers.WithWaitStrategy(wait.ForLog("Ready to accept connections").WithStartupTimeout(time.Minute)),
-	)
-	if err != nil {
-		t.Fatalf("start pinned Redis container: %v", err)
-	}
-	t.Cleanup(func() {
-		terminateContext, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
-		if err := testcontainers.TerminateContainer(container, testcontainers.StopContext(terminateContext)); err != nil {
-			t.Errorf("terminate Redis container: %v", err)
-		}
-	})
-	endpoint, err := container.Endpoint(ctx, "")
-	if err != nil {
-		t.Fatalf("Redis endpoint: %v", err)
-	}
-	client := redis.NewClient(&redis.Options{
-		Addr:         endpoint,
-		MaxRetries:   -1,
-		DialTimeout:  time.Second,
-		ReadTimeout:  time.Second,
-		WriteTimeout: time.Second,
-	})
-	t.Cleanup(func() { _ = client.Close() })
-	if err := client.Ping(ctx).Err(); err != nil {
-		t.Fatalf("ping pinned Redis container: %v", err)
-	}
+	client, _ := newIsolatedRedis(t, ctx)
+
 	return client
 }

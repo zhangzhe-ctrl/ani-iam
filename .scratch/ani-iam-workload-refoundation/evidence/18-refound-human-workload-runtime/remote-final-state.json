@@ -1,0 +1,143 @@
+{
+  "host": "i-8yg2l7u8",
+  "registered_containers": 113,
+  "terminated_containers": 113,
+  "remaining_registered_containers": [],
+  "formal_processes": [
+    {
+      "binary_sha256": "c7b7bf3d05e8c9b318a07115621e1382438b84d36ec250db823f864df12ab4d4",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015150Z-62c8bf97/private/formal-e9683167-c4bd-4274-a83f-dd5f6984522b/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015150Z-62c8bf97/private/formal-e9683167-c4bd-4274-a83f-dd5f6984522b",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015150Z-62c8bf97/private/formal-e9683167-c4bd-4274-a83f-dd5f6984522b/process.log",
+      "pid": 2950862,
+      "test": "TestFormalIAMWorkloadAndHumanRuntime",
+      "still_running_this_goal_process": false
+    },
+    {
+      "binary_sha256": "ff4e8671236505bc6d5043460fb2ea1ea2ed795b4a2ec4cdaf1f241e1d05346f",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015503Z-447132c2/private/formal-563145a8-0601-47f7-aba9-683ac3509806/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015503Z-447132c2/private/formal-563145a8-0601-47f7-aba9-683ac3509806",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015503Z-447132c2/private/formal-563145a8-0601-47f7-aba9-683ac3509806/process.log",
+      "pid": 2972611,
+      "test": "TestFormalIAMWorkloadAndHumanRuntime",
+      "still_running_this_goal_process": false
+    },
+    {
+      "binary_sha256": "d4a8c97ce16966a79c2e267a8d0da5ac0fc6330548927c06df55dec6362c92de",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015642Z-e97ca2ce/private/formal-6c68ffe2-0914-477e-878a-b86a37f31c1f/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015642Z-e97ca2ce/private/formal-6c68ffe2-0914-477e-878a-b86a37f31c1f",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015642Z-e97ca2ce/private/formal-6c68ffe2-0914-477e-878a-b86a37f31c1f/process.log",
+      "pid": 2983058,
+      "test": "TestFormalIAMWorkloadAndHumanRuntime",
+      "still_running_this_goal_process": false
+    },
+    {
+      "binary_sha256": "5d9bfe2fc07f4c9325394ec65e2991948dcceebc2d5766644807911bc85132ec",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015905Z-4b232d5c/private/formal-f3f877d6-134a-4788-97e0-4d5b125dec69/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015905Z-4b232d5c/private/formal-f3f877d6-134a-4788-97e0-4d5b125dec69",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T015905Z-4b232d5c/private/formal-f3f877d6-134a-4788-97e0-4d5b125dec69/process.log",
+      "pid": 2997485,
+      "test": "TestFormalIAMWorkloadAndHumanRuntime",
+      "still_running_this_goal_process": false
+    },
+    {
+      "binary_sha256": "513d43dc23060da1f0c982ba1a038d539e0cc9ec7b7b341cd541af8f301d865c",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020057Z-dd63f0c3/private/formal-32aab929-368b-4806-ac71-504b1db077db/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020057Z-dd63f0c3/private/formal-32aab929-368b-4806-ac71-504b1db077db",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020057Z-dd63f0c3/private/formal-32aab929-368b-4806-ac71-504b1db077db/process.log",
+      "pid": 3009064,
+      "test": "TestFormalIAMWorkloadAndHumanRuntime",
+      "still_running_this_goal_process": false
+    },
+    {
+      "binary_sha256": "17abc68aed1f1992c3eea94dc5812eec680207351f1f99c1ff730f518cd1d4a6",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020353Z-0f88e91f/private/formal-cc807b7d-63de-4297-8e94-e3f864c902cc/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020353Z-0f88e91f/private/formal-cc807b7d-63de-4297-8e94-e3f864c902cc",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020353Z-0f88e91f/private/formal-cc807b7d-63de-4297-8e94-e3f864c902cc/process.log",
+      "pid": 3039753,
+      "test": "TestFormalIAMWorkloadAndHumanRuntime",
+      "still_running_this_goal_process": false
+    },
+    {
+      "binary_sha256": "17abc68aed1f1992c3eea94dc5812eec680207351f1f99c1ff730f518cd1d4a6",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020353Z-0f88e91f/private/formal-eab67674-9d80-4c89-901e-33f75cb2f133/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020353Z-0f88e91f/private/formal-eab67674-9d80-4c89-901e-33f75cb2f133",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T020353Z-0f88e91f/private/formal-eab67674-9d80-4c89-901e-33f75cb2f133/process.log",
+      "pid": 3066876,
+      "test": "TestTenantWorkloadManagementRealPostgresTenantPaginationConcurrencyAndRollback",
+      "still_running_this_goal_process": false
+    },
+    {
+      "binary_sha256": "a59fbcf4dff49947bb5e84b3a58e53923cc63f3e7fd3914e4bf01e1caadba3b7",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T021423Z-bca28bda/private/formal-1ca859d3-3114-4f01-9bde-a92f512160e1/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T021423Z-bca28bda/private/formal-1ca859d3-3114-4f01-9bde-a92f512160e1",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T021423Z-bca28bda/private/formal-1ca859d3-3114-4f01-9bde-a92f512160e1/process.log",
+      "pid": 3104872,
+      "test": "TestFormalIAMWorkloadAndHumanRuntime",
+      "still_running_this_goal_process": false
+    },
+    {
+      "binary_sha256": "a59fbcf4dff49947bb5e84b3a58e53923cc63f3e7fd3914e4bf01e1caadba3b7",
+      "config_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T021423Z-bca28bda/private/formal-04017d67-3be9-424c-aed7-cbb918a43182/runtime.json",
+      "directory": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T021423Z-bca28bda/private/formal-04017d67-3be9-424c-aed7-cbb918a43182",
+      "log_reference": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-20260910T021423Z-bca28bda/private/formal-04017d67-3be9-424c-aed7-cbb918a43182/process.log",
+      "pid": 3127624,
+      "test": "TestTenantWorkloadManagementRealPostgresTenantPaginationConcurrencyAndRollback",
+      "still_running_this_goal_process": false
+    }
+  ],
+  "tools": {
+    "buf": {
+      "path": "/home/ubuntu/.local/share/ani-iam/bin/buf",
+      "sha256": "8720830e26a733da55bb89bcd3cb44849c0965fc0c44fb5d691cccdc64dca5af"
+    },
+    "sqlc": {
+      "path": "/home/ubuntu/.local/share/ani-iam/bin/sqlc",
+      "sha256": "0496fbc18f603e2fbd10c752942d1389a1fa9bc3d18de7243ec00cccd611575f"
+    },
+    "atlas": {
+      "path": "/home/ubuntu/.local/share/ani-iam/bin/atlas",
+      "sha256": "10d7913e3dce43ab99b8d71534a4cbadaf11a16dc293adf3b91d10e83a0ac70b"
+    },
+    "protoc-gen-go": {
+      "path": "/home/ubuntu/.local/share/ani-iam/bin/protoc-gen-go",
+      "sha256": "7475078ca943fa552b4755a0b5dd84f4387905a08cb09a47696fd3683cc1c010"
+    },
+    "protoc-gen-go-grpc": {
+      "path": "/home/ubuntu/.local/share/ani-iam/bin/protoc-gen-go-grpc",
+      "sha256": "aa1fabbfc27b12d81182864a3f90b47aee907bced808e17e275c5b18c9602b08"
+    },
+    "go": {
+      "path": "/home/ubuntu/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.7.linux-amd64/bin/go",
+      "sha256": "182d1dc98119d61a6241590e1aaca180d771dbcb1133b9846684aee82d457362"
+    }
+  },
+  "run_exits": {
+    "wr17-18-20260910T011051Z-60706e82": "1",
+    "wr17-18-20260910T011351Z-08754285": "0",
+    "wr17-18-20260910T012411Z-c9421616": "1",
+    "wr17-18-20260910T012626Z-b4fe3414": "0",
+    "wr17-18-20260910T013131Z-2a48fd8a": "1",
+    "wr17-18-20260910T014003Z-a91e0807": "1",
+    "wr17-18-20260910T014228Z-64eb15d7": "1",
+    "wr17-18-20260910T014455Z-2073ece4": "1",
+    "wr17-18-20260910T014637Z-a92f151f": "0",
+    "wr17-18-20260910T015150Z-62c8bf97": "1",
+    "wr17-18-20260910T015331Z-89b6255c": "1",
+    "wr17-18-20260910T015503Z-447132c2": "1",
+    "wr17-18-20260910T015642Z-e97ca2ce": "1",
+    "wr17-18-20260910T015905Z-4b232d5c": "1",
+    "wr17-18-20260910T020057Z-dd63f0c3": "0",
+    "wr17-18-20260910T020246Z-d96466b9": "0",
+    "wr17-18-20260910T020353Z-0f88e91f": "0",
+    "wr17-18-20260910T021310Z-5f2944eb": "0",
+    "wr17-18-20260910T021423Z-bca28bda": "0"
+  },
+  "protected_network_containers_current": [
+    "13e815adc456057b4c1d5058565968dc724a27a24934db235c8a02d55b4f25a7 /kc062-control-plane kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed",
+    "567a32f6e31bbe1532ffe56235b2531812f599f0c6af8967682a6560a6bdbacc /kc062-worker kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed",
+    "2524bc25b8d56b4af52fb17b1dbb8d1075fd31e14171d913f09e795625589ead /kc062-worker2 kindest/node:v1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed"
+  ],
+  "memory": "               total        used        free      shared  buff/cache   available\nMem:            7935        2831         343         119        5186        5103\nSwap:           8191        3218        4973\n",
+  "retained": "Source archives, tool binaries, logs and private per-fixture credentials remain in owned run directories; no global cleanup."
+}

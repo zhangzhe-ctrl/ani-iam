@@ -1,0 +1,345 @@
+{
+  "observed_at": "2026-09-10T07:23:22.222985+00:00",
+  "resources": [
+    {
+      "kind": "Pod",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "wr19-exec-a-87c97565b-8kj4h",
+      "uid": "ee904b21-1669-4940-a0e4-41d4c7b86380",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "wr19-exec-a-87c97565b",
+          "uid": "3f60884b-8220-4d26-9da7-1720bfcacb9e"
+        }
+      ],
+      "retained": true,
+      "phase": "Running",
+      "conditions": [
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:42Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "PodReadyToStartContainers"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:32Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "Initialized"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:42Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:42Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "ContainersReady"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:32Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "PodScheduled"
+        }
+      ],
+      "images": [
+        {
+          "name": "shell",
+          "imageID": "docker.changqingyun.cn/mirror/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d",
+          "ready": true
+        }
+      ]
+    },
+    {
+      "kind": "ReplicaSet",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "wr19-exec-a-87c97565b",
+      "uid": "3f60884b-8220-4d26-9da7-1720bfcacb9e",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Deployment",
+          "name": "wr19-exec-a",
+          "uid": "a8fd1691-b453-4d97-b0cf-7b04eaafa48e"
+        }
+      ],
+      "retained": true
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "wr19-exec-a",
+      "uid": "a8fd1691-b453-4d97-b0cf-7b04eaafa48e",
+      "owners": [],
+      "retained": true,
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-09-10T07:22:43Z",
+            "lastUpdateTime": "2026-09-10T07:22:43Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-09-10T07:22:32Z",
+            "lastUpdateTime": "2026-09-10T07:22:43Z",
+            "message": "ReplicaSet \"wr19-exec-a-87c97565b\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "kind": "NetworkPolicy",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "wr19-default-deny",
+      "uid": "805222e8-3f59-4ebe-b29f-e1b478537398",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "Role",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "wr19-gateway-reader",
+      "uid": "c5c9764d-19e6-437f-8400-b40d93b528f3",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "Role",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "wr19-session-exec",
+      "uid": "ea53f04c-a01d-4f88-8d8b-ae41123bbe84",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "RoleBinding",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "wr19-gateway-reader",
+      "uid": "9882b7ea-0383-494d-b0f3-a5aa1f9f4510",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "RoleBinding",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "wr19-session-exec",
+      "uid": "d3990cb9-a9f6-46e5-9134-c4e69bd46dc3",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "ServiceAccount",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "default",
+      "uid": "72d9050f-eb6f-4fe1-8f68-cfb55b544a15",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "ConfigMap",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "name": "kube-root-ca.crt",
+      "uid": "e4b30a68-357f-4403-8aee-0a549f697ce0",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "wr19-exec-b-5bb58f9578-xg2rk",
+      "uid": "70d7ab87-6942-421d-9cd7-648bf48e6e70",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "ReplicaSet",
+          "name": "wr19-exec-b-5bb58f9578",
+          "uid": "718d0852-e936-4dad-adc9-f271e8045de9"
+        }
+      ],
+      "retained": true,
+      "phase": "Running",
+      "conditions": [
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:43Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "PodReadyToStartContainers"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:33Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "Initialized"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:44Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "Ready"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:44Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "ContainersReady"
+        },
+        {
+          "lastProbeTime": null,
+          "lastTransitionTime": "2026-09-10T07:22:33Z",
+          "observedGeneration": 1,
+          "status": "True",
+          "type": "PodScheduled"
+        }
+      ],
+      "images": [
+        {
+          "name": "shell",
+          "imageID": "docker.changqingyun.cn/mirror/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d",
+          "ready": true
+        }
+      ]
+    },
+    {
+      "kind": "ReplicaSet",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "wr19-exec-b-5bb58f9578",
+      "uid": "718d0852-e936-4dad-adc9-f271e8045de9",
+      "owners": [
+        {
+          "apiVersion": "apps/v1",
+          "blockOwnerDeletion": true,
+          "controller": true,
+          "kind": "Deployment",
+          "name": "wr19-exec-b",
+          "uid": "759065d2-7c91-4d84-8528-6ab781a498ec"
+        }
+      ],
+      "retained": true
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "wr19-exec-b",
+      "uid": "759065d2-7c91-4d84-8528-6ab781a498ec",
+      "owners": [],
+      "retained": true,
+      "status": {
+        "availableReplicas": 1,
+        "conditions": [
+          {
+            "lastTransitionTime": "2026-09-10T07:22:44Z",
+            "lastUpdateTime": "2026-09-10T07:22:44Z",
+            "message": "Deployment has minimum availability.",
+            "reason": "MinimumReplicasAvailable",
+            "status": "True",
+            "type": "Available"
+          },
+          {
+            "lastTransitionTime": "2026-09-10T07:22:33Z",
+            "lastUpdateTime": "2026-09-10T07:22:44Z",
+            "message": "ReplicaSet \"wr19-exec-b-5bb58f9578\" has successfully progressed.",
+            "reason": "NewReplicaSetAvailable",
+            "status": "True",
+            "type": "Progressing"
+          }
+        ],
+        "observedGeneration": 1,
+        "readyReplicas": 1,
+        "replicas": 1,
+        "terminatingReplicas": 0,
+        "updatedReplicas": 1
+      }
+    },
+    {
+      "kind": "NetworkPolicy",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "wr19-default-deny",
+      "uid": "e35c4c81-756f-438d-b465-e72b05a21006",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "Role",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "wr19-gateway-reader",
+      "uid": "b7535d0a-64c3-44bc-865f-750ea9a7bc68",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "Role",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "wr19-session-exec",
+      "uid": "d62e62a0-17a5-4982-a3b0-d7126279ece5",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "RoleBinding",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "wr19-gateway-reader",
+      "uid": "36fbbd32-4cea-42ac-97f8-c63bde081b0e",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "RoleBinding",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "wr19-session-exec",
+      "uid": "a99b7728-c38f-42dc-a2b1-ede4309e96f8",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "ServiceAccount",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "default",
+      "uid": "613fbb63-6c78-4982-995e-c165042009d6",
+      "owners": [],
+      "retained": true
+    },
+    {
+      "kind": "ConfigMap",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "name": "kube-root-ca.crt",
+      "uid": "6258a8e6-8ed8-42b5-a197-40a13e3f1270",
+      "owners": [],
+      "retained": true
+    }
+  ],
+  "full_chain": "not_verified",
+  "retention": "retained for WR19 and subsequent caller/Session regressions per user"
+}

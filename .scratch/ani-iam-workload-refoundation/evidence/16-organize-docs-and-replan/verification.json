@@ -1,0 +1,251 @@
+{
+  "scope": "documentation_only",
+  "status": "pass",
+  "product_runtime_status": "not_verified",
+  "checks": {
+    "before_snapshot_integrity": {
+      "status": "pass",
+      "files": 52,
+      "failures": []
+    },
+    "protected_tracked_files_unchanged": {
+      "status": "pass",
+      "files": 393,
+      "limitation": "Does not assert pre/post hashes for pre-existing untracked files outside the snapshot.",
+      "failures": []
+    },
+    "head_unchanged": {
+      "status": "pass",
+      "head": "cd38cd90bca3e9d83af09a381051b895d82ae94f",
+      "failures": []
+    },
+    "snapshot_document_scope": {
+      "status": "pass",
+      "changed_documents": [
+        ".scratch/ani-iam-rebuild/spec.md",
+        ".scratch/ani-iam-workload-refoundation/issues/01-freeze-human-workload-architecture.md",
+        ".scratch/ani-iam-workload-refoundation/issues/02-refound-contracts-and-registries.md",
+        ".scratch/ani-iam-workload-refoundation/issues/03-rebuild-human-workload-persistence.md",
+        ".scratch/ani-iam-workload-refoundation/issues/04-deliver-tenant-workload-api-key.md",
+        ".scratch/ani-iam-workload-refoundation/issues/05-deliver-platform-workload-token.md",
+        ".scratch/ani-iam-workload-refoundation/issues/06-secure-service-to-service-grpc.md",
+        ".scratch/ani-iam-workload-refoundation/issues/07-deliver-core-lifecycle-workload-auth.md",
+        ".scratch/ani-iam-workload-refoundation/issues/08-complete-cutover-critical-callers.md",
+        ".scratch/ani-iam-workload-refoundation/issues/09-rehearse-isolated-cutover.md",
+        ".scratch/ani-iam-workload-refoundation/issues/10-complete-administration-recovery.md",
+        ".scratch/ani-iam-workload-refoundation/issues/11-complete-audit-idempotency.md",
+        ".scratch/ani-iam-workload-refoundation/issues/12-complete-callers-ui-s2s-e2e.md",
+        ".scratch/ani-iam-workload-refoundation/issues/13-rebuild-test-data-and-cutover.md",
+        ".scratch/ani-iam-workload-refoundation/issues/14-delete-legacy-auth.md",
+        ".scratch/ani-iam-workload-refoundation/issues/15-complete-functional-acceptance.md",
+        ".scratch/ani-iam-workload-refoundation/spec.md",
+        ".scratch/ani-iam-workload-refoundation/ticket-plan.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CONTEXT.md",
+        "README.md",
+        "docs/adr/0001-allow-breaking-core-v1-for-prelaunch-iam-rebuild.md",
+        "docs/adr/0004-coordinate-tenant-lifecycle-and-iam-asynchronously.md",
+        "docs/adr/0005-share-infrastructure-without-sharing-iam-project-code.md",
+        "docs/adr/0006-treat-september-v1-as-test-environment-delivery.md",
+        "docs/adr/0008-model-tenant-authorization-with-explicit-relations.md",
+        "docs/adr/0014-keep-iam-audit-transactional-and-append-only.md",
+        "docs/adr/0015-keep-browser-refresh-tokens-in-http-only-cookies.md",
+        "docs/adr/0016-use-one-generated-authorization-gate-at-the-gateway.md",
+        "docs/adr/0017-use-explicit-iam-lifecycle-states-instead-of-generic-soft-delete.md",
+        "docs/adr/0018-separate-principal-types-and-persist-integration-state-explicitly.md",
+        "docs/adr/0022-unify-software-actors-as-workload-principals.md",
+        "docs/agents/domain.md",
+        "docs/agents/issue-tracker.md",
+        "docs/plans/plan-iam-decision-traceability.md",
+        "docs/plans/plan-iam-kratos-phased.md",
+        "docs/plans/plan-iam-service-refactor.md",
+        "docs/plans/plan-workload-principal-refoundation.md"
+      ],
+      "failures": []
+    },
+    "old_issue_bodies_preserved": {
+      "status": "pass",
+      "files": 15,
+      "failures": []
+    },
+    "single_documentation_issue_only": {
+      "status": "pass",
+      "statuses": {
+        "1": "wontfix",
+        "2": "wontfix",
+        "3": "wontfix",
+        "4": "wontfix",
+        "5": "wontfix",
+        "6": "wontfix",
+        "7": "wontfix",
+        "8": "wontfix",
+        "9": "wontfix",
+        "10": "wontfix",
+        "11": "wontfix",
+        "12": "wontfix",
+        "13": "wontfix",
+        "14": "wontfix",
+        "15": "wontfix",
+        "16": "claimed",
+        "17": "needs-info",
+        "18": "needs-triage",
+        "19": "needs-triage",
+        "20": "needs-triage",
+        "21": "needs-triage",
+        "22": "needs-triage",
+        "23": "needs-triage",
+        "24": "needs-triage",
+        "25": "needs-triage",
+        "26": "needs-triage",
+        "27": "needs-triage",
+        "28": "needs-info",
+        "29": "needs-info"
+      },
+      "claimed": [
+        "16"
+      ],
+      "failures": []
+    },
+    "new_issue_graph": {
+      "status": "pass",
+      "files": 13,
+      "dependencies": {
+        "17": [
+          16
+        ],
+        "18": [
+          17
+        ],
+        "19": [
+          18
+        ],
+        "20": [
+          19
+        ],
+        "21": [
+          19
+        ],
+        "22": [
+          20,
+          21
+        ],
+        "23": [
+          19,
+          22
+        ],
+        "24": [
+          20,
+          21,
+          22,
+          23
+        ],
+        "25": [
+          24
+        ],
+        "26": [
+          25
+        ],
+        "27": [
+          25
+        ],
+        "28": [
+          26,
+          27
+        ],
+        "29": [
+          28
+        ]
+      },
+      "failures": []
+    },
+    "capability_coverage": {
+      "status": "pass",
+      "mandatory_capabilities": 14,
+      "post_m1_outcomes": 4,
+      "failures": []
+    },
+    "kratos_template_preserved": {
+      "status": "pass",
+      "failures": []
+    },
+    "historical_rebuild_body_preserved": {
+      "status": "pass",
+      "failures": []
+    },
+    "historical_300_answers_preserved": {
+      "status": "pass",
+      "failures": []
+    },
+    "active_local_markdown_targets": {
+      "status": "pass",
+      "documents": 53,
+      "links": 176,
+      "limitation": "Local target existence only; anchors and external URLs not checked. Historical before content is preserved, not re-linked.",
+      "failures": []
+    },
+    "active_document_whitespace": {
+      "status": "pass",
+      "failures": []
+    },
+    "git_diff_check": {
+      "status": "pass",
+      "failures": []
+    }
+  },
+  "current_document_hashes": {
+    "AGENTS.md": "cf21afcaa618d7a8ae1db9704d1e69d9ae367832ccb182511a646fc80753ba69",
+    "CLAUDE.md": "a5d88d334235f277e3a6eefa356dfa27d4ed5de6e0bc9258b85ab3b7000d274f",
+    "CONTEXT.md": "02d20d2ad7accdaebf6a04e78babee92ab6f41ab9e09138c7bb907af675d798b",
+    "README.md": "ce1b12b49aabdec7c2ee29abe60bb792777e0d8a048d329db8fda6265049b925",
+    "docs/adr/0001-allow-breaking-core-v1-for-prelaunch-iam-rebuild.md": "c65144a27f0a02a8a505e1d9af1c1228c250a5d3cc658d487dae465e346939df",
+    "docs/adr/0002-separate-tenant-lifecycle-from-iam-access.md": "666f51948f5b7ea83595fc0646164177f9086acc4f58598ac63811f797ba392c",
+    "docs/adr/0003-separate-core-control-and-iam-databases.md": "850d23fbb37d8ddcdc8abe530402b946e21c65982341e66a7b0f215edc62a8a8",
+    "docs/adr/0004-coordinate-tenant-lifecycle-and-iam-asynchronously.md": "d492e2d3b49fa40b768b6c2e8a9b45ec6f645fabeefe36d51d4519a21e70bf0f",
+    "docs/adr/0005-share-infrastructure-without-sharing-iam-project-code.md": "55484b0431e7e7966fc52a29456fd83e83b2fbb880fd4b5c80b433a055433c1f",
+    "docs/adr/0006-treat-september-v1-as-test-environment-delivery.md": "05642341f19dcdea30d74831e85bdab280837ca784da70f99a259eb4213e9276",
+    "docs/adr/0007-remove-postgresql-rls-from-target-iam.md": "1fa0206773c360bcf511bd97e265cd973c32dc1c6f0a72e2e878b09519f6a454",
+    "docs/adr/0008-model-tenant-authorization-with-explicit-relations.md": "776053db326c4a666a224cdd8d78a57cb350a77135bb7eca8362777cc59658d1",
+    "docs/adr/0009-generate-permissions-and-constrain-role-management.md": "75b7b35738e147d23ecb080359990025f43220d775bc291fb32cb561aadf4907",
+    "docs/adr/0010-separate-invitations-from-memberships.md": "0e47cd400ce9d0b991baaadf5cf892620bac5ae03b4c3f17b9d89e74fb4ce609",
+    "docs/adr/0011-use-global-human-principals-and-boundary-scoped-tokens.md": "d756271a8c33f85ef2de496accacff856ae1b75ebcf2f385620951bab9fa94c2",
+    "docs/adr/0012-use-short-boundary-tokens-and-rotating-refresh-families.md": "ce6a09a871e61697f4144db0f7e1e98883c05b030a6d728af6dab5201982a363",
+    "docs/adr/0013-use-durable-session-grants-instead-of-a-jwt-blocklist.md": "8aa86bdee58a35c80685d2974eb23786608a663da9aac5e68a8c72d007713548",
+    "docs/adr/0014-keep-iam-audit-transactional-and-append-only.md": "ed5b40080b3c99c553780f542c6e89aed4212c409f85e17eadb7d00f64a93f20",
+    "docs/adr/0015-keep-browser-refresh-tokens-in-http-only-cookies.md": "9d63317202aee0d8e922064329b582fde6f55a6f030ddd860e16715db0982f8b",
+    "docs/adr/0016-use-one-generated-authorization-gate-at-the-gateway.md": "89cd5ea4045c82bc2813d2eca74468a08901ebe2141b0e10983fe8507bde4638",
+    "docs/adr/0017-use-explicit-iam-lifecycle-states-instead-of-generic-soft-delete.md": "4cf6494e46463bfad4aca4811ac582e0053ed3397eae0a72f24ccc5e677e108b",
+    "docs/adr/0018-separate-principal-types-and-persist-integration-state-explicitly.md": "1b47aba6f627070342292969ea556503cc01888c4faf6d77852cfc496e75ee09",
+    "docs/adr/0019-use-kratos-conventions-with-framework-independent-business-rules.md": "d634d25d21d9e37f5137f6ded57b13c3bb46223815cedef47d45bab264b79c29",
+    "docs/adr/0020-pin-maintained-libraries-for-framework-and-infrastructure.md": "7056e90b207f828da63c4cc13f131c534d598f1fac6d81f1ed11bea3a710d525",
+    "docs/adr/0021-separate-functional-validation-from-production-readiness.md": "6d5c88ea79cfd6637b51308d1da950df091c7f55b17f572aee80a2a3ef999182",
+    "docs/adr/0022-unify-software-actors-as-workload-principals.md": "09313e4c1ee31868be2247cdbf4a10e436df73915db0d8f605fe06c3225b1237",
+    "docs/agents/domain.md": "10e5ea03e94404942091eef93c4ea6589d71daf936baf9896850a57b1a7749b3",
+    "docs/agents/issue-tracker.md": "03908586af33afba41a962759913697e970d279e1d2942cd306d09ffd0d4f70e",
+    "docs/agents/scaffolding-and-codegen.md": "880b39462bc380fbcc4bfd61a1a9519d7937f909617593402fc432c774b50d79",
+    "docs/agents/triage-labels.md": "f87729cc3add720b17db1c22bae69bf41d30700910c90d31aa3bd8a2d2cda7fe",
+    "docs/plans/plan-iam-decision-traceability.md": "f1d3e97f1835b9c8e7577fff0b3df9d4706ae953f1c7e2d7dcfb2048c221e649",
+    "docs/plans/plan-iam-kratos-phased.md": "98e9cb5a6285d9ba6c46f8bc37cdd3153b4ddccbdbdc896d2402bc0a17c2d7c2",
+    "docs/plans/plan-iam-service-refactor.md": "d9a16cdbde08f745251dbdd6997c224e97a56beea81f4edd51a3e85850ed70a8",
+    "docs/plans/plan-workload-principal-refoundation.md": "797f04520ad0feb867d606a0dff6ded5d35f9a5f445a222af55f44f5acb099a1",
+    ".scratch/ani-iam-workload-refoundation/spec.md": "2a3a3136514b84abcf2a4305877741584287c57e3091dd1fcc3d5e074371d963",
+    ".scratch/ani-iam-workload-refoundation/ticket-plan.md": "9484a7a79af7cb3bdcb5cfbb66c1c7a1a756a0298fc7c1789d2063fe37f8cbab",
+    ".scratch/ani-iam-workload-refoundation/capability-matrix.md": "d704c22a975e60901bf60a2f337dc5e064033927e2c0646cd6d782c70653aedb",
+    ".scratch/ani-iam-workload-refoundation/decisions.md": "9bb787a5c2d305efd5da3c0b77df8774a70dd74cdace8d08edd22d79e1f2a8ff",
+    ".scratch/ani-iam-workload-refoundation/issues/16-organize-docs-and-replan.md": "bf3b9603b7e17d8394843d7a7e510cb90acbb4c8b8ab8d57391e2547b269f254",
+    ".scratch/ani-iam-workload-refoundation/issues/17-freeze-api-replacement-contracts.md": "b97505793071a193bfb0ec22dfa575f370cea0ee005287af2e9980ba9e534783",
+    ".scratch/ani-iam-workload-refoundation/issues/18-refound-human-workload-runtime.md": "d93fae782c936038a8bd1df91e8d6a3b567623cc8f5504db20bf96efa96ad16b",
+    ".scratch/ani-iam-workload-refoundation/issues/19-prove-workload-session-reference.md": "27f7c126c19d2c9124a8a60811a373579356c6146c631c7545bdf84a5743b622",
+    ".scratch/ani-iam-workload-refoundation/issues/20-complete-human-authentication-notification.md": "93af073bdb8d2c6f21224030cd002f44cf934861e3509d70e69abaca5f2b4acd",
+    ".scratch/ani-iam-workload-refoundation/issues/21-complete-tenant-workload-api-key.md": "434db98fd291abfc8e88946087e4dddb71bebd2d75c5adea1e3aa8fbfb4c03b0",
+    ".scratch/ani-iam-workload-refoundation/issues/22-complete-identity-administration.md": "4485467441c76899eb5881f4e895bc94350328c09f0a3b24474dd3a16cfe8b39",
+    ".scratch/ani-iam-workload-refoundation/issues/23-integrate-core-lifecycle-bootstrap.md": "38bea1cc0ba9b6b4ee6db6d8a4c11007e5ba3feb83fb35a1d5ce42152d35b30a",
+    ".scratch/ani-iam-workload-refoundation/issues/24-verify-backend-callers.md": "feb85ef217be54d7476103ee0a89e6ca11f5700c9171819c88b35d0b8a584e3c",
+    ".scratch/ani-iam-workload-refoundation/issues/25-accept-isolated-api-replacement.md": "c952f4f63b0665760c3eebc2617395e4fbc545345fb0c004fa99f38cd42505e4",
+    ".scratch/ani-iam-workload-refoundation/issues/26-trim-legacy-identity-code.md": "53da9bc0541b0d6b8afff0dbc3c31953ac1ac06df6748e524c64b8249b9bd788",
+    ".scratch/ani-iam-workload-refoundation/issues/27-integrate-console-boss.md": "101d8db927674d6d477ac6a1aefe4520be1f00fb7422657e513ef0e2d14d4e26",
+    ".scratch/ani-iam-workload-refoundation/issues/28-complete-system-replacement.md": "0d05d8752bced279552811fdee01eb2d93742c9874ec629ef8921300cab1b3e0",
+    ".scratch/ani-iam-workload-refoundation/issues/29-retire-legacy-assets.md": "85bd6ee9a9cff91b5a691e69891d67c6d0935aa92e853b02faaa5966aa888fd6",
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/review.md": "a0bab3f4b70e17436504236e3a139f9c6a8a5f297d76d7cc35482b3403fa57b9"
+  }
+}

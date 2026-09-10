@@ -1,0 +1,274 @@
+{
+  "schema": "ani-iam.wr17-18-isolation/v1",
+  "status": "prepared; no resources created",
+  "inputs": {
+    "iam": {
+      "root": "/home/chabking/workspace/ani-iam",
+      "commit": "cd38cd90bca3e9d83af09a381051b895d82ae94f",
+      "tree": "a3668037d43bff9a3d938b9cf07500402e4ebd70",
+      "use": "source baseline",
+      "artifacts": [
+        {
+          "path": "go.mod",
+          "sha256": "d876bf396236a1b60112bcc82df6dd664453b49ee399a8f73d4b8bdf73822e5c",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "go.sum",
+          "sha256": "76b4b8ce60e1b64e96573f3e0b52fac1dbf47c0efef71fb5be6e214f378c7a23",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "api/iam/v1/buf.yaml",
+          "sha256": "c58611a82cf9e548dad4f6acc1c3ab8b974e65b635afb7091b64cd3fd3fae6db",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "api/iam/v1/buf.lock",
+          "sha256": "dd67624b16fa20c7f3d9cb1ff150a3690425c3de5325f0f6b4bf045df7772db6",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "api/iam/v1/buf.gen.yaml",
+          "sha256": "36383d7c9e9e5dfed41358aec66641d4bab4ea6254dea2f9591090a7711b54db",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "api/iam/v1/iam_descriptor.pb",
+          "sha256": "66552fe0a53a1c4956f6ee7943498af1b5309602fec28eb47c1b51f4276f5d9a",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "sqlc.yaml",
+          "sha256": "486a757be88a0ce95c69915a0bdab6e8250a090904f810114c35989dae37509f",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "atlas.hcl",
+          "sha256": "87c40f8df78d21891a8c196c56177bfc5c097a7d6a115925c9d39df39c404d32",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "migrations/atlas.sum",
+          "sha256": "b0acaa5ab88e6c04d4cdf2427182fde53f028e5819d2d08b00951573a50acae9",
+          "matches_fixed_commit": true
+        }
+      ]
+    },
+    "ani": {
+      "root": "/home/chabking/workspace/ANI",
+      "commit": "50aa9fe2099b7ff4c276f883939a8d26c9d9eff8",
+      "tree": "e13564198e9a80082f8a46a5fc7c682b5eba239c",
+      "use": "read-only contract/reference; no runtime mutation",
+      "artifacts": [
+        {
+          "path": "repo/api/openapi/operation-registry.v1.json",
+          "sha256": "27e3637976a824c4efcd4a77ad9491d58f97ceb7c0ba3885e133ad14eebab7f3",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "repo/api/proto/auth/v1/auth_service.proto",
+          "sha256": "aabcc72b10bd2b89591eaf706b4cf2659b98a8b5b4e3dbf92b3e387938bc33ec",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "repo/services/ani-gateway/internal/router/session_grpc_client.go",
+          "sha256": "b8322dfd4623d2ff7c76a9d953b110def867f95f5f342a26e39b6a87437bab1b",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "repo/services/ani-gateway/internal/router/instances.go",
+          "sha256": "a2d1ce16ea5d6ab8d0db5e8d13edc53eae335af11d7abf049cf814c3adc6dd3f",
+          "matches_fixed_commit": true
+        }
+      ]
+    },
+    "session": {
+      "root": "/home/chabking/workspace/ani-session-gateway",
+      "commit": "d8cebd50fb38c3e0d7b875e2c4a88377eb43cce1",
+      "tree": "44fc754564f37003074d15a83ea469076c2c8da6",
+      "use": "read-only contract/reference; no runtime mutation",
+      "artifacts": [
+        {
+          "path": "api/proto/session/v1/session.proto",
+          "sha256": "a7ac8ebe9dd66fbc50831fc3008407dea1b97bd56d483c4e38cd965253690a88",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "api/go.mod",
+          "sha256": "082550526257ed7fad4f918cf5ee8afcec5fdfe5cf691b0fd8dd7284d56209fc",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "internal/transport/grpc/server.go",
+          "sha256": "940328e0281e1610766e77a870cf030c20db11d852b31f654d27130581a29c89",
+          "matches_fixed_commit": true
+        }
+      ]
+    },
+    "notification": {
+      "root": "/home/chabking/workspace/ani-notification-service",
+      "commit": "0e3f0a2b47fcc1fa96fa926cae2b9ab55bd25d84",
+      "tree": "2d1f7038d70deb16f4c9660e42006b42ddab973d",
+      "use": "read-only contract/reference; no runtime mutation",
+      "artifacts": [
+        {
+          "path": "go.mod",
+          "sha256": "18176f1962044c9a7b753f44902ffa177b9f216c3ead1cb3e9ff9934ede4cefb",
+          "matches_fixed_commit": true
+        }
+      ]
+    },
+    "network_reference": {
+      "root": "/home/chabking/workspace/ani-network-service",
+      "commit": "40ab0cf64246da13b43296dff8175f16738c12c4",
+      "tree": "ecaad9721934f4e5aeef5a93fd71b2cc32bb0cea",
+      "use": "read-only contract/reference; no runtime mutation",
+      "artifacts": [
+        {
+          "path": "docs/remote-execution.md",
+          "sha256": "768237a4404d42aeef94b1dcba84eac7f1eed5417a072e4594353cc3a65984bd",
+          "matches_fixed_commit": true
+        },
+        {
+          "path": "scripts/remote-run",
+          "sha256": "8af76e9fde89b25196d710b5edb4f528b100afa095e3445b630f2cd5f0727055",
+          "matches_fixed_commit": false
+        },
+        {
+          "path": "scripts/remote-pair",
+          "sha256": "9d5516818f738c52757e54c61bc92c20e893c791534d446e4080632828a3343d",
+          "matches_fixed_commit": false
+        }
+      ]
+    }
+  },
+  "local_product_worktree": "/home/chabking/workspace/ani-iam-wr17-18",
+  "authoritative_issue_directory": "/home/chabking/workspace/ani-iam/.scratch/ani-iam-workload-refoundation/issues",
+  "remote": {
+    "ssh_alias": "ubuntu",
+    "ssh_config": "/home/chabking/.ssh/config",
+    "observed_host": "i-8yg2l7u8",
+    "preflight_utc": "2026-09-09T17:34:42Z",
+    "cpu": 4,
+    "memory_available_mib": 5530,
+    "disk_available_gib": 223,
+    "docker": "29.6.1",
+    "tool_directory": "/home/ubuntu/.local/share/ani-iam",
+    "run_directory_template": "/home/ubuntu/workspace/ani-iam-runs/wr17-18-<UTC>-<random8>",
+    "GOMAXPROCS": 2,
+    "go_build_parallelism": 2,
+    "heavy_runs": "serial",
+    "local_heavy_fallback": false,
+    "protected_resources": [
+      "kc062-control-plane",
+      "kc062-worker",
+      "kc062-worker2",
+      "/home/ubuntu/.local/share/ani-network-service",
+      "/home/ubuntu/workspace/ani-network-service-runs"
+    ]
+  },
+  "tools": {
+    "go": {
+      "version": "1.26.7",
+      "verified_remote_binary": "/home/ubuntu/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.7.linux-amd64/bin/go",
+      "sha256": "182d1dc98119d61a6241590e1aaca180d771dbcb1133b9846684aee82d457362"
+    },
+    "buf": {
+      "version": "1.72.0",
+      "expected_sha256": "8720830e26a733da55bb89bcd3cb44849c0965fc0c44fb5d691cccdc64dca5af",
+      "availability": "install pinned binary during WR18; existing Network 1.60.0 not reusable"
+    },
+    "protoc-gen-go": {
+      "version": "v1.36.12",
+      "expected_sha256": "7475078ca943fa552b4755a0b5dd84f4387905a08cb09a47696fd3683cc1c010",
+      "local_verified": "/home/chabking/go/bin/protoc-gen-go"
+    },
+    "protoc-gen-go-grpc": {
+      "version": "1.6.2",
+      "expected_sha256": "aa1fabbfc27b12d81182864a3f90b47aee907bced808e17e275c5b18c9602b08",
+      "local_verified": "/home/chabking/go/bin/protoc-gen-go-grpc"
+    },
+    "sqlc": {
+      "version": "1.31.1",
+      "sha256": "0496fbc18f603e2fbd10c752942d1389a1fa9bc3d18de7243ec00cccd611575f",
+      "verified_remote_binary": "/home/ubuntu/.local/share/ani-network-service/bin/sqlc"
+    },
+    "atlas": {
+      "version": "1.3.0 Community",
+      "expected_sha256": "10d7913e3dce43ab99b8d71534a4cbadaf11a16dc293adf3b91d10e83a0ac70b",
+      "source": "https://atlasbinaries.com/atlas/atlas-community-linux-amd64-v1.3.0",
+      "availability": "install pinned binary during WR18; Network binary cfc773e5... is different and not reused"
+    }
+  },
+  "images": {
+    "postgres": "postgres:16.4-alpine@sha256:5660c2cbfea50c7a9127d17dc4e48543eedd3d7a41a595a2dfa572471e37e64c",
+    "redis": "redis:7.4-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+    "dex": "ghcr.io/dexidp/dex:v2.40.0@sha256:3e35d5d0f7dbd33fbadc36a71ff58cf4097ab98d73d22f6cb9a6471a32e028af"
+  },
+  "resource_policy": {
+    "names": "ani-iam-wr17-18-<run_id>-<purpose>-<sequence>",
+    "labels": {
+      "ani.goal": "wr17-18",
+      "ani.run_id": "<run_id>"
+    },
+    "ports": "127.0.0.1 only, OS/Docker allocated random ports recorded per run",
+    "database_names": [
+      "ani_iam_wr18_a",
+      "ani_iam_wr18_b"
+    ],
+    "roles": [
+      "isolated superuser for role creation only",
+      "ani_iam_migrator owner/migration/fixture",
+      "ani_iam_runtime restricted business role"
+    ],
+    "credentials": "new independent random per run, VM private files mode0600 / test process memory; record reference only, no DSN/password/PEM copying",
+    "redis": "dedicated container per fixture/run, independent password and key namespace, no shared FLUSH",
+    "reaper": "TESTCONTAINERS_RYUK_DISABLED=true; explicit exact registered container cleanup",
+    "kubernetes": "not used",
+    "nats": "not used",
+    "cleanup": "only registered goal-owned containers/volumes/processes; retain source, logs, hashes, failure assertions; no global prune",
+    "dex": "dedicated local OIDC test container if running preserved provider regression; isolate callback/client/credentials, no existing IdP access"
+  },
+  "source_transport": {
+    "selection": "explicit product source/contract/codegen/test helper allowlist; include dirty and new files; exclude .git, history evidence, secrets, caches, external env files",
+    "identity": [
+      "fixed original commit/tree",
+      "per-file relative path/mode/SHA256",
+      "archive SHA256",
+      "current effective docs snapshot SHA256"
+    ],
+    "before_execute": "verify archive then each path/mode/digest; reject symlinks/unknown paths",
+    "after_generate": "return to temp then compare original input hashes before merging output",
+    "ssh_uncertain": "inspect same run shell.pid/command.log/command.exit before action; never blind replay"
+  },
+  "evidence_gates": [
+    "static freeze",
+    "codegen repeat clean",
+    "unit/build/vet/directed race",
+    "real PostgreSQL role/tenant/transaction/idempotency negatives",
+    "real isolated Redis Human regressions",
+    "formal cmd/server config/TLS/RPC/readiness/shutdown"
+  ],
+  "runtime_results": "not_verified",
+  "fixture_contract": {
+    "environment": "wr17-18-isolated",
+    "trust_domain": "iam.wr17-18.test",
+    "environment_is_not_authority": true,
+    "certificate_issuer": "new task-owned CA per remote run; never reuse existing cert/key material",
+    "verified_gateway_dns": "ani-gateway",
+    "gateway_canonical_name": "gateway",
+    "gateway_owner": "platform",
+    "gateway_principal_id": "01993000-0000-7000-8000-000000000001",
+    "gateway_binding_id": "01993000-0000-7000-8000-000000000002",
+    "tenant_a": "0198f062-b76d-7f2a-b0ad-50a417bf1f70",
+    "tenant_b": "0198f062-b76d-7892-b978-baa342c53020",
+    "human_actor": "0198f062-b76d-77da-98fa-65f26fc01e17",
+    "seed_connection": "owner/migrator pool only",
+    "runtime_credentials_ref": "<remote_run>/private/runtime-db.secret",
+    "migration_credentials_ref": "<remote_run>/private/migration-db.secret",
+    "redis_credentials_ref": "<remote_run>/private/redis.secret",
+    "private_mode": "directory0700 / files0600; not in returned source/evidence",
+    "test_fixture_not_bootstrap": true
+  }
+}

@@ -1,0 +1,2131 @@
+{
+  "head": "cd38cd90bca3e9d83af09a381051b895d82ae94f",
+  "tree": "a3668037d43bff9a3d938b9cf07500402e4ebd70",
+  "status": " M .scratch/ani-iam-p2-direct/issues/11-deliver-workload-service-token.md\n M .scratch/ani-iam-p2-direct/issues/12-deliver-core-lifecycle-nats.md\n M .scratch/ani-iam-p2-direct/issues/13-complete-cutover-critical-callers.md\n M .scratch/ani-iam-p2-direct/issues/14-rehearse-isolated-cutover-rollback.md\n M .scratch/ani-iam-p2-direct/issues/15-complete-iam-administration-recovery.md\n M .scratch/ani-iam-p2-direct/issues/16-complete-audit-idempotency.md\n M .scratch/ani-iam-p2-direct/issues/17-complete-target-callers-ui-e2e.md\n M .scratch/ani-iam-p2-direct/issues/18-rebuild-data-final-cutover.md\n M .scratch/ani-iam-p2-direct/issues/19-delete-legacy-assets.md\n M .scratch/ani-iam-p2-direct/issues/20-complete-functional-acceptance.md\n M .scratch/ani-iam-p2-direct/spec.md\n M .scratch/ani-iam-p2-direct/ticket-plan.md\n M .scratch/ani-iam-rebuild/spec.md\n M AGENTS.md\n M CLAUDE.md\n M CONTEXT.md\n M README.md\n M docs/adr/0001-allow-breaking-core-v1-for-prelaunch-iam-rebuild.md\n M docs/adr/0004-coordinate-tenant-lifecycle-and-iam-asynchronously.md\n M docs/adr/0005-share-infrastructure-without-sharing-iam-project-code.md\n M docs/adr/0006-treat-september-v1-as-test-environment-delivery.md\n M docs/adr/0007-remove-postgresql-rls-from-target-iam.md\n M docs/adr/0008-model-tenant-authorization-with-explicit-relations.md\n M docs/adr/0009-generate-permissions-and-constrain-role-management.md\n M docs/adr/0011-use-global-human-principals-and-boundary-scoped-tokens.md\n M docs/adr/0012-use-short-boundary-tokens-and-rotating-refresh-families.md\n M docs/adr/0013-use-durable-session-grants-instead-of-a-jwt-blocklist.md\n M docs/adr/0014-keep-iam-audit-transactional-and-append-only.md\n M docs/adr/0015-keep-browser-refresh-tokens-in-http-only-cookies.md\n M docs/adr/0016-use-one-generated-authorization-gate-at-the-gateway.md\n M docs/adr/0017-use-explicit-iam-lifecycle-states-instead-of-generic-soft-delete.md\n M docs/adr/0018-separate-principal-types-and-persist-integration-state-explicitly.md\n M docs/adr/0021-separate-functional-validation-from-production-readiness.md\n M docs/agents/domain.md\n M docs/agents/issue-tracker.md\n M docs/agents/triage-labels.md\n M docs/plans/plan-iam-decision-traceability.md\n M docs/plans/plan-iam-kratos-phased.md\n M docs/plans/plan-iam-service-refactor.md\n?? .scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/\n?? .scratch/ani-iam-workload-refoundation/\n?? docs/adr/0022-unify-software-actors-as-workload-principals.md\n?? docs/plans/plan-workload-principal-refoundation.md\n",
+  "files": {
+    ".scratch/ani-iam-p2-direct/evidence/00-restore-clean-kratos-baseline/index.md": {
+      "sha256": "10e8973830527ffc22a9f7e3262c45fab418545964b9c8404c39b622575d3cb3",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/00-restore-clean-kratos-baseline/kratos-agent-guidelines.md": {
+      "sha256": "2cea79f616df864bb1bb92288d8bee764a9d654cf181b71493756ba4438a900c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/00-restore-clean-kratos-baseline/main-publication.md": {
+      "sha256": "c869275eb8e130871902b9a25ccecd5872f9371ecfbdd0f892f19e85717cf1aa",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/README.md": {
+      "sha256": "df581b0e3d2d69af54fd949557040a21fcbd52c7c44daa4d0d3a2b9648fd623f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/auth-service-rpcs.tsv": {
+      "sha256": "281fcdc00dab5f5193148a5df219ab747cc2bb650627d37f73d25a92427353ef",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/callers-and-runtime.md": {
+      "sha256": "fa762f1aa9686882da1958c6cbaf5f153eb99af8a5e0dcaf9c467200adde735c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/deletion-manifest.md": {
+      "sha256": "f68d16af8bc9fa5540e5c5de538997b746f2368029e070d11aff98a6776bd088",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/generate_fixed_inventory.py": {
+      "sha256": "0e01afed923a95d7daeb6f7c7686fd64f7ff6f6c034345964b9840f799f859ed",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/historical-rls-negative.md": {
+      "sha256": "189a43ca5de4ca885743f6bbeca772bd10eaad2adfca482eb3caf6b776924f6e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/migration-files.tsv": {
+      "sha256": "e863ffc96f86679dae90bbee7db1bf24e4f1b75b8eb9f25e4ca02e2fa78da7ea",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/openapi-operations.tsv": {
+      "sha256": "e5f1a2025df723705d0aa37eb09c88379a0a589e724490915076b438195a6bfc",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/related-iam-operations.tsv": {
+      "sha256": "5f8cd36dd12ed79db7903b10ce2747e14eef60fe268d83347b797342a870e217",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/replacement-matrix.md": {
+      "sha256": "a9d3d490c10e5b1934da298a85d045bbdcec4c445d43ecdfde6e9df3d0b4554c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/source-and-contracts.md": {
+      "sha256": "93a5edbc5e999dbcf06bfadd46bc2a6f8bdadcbabfee5b01fbd1752c6f1af11b",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/source-manifest.tsv": {
+      "sha256": "3c0df2fd53d91a7d91930d72aa1bf847d4158f3724885b7cbd5d9ccf53477849",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/storage-and-infrastructure.md": {
+      "sha256": "65db4ea992b4311e4a3eea044d975a8c5c47bdb3ae4026e85173cdb0501bc3ee",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/verification.md": {
+      "sha256": "5df2e736e1007d8a6b06effd41291d0defca0e77e153a0073c889b905054a667",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/01-freeze-direct-p2-baseline/verify_evidence.py": {
+      "sha256": "9cfc5b64141f637a81ab527c8ba14e54011bb959f5e20a0951d352c94b5d93ea",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/02-freeze-public-openapi-registry/breaking.md": {
+      "sha256": "c3b69025dea0a739fa95648eafed2827d4ab6d93c840747d99638b9f700835b6",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/02-freeze-public-openapi-registry/checkpoint.md": {
+      "sha256": "0a10f41edd7533e185aa1945fc2645ab4649d0e5a11d17db5716a2e2c6cab4e1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/02-freeze-public-openapi-registry/commands.md": {
+      "sha256": "c29f74351ff5478bdcd6d80f676aae6f8a4965e66b932e351de50ed5540cd5c4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/02-freeze-public-openapi-registry/contract-summary.md": {
+      "sha256": "6f64d302ed50cbf97ab1bc7721cae7d943cb90952284db59ef2be6fcc9880594",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/02-freeze-public-openapi-registry/hashes.md": {
+      "sha256": "2dfb1c6b05f72238a02c9a4c4da07905f2eb1659220f742dd5e7e21d7a696f8c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/02-freeze-public-openapi-registry/red.md": {
+      "sha256": "314ca60c2a2909bcb71186e40a87365a0dde24b1ed94d913aa696ff119957634",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/02-freeze-public-openapi-registry/review.md": {
+      "sha256": "138bbab2891fecc0f2b2da3fb233b9a5c9a355bb8d1c330e34df3021e3f2be2f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/02-freeze-public-openapi-registry/sdk-impact.md": {
+      "sha256": "879ede2f5d8fda1a8f83924292985c25e11e89667865ebbc8bd77594256187a2",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/breaking.md": {
+      "sha256": "f199b6fe465bc972eca9c04fc234ef78307c4bb3d75276e1db85baa350fe1627",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/checkpoint.md": {
+      "sha256": "196b86bcf6c8147a14a1a22ff5d2a1961dedcfeda9171569cdd500b672de3e92",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/commands.md": {
+      "sha256": "20c988a8f259a8384d411f555c14d120adccd0a6920b2c016063106690929652",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/contracts.md": {
+      "sha256": "d26f9ace249e1c05802617ada72a93e354005ee11273e260c8ec2d95a82599a9",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/descriptor-inventory.md": {
+      "sha256": "7c3745d3c55346595eaaf10ffa2095fae4433fad37534129caa78a6f44c5ead4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/fixtures.md": {
+      "sha256": "1f0fd5865c45fb3e5a1ecda2ee8029abb898c41ef348d6f47843f36a3568f38f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/hashes.md": {
+      "sha256": "271359fec2507c37fde7a95be178fd292c0326a12b31dbd13932bde7a97876a1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/red.md": {
+      "sha256": "b2f38320e5581779d505df8baaf945e15473cbe909aec888a349d2e8b258e03c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/03-freeze-iam-core-contracts/review.md": {
+      "sha256": "14c8e0d9658692bf1dcad686a13b606840dcaf0977fcc21b4859c9a7ed831b94",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/.gitignore": {
+      "sha256": "035be897b00b2e4df85234618e91ae2c91213ba53b2bf492fc890efec505f2ae",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/bom.cdx.json": {
+      "sha256": "78631c4efaf58c92ac528e15708cf43f2ad09a99f4071807319386fe84f3d383",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/generated.md": {
+      "sha256": "a9e2b1d2cbb39feb531b4ca4eb1970d45c29fe8bdf0caad7bad207ff56f43ab0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/licenses.md": {
+      "sha256": "9709a494989d9f52ea36f5a6e832df1ac3bac1320c199add91565d5dd5958c6a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/query-mutation.md": {
+      "sha256": "55a507bf36b223e6c476187726c8bdabb6407181ca9060cb660db9cdd2576373",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/red.md": {
+      "sha256": "60bfa3ab4a7527589e72a93a74bb0bf6d9f74c9211ca1e2915241347133a58e1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/results.md": {
+      "sha256": "80a47fc434203fdd06419712d484882776000ab75c496b52ac710e8bc5fa0354",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/review.md": {
+      "sha256": "5c9e442fbfd6a6db9fc038132811243b931d303aabfbe65ff541ca84b9bd5228",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/toolchain.md": {
+      "sha256": "18ee2c64b4aa19943e5cef77a4da28e431cab80d8bb612f4b14a934207bd1e5a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/04-build-no-rls-persistence/vulnerabilities.md": {
+      "sha256": "6926209eda4dde98dec74a4cf9ca2eda0170797ddaf5350b9075ddaaac0902c0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/05-prove-target-vertical-slice/bom.cdx.json": {
+      "sha256": "3b764a875600d0878b5467ea2ff52fdf74e7e3e6d7b2f5ebaee20873992f2ed4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/05-prove-target-vertical-slice/composition-root-path-review.md": {
+      "sha256": "bd6cf5bcc79ddf35e3c6df3cc0e52aed134be777af89b9fb263048b61930f1b5",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/05-prove-target-vertical-slice/final.md": {
+      "sha256": "bbdd6cb3529146a2d65659e80f3898fbf0714612fdae8118ff27450968b5b0b8",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/05-prove-target-vertical-slice/green.md": {
+      "sha256": "3a83ddce4a771645f06389772f559693c7820b2335e2056d8b844b88b77a416a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/05-prove-target-vertical-slice/path-audit.md": {
+      "sha256": "fce10edffe7122ec5a2a8114840ed91bcc835bdd70697cad989f22b72a298540",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/05-prove-target-vertical-slice/red.md": {
+      "sha256": "bda4756c8d76114ec62df7d0609123cddc2fe47fafcdd22980cabf95130a98f3",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/05-prove-target-vertical-slice/review.md": {
+      "sha256": "8aa527f96c0fe71375ca35fea2703d5f69ef0f02890ea5fac2116587138fd419",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/05-prove-target-vertical-slice/supply-chain.md": {
+      "sha256": "0b5c43c5338c82a2340b6ba5c9b76aef3e743fa2aa48f62c1d287a18ca676c7e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/blocker-audit.md": {
+      "sha256": "abba7c6498189b308349542880dd68f3231d449c646badb14023582255e31a7c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/bom.cdx.json": {
+      "sha256": "9e35d90e8f7a1abe4da5d9ec79d7811afa6c0f3b2587df2d0ded5b735e94cbf0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/cross-store-decision.md": {
+      "sha256": "b271d3d09928a2b4ccfc5391ca6bd2bdb9746ca0b305644ed5399b19c5286b28",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/decision-request.md": {
+      "sha256": "a321212c2b8f8f9736e903af43adb1a2305b29bdc65345d669d38d2faa0f8b86",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/design-blocker.md": {
+      "sha256": "f9296558b532b47fd9b8c45706040890664c969ad13381a8fa212ad162cc7728",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/green.md": {
+      "sha256": "9a1b67615f05397301406117793ea1a7ce5438677847802ef5c38649f2f5a7c5",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/notification-contract.md": {
+      "sha256": "ece02137e4eb6b2322e7dcf8263f02d64b6d7126342e8f6875cd337899a358b1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/red.md": {
+      "sha256": "7f2493b2b56d10d1feae036ea5496cfc8fa084c90fc91ffdd2e081b7d005c3c7",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/supply-chain.md": {
+      "sha256": "a150d84fc757a55025f5945e01f74a8f9979b3cd4fbec082ffc17facd11322d9",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/06-deliver-password-authentication/verification.md": {
+      "sha256": "dd9f140b4493fa77232b94dd7637f4819c673073c3baebb4cb5047162d16e238",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/07-deliver-oidc-identity-link/bom.cdx.json": {
+      "sha256": "0d12640f1867273200c6778ecb046df3d1e05bacbbfacc310aed53e290c11dc9",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/07-deliver-oidc-identity-link/green.md": {
+      "sha256": "81ac4787356b8803c1b5cedda77f0f3c442487c2a4fd8ecf2871559fd7ddf5d4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/07-deliver-oidc-identity-link/path-audit.md": {
+      "sha256": "709c77ad3225954fc9337f9dcdeae7c1068ef09da8fb01bc4dc30fc4f2602791",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/07-deliver-oidc-identity-link/red.md": {
+      "sha256": "cb4e8f19c74f08bce98541495efa0aaf62dff6a5b10234050924419f58a1c7f2",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/07-deliver-oidc-identity-link/review.md": {
+      "sha256": "b648ebe242df89ead98ad527e8303efc5d3ce352bb1e5637d2ce9cbbfd4ca6b6",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/07-deliver-oidc-identity-link/supply-chain.md": {
+      "sha256": "5756c5c49d23e8ed4f0a93ae28305174f33378c89cbd36d153d2bedcf2f919ba",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/07-deliver-oidc-identity-link/verification.md": {
+      "sha256": "7327b7ba871272e90084a486317ee837dd849f9379b538a2a7585fc350c6cfa4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/08-deliver-session-browser-boundaries/bom.cdx.json": {
+      "sha256": "a4c609b0307816cfddbe4aaecaad3d7215f99d7d2121f5458d4a03e4932a1c7f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/08-deliver-session-browser-boundaries/browser-integration-contract.md": {
+      "sha256": "a4949289ecd7f36ac0781b251999df2b0f583ebdff5852c556920666db7e1fe3",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/08-deliver-session-browser-boundaries/path-audit.md": {
+      "sha256": "6c8009832ec9c09cc8b5bf7969d3e2630791b474574b1d82db2e846aa845cabd",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/08-deliver-session-browser-boundaries/red-green.md": {
+      "sha256": "344e5f9ae5d304d4fa30271708d8117035916d791240736fc750e729abf717f5",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/08-deliver-session-browser-boundaries/reviews.md": {
+      "sha256": "0bb552714bbb6a81d5437a32165ef0c28e4a8530847bb3ff5ed3fd9f2f645bf2",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/08-deliver-session-browser-boundaries/supply-chain.md": {
+      "sha256": "e85d0f9a0189354a1f1cb8f783426ba5e695f0a5f54029b441be97528f0a8ae0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/08-deliver-session-browser-boundaries/verification.md": {
+      "sha256": "2c3a8396f586b3a6747a680bfcf5f5ca0097e76822bee44ac3d9dfaabcfcd01e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/09-deliver-tenant-access-authorization/baseline-and-generation.md": {
+      "sha256": "8dea8891431c912b239c642e6ff258b7987b6114b9fcfcae52ce228cd01c9b96",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/09-deliver-tenant-access-authorization/path-audit.md": {
+      "sha256": "38b261759a53132e2c46c26d3f020f12bc43dffc9509a613061bf33825c1ee58",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/09-deliver-tenant-access-authorization/reviews.md": {
+      "sha256": "d2b266abeb1c10ad443d7fe78f5c97ccd1e24811cd5edac47c173c7c097803e1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/09-deliver-tenant-access-authorization/scope-and-gaps.md": {
+      "sha256": "27c94ed033734ae8d20e114669bceb8110534e324d0ae4290e7f4047dd4d5a48",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/09-deliver-tenant-access-authorization/tdd-and-verification.md": {
+      "sha256": "e8ff1132bdfcb4a9059ca9e4da35f582edf788fa83f4080eccc5add93b94934a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/10-deliver-service-principal-api-key/baseline-resume-20260909.md": {
+      "sha256": "b94e4bed68f18a3eb2b416418a07afe01db8d251ad6162d50acf5444aa11ac2f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/10-deliver-service-principal-api-key/completion-audit-20260909.md": {
+      "sha256": "6fdcddad9f5cab96effcc2606ac80fcdec3d4e46b4041cf74ace90377174a17c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/10-deliver-service-principal-api-key/pause-checkpoint-20260908.md": {
+      "sha256": "607ca8d8094b21a58dfe20a5d59812ed4326519d828c059a97b1199b7b88bcdf",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/10-deliver-service-principal-api-key/preflight-and-plan.md": {
+      "sha256": "8f1b60d0191a8ccf1c515361004a2a2ca63e7e5c118f5c9cd20820a0e05acaf7",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/10-deliver-service-principal-api-key/review-path-checkpoint-20260909.md": {
+      "sha256": "a01a49770e7cb39d6629daad22ebd930a6e8367a5734a1dbcff5296cfd0ebfd0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/baseline.md": {
+      "sha256": "367016ae1631725cda40b30105e9f59b171d90545580cc463f5117e96afde157",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/design.md": {
+      "sha256": "292370ef58081995ad1514883ac51cb19cd2a50e7c194e2666cc80f36899abe5",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/inference-e2e.json": {
+      "sha256": "dd747af58ec161131178298cada616e6ef0dfc3bcd144e20281c2c8a40a22364",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/not-verified.md": {
+      "sha256": "3ee9c620cf4fbd20775db4f501d2e025532f0d07a3b23bbca562e158971763a6",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/path-expansion-checkpoint-20260909.md": {
+      "sha256": "fd7fe5869df939769539e95366f3e7e1ddb2a21082ec048896f9d5a3184a7b2e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/results.json": {
+      "sha256": "488e6058f2f9fa15e994221212bad86dacf5a69b22d20a0f208675468c4f6b51",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/review.md": {
+      "sha256": "67d661316c3c4c2c9e70a976e4cff7a75a8046cf3c1c16010cb9950af82e3d34",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/sanitized-command-log.md": {
+      "sha256": "4cccb97d85c45a21bfbef16653068023c273639e6f858aa0d5328308900e077d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/secret-scan.md": {
+      "sha256": "8dcc3fa61acdfe3f6ddd0125c6d6e90c0dd64076c22963e82a1e23f94757b943",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/service-token-matrix.json": {
+      "sha256": "f308244dee75d093539ebc6b138ae1bcde1622b7cbd059dd2df9cf4c0651f4be",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/sha256sums.txt": {
+      "sha256": "4a20b5a2edf20a39824b231d5a6533bf4ee119ce6fb9d2c6758b2a443ed13256",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/staged-path-audit.md": {
+      "sha256": "b724bb90aaf81d076b8e971e27d957216dd0f7dfb7fe5ed68c39c97647362996",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/verification.md": {
+      "sha256": "67d6b15dd474d2d57b7c4d2908f8dcd153de6a48748638dd83acacec2a17b4c7",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/evidence/11-deliver-workload-service-token/workload-identity-matrix.json": {
+      "sha256": "3b080e955e90ad61d8f3e62166b37763abbf9534e134ffd401c0c367d71e7844",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/00-restore-clean-kratos-baseline.md": {
+      "sha256": "8ab82882f131e59b96f996e31216210c5eb5ee7bc16fcd82d253235673fc2df1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/01-freeze-direct-p2-baseline.md": {
+      "sha256": "4db89fc8258afe281446111b9700f9e3a01093431d9188b3f84b9aea476c0883",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/02-freeze-public-openapi-registry.md": {
+      "sha256": "f7d2fba816bc3d1b2ed86b9a6371c9f83f0b70dfb2a08a2618534a717343f46c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/03-freeze-iam-core-contracts.md": {
+      "sha256": "7df6d2f27ed7479b4e2ae8c31f0abbfb6cb7e76b87d7017f2b459be7d0a16c9f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/04-build-no-rls-persistence.md": {
+      "sha256": "167a857e676d6dcef262e510c80db4f6be234d132a799a679b428d9d77ec0aeb",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/05-prove-target-vertical-slice.md": {
+      "sha256": "cf8f13c3b20c3e2f6a980f001a21b54b7d8b931c18763d003be38b4dbc5463d1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/06-deliver-password-authentication.md": {
+      "sha256": "35fa3f8654a1d7337eda86290585c1eecdf4e1d990f2e1df0fe9d3bb7932207d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/07-deliver-oidc-identity-link.md": {
+      "sha256": "a369b676e172d53c7bdcc7d5a638f9df9a5fb5e2eead84785374094f9d0317c8",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/08-deliver-session-browser-boundaries.md": {
+      "sha256": "38f1c56f015f785a960f4d6dda2a55efcfee5fdbe3d17ca906b95dca278a563e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/09-deliver-tenant-access-authorization.md": {
+      "sha256": "f4e68285098ee138c4fae35de2910cef101f5a15e78566749d0061eb782d5aee",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/10-deliver-service-principal-api-key.md": {
+      "sha256": "84a10429e97edbe22737deb74e12558304e742d47964839366a6e5fc3ed1929c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/11-deliver-workload-service-token.md": {
+      "sha256": "26bcaec522fd82501c01360eb413240c096e7d8c3d3aa97f616d174308967009",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/12-deliver-core-lifecycle-nats.md": {
+      "sha256": "ce29391b3632d80b891d5d22f9130f9624b37dc65e0ac4b1addd3d12471e76a0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/13-complete-cutover-critical-callers.md": {
+      "sha256": "c2a736af348a18480568e7dc0588dc1efd4f2ce48e6e51855d1432a7a064c11f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/14-rehearse-isolated-cutover-rollback.md": {
+      "sha256": "add86591a45d4d59ba8f1e8dba9eb5f76be1416cf799e5bb5687114f59231451",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/15-complete-iam-administration-recovery.md": {
+      "sha256": "09d22b82784c729afaab9e71cb2a414d910e98c84183939c76cce27dd154715d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/16-complete-audit-idempotency.md": {
+      "sha256": "b66060ce2b060cf971450d0e60119f07e6bea6159ebad224ece6522d3b7dced1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/17-complete-target-callers-ui-e2e.md": {
+      "sha256": "9a123482df734a8e376dde62d065e42a72d148c75167be67433aa7ee1fdf1003",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/18-rebuild-data-final-cutover.md": {
+      "sha256": "0b0a623ec5d7ec35117da8d694fb83668bf19ac0848d088ffb3587ae905543a0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/19-delete-legacy-assets.md": {
+      "sha256": "ac36ba9471371773643ab5839e1d6c556d29d3cb08594a9aea1d819b35467a9d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/issues/20-complete-functional-acceptance.md": {
+      "sha256": "61bbfd352a71e06edb4108cbddb530539011030cb300058d521ca6fcd40d0f74",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/spec.md": {
+      "sha256": "e6920fa61de98fa701b104723dc2ae8645575722965ee0765d695631494cb270",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-p2-direct/ticket-plan.md": {
+      "sha256": "bd46eced247d17e5bfb33958d8e5132d8fd54dfcc9087734c2dc2f53a7412736",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/01-freeze-compatibility-oracle/SHA256SUMS": {
+      "sha256": "4546c6ea1cf32e5af6d1a0588a3942aad5327b8d74d4d97c9211be38e24baf32",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/01-freeze-compatibility-oracle/baseline.md": {
+      "sha256": "ce2c3c14c28695132af9ac3fc3bb4adde197e8eb98c0cd93d4fdd293e1e9bcfe",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/01-freeze-compatibility-oracle/callers.md": {
+      "sha256": "f06f9b97dadcf304fb261658062c2656ef22c547964a984d3dedd18261348e13",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/01-freeze-compatibility-oracle/compatibility-oracle.md": {
+      "sha256": "5bbe3d1d6b257885937c36ec459fbf0047799ede15a6c7715b755b8884899f1d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/01-freeze-compatibility-oracle/human-review.md": {
+      "sha256": "8a0c79842c4ad6af7554c087f56b6624f359754ff40272dc49fc464131065a1a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/01-freeze-compatibility-oracle/index.md": {
+      "sha256": "93c2d7fcf6e26e041eb1f26a057f24dd7edd238392c61c27b222a8e6b14f1470",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/01-freeze-compatibility-oracle/replacement-gates.md": {
+      "sha256": "5372dab3864ed15faaa6dc2637ff722967fa324a71a87dc95948967b58b754c2",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/01-freeze-compatibility-oracle/replacement_gate.py": {
+      "sha256": "8ebc1dcc6022fae3bd3d0981274da4a1761fd771372d93230c1fc2f74e2e611f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/bom.cdx.json": {
+      "sha256": "e59f87b238cdf177f77b7be4aa2586166541545f40c58be150b4a1f90ebd74f1",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/buf.gen.yaml": {
+      "sha256": "06db8850f314b70bcfe808c411cde779f26f2c33c00a1a750fa8d6cf4c48aaed",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/buf.yaml": {
+      "sha256": "910d7fa6ac28f8d96e2c051a5626aba2af96401d7cf3f8bc0fc072ed4482daa2",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/codegen.md": {
+      "sha256": "d03c1de5fbc71e023245358e7a4aa32b26783d63348c6994d20dd38518c5a3b3",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/component-coverage.md": {
+      "sha256": "6c7c010c0777f633c97fc23417d6258c7d90d07da65abf96c8a05d0200add171",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/dependency-baseline.md": {
+      "sha256": "86b0fac20338b7ddf97f3c645c96b8e094eb555b447c53ca378f9bca9cc5621d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/generated-baseline.md": {
+      "sha256": "5661e87c42168edb29227e4030d05d68eaabe283bd9cdfc884fabc7c8e8d3976",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/index.md": {
+      "sha256": "4f3dc68a9d88f0d0b6547e0d92b31e57716efae6d7c91f830a86ae25c4bc0083",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/isolation.md": {
+      "sha256": "6d239bdb668479c4566793c223ea961bb362f445b055c3f952ddb2adef70464d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/licenses.md": {
+      "sha256": "da443ec4834c733dd76f90ede9576f21b5d4558e763511d0545b4980a9043938",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/scaffold-delta.md": {
+      "sha256": "8f9968fcf1ad6a4fdc880e790429a5c444d6a89a798f8d0ade439c23209b5e32",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/verification.md": {
+      "sha256": "a896918d580468f629383ef9c95212bc781307a8942c2a43a2a2730f8ec29351",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/02-create-isolated-kratos-runtime/vulnerabilities.md": {
+      "sha256": "8572255f824f8bf56d74343a5bdf0303f82870f523dff6ec1ea38ecb704f5898",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/03-connect-legacy-auth-grpc/compatibility-boundary.md": {
+      "sha256": "07e56ea2fa0f381d42e5bf61919cd7dc44b931362a62e7eb79503de999cbe07e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/03-connect-legacy-auth-grpc/descriptor.md": {
+      "sha256": "dcea4a61be9566cb40eb7668f80b4c9de1a9c8d67c082d42c3a1103bdb1e95d4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/03-connect-legacy-auth-grpc/index.md": {
+      "sha256": "45a7e12228a5da1b1c7237fa13256c8cfa85ea97da6b540cd60b5ba208d78cd9",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/03-connect-legacy-auth-grpc/transport-contract.md": {
+      "sha256": "510304413b9004b62a524f2fc4d41c6478e724ff1cafc8320a0e5e18c80cd235",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/03-connect-legacy-auth-grpc/verification.md": {
+      "sha256": "f2f3467f74dbe9dcaa9c9818dd6d7b15745209a42f7205a4cfc4f49674777e50",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/04-connect-real-legacy-storage/index.md": {
+      "sha256": "1d02fbda0d006027b4c116ff35af0971de91fea9c82c5300e56f639673851256",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/04-connect-real-legacy-storage/rls-blocker.md": {
+      "sha256": "60d11642bb9244fba1d8cbcd10dfab4dd45d5a98000afe68c86f405e38a642f0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/04-connect-real-legacy-storage/verification.md": {
+      "sha256": "1253f202101d6b614b6630a39075a8e7b843958284324d7516d978760ba11b8b",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/39-replan-direct-p2/mattpocock-skills-guidance.md": {
+      "sha256": "85f5d89bb02b8ed0b309f76284cceef3d18542074f571b73ec81e01a2dddf31a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/39-replan-direct-p2/publication-verification.md": {
+      "sha256": "a77767e717405fb25d6f4d123f39b2ac1281d21a7cfab7ef46fa993138f8fb9f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/evidence/39-replan-direct-p2/ticket-mapping.md": {
+      "sha256": "e021f02cdba5d75b167d9a3ab24be4c1da865522253e3206ab79312feeb9ec89",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/01-freeze-compatibility-oracle.md": {
+      "sha256": "03838a48bf8187dc59ca008f2d3ff3771ad9edc56367792f8307e083cb1239cf",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/02-create-isolated-kratos-runtime.md": {
+      "sha256": "d92167dc15cbda8f9ba769409cc5727374e28e133e382d7c1007ac074557d598",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/03-connect-legacy-auth-grpc.md": {
+      "sha256": "4f8eb45afe02fbcad9422940a7caff067bb49680105f838ef6afc081a9ef846a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/04-connect-real-legacy-storage.md": {
+      "sha256": "2c186a3b780f47bf11ed1df01436cabdbe96d576a291f25083e02359cc460a37",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/05-verify-password-refresh-revoke.md": {
+      "sha256": "97266f95f26e6d0bca666d0092d095e44e2731fa2abd5bea0d3315f4ffa14826",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/06-verify-oidc-dex-login.md": {
+      "sha256": "c85a7b04f287fd21efc4c09736fd06a92728145f03c574c41663f8aae1fc5195",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/07-verify-api-key-service-token.md": {
+      "sha256": "c0da59c346c892e9e5cd6147e0969d1f87c31688265acfd5d0dea0a523d673f0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/08-verify-principal-permission-decisions.md": {
+      "sha256": "f138f0e022d2320a9e951bff68cf0e38f723bd5b0710df91a9cedc27c6deab0c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/09-complete-cp0-go-no-go.md": {
+      "sha256": "4926577685b1ca913d34ddca8f66f862496de5c6c7ee77ddc60fbbcd6548b0eb",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/10-promote-spike-to-supported-runtime.md": {
+      "sha256": "eae8a5c03c1843389481a37f33b1f98e9032e22befc4e99d0e1aa4a87ceaa014",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/11-complete-legacy-auth-runtime.md": {
+      "sha256": "86d43097f9be72fa61600fd4cd324008f6bedbb1615b8264d3823f879b5d3f32",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/12-establish-stable-iam-address.md": {
+      "sha256": "496c8decf982e7a59467493d0764354d7bf82bf8ac7fbb1cbde84540cc99db23",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/13-run-isolated-kratos-canary.md": {
+      "sha256": "7e8dc069e6b2c428e37c756bc6b4706f3afb4a7aceff46305f89820592cfded3",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/14-cut-selector-to-kratos.md": {
+      "sha256": "97974b2b37a61b543c8718f5f1b53d5c33cef546e1e024130c656e1eee3fea00",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/15-observe-and-retire-legacy-runtime.md": {
+      "sha256": "1c1f7526d678efd2b6c7b72e2f202e767a5cf414f2e0f270129c15b4aa27da5d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/16-freeze-public-openapi-registry.md": {
+      "sha256": "1e771130e2bfc8197462af7e2a09c9ddd3c5c5032def09a50759f4d9469b4f54",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/17-freeze-iam-core-contracts.md": {
+      "sha256": "98777005d1485d2fcc66cf058b12dce80a1c0c8e59fb90f33c92b2a66b8fb372",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/18-build-no-rls-persistence-foundation.md": {
+      "sha256": "716c9a8fb6ef1bcda70b1ef2869345eed0ff1e7edc2809ef62c2ca1290db7b4d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/19-deliver-tenant-access-bootstrap.md": {
+      "sha256": "cfeeed706ced61e67cfe6ba84c296544cde4fa04957b56c9b780f93826b212f0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/20-deliver-invitation-human-membership.md": {
+      "sha256": "a138e6df1055f7b4146fdef8234778638757b178d916e1ab5052c856d1668793",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/21-deliver-role-binding-membership-admin.md": {
+      "sha256": "43616eba111ce5b53b1019d6567c77a9a8cc3bb28ef1d65d4b2f5e219e59b86b",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/22-deliver-password-authentication.md": {
+      "sha256": "e9165ab75ebbed1832104aa1c96b76e27bb9615441106ec8d939facced1fef20",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/23-deliver-oidc-identity-link.md": {
+      "sha256": "1d195fcf005903b721a1733ab5e3c72012cb74c702f50aec36e8002a1e224425",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/24-deliver-session-grant-refresh.md": {
+      "sha256": "90a125cd8f6e2e8d17266e3335901a7e52d8486a5a426aa05b8e00c97999f3bd",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/25-deliver-browser-platform-boundaries.md": {
+      "sha256": "570e4d93e4949bbbb3527fdf858a17cb9179e8521b70a1c84fb18c4826d5a8fa",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/26-deliver-one-call-authorization.md": {
+      "sha256": "fbd2a99358f05bc92fd9deac2833db483788b3fd0a996b7929e52fc635ba53be",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/27-deliver-service-principal-api-key.md": {
+      "sha256": "2705f3ea0ec22553a2c2786259d9d7051234a8576e5c74a0f7b2688b499e4d77",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/28-deliver-workload-service-token.md": {
+      "sha256": "15d54878c0fef106f05e06f7f2a65898fadd8bbc8dcf534346feba23d147fb26",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/29-deliver-lifecycle-projection-repair.md": {
+      "sha256": "c476aab955df9ec71411bfe240b7b3801676eba837febb3b7b3a21aa6d3d6b72",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/30-deliver-core-outbox-bootstrap-dlq.md": {
+      "sha256": "f2adb855125825a544e9f2a95d78df8ef1780eba7f835b897b3f7489362793e8",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/31-deliver-platform-administration.md": {
+      "sha256": "5311ebaddc3578439e1244ec9ebc2933547be8742dbefe08027f3f758a0fed87",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/32-deliver-high-risk-tenant-admin-recovery.md": {
+      "sha256": "1eef5dc42320b870d35b07f0f660c1ba4f2d333b7ce9f04c607584e36c95d9ef",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/33-deliver-audit-query-retention.md": {
+      "sha256": "da0383bbc938a3e81a86604cd782227701fbd836630b97089bb4ed0083ed1e17",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/34-enforce-global-mutation-idempotency.md": {
+      "sha256": "ec37544ed0e0965b236ec5cbfc96a55c3e29a7df4835b1e2ca45c4b18826980e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/35-complete-target-callers-ui-e2e.md": {
+      "sha256": "074688b3427abfc96c5345b90f73ebc86bb917c2a4e0782f9ecf1ca30b604762",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/36-rebuild-data-and-cut-over.md": {
+      "sha256": "5218153a5ae6a9c6e40b7dfe9790aaaaa2ee46bbd99a29d734904c5f1546d2a0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/37-delete-legacy-assets.md": {
+      "sha256": "dfa4fca62c58887e197edcbde38f242eb57a3a09c595b9b6eb48b705dde8b2ae",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/38-complete-functional-acceptance.md": {
+      "sha256": "0ea388df3afc6e4a3047024961ebf154799b3197f776edcb77ccb1c079b92a66",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/issues/39-replan-direct-p2.md": {
+      "sha256": "1c55c538ff8db4833d13b16674c26a4244a17613491e608c8c50bafe42c8a6ad",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-rebuild/spec.md": {
+      "sha256": "831459ed21c7018f8584c647de165cbab7af62d2fa455928c0d34b6a08331a15",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/capability-matrix.md": {
+      "sha256": "d704c22a975e60901bf60a2f337dc5e064033927e2c0646cd6d782c70653aedb",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/decisions.md": {
+      "sha256": "9bb787a5c2d305efd5da3c0b77df8774a70dd74cdace8d08edd22d79e1f2a8ff",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/baseline.json": {
+      "sha256": "27dd2610ad04f51cfd22a5a2b6e5311b9f5b852fc66b46bda757e41b94549aba",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-rebuild/spec.md": {
+      "sha256": "7555caae7bddc579165a58be949634dc57a1f172152acb347fbd1105c77e2bad",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/01-freeze-human-workload-architecture.md": {
+      "sha256": "44e27969f4ef2340b612860d02267c312d15eda6f2ea0400850528aae8f63e95",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/02-refound-contracts-and-registries.md": {
+      "sha256": "bb4742c91fb68a2469223f224958094f7618e50243534b286771ad58efa4bc4e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/03-rebuild-human-workload-persistence.md": {
+      "sha256": "6b7d595e92abdf94ca9f4a9cb9d6cd7a9a1297c0f17c4fb7bc37a0493031b1ad",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/04-deliver-tenant-workload-api-key.md": {
+      "sha256": "c70798270a17789d8457d9ef7726392cd2820a121e3142da791ef181eee8238f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/05-deliver-platform-workload-token.md": {
+      "sha256": "2f62029d587e89f965022b2c67a61eabe04adcc3f33246285d069f8b23a68e00",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/06-secure-service-to-service-grpc.md": {
+      "sha256": "b7158ba5582eb45474e798afc0af62ddbcec44a6188b5e8a069c4d668f12dce8",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/07-deliver-core-lifecycle-workload-auth.md": {
+      "sha256": "8b853ce9a1df734bfeb5178a16bb3b2708ce3dd629c9bc8754be07a663b72910",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/08-complete-cutover-critical-callers.md": {
+      "sha256": "9996bc7d2db961209ebdd20f97090be0fb15c2f13db7254c434a8ce97b4c1b0e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/09-rehearse-isolated-cutover.md": {
+      "sha256": "19f099dc5c80f7089b28dad278b36b248745f83e73adb42ea33e63efc4157974",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/10-complete-administration-recovery.md": {
+      "sha256": "6d218b4bfdc716216916a316034d681ba2862293964401c66bd554a5f57582ae",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/11-complete-audit-idempotency.md": {
+      "sha256": "f222d6257a615397d1c7b997048e0daf64d0d3ac056ae0723d7dfbec0b0dfc56",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/12-complete-callers-ui-s2s-e2e.md": {
+      "sha256": "fda613fa2d81658d17777a46c52fecd4b76e84e3b6c8066f15683d7c9c1c72a6",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/13-rebuild-test-data-and-cutover.md": {
+      "sha256": "6e2c4d08e3d3b458ca72375c6ea74e096be374ffd47ee6280149955ae968f861",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/14-delete-legacy-auth.md": {
+      "sha256": "3d90cc8b02b1d50fe52cf5892cd95508b3ead5f72cb1cfce4f6cef621699ce27",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/issues/15-complete-functional-acceptance.md": {
+      "sha256": "f35093e337f41193be5d5eeefe15d024734f8e6c11d3eb579b3d9f7c465da992",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/spec.md": {
+      "sha256": "1ef28a28ae311a0c1149e7c848c016585c56a658dff3b578c78a88d09dda972e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/.scratch/ani-iam-workload-refoundation/ticket-plan.md": {
+      "sha256": "b43d22758a15ce0c05d4f38a01ab12ce0923e6e4e536edc17e4e21e31d8c6173",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/AGENTS.md": {
+      "sha256": "9cd8bac555858311bb0390c0060e8ef107bcbd8c16d24b852ab1966224e05732",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/CLAUDE.md": {
+      "sha256": "e8fc9c34bb5f49f0692ea5960522e7e6fc4b93ca8d7c6c3753f7682812faa11a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/CONTEXT.md": {
+      "sha256": "eda80f403b95c332c52decfbe19836f856ea9e79c9a634b6047053bd97e068b5",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/README.md": {
+      "sha256": "fe5ef17a112996884e72e88d377d2cf4dbf5cab0e10cb07dd4992e75c16c5338",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0001-allow-breaking-core-v1-for-prelaunch-iam-rebuild.md": {
+      "sha256": "809214bea92edd387750251637289d41663900566bd8a6d31e96045be39d1ca3",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0002-separate-tenant-lifecycle-from-iam-access.md": {
+      "sha256": "666f51948f5b7ea83595fc0646164177f9086acc4f58598ac63811f797ba392c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0003-separate-core-control-and-iam-databases.md": {
+      "sha256": "850d23fbb37d8ddcdc8abe530402b946e21c65982341e66a7b0f215edc62a8a8",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0004-coordinate-tenant-lifecycle-and-iam-asynchronously.md": {
+      "sha256": "43542861552cb544d1c73352f9d8aa1301c78c887552ef4e0b5d6b194d7a226e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0005-share-infrastructure-without-sharing-iam-project-code.md": {
+      "sha256": "b3a914cb2912684beee4fd504f027e4650e998eb96c3e319e11aad06f678500c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0006-treat-september-v1-as-test-environment-delivery.md": {
+      "sha256": "9fae6e04f7607ca7bbed06edf20f05e7716249eea3d23786c47df2860a166d7a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0007-remove-postgresql-rls-from-target-iam.md": {
+      "sha256": "1fa0206773c360bcf511bd97e265cd973c32dc1c6f0a72e2e878b09519f6a454",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0008-model-tenant-authorization-with-explicit-relations.md": {
+      "sha256": "56d9e6079dd85d6c319e46adf37ca90334a31757157fd53c667b057f1f2e8f3e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0009-generate-permissions-and-constrain-role-management.md": {
+      "sha256": "75b7b35738e147d23ecb080359990025f43220d775bc291fb32cb561aadf4907",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0010-separate-invitations-from-memberships.md": {
+      "sha256": "0e47cd400ce9d0b991baaadf5cf892620bac5ae03b4c3f17b9d89e74fb4ce609",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0011-use-global-human-principals-and-boundary-scoped-tokens.md": {
+      "sha256": "d756271a8c33f85ef2de496accacff856ae1b75ebcf2f385620951bab9fa94c2",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0012-use-short-boundary-tokens-and-rotating-refresh-families.md": {
+      "sha256": "ce6a09a871e61697f4144db0f7e1e98883c05b030a6d728af6dab5201982a363",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0013-use-durable-session-grants-instead-of-a-jwt-blocklist.md": {
+      "sha256": "8aa86bdee58a35c80685d2974eb23786608a663da9aac5e68a8c72d007713548",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0014-keep-iam-audit-transactional-and-append-only.md": {
+      "sha256": "dcdfb80261291b24c81f3a64d92e9aad38963fb56ec00f0ce87693b55b37fc2f",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0015-keep-browser-refresh-tokens-in-http-only-cookies.md": {
+      "sha256": "23761b86cdf9a1380f7ada53cd20c46e0017a3c2e741e61829cf5a6cbd7c23c6",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0016-use-one-generated-authorization-gate-at-the-gateway.md": {
+      "sha256": "a04783fe452a07a310fb1c327f3e3fea8d555042942f64d4a2a844499a86adea",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0017-use-explicit-iam-lifecycle-states-instead-of-generic-soft-delete.md": {
+      "sha256": "a86b82f92dd2f9318ad0cbf7ee7ff2d0fc71166aaae23a220d49741277069caa",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0018-separate-principal-types-and-persist-integration-state-explicitly.md": {
+      "sha256": "1d8b547a7dc4a7df2524ad22d9cb06697c7d92818071b67484a9d3bc873d1064",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0019-use-kratos-conventions-with-framework-independent-business-rules.md": {
+      "sha256": "d634d25d21d9e37f5137f6ded57b13c3bb46223815cedef47d45bab264b79c29",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0020-pin-maintained-libraries-for-framework-and-infrastructure.md": {
+      "sha256": "7056e90b207f828da63c4cc13f131c534d598f1fac6d81f1ed11bea3a710d525",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0021-separate-functional-validation-from-production-readiness.md": {
+      "sha256": "6d5c88ea79cfd6637b51308d1da950df091c7f55b17f572aee80a2a3ef999182",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0022-unify-software-actors-as-workload-principals.md": {
+      "sha256": "5e3bb3099cab855873da3c698498fab3cbc7f7291d19b7e1e10f911f89e3ce15",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/agents/domain.md": {
+      "sha256": "dc014a1da1e7fb85ca646dcb7dfeae603b1944e6bd769977709b8221c1dcd198",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/agents/issue-tracker.md": {
+      "sha256": "6e080564bb50b91f4bb11efa93bd2f26c2164ea1a3f26440ca3f1d23b90b097e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/agents/scaffolding-and-codegen.md": {
+      "sha256": "880b39462bc380fbcc4bfd61a1a9519d7937f909617593402fc432c774b50d79",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/agents/triage-labels.md": {
+      "sha256": "f87729cc3add720b17db1c22bae69bf41d30700910c90d31aa3bd8a2d2cda7fe",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/plans/plan-iam-decision-traceability.md": {
+      "sha256": "23458835acfa13028d453a78a89a46332ee1dbed99b6daa6a8b2088e656d193d",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/plans/plan-iam-kratos-phased.md": {
+      "sha256": "56ca4a968b0f545852dc63e923fc220cec5ad8c5e60f160073c75bba43410801",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/plans/plan-iam-service-refactor.md": {
+      "sha256": "93bddb833b7cfc80688cbf2d7a29b66143a10bb3a9588b2627f9da1a22cfe9de",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/plans/plan-workload-principal-refoundation.md": {
+      "sha256": "5f2f7f1453a8786d8a96f6dfa54d29eebf288f17ec20b4a49fe1e62a1555cec0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/review.md": {
+      "sha256": "a0bab3f4b70e17436504236e3a139f9c6a8a5f297d76d7cc35482b3403fa57b9",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/verification.json": {
+      "sha256": "565b56ed5da7b7e907bfbde27f05e4dbbc200e64e01bc74957a86de405969165",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/verify_docs.py": {
+      "sha256": "204249fb70397ec7fe2c8694216f69634e5b998035be581b6e7b14ac8d342ff7",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/01-freeze-human-workload-architecture.md": {
+      "sha256": "d9d18de3bd618590f0ce00af88df2ae3d74ea09161ab37399272bfad5d0b5566",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/02-refound-contracts-and-registries.md": {
+      "sha256": "c6a1bb1ccec8da9a5b2d5b1e0f6e3ce2477b41431c0b29eb5b26f7ad8bb327b5",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/03-rebuild-human-workload-persistence.md": {
+      "sha256": "64951d561998a1a1fb1085ec1fbd9a686c68c8e01d23470564402714d2f28618",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/04-deliver-tenant-workload-api-key.md": {
+      "sha256": "1e5d70521803dae2ed72722c39916ebb4841298594d57a3d082c6c668cece9a4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/05-deliver-platform-workload-token.md": {
+      "sha256": "28d09ed8889dce1766b6af0bd4bbccab4837667be61e43aa302eed9ae5da10c7",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/06-secure-service-to-service-grpc.md": {
+      "sha256": "bcb20a7993e66326e80423865b0759f5a8fef60c71a03aa8eb414780f8b69048",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/07-deliver-core-lifecycle-workload-auth.md": {
+      "sha256": "b2c75b16ab3cef8c49934187536efd0d264b5e71babd52c5fc66827fad339597",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/08-complete-cutover-critical-callers.md": {
+      "sha256": "4507e4e3100a3c0798c35407d45e86eca475cf3be22b0ee5268750e95c031199",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/09-rehearse-isolated-cutover.md": {
+      "sha256": "fe506659bc4912850ce369f96ee670d5951307af0698c96a480b249de4989860",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/10-complete-administration-recovery.md": {
+      "sha256": "ced1e275ebd4b8d4c691f491811f0a0db478b91260f2b2b8cdae7db68cb08cf4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/11-complete-audit-idempotency.md": {
+      "sha256": "d85ce922a0e492d67a173b22a633af66793a033574ec1a70be32ed863d947af6",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/12-complete-callers-ui-s2s-e2e.md": {
+      "sha256": "4c40325cfecfd35c45b3b928756c895aa7b76ac80d81bd449ee615c5de87f2c6",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/13-rebuild-test-data-and-cutover.md": {
+      "sha256": "c9f3e1592f06f8275874634bf5a51d19cfb2a70ededc9c779d40c089da3f7473",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/14-delete-legacy-auth.md": {
+      "sha256": "71fef32e4483fbe619523e8ac4fa95ff18f23ffe5b29e7c82b7af3f54d2b6ab0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/15-complete-functional-acceptance.md": {
+      "sha256": "28627feda0fab9fbd22ff410159bbeb3c54040dec2d3ccaa871db2b5561be80e",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/16-organize-docs-and-replan.md": {
+      "sha256": "01b07663e3a4f8a5810a522eb5ff335b33340adf091b3095044169574b7ea160",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/17-freeze-api-replacement-contracts.md": {
+      "sha256": "b97505793071a193bfb0ec22dfa575f370cea0ee005287af2e9980ba9e534783",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/18-refound-human-workload-runtime.md": {
+      "sha256": "d93fae782c936038a8bd1df91e8d6a3b567623cc8f5504db20bf96efa96ad16b",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/19-prove-workload-session-reference.md": {
+      "sha256": "27f7c126c19d2c9124a8a60811a373579356c6146c631c7545bdf84a5743b622",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/20-complete-human-authentication-notification.md": {
+      "sha256": "93af073bdb8d2c6f21224030cd002f44cf934861e3509d70e69abaca5f2b4acd",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/21-complete-tenant-workload-api-key.md": {
+      "sha256": "434db98fd291abfc8e88946087e4dddb71bebd2d75c5adea1e3aa8fbfb4c03b0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/22-complete-identity-administration.md": {
+      "sha256": "4485467441c76899eb5881f4e895bc94350328c09f0a3b24474dd3a16cfe8b39",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/23-integrate-core-lifecycle-bootstrap.md": {
+      "sha256": "38bea1cc0ba9b6b4ee6db6d8a4c11007e5ba3feb83fb35a1d5ce42152d35b30a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/24-verify-backend-callers.md": {
+      "sha256": "feb85ef217be54d7476103ee0a89e6ca11f5700c9171819c88b35d0b8a584e3c",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/25-accept-isolated-api-replacement.md": {
+      "sha256": "c952f4f63b0665760c3eebc2617395e4fbc545345fb0c004fa99f38cd42505e4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/26-trim-legacy-identity-code.md": {
+      "sha256": "53da9bc0541b0d6b8afff0dbc3c31953ac1ac06df6748e524c64b8249b9bd788",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/27-integrate-console-boss.md": {
+      "sha256": "101d8db927674d6d477ac6a1aefe4520be1f00fb7422657e513ef0e2d14d4e26",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/28-complete-system-replacement.md": {
+      "sha256": "0d05d8752bced279552811fdee01eb2d93742c9874ec629ef8921300cab1b3e0",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/issues/29-retire-legacy-assets.md": {
+      "sha256": "85bd6ee9a9cff91b5a691e69891d67c6d0935aa92e853b02faaa5966aa888fd6",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/spec.md": {
+      "sha256": "2a3a3136514b84abcf2a4305877741584287c57e3091dd1fcc3d5e074371d963",
+      "mode": "0o644"
+    },
+    ".scratch/ani-iam-workload-refoundation/ticket-plan.md": {
+      "sha256": "9484a7a79af7cb3bdcb5cfbb66c1c7a1a756a0298fc7c1789d2063fe37f8cbab",
+      "mode": "0o644"
+    },
+    ".scratch/ani-pre930-containment/evidence/01-restore-ani-current-contract/checkpoint-main-drift-20260908.md": {
+      "sha256": "e20fc5fb558f8c2900945afb6da04d2e6832d99905a21e37428ac8a6796f9c11",
+      "mode": "0o644"
+    },
+    ".scratch/ani-pre930-containment/evidence/01-restore-ani-current-contract/final-reconciliation-20260908.md": {
+      "sha256": "f363d2aeaac34be35dd835dcd4bd559972c1ab3e0fe77b8b7f7ef2ac4c7e1fc4",
+      "mode": "0o644"
+    },
+    ".scratch/ani-pre930-containment/issues/01-restore-ani-current-contract.md": {
+      "sha256": "0ac001e336e560ea6f3f95436ee0cd40204942416ec604fe1fe811dccf95286a",
+      "mode": "0o644"
+    },
+    ".scratch/ani-pre930-containment/spec.md": {
+      "sha256": "b68bff6fd19ead23dc479cf45cb3c82931457444cbdaaa3fea16c0e5dad00824",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/00-environment-preflight/preflight-20260908.md": {
+      "sha256": "0e12fd691846ee418089229b33ed292222254df6abf845ea9bcd052825f0b3ca",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/00-registry.yaml": {
+      "sha256": "c45e0164db84b658a419da0e0603001c50505e298462540dda6e42ed430cc434",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/10-storage.yaml": {
+      "sha256": "34172156ad2b2e122337939839874972c258a0bfe058142c2d43c0d8409e6e8d",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/20-network.yaml": {
+      "sha256": "70a304c0ce8ae0e4d4f45ac4bcbe65dfa8838da2aad3a1a1bb096564245808b4",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/artifacts.json": {
+      "sha256": "fd9b16328f73ac2a3eff571ff148db09bad2ffd6290fb8d42137eb60adf38ec7",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/build-logs/current-auth.log": {
+      "sha256": "c208f657059f8480d6ce4bca64ab35bb5122f6ba2775067b86467f84ab4779be",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/build-logs/target-iam.log": {
+      "sha256": "ba108170c18ac88d40e23ab8bb15a60451aed9d61f432c42521d4459404d7b07",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/commands.log": {
+      "sha256": "49c82a2809b1c8775608a2b59fc04de15ec5be016dcfe2190fd90b2bc8713247",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/current-auth-fixed-build-20260908t114831z/record.json": {
+      "sha256": "03226fd5bb46cdf3e907ee278c045a778cb215aba21c642e4b227abc904216a9",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/current-auth-fixed-build-20260908t114831z/sha256sums.txt": {
+      "sha256": "8c02ac2bdf5ba3f4c44726fc3b008157b073bc372f88f027af4da1d43041e839",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/current-auth-fixed-build-20260908t114831z/summary.md": {
+      "sha256": "72eaddabf9ab1e61a8402a3639de53c13a07b43d56fe61ac5b467dffbba60050",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/difference-ledger.json": {
+      "sha256": "6c6ec6cdcfe66f735ac89ca47de0b9f0879e8089226de94268286a26fa77a849",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/environment.json": {
+      "sha256": "de77690343aab758f62a126658d85a880f78ddc0bc399d7a4205548a37823019",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/inputs.json": {
+      "sha256": "1c3c719cbb570cd6681755d41f97e3734ecafaf9781adbd156bae447ac190239",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/inventory.txt": {
+      "sha256": "938cd3428101ea0f67d772bf81b8f9d79dfc22513311ab48c26701ac53efbb2f",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/network-policy-matrix.json": {
+      "sha256": "0d2427094fbb048d12eaa4f9107c7180c68c8ef955cfa258f0f311fd66d861e7",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/plan.json": {
+      "sha256": "0f05c6b25b1b1c0c526f0d6a583595d73268c53846e02ed58aef84667a84a898",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/recovery-state.json": {
+      "sha256": "6c75140f5cb96432fbb9a130cbffab93c72ab7f1c3dd241d5fb2fa8a03f134a0",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/registry-node-pull-matrix.json": {
+      "sha256": "df00229a3fe34f13e4dd9706832ec713f6dede8ebd4d1620518e20773bec2920",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/results.json": {
+      "sha256": "c8e330cf75ac89d7812aea946af160a0d314d7aa179a405f20b98b24ef75ba78",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/artifacts.json": {
+      "sha256": "cdc30bae44d9d2a65c4cb277d6ab197bdedb9564fddf548402db275d3d776e30",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/commands.log": {
+      "sha256": "a088a65963497f1c153ee6e7fd6bcb1abb608ec3c4ec70b0409ebe5e2deac84e",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/difference-ledger.json": {
+      "sha256": "7a599e5f126f2b47d54801cc8a8c22e0aa152f8acad44e6b84705eba6c6e05b1",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/dp2-handoff.json": {
+      "sha256": "b24f1c87b3b59a21500a8ff7f11b0527bd570c0b9bcff3da4888f3b56a6b4798",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/environment.json": {
+      "sha256": "fa2032f6bb03623946d5a4b6252d73fc1f6d74cc7115968d8baf558b4807460e",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/not-verified.md": {
+      "sha256": "e37fbf6e68ee54644bb6babca8fc8a8a4763e59777adf6877ec73c16ddc5fc73",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/results.json": {
+      "sha256": "0d615a89fdc41946040f39357addf21907544b665977c5ae70f01100869e9fbd",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/scenario.json": {
+      "sha256": "7aa183f3988fd029ab953bf6e1744b7a6a2724be0d7f99a4fe0dabc61f4a18b9",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/sha256sums.txt": {
+      "sha256": "9b6c8e342f4a966eb83132d842b306a4a65b00e9f842a82f52cce76e91571a2f",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/runtime-20260909t013439z/summary.md": {
+      "sha256": "627aea6d585b1a7fb85a614045165d6b6e6c2733363a30e00a1916337da8f730",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/scenario.json": {
+      "sha256": "e252260e2722ab2aa6dbf0bf8e85c518a36d919b355cfaa79e7e4c08c6c6f061",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/secret-scan.txt": {
+      "sha256": "55aa057527d23372e537b971fa752f6c3d0e847180e825aa2c8c335c39268aa2",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/sha256sums.txt": {
+      "sha256": "f8d2a79b20af313fbee98654f1e2e1feddcc83df721a9152cfb40096d10ae0a3",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/smoke-results.json": {
+      "sha256": "51101610c039f7437f43c7c058fbe31b378873893cfa2cdd4bf53acdac0c28a4",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/source-gate.json": {
+      "sha256": "38fedba5e416ded89a809252a1efacacaa6333eb15cdd8dc61629f0e363270b3",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/evidence/01-establish-dual-lane/summary.md": {
+      "sha256": "daed44060b91c33ddad01164c73d05af671da1b5021b21b8992944bb643e18d4",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/issues/00-freeze-environment-plan.md": {
+      "sha256": "6d15ab2375147226689d7f96b8eb4a3d714750cebacbec429c7d6dd003faa318",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/issues/01-establish-dual-lane.md": {
+      "sha256": "0ed0cd4ade39792f3b3c88898610cdf14dff46f976d00fabd3055e22d99eb64a",
+      "mode": "0o644"
+    },
+    ".scratch/cutover-fitness-01/spec.md": {
+      "sha256": "842e518b33438fc79989f82e558a2027b6d9e9b42f62ffab42c2695fb23ea5e1",
+      "mode": "0o644"
+    },
+    "AGENTS.md": {
+      "sha256": "cf21afcaa618d7a8ae1db9704d1e69d9ae367832ccb182511a646fc80753ba69",
+      "mode": "0o644"
+    },
+    "CLAUDE.md": {
+      "sha256": "a5d88d334235f277e3a6eefa356dfa27d4ed5de6e0bc9258b85ab3b7000d274f",
+      "mode": "0o644"
+    },
+    "CONTEXT.md": {
+      "sha256": "02d20d2ad7accdaebf6a04e78babee92ab6f41ab9e09138c7bb907af675d798b",
+      "mode": "0o644"
+    },
+    "README.md": {
+      "sha256": "ce1b12b49aabdec7c2ee29abe60bb792777e0d8a048d329db8fda6265049b925",
+      "mode": "0o644"
+    },
+    "api/iam/v1/authentication_service.pb.go": {
+      "sha256": "9875418a17d6d538f5f288b29ecafb3f85e5d07f1ab602bdae7357946549cf0e",
+      "mode": "0o644"
+    },
+    "api/iam/v1/authentication_service.proto": {
+      "sha256": "0d56d271b5961ac7eb0255a34e3eb3ef01faeaa3fc1f784519b467b7d73bd1a3",
+      "mode": "0o644"
+    },
+    "api/iam/v1/authentication_service_grpc.pb.go": {
+      "sha256": "bfa7bf9541f769ec415b8ff0419136999591cfd5707425015ead2ac524b930c5",
+      "mode": "0o644"
+    },
+    "api/iam/v1/authorization_service.pb.go": {
+      "sha256": "fdd780f5f5a945ff74dc918b3a2a75361e3a05362f4dc412d9facfffe2f02a2e",
+      "mode": "0o644"
+    },
+    "api/iam/v1/authorization_service.proto": {
+      "sha256": "7799bef6830dcdd6de8cf19f40b6d4a79361a35c06664e078b8b0ac61cf22050",
+      "mode": "0o644"
+    },
+    "api/iam/v1/authorization_service_grpc.pb.go": {
+      "sha256": "90bff0d32e6350d980e53884cf7d459a62091d194ee7c91bdbccda2d2be4448a",
+      "mode": "0o644"
+    },
+    "api/iam/v1/buf.gen.yaml": {
+      "sha256": "36383d7c9e9e5dfed41358aec66641d4bab4ea6254dea2f9591090a7711b54db",
+      "mode": "0o644"
+    },
+    "api/iam/v1/buf.lock": {
+      "sha256": "dd67624b16fa20c7f3d9cb1ff150a3690425c3de5325f0f6b4bf045df7772db6",
+      "mode": "0o600"
+    },
+    "api/iam/v1/buf.yaml": {
+      "sha256": "c58611a82cf9e548dad4f6acc1c3ab8b974e65b635afb7091b64cd3fd3fae6db",
+      "mode": "0o644"
+    },
+    "api/iam/v1/contract.pb.go": {
+      "sha256": "2fc718a4a44165eb8928520348751b3c456f9c28b79c670ffb03753fa5704ae7",
+      "mode": "0o644"
+    },
+    "api/iam/v1/contract.proto": {
+      "sha256": "1ffc52614f8f98d2d99efb30315c2b82c808dd16257c504e8af5995ac06dda0b",
+      "mode": "0o644"
+    },
+    "api/iam/v1/iam_admin_service.pb.go": {
+      "sha256": "06cf0459771c20f5d0d5cea8c8910a55e5c4fec4f1f14780e9787310a120a196",
+      "mode": "0o644"
+    },
+    "api/iam/v1/iam_admin_service.proto": {
+      "sha256": "332dc8ad82bdc9e7c07618808028316a0c9ab735d0b71177095cb7d2f3a7d316",
+      "mode": "0o644"
+    },
+    "api/iam/v1/iam_admin_service_grpc.pb.go": {
+      "sha256": "410982325722df2060c105a74a9eee9b2006214f7a1f9ed553af8fdd0148d155",
+      "mode": "0o644"
+    },
+    "api/iam/v1/iam_descriptor.pb": {
+      "sha256": "66552fe0a53a1c4956f6ee7943498af1b5309602fec28eb47c1b51f4276f5d9a",
+      "mode": "0o644"
+    },
+    "atlas.hcl": {
+      "sha256": "87c40f8df78d21891a8c196c56177bfc5c097a7d6a115925c9d39df39c404d32",
+      "mode": "0o644"
+    },
+    "cmd/server/app.go": {
+      "sha256": "a31f8d8538f6a841f0b950f269099ece03242d539dfc06999b4440bb49c07f69",
+      "mode": "0o644"
+    },
+    "cmd/server/app_test.go": {
+      "sha256": "a39d045db261b50c1d01e9f165a4a4c7ec07f59d853a9f0eb2340fc9c3bd69cb",
+      "mode": "0o644"
+    },
+    "cmd/server/main.go": {
+      "sha256": "d5f7d084defc0c50147350f33bd53146d5d2150d3284f69ec724167fc5a2258d",
+      "mode": "0o644"
+    },
+    "cmd/server/main_test.go": {
+      "sha256": "7eada4374d086a54665dba02710a1a124737e48db29bcde346eb1e94c2a5b2ed",
+      "mode": "0o644"
+    },
+    "configs/config.yaml": {
+      "sha256": "da73f87acac8708aef9980db212562a31f96f18b0f3b6c838115c4d0a99b1aff",
+      "mode": "0o644"
+    },
+    "deploy/cutover-fitness/00-registry.yaml.tmpl": {
+      "sha256": "62c98c19e15a617a916330f306c823433859fe0aae17d31409b3f0651e74dd5d",
+      "mode": "0o644"
+    },
+    "deploy/cutover-fitness/10-storage.yaml.tmpl": {
+      "sha256": "d4fe7bcb79fad87a8f4d1ca29d2acb383a26835f8fcb5424e8ca5ae071342d3f",
+      "mode": "0o644"
+    },
+    "deploy/cutover-fitness/20-network.yaml.tmpl": {
+      "sha256": "3568f7031dbe7c5172e2593a2623c34ea4a1c3fc158e86b6d72eb41413987d94",
+      "mode": "0o644"
+    },
+    "deploy/cutover-fitness/30-runtime.yaml": {
+      "sha256": "9f2948691ded7683927b254c2bc3ff9368066bbd6d8a987b7414ca8bc8799703",
+      "mode": "0o644"
+    },
+    "deploy/cutover-fitness/ani-iam.Dockerfile": {
+      "sha256": "87c182608cbe6eeeb5451fce34f035b6b20e25bde040254560b73d381bce51dc",
+      "mode": "0o644"
+    },
+    "deploy/cutover-fitness/current-auth.Dockerfile": {
+      "sha256": "a3ad5ba868509b3432f6aa3e6fa8a1f851380bc6fc846f198be1421a95d8b0cc",
+      "mode": "0o644"
+    },
+    "deploy/cutover-fitness/gateway.Dockerfile": {
+      "sha256": "b91d21a63773f81879f02fcb9b17f461ad7573f31f90248ac9d9d8ae1a36f12c",
+      "mode": "0o644"
+    },
+    "deploy/cutover-fitness/probe.Dockerfile": {
+      "sha256": "afd54695a309eea3a213a35c83f2b6337fb09de3a663cf23084617601e753728",
+      "mode": "0o644"
+    },
+    "docs/adr/0001-allow-breaking-core-v1-for-prelaunch-iam-rebuild.md": {
+      "sha256": "c65144a27f0a02a8a505e1d9af1c1228c250a5d3cc658d487dae465e346939df",
+      "mode": "0o644"
+    },
+    "docs/adr/0002-separate-tenant-lifecycle-from-iam-access.md": {
+      "sha256": "666f51948f5b7ea83595fc0646164177f9086acc4f58598ac63811f797ba392c",
+      "mode": "0o644"
+    },
+    "docs/adr/0003-separate-core-control-and-iam-databases.md": {
+      "sha256": "850d23fbb37d8ddcdc8abe530402b946e21c65982341e66a7b0f215edc62a8a8",
+      "mode": "0o644"
+    },
+    "docs/adr/0004-coordinate-tenant-lifecycle-and-iam-asynchronously.md": {
+      "sha256": "d492e2d3b49fa40b768b6c2e8a9b45ec6f645fabeefe36d51d4519a21e70bf0f",
+      "mode": "0o644"
+    },
+    "docs/adr/0005-share-infrastructure-without-sharing-iam-project-code.md": {
+      "sha256": "55484b0431e7e7966fc52a29456fd83e83b2fbb880fd4b5c80b433a055433c1f",
+      "mode": "0o644"
+    },
+    "docs/adr/0006-treat-september-v1-as-test-environment-delivery.md": {
+      "sha256": "05642341f19dcdea30d74831e85bdab280837ca784da70f99a259eb4213e9276",
+      "mode": "0o644"
+    },
+    "docs/adr/0007-remove-postgresql-rls-from-target-iam.md": {
+      "sha256": "1fa0206773c360bcf511bd97e265cd973c32dc1c6f0a72e2e878b09519f6a454",
+      "mode": "0o644"
+    },
+    "docs/adr/0008-model-tenant-authorization-with-explicit-relations.md": {
+      "sha256": "776053db326c4a666a224cdd8d78a57cb350a77135bb7eca8362777cc59658d1",
+      "mode": "0o644"
+    },
+    "docs/adr/0009-generate-permissions-and-constrain-role-management.md": {
+      "sha256": "75b7b35738e147d23ecb080359990025f43220d775bc291fb32cb561aadf4907",
+      "mode": "0o644"
+    },
+    "docs/adr/0010-separate-invitations-from-memberships.md": {
+      "sha256": "0e47cd400ce9d0b991baaadf5cf892620bac5ae03b4c3f17b9d89e74fb4ce609",
+      "mode": "0o644"
+    },
+    "docs/adr/0011-use-global-human-principals-and-boundary-scoped-tokens.md": {
+      "sha256": "d756271a8c33f85ef2de496accacff856ae1b75ebcf2f385620951bab9fa94c2",
+      "mode": "0o644"
+    },
+    "docs/adr/0012-use-short-boundary-tokens-and-rotating-refresh-families.md": {
+      "sha256": "ce6a09a871e61697f4144db0f7e1e98883c05b030a6d728af6dab5201982a363",
+      "mode": "0o644"
+    },
+    "docs/adr/0013-use-durable-session-grants-instead-of-a-jwt-blocklist.md": {
+      "sha256": "8aa86bdee58a35c80685d2974eb23786608a663da9aac5e68a8c72d007713548",
+      "mode": "0o644"
+    },
+    "docs/adr/0014-keep-iam-audit-transactional-and-append-only.md": {
+      "sha256": "ed5b40080b3c99c553780f542c6e89aed4212c409f85e17eadb7d00f64a93f20",
+      "mode": "0o644"
+    },
+    "docs/adr/0015-keep-browser-refresh-tokens-in-http-only-cookies.md": {
+      "sha256": "9d63317202aee0d8e922064329b582fde6f55a6f030ddd860e16715db0982f8b",
+      "mode": "0o644"
+    },
+    "docs/adr/0016-use-one-generated-authorization-gate-at-the-gateway.md": {
+      "sha256": "89cd5ea4045c82bc2813d2eca74468a08901ebe2141b0e10983fe8507bde4638",
+      "mode": "0o644"
+    },
+    "docs/adr/0017-use-explicit-iam-lifecycle-states-instead-of-generic-soft-delete.md": {
+      "sha256": "4cf6494e46463bfad4aca4811ac582e0053ed3397eae0a72f24ccc5e677e108b",
+      "mode": "0o644"
+    },
+    "docs/adr/0018-separate-principal-types-and-persist-integration-state-explicitly.md": {
+      "sha256": "1b47aba6f627070342292969ea556503cc01888c4faf6d77852cfc496e75ee09",
+      "mode": "0o644"
+    },
+    "docs/adr/0019-use-kratos-conventions-with-framework-independent-business-rules.md": {
+      "sha256": "d634d25d21d9e37f5137f6ded57b13c3bb46223815cedef47d45bab264b79c29",
+      "mode": "0o644"
+    },
+    "docs/adr/0020-pin-maintained-libraries-for-framework-and-infrastructure.md": {
+      "sha256": "7056e90b207f828da63c4cc13f131c534d598f1fac6d81f1ed11bea3a710d525",
+      "mode": "0o644"
+    },
+    "docs/adr/0021-separate-functional-validation-from-production-readiness.md": {
+      "sha256": "6d5c88ea79cfd6637b51308d1da950df091c7f55b17f572aee80a2a3ef999182",
+      "mode": "0o644"
+    },
+    "docs/adr/0022-unify-software-actors-as-workload-principals.md": {
+      "sha256": "09313e4c1ee31868be2247cdbf4a10e436df73915db0d8f605fe06c3225b1237",
+      "mode": "0o644"
+    },
+    "docs/agents/domain.md": {
+      "sha256": "10e5ea03e94404942091eef93c4ea6589d71daf936baf9896850a57b1a7749b3",
+      "mode": "0o644"
+    },
+    "docs/agents/issue-tracker.md": {
+      "sha256": "03908586af33afba41a962759913697e970d279e1d2942cd306d09ffd0d4f70e",
+      "mode": "0o644"
+    },
+    "docs/agents/scaffolding-and-codegen.md": {
+      "sha256": "880b39462bc380fbcc4bfd61a1a9519d7937f909617593402fc432c774b50d79",
+      "mode": "0o644"
+    },
+    "docs/agents/triage-labels.md": {
+      "sha256": "f87729cc3add720b17db1c22bae69bf41d30700910c90d31aa3bd8a2d2cda7fe",
+      "mode": "0o644"
+    },
+    "docs/plans/plan-iam-decision-traceability.md": {
+      "sha256": "f1d3e97f1835b9c8e7577fff0b3df9d4706ae953f1c7e2d7dcfb2048c221e649",
+      "mode": "0o644"
+    },
+    "docs/plans/plan-iam-kratos-phased.md": {
+      "sha256": "98e9cb5a6285d9ba6c46f8bc37cdd3153b4ddccbdbdc896d2402bc0a17c2d7c2",
+      "mode": "0o644"
+    },
+    "docs/plans/plan-iam-service-refactor.md": {
+      "sha256": "d9a16cdbde08f745251dbdd6997c224e97a56beea81f4edd51a3e85850ed70a8",
+      "mode": "0o644"
+    },
+    "docs/plans/plan-workload-principal-refoundation.md": {
+      "sha256": "797f04520ad0feb867d606a0dff6ded5d35f9a5f445a222af55f44f5acb099a1",
+      "mode": "0o644"
+    },
+    "go.mod": {
+      "sha256": "d876bf396236a1b60112bcc82df6dd664453b49ee399a8f73d4b8bdf73822e5c",
+      "mode": "0o644"
+    },
+    "go.sum": {
+      "sha256": "76b4b8ce60e1b64e96573f3e0b52fac1dbf47c0efef71fb5be6e214f378c7a23",
+      "mode": "0o644"
+    },
+    "internal/biz/README.md": {
+      "sha256": "b112fe146738abbc9277593578fbaaddbdcc8e9119d8dd59f3c1320114f53a8d",
+      "mode": "0o644"
+    },
+    "internal/biz/authentication.go": {
+      "sha256": "e111a999e812dd1095f4e805533f2d7e20a5edaa6d9bde0989c190e096dcd14c",
+      "mode": "0o644"
+    },
+    "internal/biz/authentication_test.go": {
+      "sha256": "7af041bfd2cafebf6593ec77afe70d0d1719494cf611e8cc6992a87e988aab22",
+      "mode": "0o644"
+    },
+    "internal/biz/authorization.go": {
+      "sha256": "f93e8646418359db984d1d891f578e2379369428723175d59bd96f839da358c9",
+      "mode": "0o644"
+    },
+    "internal/biz/authorization_test.go": {
+      "sha256": "ab72f813635e529db9af40a6eae9189c7f8d9777d8daab6d3e8908771ef8918a",
+      "mode": "0o644"
+    },
+    "internal/biz/biz.go": {
+      "sha256": "d9698848f006e7e25fd3e758699cbec772f724df5b24420d48ff81f58ef510c2",
+      "mode": "0o644"
+    },
+    "internal/biz/membership.go": {
+      "sha256": "cb69387664080a503393a2ebf438b9900a4bc5bbf0886e51ebdf2d8f28bf0b0e",
+      "mode": "0o644"
+    },
+    "internal/biz/membership_test.go": {
+      "sha256": "3628f612815eb61a0a88c167f74fc0c7a56734faf0ddf4fc3fc89a81592a2b32",
+      "mode": "0o644"
+    },
+    "internal/biz/oidc.go": {
+      "sha256": "feaf5417fc24c4a13a75379d519e8c2de798863edde5ba30934949e7c7e9c29b",
+      "mode": "0o644"
+    },
+    "internal/biz/oidc_test.go": {
+      "sha256": "4533a8a9411b981138150524c09674f9350dd4cf4883baa94b5fc3b1c663faf4",
+      "mode": "0o644"
+    },
+    "internal/biz/password_action.go": {
+      "sha256": "f129eca3235d6cdd0a4c21106679e387393369c1655aee2769d3b530b504809d",
+      "mode": "0o644"
+    },
+    "internal/biz/password_action_notification.go": {
+      "sha256": "35a8d3cacfff659fcc7c83fba0b09bce72dea7ca16af3d8d5d3fc22dacfa0263",
+      "mode": "0o644"
+    },
+    "internal/biz/password_action_notification_test.go": {
+      "sha256": "7e85db91dc61634058d266e134c8f8e4e0d0f44a5e587159ebf25746bb87b109",
+      "mode": "0o644"
+    },
+    "internal/biz/password_action_test.go": {
+      "sha256": "bdca36f413760c4946382cf032e9180626ce9c472a901f13dbb37e45517dfbc9",
+      "mode": "0o644"
+    },
+    "internal/biz/principal_validation.go": {
+      "sha256": "898e4d20f4d9d6c9c5193c03fc4899fe917588bbbe8fa9f7cfa9d51dd02b7bf7",
+      "mode": "0o644"
+    },
+    "internal/biz/principal_validation_test.go": {
+      "sha256": "f95d29c8cd3b73dbc99fcdbc6a1b4ee1aa5261566783a023e44a90870ce1b9c7",
+      "mode": "0o644"
+    },
+    "internal/biz/service_principal.go": {
+      "sha256": "6c16c44c0e4a8dd1e6d4bd35ea18232a6dfd8405694ed91c9675e1ae2fe27138",
+      "mode": "0o644"
+    },
+    "internal/biz/service_principal_test.go": {
+      "sha256": "9986796cb74e93fc6bec62b4ed18db9be282c580e317d588c9d34db0984bac31",
+      "mode": "0o644"
+    },
+    "internal/biz/session.go": {
+      "sha256": "4f206f3d963c4626aeb813ebdfeefdc325f7b3021857ee97863761630122e0e5",
+      "mode": "0o644"
+    },
+    "internal/biz/session_test.go": {
+      "sha256": "fe4298510784a6ea4d07d9a23448a57063ba32dcb6a946591da5acdff1f9257b",
+      "mode": "0o644"
+    },
+    "internal/biz/tenant_authorization.go": {
+      "sha256": "de269fb64831cd419ea9bffe9bde63c1a4476b2d5417c3543cdbb3f314be9b3d",
+      "mode": "0o644"
+    },
+    "internal/biz/tenant_authorization_test.go": {
+      "sha256": "06a76424bb419bc1fc1aedf6e2124b6badf6f03d16a17cf1e117162eb2ab4202",
+      "mode": "0o644"
+    },
+    "internal/biz/tenant_scope.go": {
+      "sha256": "0eaf1bb72c8a24b83cf45b8525da7eca1316a7fe99ac66aa388daaf6c98d871e",
+      "mode": "0o644"
+    },
+    "internal/biz/tenant_scope_test.go": {
+      "sha256": "c40d3ff4b7b0f10f59139fc1f081b6c5af5a5d6708e654794337491accc22061",
+      "mode": "0o644"
+    },
+    "internal/conf/conf.pb.go": {
+      "sha256": "32c3ec90ad8de80701c695336e0df0601027144456190bb5a46acc4abc4dec2d",
+      "mode": "0o644"
+    },
+    "internal/conf/conf.proto": {
+      "sha256": "a4812ba9729ad60194488725dfe6ecba9858311381e4824205dbd289d3a9ca0a",
+      "mode": "0o644"
+    },
+    "internal/conf/validate.go": {
+      "sha256": "6e89850925f5aed83c874201826750cab383b181a691b6aa01f06532a4a27ffa",
+      "mode": "0o644"
+    },
+    "internal/conf/validate_test.go": {
+      "sha256": "91940bf840fd33c8f2f0312ff67a0d52bdd75df5730d5d7c0fa9f1b1c41b35b5",
+      "mode": "0o644"
+    },
+    "internal/data/README.md": {
+      "sha256": "72f4a46fb9627152e5abcaf87f7e41fb1b142183e4d7aa7d6ee53f1f89d12452",
+      "mode": "0o644"
+    },
+    "internal/data/access_token_jwx.go": {
+      "sha256": "0e6af2af97bee54c277aaca724f3835b173a484e99dcc080a8eb49fa0d5d90db",
+      "mode": "0o644"
+    },
+    "internal/data/access_token_jwx_test.go": {
+      "sha256": "0d098105896edb266fa710f3b54ffd0c8d9f5aefa462a04bfd9380d0518c0c94",
+      "mode": "0o644"
+    },
+    "internal/data/access_token_key_file.go": {
+      "sha256": "37cb4433659416456dc6a02ffa29b51917e4a651996d77f1bd9601fd0f7894d0",
+      "mode": "0o644"
+    },
+    "internal/data/access_token_key_file_test.go": {
+      "sha256": "24f0f8ee2942bafd187382217fd7b744eb149820c6883619e6ff0bc52c567581",
+      "mode": "0o644"
+    },
+    "internal/data/api_key_creation_limiter_redis.go": {
+      "sha256": "807f74b5b361a6f4cde4c89db5b672043f4198100005d0662fd5b981e4a9d67a",
+      "mode": "0o644"
+    },
+    "internal/data/api_key_redis_test.go": {
+      "sha256": "f068f55bb0c2df4c9a654faa9acef114e7c22ad9db8efdcb162c56a8ea2db373",
+      "mode": "0o644"
+    },
+    "internal/data/api_key_usage_redis.go": {
+      "sha256": "3ba46c95b7a6ab0b409a8cf09529f6538e69d9a8a07fa2918bf6c285d5c23f0a",
+      "mode": "0o644"
+    },
+    "internal/data/cmd/genoperationregistry/main.go": {
+      "sha256": "9c116c937d764132d35152bc511d45cc9d6e73d76ed2cc992e33f675d1bdb02f",
+      "mode": "0o644"
+    },
+    "internal/data/cmd/genoperationregistry/main_test.go": {
+      "sha256": "897435b7df405e635b0795d75400aa35d8c9f2299d3084c69e822a9b1805de5d",
+      "mode": "0o644"
+    },
+    "internal/data/data.go": {
+      "sha256": "e190680a7198f787809f7d7f305152258e05f41b929b8bf0ca5178c8fa193121",
+      "mode": "0o644"
+    },
+    "internal/data/generated_operation_policies.go": {
+      "sha256": "b85d0decea33f6828f16325d40edd845fe329e023eda42109f7379621b97aaba",
+      "mode": "0o644"
+    },
+    "internal/data/id_generator.go": {
+      "sha256": "ad992105fc5a290b6d6ab3a71ba45c2aa152dd4042dc690111ffcbe3e3a14bcf",
+      "mode": "0o644"
+    },
+    "internal/data/id_generator_test.go": {
+      "sha256": "dd95cb68233763729789b342c2f6c772d4fbbe7c087e0283e040b706b8cdb375",
+      "mode": "0o644"
+    },
+    "internal/data/login_throttle_redis.go": {
+      "sha256": "6ad54e343c4afcd16fa37d943342304e9bf9c2ff1d37cd291a53e2f03d03fa66",
+      "mode": "0o644"
+    },
+    "internal/data/notification_grpc_client.go": {
+      "sha256": "c9f3ba6bc1afd5c8df60431d43378db603135703e9d0506da399ab4c11d47702",
+      "mode": "0o644"
+    },
+    "internal/data/notification_grpc_client_test.go": {
+      "sha256": "44e5b43ab9bd6900324bd92889ed746f0e0e37e937a3a9a772541096d4d8b370",
+      "mode": "0o644"
+    },
+    "internal/data/oidc_postgres.go": {
+      "sha256": "fb32378cae4b7f6268fe0ddb518050f0cf96d6e18542bf0dbed3bcedc72c6299",
+      "mode": "0o644"
+    },
+    "internal/data/oidc_provider.go": {
+      "sha256": "cd44357d499fe458c1e4ad6c5734cad28881f4d4c19bfc9eae097defe9d6ed18",
+      "mode": "0o644"
+    },
+    "internal/data/oidc_provider_test.go": {
+      "sha256": "de8183faf4922a4c3f9505358a64234ed69896ff8d2523cf72873f638ce9219f",
+      "mode": "0o644"
+    },
+    "internal/data/oidc_redis.go": {
+      "sha256": "e6812226bec0ced98661b41016582e0663070ce442e2c94d6dbfc2b09be05820",
+      "mode": "0o644"
+    },
+    "internal/data/operation_registry.go": {
+      "sha256": "89bb83a45edbac5c88f68b1f21ad5810f523ff36ba15e3657fa805d62900e695",
+      "mode": "0o644"
+    },
+    "internal/data/operation_registry_test.go": {
+      "sha256": "65acb7e98195452fd91dad947b06ab06941f5f136d5dbc9240de767ae5f1557f",
+      "mode": "0o644"
+    },
+    "internal/data/password_action_notification_grpc.go": {
+      "sha256": "b500002b62d2d3afc64c152199fe4cb87b6eb66dcef76f45f397fc8baba00b91",
+      "mode": "0o644"
+    },
+    "internal/data/password_action_notification_grpc_test.go": {
+      "sha256": "08fbb29875ccd5cbc8e4436d2afca965759ba0823fcc8a03f5e1670d7d858b3f",
+      "mode": "0o644"
+    },
+    "internal/data/password_action_notification_outbox.go": {
+      "sha256": "18525c4a35cc6c907ae9052a3c664f1a330646dee5c8fb227d3c2857a1679e68",
+      "mode": "0o644"
+    },
+    "internal/data/password_argon2id.go": {
+      "sha256": "29f40804c25bd365ab48b5740215f934589908f1787285af21fb37fa1e688e61",
+      "mode": "0o644"
+    },
+    "internal/data/password_argon2id_test.go": {
+      "sha256": "e4828a6d4962866c188abccda3dacfe67283f07df267312575a5f22bdcf7a89d",
+      "mode": "0o644"
+    },
+    "internal/data/postgres.go": {
+      "sha256": "0d732a1ab2d17a014489cc1ed571e9a2e48c98e3357ecd9c92a16af1f3e4a653",
+      "mode": "0o644"
+    },
+    "internal/data/queries/persistence.sql": {
+      "sha256": "3a0b0f7f1c377094e855debb9add0bf1f42fb46d24767f3766af825ab5b33152",
+      "mode": "0o644"
+    },
+    "internal/data/secret_generator.go": {
+      "sha256": "685150592b8a58a94c05e185f940989f58f414c77d297748e952c08898651f17",
+      "mode": "0o644"
+    },
+    "internal/data/secret_generator_test.go": {
+      "sha256": "26435c0e59bc4ebf65b7daa351072b2625ce3361cf4c53421c64f47773f5dd9d",
+      "mode": "0o644"
+    },
+    "internal/data/service_principal.go": {
+      "sha256": "303f6114938b59b4556c5c9a6970f9d3bdf82e5b26fea949da74327e5eef2a30",
+      "mode": "0o644"
+    },
+    "internal/data/session_postgres.go": {
+      "sha256": "c56000a98e24f49695c8e3d5f1370d292625be97f53b0883a9a5b2950382c537",
+      "mode": "0o644"
+    },
+    "internal/data/sqlcgen/db.go": {
+      "sha256": "c40f70c9870c43ddc88f743ec63627bc9af2d57fab48fdb0c055981d090b0cf8",
+      "mode": "0o644"
+    },
+    "internal/data/sqlcgen/models.go": {
+      "sha256": "3b3505c9f432d56b07d3921221c32131b5c669de716fd3b083d5b05684d3b414",
+      "mode": "0o644"
+    },
+    "internal/data/sqlcgen/persistence.sql.go": {
+      "sha256": "d6cb5222799d482b31bd774f4828099575e111a341cc3c15f52a97f736ec796c",
+      "mode": "0o644"
+    },
+    "internal/data/sqlcgen/querier.go": {
+      "sha256": "343e84aff79e2d6c37a60f5400b41c3dcffee0e80c933b0111ce7d36f196af92",
+      "mode": "0o644"
+    },
+    "internal/data/system_clock.go": {
+      "sha256": "59a8549bc926f1c1a9df194a9bf23ef6e89d4c865ae1cd63df484c9c2ce40c40",
+      "mode": "0o644"
+    },
+    "internal/data/system_clock_test.go": {
+      "sha256": "fbc5aead43f1365080d234db2ed92b31fec8087da79fe55205cb165c0dbd4c44",
+      "mode": "0o644"
+    },
+    "internal/data/target_slice.go": {
+      "sha256": "c0e5e3a1523c439c6f0b44aad03aeb3895a5697a6aa902e4d6c30d1904126982",
+      "mode": "0o644"
+    },
+    "internal/data/tenant_authorization.go": {
+      "sha256": "1813a2bc3d3df35b1ee0ab87cd07fb719ac2967d036fc925f82a6fe19d54c304",
+      "mode": "0o644"
+    },
+    "internal/server/admin.go": {
+      "sha256": "574a09d99025d89b720057ec1b8c45653542d7bd8b325f830d3ef78bd3b66501",
+      "mode": "0o644"
+    },
+    "internal/server/admin_test.go": {
+      "sha256": "d6e750057525631965045bde95009b96fd750528557df5fa99125118022b4959",
+      "mode": "0o644"
+    },
+    "internal/server/grpc.go": {
+      "sha256": "dcf68151eefa867de82c6c3bd73739eaefbc05b0ff680c0e46b4a4fd55adf360",
+      "mode": "0o644"
+    },
+    "internal/server/grpc_test.go": {
+      "sha256": "626caf1ba72f497b9573b47b11aa9992126ca6913eeb6e40c59bc44ce0c3ac8e",
+      "mode": "0o644"
+    },
+    "internal/server/observability.go": {
+      "sha256": "818033316100799d4eca9f7039670d3ebb9264d8190c8656e7f032b9a44eaffa",
+      "mode": "0o644"
+    },
+    "internal/server/observability_test.go": {
+      "sha256": "1f48c693a9736dad66398b4dbfae68387a960beb83ae019158689af80aad87cc",
+      "mode": "0o644"
+    },
+    "internal/server/readiness.go": {
+      "sha256": "2dee0511011c2f804a9a3c158a08e0f2e8f162e233e2de57aab6253b59ebf441",
+      "mode": "0o644"
+    },
+    "internal/server/server.go": {
+      "sha256": "143d7c7ee7d6a4928663b9358e204d68b728123253735fd304689ec77e0dbca2",
+      "mode": "0o644"
+    },
+    "internal/server/tls.go": {
+      "sha256": "976285f4f32a2ae5aa6f88437320335bad31e4c55188c9466f48003adebcca0d",
+      "mode": "0o644"
+    },
+    "internal/server/tls_test.go": {
+      "sha256": "0f61ed4fe0290b3ced96981b2e0046647dea79e52dd0de5ee18bb9cb5dea9ab0",
+      "mode": "0o644"
+    },
+    "internal/server/workload_identity.go": {
+      "sha256": "007ce9cc5dd595c38b5ec151d0f9a3d60e97daab9e4e5474021bcc880b1666b5",
+      "mode": "0o644"
+    },
+    "internal/server/workload_identity_test.go": {
+      "sha256": "cf0aa1745d6a46709b209c445ce27a24dbe2366403bc8d4590d1eb8b01240be3",
+      "mode": "0o644"
+    },
+    "internal/service/README.md": {
+      "sha256": "c1a9aa4ff15984caa1119553751943d230e26951d7273dc7cbb1a3d3b077f303",
+      "mode": "0o644"
+    },
+    "internal/service/authentication.go": {
+      "sha256": "e467ef25870911ff172415b7036dd34e318c4379715551a324418b9c3fd4cfdb",
+      "mode": "0o644"
+    },
+    "internal/service/authentication_test.go": {
+      "sha256": "d606c1240cfee248ba3f0d87c44835dd84f62e9add8b184fa4c316f734d563f2",
+      "mode": "0o644"
+    },
+    "internal/service/authorization.go": {
+      "sha256": "b6b50059d2465167720ed2021a67bb7cc04024cf3e0c842868d8ccf6707a8200",
+      "mode": "0o644"
+    },
+    "internal/service/authorization_test.go": {
+      "sha256": "1d9822615496a137871cf8709186d95b0242bb85c071718b4af5740dbbac31c5",
+      "mode": "0o644"
+    },
+    "internal/service/iam_admin.go": {
+      "sha256": "55beb6a47428b1e7ceda4d0e2bafcb79966c45f3b1be3ea55aefdd08e84890d1",
+      "mode": "0o644"
+    },
+    "internal/service/iam_admin_test.go": {
+      "sha256": "8e980d539a74cfbd8f9ab54906adbe321d2d14b75fc98585323a21fd49abfbdc",
+      "mode": "0o644"
+    },
+    "internal/service/service.go": {
+      "sha256": "0ea32648379830d5b3e6f7ce9241499565675f4dff6cecd9b369d9ca7c4830e6",
+      "mode": "0o644"
+    },
+    "migrations/202609040001_persistence_foundation.sql": {
+      "sha256": "0bb28594601bb666e045c5a957feb0dacf9de8c6840247a7bc15f9a298393483",
+      "mode": "0o644"
+    },
+    "migrations/202609040002_target_vertical_slice.sql": {
+      "sha256": "2ae71907884a815b992a6d84587dd20f9fdcb818e7a79bd105e81db582e82f98",
+      "mode": "0o644"
+    },
+    "migrations/202609060001_password_authentication.sql": {
+      "sha256": "8a4b5f50dac1313dbb906ed06ed3464117dbaee16b85f9c8540e1e896b03bad2",
+      "mode": "0o644"
+    },
+    "migrations/202609070001_oidc_identity.sql": {
+      "sha256": "3e6e16ec9031922acfe8138ac646827bce4d703c7babefb42c90c6a4e0fa084a",
+      "mode": "0o644"
+    },
+    "migrations/202609070002_session_continuity.sql": {
+      "sha256": "91776cbf15a21d6307242d5ed5fa3f68729340ab03d62f95a9142044f0ca80b6",
+      "mode": "0o644"
+    },
+    "migrations/202609080001_tenant_authorization.sql": {
+      "sha256": "c46c9bfd399d3f74731b522662a7a991da6a8510c749a6e17dbfb73ac1641633",
+      "mode": "0o644"
+    },
+    "migrations/202609080002_permission_catalog.sql": {
+      "sha256": "814e31cd79eef9fb750a7a439bb09ab74f37ec3230dff63cf0b457ce7ef59dd4",
+      "mode": "0o644"
+    },
+    "migrations/202609080003_service_principal_api_key.sql": {
+      "sha256": "7c84d12542cd04a8031c6a7749ddd57ce7f2654cfc01cbf37fd97d1f18b950b0",
+      "mode": "0o644"
+    },
+    "migrations/atlas.sum": {
+      "sha256": "b0acaa5ab88e6c04d4cdf2427182fde53f028e5819d2d08b00951573a50acae9",
+      "mode": "0o644"
+    },
+    "sqlc.yaml": {
+      "sha256": "486a757be88a0ce95c69915a0bdab6e8250a090904f810114c35989dae37509f",
+      "mode": "0o644"
+    },
+    "tests/contracts/artifacts/core_tenant_integration_v1_descriptor.pb": {
+      "sha256": "7dd40f9053b7c1c0c8905decab0f81b07173d0b25651113147bde9a5370d352a",
+      "mode": "0o644"
+    },
+    "tests/contracts/contract_pins.json": {
+      "sha256": "0e69d1c0993c5bf1bac8b1f5ae3eb9181762f4800db8ea16acbd52660a0dc112",
+      "mode": "0o644"
+    },
+    "tests/contracts/contracts_test.go": {
+      "sha256": "11e47a7302388babbab37fadfa23969cd0629ab690c1c51f0447e8c8a8e2f1a6",
+      "mode": "0o644"
+    },
+    "tests/contracts/fixtures/core_error_contract.v1.json": {
+      "sha256": "f90d9aed3e369ddd2b310771aee9da7a0fd39f99af55ac514f0a4581b6f94865",
+      "mode": "0o644"
+    },
+    "tests/contracts/fixtures/core_tenant_iam_bootstrap_requested.v1.json": {
+      "sha256": "545017fd5dc4f023bc12fbaca1829dda88924c2872f2cff220424a8c2ad221e8",
+      "mode": "0o644"
+    },
+    "tests/contracts/fixtures/core_tenant_lifecycle_changed.v1.json": {
+      "sha256": "637443dffaf6f60dc9165cae2f2f87b875b90baaa280fa1315e4a3fd5a7436f7",
+      "mode": "0o644"
+    },
+    "tests/contracts/fixtures/core_tenant_lifecycle_heartbeat.v1.json": {
+      "sha256": "05b9715e8262d3a547605bce9312bb6e26b4ccc859ed2e0c18158042395acc00",
+      "mode": "0o644"
+    },
+    "tests/contracts/fixtures/core_tenant_lifecycle_snapshot_page.v1.json": {
+      "sha256": "539a59fcc0691bbdefa13ec5c85081738436b118f6221edd9f026cc816903546",
+      "mode": "0o644"
+    },
+    "tests/contracts/fixtures/iam_check_permission.v1.json": {
+      "sha256": "92c1d517ff3c49532ca08e0f6b24eace2569a8fdb702af8d1d134bc7e846c4c2",
+      "mode": "0o644"
+    },
+    "tests/contracts/fixtures/iam_error_contract.v1.json": {
+      "sha256": "c7a488d5ce5d409d1de25845dd3dc3af7a32c1ce853f81c490d541b8a4448e3c",
+      "mode": "0o644"
+    },
+    "tests/contracts/fixtures/iam_password_login.v1.json": {
+      "sha256": "cb4df637172faae8551d42abd55b9167195d9a21693080a06e713ae9c6483cc4",
+      "mode": "0o644"
+    },
+    "tests/cp0/runtime_test.go": {
+      "sha256": "c54a92448434a6fd156b3110daae8d82479266cefc5541ee0f5514044de7753f",
+      "mode": "0o644"
+    },
+    "tests/integration/api_key_redis_control_test.go": {
+      "sha256": "66e936ad2698f3ef718cd5d70146a809460f6d25412d654b88ebad6e46e5c117",
+      "mode": "0o644"
+    },
+    "tests/integration/envoy_adapter_real_iam_test.go": {
+      "sha256": "b007a10b65a486dced1dd3a3f5ee5d0c729b0c3b1f30be609bfae75ca1dafdc5",
+      "mode": "0o644"
+    },
+    "tests/integration/notification_l3_process_test.go": {
+      "sha256": "622ad6213188a5f86465a68a6f4bde4fce7f367f5f98e7b2bab8ef09ddd47ce9",
+      "mode": "0o644"
+    },
+    "tests/integration/oidc_dex_test.go": {
+      "sha256": "bf27899f6541bd54103c529e1507e24f9855cc4b74e673de2d544fd24aa5db5e",
+      "mode": "0o644"
+    },
+    "tests/integration/oidc_persistence_test.go": {
+      "sha256": "845e73196542ca3fe7ca618dd7f9f10ece906ed63c525914a97b6aa36eedc92d",
+      "mode": "0o644"
+    },
+    "tests/integration/oidc_state_test.go": {
+      "sha256": "5d0070485cf68e3df3b8b844987299993f49ee08854b72e154bd9fffe115fde4",
+      "mode": "0o644"
+    },
+    "tests/integration/password_action_notification_outbox_test.go": {
+      "sha256": "8a0fda929db96ee266418a4d29c817473846688e96dbfcf0ed872fa00cb2f0ac",
+      "mode": "0o644"
+    },
+    "tests/integration/password_action_test.go": {
+      "sha256": "d98cbd92b5045965671ae39162db22e6e823113b2a4d87a63b7cc9aaf6e7199e",
+      "mode": "0o644"
+    },
+    "tests/integration/password_login_lock_test.go": {
+      "sha256": "ca9d2c9937e2771fc5ebb179481b6c95286eb6804dcd5da85555229ab0b3bee3",
+      "mode": "0o644"
+    },
+    "tests/integration/persistence_test.go": {
+      "sha256": "22f0101d5fcc6f4dc88bf08eb1e46bc015c8b55c9fd1574275bc9cfe564b9a28",
+      "mode": "0o644"
+    },
+    "tests/integration/redis_throttle_test.go": {
+      "sha256": "104740638a025bb29e26eb7e6ebdb6d80ef0a4a50c76673ac5d9f20007847f8d",
+      "mode": "0o644"
+    },
+    "tests/integration/runtime_gateway_e2e_test.go": {
+      "sha256": "94d78f5cbd6abedd2374f21d29094eb785cf1a2c2492b6ffc72a759bba874e67",
+      "mode": "0o644"
+    },
+    "tests/integration/service_principal_test.go": {
+      "sha256": "57a24e3dd41e8eabe1456dd7f39527d2165114956ac0b13ffac3aef38063bf0c",
+      "mode": "0o644"
+    },
+    "tests/integration/session_continuity_test.go": {
+      "sha256": "b9a00866ccf20bf2a7b1957bb88296272d788c435cb0c1a28d1403e1b8fb9456",
+      "mode": "0o644"
+    },
+    "tests/integration/session_test_support_test.go": {
+      "sha256": "68e52cf37484e67036d437bad66c7220ebcc2f2bf69c3976f88c6a057a8a65f6",
+      "mode": "0o644"
+    },
+    "tests/integration/tenant_authorization_test.go": {
+      "sha256": "879be206c5e8c3735bc58a9101bd2b8d74a50614e296683ca70940fd135e9fe9",
+      "mode": "0o644"
+    },
+    "tests/integration/vertical_slice_test.go": {
+      "sha256": "2aa364567e60df2d2dd2e352b5ba363784f1cf0c01a9a0290b02a98cacc2fda2",
+      "mode": "0o644"
+    },
+    "tests/password_action_workload_identity_test.go": {
+      "sha256": "e81825700f7b61537b59740919e1e9e8272df33783db0f84400926bbbec25e8f",
+      "mode": "0o644"
+    },
+    "tests/password_login_source_ip_contract_test.go": {
+      "sha256": "1bd56a1688343790433bd442593dcc07a46f8faa04d0014eca65f4608523a083",
+      "mode": "0o644"
+    },
+    "tools/cutover-fitness/__pycache__/cf01.cpython-314.pyc": {
+      "sha256": "d384dc6a4e117b8273bc8e491eedc7050fc51bf84eddc2db9160411bc22bd813",
+      "mode": "0o644"
+    },
+    "tools/cutover-fitness/__pycache__/probe.cpython-314.pyc": {
+      "sha256": "3f376ebab06c5a4915ca59558ad3ed7e1182f2d6d70d8e4bf1854e2465e54641",
+      "mode": "0o644"
+    },
+    "tools/cutover-fitness/__pycache__/test_cf01.cpython-314.pyc": {
+      "sha256": "2ef0b18e1bdb22d5dd3260f0942e13de8fac133df8397d51508f916486b1137a",
+      "mode": "0o644"
+    },
+    "tools/cutover-fitness/cf01.py": {
+      "sha256": "ae2e4b65630a4cfd303251eaed35fa72f5bcb87fb43034e76379705e01dd2a6e",
+      "mode": "0o755"
+    },
+    "tools/cutover-fitness/probe.py": {
+      "sha256": "46b385ae56fdf9d024f75146370af78a3b03abfe827efa1f65e6f121a855adc3",
+      "mode": "0o755"
+    },
+    "tools/cutover-fitness/source_gate.sh": {
+      "sha256": "786ae812fdb43ea83e1097c46e8384b9ae3d872abff990a9a1c9082d885848a8",
+      "mode": "0o755"
+    },
+    "tools/cutover-fitness/test_cf01.py": {
+      "sha256": "4634b59c2b6f1168f262f232fe58cb53f64d1060229e031649ca7c60f19d3fcb",
+      "mode": "0o644"
+    }
+  }
+}

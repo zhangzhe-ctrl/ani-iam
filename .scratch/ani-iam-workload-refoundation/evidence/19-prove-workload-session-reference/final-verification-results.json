@@ -1,0 +1,46 @@
+{
+  "IAM_regression": {
+    "run_id": "wr19-20260910T080911Z-a44e7efd",
+    "IAM_root_unit_vet": "pass",
+    "SDK_race_vet": "pass",
+    "example_build_vet": "pass",
+    "named_real_dependency_passes": 58,
+    "named_failures": 0,
+    "named_skips": 0,
+    "command_exit": 2,
+    "exit_explanation": "IAM regression passed; later Session generator gate selected global gRPC generator 1.6.2 rather than its own Makefile pin 1.6.0. The only content delta was the version comment. Corrected remotely in next run; no product change."
+  },
+  "repository_gates": {
+    "run_id": "wr19-20260910T081233Z-53d52093",
+    "command_exit": 0,
+    "Session": [
+      "buf lint",
+      "API OpenAPI contract",
+      "repeat generation unchanged with buf1.60.0/protoc-gen-go1.36.12/protoc-gen-go-grpc1.6.0",
+      "deployment manifest and ticket-key checks",
+      "root and API go test",
+      "all Session root race",
+      "root and API vet",
+      "formal binary build"
+    ],
+    "ANI": [
+      "make test including architecture/auth/generation/49 Go packages/Python syntax",
+      "make validate-doc-entrypoints",
+      "Services boundary with four fixed accepted baseline warnings",
+      "WR19 operation registry --check"
+    ],
+    "diff_check": "all three local worktrees passed; no remote Git commit/index fabricated"
+  },
+  "source_consistency": "final-source-consistency.json",
+  "cleanup": [
+    "runs/wr19-20260910T080911Z-a44e7efd/cleanup-and-log-scan.json",
+    "runs/wr19-20260910T081233Z-53d52093/cleanup-and-log-scan.json"
+  ],
+  "real_chain": "real-reference-results.json",
+  "final_documentation_gate": {
+    "run_id": "wr19-20260910T082134Z-2c35dca1",
+    "command_exit": 0,
+    "make_validate_doc_entrypoints": "pass",
+    "only_documentation_changed_after_full_gates": true
+  }
+}

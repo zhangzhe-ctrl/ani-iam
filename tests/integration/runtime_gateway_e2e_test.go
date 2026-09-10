@@ -179,7 +179,7 @@ func startIAMProcessForGatewayE2E(t *testing.T, environment *postgresEnvironment
 	grpcAddress := reserveIAMProcessLoopbackAddress(t)
 	adminAddress := reserveIAMProcessLoopbackAddress(t)
 	configFile := filepath.Join(directory, "runtime.yaml")
-	configDocument := fmt.Sprintf(`profile: direct-p2-isolated
+	configDocument := fmt.Sprintf(`profile: workload-isolated
 server:
   grpc:
     network: tcp

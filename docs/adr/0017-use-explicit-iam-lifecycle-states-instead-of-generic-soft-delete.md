@@ -4,6 +4,8 @@ status: accepted
 
 # Use explicit IAM lifecycle states instead of generic soft delete
 
+The Human/Workload refoundation reopens only the historical test-cleanup exception below. Its retention/cleanup contract is tracked under D04 in the current decisions register; until accepted, neither this ADR nor the candidate authorizes manual audit-row deletion. All other lifecycle, locking, ownership, and schema decisions remain accepted.
+
 IAM-owned entities use application-generated UUIDv7 identities. Core Tenant identities are contractually UUIDs stored in PostgreSQL `uuid` columns, but IAM only accepts Core-generated values and never creates a second Tenant identity.
 
 The IAM database separates an owner or migration role from the runtime application role. Only the migration job may execute DDL. The application receives allowlisted DML grants, is neither owner nor superuser, and has no `BYPASSRLS` privilege even though P2 defines no RLS policies. A read-only support role is not provisioned by default and requires a separate approval if later needed.
@@ -26,9 +28,9 @@ The independent IAM repository owns checksum-verified migrations executed by a p
 
 The initial P2 delivery has no automated retention cleanup job. Expired Invitations, action tokens, consumed Refresh Token evidence, old idempotency rows, and audit data therefore accumulate until a later maintenance feature is authorized. Audit remains queryable for at least 180 days but has no maximum deletion deadline; if the project remains active at that horizon, a later iteration must deliver explicit deletion or retention handling.
 
-The system monitors row counts, database size and growth, and the oldest record in accumulating tables and raises alerts without automatic deletion. Under test-environment disk pressure, a database administrator may manually delete only expired, revoked, or consumed temporary records that no longer participate in Refresh reuse detection, and audit events older than 180 days. Active, pending, unpublished, `attention_required`, or otherwise live security state is ineligible.
+The system monitors row counts, database size and growth rate, and the oldest record in accumulating tables and raises alerts without automatic deletion. Runtime audit access remains append-only. The proposed disposable whole-database cleanup mechanism is historical candidate input, not an accepted M1 requirement or deletion permission. Expired, revoked, or consumed non-audit temporary state requires a separately frozen owner-specific maintenance rule and cannot be inferred from this ADR.
 
-The user has explicitly chosen not to require a snapshot, change record, reason, or row-count report for this test-environment manual cleanup. It is consequently an unaudited emergency test operation, not a verified retention mechanism and not a precedent or gate for a future production environment.
+The earlier September design allowed an unaudited administrator to delete audit events older than 180 days without a snapshot, change record, reason, or row-count report. That choice is retained here only as historical rationale and no longer authorizes current work. M1 verifies the accepted minimum 180-day queryability and absence of automatic deletion. The prior candidate's exact three-boundary test recipe and cleanup exception remain recorded in the [before snapshot](../../.scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/adr/0017-use-explicit-iam-lifecycle-states-instead-of-generic-soft-delete.md); retention/cleanup semantics beyond the accepted rules remain D04 work and any future purge requires a separately accepted contract.
 
 The idempotency ledger guarantees replay for twenty-four hours. A request that reuses the same scoped key after that logical expiry receives `409 IDEMPOTENCY_KEY_EXPIRED` and must generate a new key; retained physical rows do not extend replay forever or become new requests.
 

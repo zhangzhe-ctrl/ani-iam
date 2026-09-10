@@ -80,19 +80,19 @@ func TestAPIKeyRuntimeControlsUseRealRedisAndAsynchronouslyFlushRestrictedPostgr
 	`, tenantID, seededAt, seededAt.Add(time.Hour)); err != nil {
 		t.Fatalf("seed tenant lifecycle projection: %v", err)
 	}
-	principalUsecase := biz.NewServicePrincipalUsecase(
-		data.NewPostgresServicePrincipalUnitOfWork(data.NewData(environment.runtimePool)),
+	principalUsecase := biz.NewTenantWorkloadUsecase(
+		data.NewPostgresTenantWorkloadUnitOfWork(data.NewData(environment.runtimePool)),
 		data.NewUUIDv7Generator(), data.NewSystemClock(), limiter,
 	)
 	actor := biz.TenantAuthorizationActor{
 		PrincipalID: actorID, AuthenticationMethod: biz.AuditAuthenticationMethodPassword,
 		RequestID: "api-key-usage", CorrelationID: "api-key-usage", DecisionID: "api-key-usage",
 	}
-	principal, err := principalUsecase.CreateServicePrincipal(ctx, mustTenantScope(t, tenantID), biz.CreateServicePrincipalCommand{
+	principal, err := principalUsecase.CreateTenantWorkload(ctx, mustTenantScope(t, tenantID), biz.CreateTenantWorkloadCommand{IdempotencyKey: uuid.NewString(),
 		Name: "Usage Aggregator Bot", RoleIDs: []uuid.UUID{roleID}, Actor: actor,
 	})
 	if err != nil {
-		t.Fatalf("CreateServicePrincipal() error = %v", err)
+		t.Fatalf("CreateTenantWorkload() error = %v", err)
 	}
 	apiKey, err := principalUsecase.CreateAPIKey(ctx, mustTenantScope(t, tenantID), biz.CreateAPIKeyCommand{
 		PrincipalID: principal.Principal.ID, NeverExpires: true, IdempotencyKey: "api-key-usage", Actor: actor,

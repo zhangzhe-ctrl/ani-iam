@@ -16,7 +16,7 @@ GRANT USAGE ON SCHEMA public TO ani_iam_runtime;
 
 CREATE TABLE principals (
     id uuid PRIMARY KEY,
-    principal_type text NOT NULL CHECK (principal_type IN ('human', 'service')),
+    principal_type text NOT NULL CHECK (principal_type IN ('human', 'workload')),
     status text NOT NULL CHECK (status IN ('active', 'disabled')),
     version bigint NOT NULL CHECK (version > 0),
     created_at timestamptz NOT NULL,
@@ -119,7 +119,7 @@ CREATE TABLE iam_audit_events (
     CONSTRAINT iam_audit_events_uuid_v7 CHECK (substring(event_id::text FROM 15 FOR 1) = '7'),
     CONSTRAINT iam_audit_events_nonzero_tenant CHECK (tenant_id <> '00000000-0000-0000-0000-000000000000'::uuid),
     CONSTRAINT iam_audit_events_authentication_method_allowed CHECK (
-        authentication_method IN ('password', 'oidc', 'api_key', 'service_token', 'internal')
+        authentication_method IN ('password', 'oidc', 'api_key', 'workload_token', 'internal')
     ),
     CONSTRAINT iam_audit_events_boundary_tenant CHECK (boundary = 'tenant'),
     CONSTRAINT iam_audit_events_request_required CHECK (request_id <> ''),

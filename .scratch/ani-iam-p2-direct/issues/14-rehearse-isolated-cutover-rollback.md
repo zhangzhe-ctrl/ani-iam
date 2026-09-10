@@ -4,7 +4,7 @@
 
 **Blocked by:** 13 / 完成五类切换关键调用面对等
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -34,3 +34,7 @@
 **Recovery:** 立即按固定旧镜像/config/selector 回退隔离轨道，保留失败证据；不扩到主测试环境。
 
 **Human checkpoint:** 实际切入前必须确认精确环境、namespace、目标/旧镜像、配置、窗口和恢复动作。完成后输出 Go/No-Go B 等待人工接受，不自动领取 15。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-09 取代，Go/No-Go B capability 和独立人工确认继续保留；演练基线必须先重建为 Human/Workload 与 secure S2S。

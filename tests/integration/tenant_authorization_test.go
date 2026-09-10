@@ -172,7 +172,7 @@ func TestTenantAuthorizationRestrictedPostgresAndLastAdminConcurrency(t *testing
 	if _, err := reader.GetRole(ctx, scopeOne, roleTwo); !errors.Is(err, biz.ErrRoleNotFound) {
 		t.Fatalf("cross-tenant GetRole() error = %v, want %v", err, biz.ErrRoleNotFound)
 	}
-	if _, err := usecase.BindRole(ctx, scopeOne, biz.BindTenantRoleCommand{
+	if _, err := usecase.BindRole(ctx, scopeOne, biz.BindTenantRoleCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: membershipOne, RoleID: roleTwo, ExpectedMembershipVersion: 1,
 		Actor: biz.TenantAuthorizationActor{
 			PrincipalID: adminOne, AuthenticationMethod: biz.AuditAuthenticationMethodPassword,
@@ -198,7 +198,7 @@ func TestTenantAuthorizationRestrictedPostgresAndLastAdminConcurrency(t *testing
 		go func() {
 			defer wait.Done()
 			<-start
-			_, mutationErr := usecase.UpdateMembership(ctx, scopeOne, biz.UpdateTenantMembershipCommand{
+			_, mutationErr := usecase.UpdateMembership(ctx, scopeOne, biz.UpdateTenantMembershipCommand{IdempotencyKey: uuid.NewString(),
 				MembershipID: membershipID, Status: biz.MembershipStatusSuspended, ExpectedVersion: 1,
 				Actor: biz.TenantAuthorizationActor{
 					PrincipalID: adminOne, AuthenticationMethod: biz.AuditAuthenticationMethodPassword,
@@ -249,7 +249,7 @@ func TestTenantAuthorizationAuditFailureRollsBackMembershipMutation(t *testing.T
 	catalog, _ := data.NewTargetPermissionCatalog(data.TargetPolicyRevision)
 	usecase := biz.NewTenantAuthorizationUsecase(data.NewPostgresTenantAuthorizationUnitOfWork(data.NewData(environment.runtimePool)), catalog, data.NewUUIDv7Generator(), data.NewSystemClock(), allowingAPIKeyCreationLimiter{})
 
-	_, err := usecase.UpdateMembership(ctx, mustTenantScope(t, tenantID), biz.UpdateTenantMembershipCommand{
+	_, err := usecase.UpdateMembership(ctx, mustTenantScope(t, tenantID), biz.UpdateTenantMembershipCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: membershipID, Status: biz.MembershipStatusActive, ExpectedVersion: 1,
 		Actor: biz.TenantAuthorizationActor{
 			PrincipalID:          uuid.MustParse("0199c85b-2000-7001-9000-0000000001ff"),
@@ -307,7 +307,7 @@ func TestTenantAuthorizationRoleBindingAuditsTargetTheBindingVersion(t *testing.
 		RequestID: "binding-audit", CorrelationID: "binding-audit", DecisionID: "binding-audit",
 	}
 	scope := mustTenantScope(t, tenantID)
-	bound, err := usecase.BindRole(ctx, scope, biz.BindTenantRoleCommand{
+	bound, err := usecase.BindRole(ctx, scope, biz.BindTenantRoleCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: targetMembershipID, RoleID: viewerRoleID, ExpectedMembershipVersion: 1, Actor: actor,
 	})
 	if err != nil {
@@ -325,7 +325,7 @@ func TestTenantAuthorizationRoleBindingAuditsTargetTheBindingVersion(t *testing.
 		t.Fatalf("bind audit target = %s/v%d, want binding v1", bindingID, bindingVersion)
 	}
 
-	unbound, err := usecase.UnbindRole(ctx, scope, biz.UnbindTenantRoleCommand{
+	unbound, err := usecase.UnbindRole(ctx, scope, biz.UnbindTenantRoleCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: targetMembershipID, RoleID: viewerRoleID, ExpectedMembershipVersion: 2, Actor: actor,
 	})
 	if err != nil {

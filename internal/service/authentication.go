@@ -88,6 +88,7 @@ func (s *AuthenticationService) BeginOIDCIdentityLink(ctx context.Context, reque
 type AuthenticationService struct {
 	iamv1.UnimplementedAuthenticationServiceServer
 	authentication authenticationUsecase
+	workload       workloadInvocationUsecase
 	oidc           oidcUsecase
 }
 
@@ -479,6 +480,11 @@ func mapIAMError(err error, details errorContext) error {
 			"idempotency_key": details.IdempotencyKey,
 		})
 	}
+	if errors.Is(err, biz.ErrIdempotencyExpired) {
+		return newIAMStatus(codes.FailedPrecondition, "IDEMPOTENCY_KEY_EXPIRED", "idempotency replay window expired", map[string]string{
+			"operation_id": details.OperationID, "idempotency_key": details.IdempotencyKey,
+		})
+	}
 	if field := invalidArgumentField(err); field != "" {
 		return invalidArgumentStatus(field, "IAM request is invalid")
 	}
@@ -497,7 +503,7 @@ func mapIAMError(err error, details errorContext) error {
 			"decision_id":  "not-issued",
 		})
 	}
-	if errors.Is(err, biz.ErrServicePrincipalDisabled) {
+	if errors.Is(err, biz.ErrTenantWorkloadDisabled) {
 		decisionID := details.DecisionID
 		if decisionID == "" {
 			decisionID = "not-issued"
@@ -523,9 +529,9 @@ func mapIAMError(err error, details errorContext) error {
 			"tenant_id": details.TenantID,
 		})
 	}
-	if errors.Is(err, biz.ErrServicePrincipalNotFound) {
+	if errors.Is(err, biz.ErrTenantWorkloadNotFound) {
 		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{
-			"resource_type": "service_principal",
+			"resource_type": "tenant_workload",
 			"resource_id":   details.ResourceID,
 		})
 	}
@@ -540,7 +546,7 @@ func mapIAMError(err error, details errorContext) error {
 			"operation_id": details.OperationID,
 		})
 	}
-	if errors.Is(err, biz.ErrVersionConflict) || errors.Is(err, biz.ErrRoleBindingConflict) || errors.Is(err, biz.ErrServicePrincipalConflict) || errors.Is(err, biz.ErrAPIKeyConflict) {
+	if errors.Is(err, biz.ErrVersionConflict) || errors.Is(err, biz.ErrRoleBindingConflict) || errors.Is(err, biz.ErrTenantWorkloadConflict) || errors.Is(err, biz.ErrAPIKeyConflict) {
 		return newIAMStatus(codes.Aborted, "VERSION_CONFLICT", "IAM resource version conflicts with current state", map[string]string{
 			"resource_id":      details.ResourceID,
 			"expected_version": "not_available",
@@ -627,9 +633,9 @@ func invalidArgumentField(err error) string {
 		return "policy_revision"
 	case errors.Is(err, biz.ErrAuthorizationTargetRequired):
 		return "target.resource_id"
-	case errors.Is(err, biz.ErrServicePrincipalNameRequired):
+	case errors.Is(err, biz.ErrTenantWorkloadNameRequired):
 		return "name"
-	case errors.Is(err, biz.ErrServicePrincipalRolesRequired):
+	case errors.Is(err, biz.ErrTenantWorkloadRolesRequired):
 		return "role_ids"
 	case errors.Is(err, biz.ErrAPIKeyExpiryInvalid):
 		return "expires_at"

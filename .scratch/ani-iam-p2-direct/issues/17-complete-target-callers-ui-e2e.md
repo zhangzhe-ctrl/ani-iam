@@ -4,7 +4,7 @@
 
 **Blocked by:** 15 / 完成 IAM 管理、Platform 与高风险恢复；16 / 完成 Audit 查询与全局 Mutation 幂等
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -32,3 +32,7 @@
 **Stop conditions:** 任一调用方/功能缺失；需要 legacy fallback；Artifact 无法固定；发现实现、契约或数据缺口。
 
 **Recovery:** 恢复隔离目标轨道配置；主测试环境和旧 Credential 保持不变。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-12 取代，capability 不取消。新票额外要求全部业务 gRPC hop 的 direct Workload 身份、peer-bound WAT 和 insecure/fallback zero-reference。

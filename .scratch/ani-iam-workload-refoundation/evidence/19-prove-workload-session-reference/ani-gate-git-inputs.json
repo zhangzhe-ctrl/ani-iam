@@ -1,0 +1,93 @@
+{
+  "commit": "0cedae825a489d936cf41815dc27f278f6d3213c",
+  "tree": "552e50bd5bdd49b6abb168b1ef99bfb74dbd1df8",
+  "objects": [
+    {
+      "oid": "0cedae825a489d936cf41815dc27f278f6d3213c",
+      "kind": "commit",
+      "source": "0cedae825a489d936cf41815dc27f278f6d3213c",
+      "sha256": "69eec9939d38c1efa941f7906bc71cdce72000f5a2019639a2a9a3862ba7ce79"
+    },
+    {
+      "oid": "552e50bd5bdd49b6abb168b1ef99bfb74dbd1df8",
+      "kind": "tree",
+      "source": "0cedae825a489d936cf41815dc27f278f6d3213c^{tree}",
+      "sha256": "f7b89333a9169de30f1320e11f44159e2c206bdd9a1a1dd134fd8ec59b0520c2"
+    },
+    {
+      "oid": "48c205f5efb5852a249fe959d51d352826b62673",
+      "kind": "tree",
+      "source": "0cedae825a489d936cf41815dc27f278f6d3213c:repo",
+      "sha256": "db7f5f848899beed9b8dc5f7efef23659a10c36457bd68f36624ad5c0a60df44"
+    },
+    {
+      "oid": "fb029ddafabefb9b22eb27834a30e558972406ec",
+      "kind": "tree",
+      "source": "0cedae825a489d936cf41815dc27f278f6d3213c:repo/api",
+      "sha256": "132e1e48b509faf20898ae84414f7f370ae1309839d6b096e53bc5aeb0da442b"
+    },
+    {
+      "oid": "229c6f7cda68aceea946a06aca5d922e9d0c8682",
+      "kind": "tree",
+      "source": "0cedae825a489d936cf41815dc27f278f6d3213c:repo/api/openapi",
+      "sha256": "3a35582ee59508fcfd4bd8820b9c3461a38ed57f9b28fa0e3884178e40b98bf0"
+    },
+    {
+      "oid": "2b3b4c4befe2d334701b65647d2378175e9cf7db",
+      "kind": "tree",
+      "source": "0cedae825a489d936cf41815dc27f278f6d3213c:repo/api/openapi/services",
+      "sha256": "5f610fb6b6b525aa5817b68fee0e9c4ead0022d118e4ace3eec452e217c4c36a"
+    },
+    {
+      "oid": "2219b5159794cae858b59c339cf6cce3c394f134",
+      "kind": "blob",
+      "source": "0cedae825a489d936cf41815dc27f278f6d3213c:repo/api/openapi/v1.yaml",
+      "sha256": "bfef6d55ea06913cdc80243c74273020aa02493b6282c725c7190d58dd70830d"
+    },
+    {
+      "oid": "4dd27b7108a1eaa51f419ca63b30f6c2891fc50a",
+      "kind": "blob",
+      "source": "0cedae825a489d936cf41815dc27f278f6d3213c:repo/api/openapi/services/v1.yaml",
+      "sha256": "3fce6e5a13e944c4f9d6899d4b22e78c649678b9e16686b34991a2d5a2a8f88a"
+    },
+    {
+      "oid": "bde4ea72b5a91cd43cc271dd44c09ff262c637e5",
+      "kind": "commit",
+      "source": "bde4ea72b5a91cd43cc271dd44c09ff262c637e5",
+      "sha256": "2f7a3d36275cf0e42e48ce543a9260f9bb4772114474376dc11e1bacdf57a80d"
+    },
+    {
+      "oid": "3595d1b7cec729adf00a5bdc67f655e10e4f3bb2",
+      "kind": "tree",
+      "source": "bde4ea72b5a91cd43cc271dd44c09ff262c637e5^{tree}",
+      "sha256": "febda4855f061e288e50fd8d48039c5b90296ea12b21aed22819f5f5690fbb97"
+    },
+    {
+      "oid": "ccc2279f7398ace26144178b39204a1e7edd6a41",
+      "kind": "tree",
+      "source": "bde4ea72b5a91cd43cc271dd44c09ff262c637e5:repo",
+      "sha256": "4897dc1fc9d910e72fab541bbcd64db33f3f39022f30896cdb9e1114930d5107"
+    },
+    {
+      "oid": "a14f56df5b23d5d1f015c885491a0324bba743e7",
+      "kind": "tree",
+      "source": "bde4ea72b5a91cd43cc271dd44c09ff262c637e5:repo/api",
+      "sha256": "e1b7daceec0273ac70f05a9ad282aab82e971a0cd132f324ee2ea7c36f4190fa"
+    },
+    {
+      "oid": "7a00d8ec4104a34dab785be6a2ddcc6e17982f7a",
+      "kind": "tree",
+      "source": "bde4ea72b5a91cd43cc271dd44c09ff262c637e5:repo/api/openapi",
+      "sha256": "20ab2d5fd94d1fc455c5aa858714028d76644cff92794f63566748e7a5960a72"
+    },
+    {
+      "oid": "f40fb4737d85146b18f744a4d9128432f516c843",
+      "kind": "blob",
+      "source": "bde4ea72b5a91cd43cc271dd44c09ff262c637e5:repo/api/openapi/v1.yaml",
+      "sha256": "6240b426e6943471f4ba705ad8e5958ffec5f0cfdbd72bfbb16e7e07b5f77b30"
+    }
+  ],
+  "purpose": "Unchanged owner validators read the replacement and accepted-main historical commit trees and their exact public OpenAPI blobs; no branch, index, private config, credential or unrelated history is copied.",
+  "accepted_main_commit": "bde4ea72b5a91cd43cc271dd44c09ff262c637e5",
+  "accepted_main_tree": "3595d1b7cec729adf00a5bdc67f655e10e4f3bb2"
+}

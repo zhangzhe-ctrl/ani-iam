@@ -1,0 +1,508 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "wr19-session",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        },
+        "namespace": "ani-cutover-target"
+      },
+      "automountServiceAccountToken": false
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "wr19-gateway-reader",
+        "namespace": "ani-cutover-target",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        }
+      },
+      "automountServiceAccountToken": false
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "ani-tenant-01993000-0019-7000-8000-000000000001",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        }
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "wr19-default-deny",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        },
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "Role",
+      "metadata": {
+        "name": "wr19-session-exec",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        },
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods/exec"
+          ],
+          "verbs": [
+            "create"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "wr19-session-exec",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        },
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "wr19-session-exec"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "wr19-session",
+          "namespace": "ani-cutover-target"
+        }
+      ]
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "wr19-exec-a",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910",
+          "ani.kubercloud.io/tenant-id": "01993000-0019-7000-8000-000000000001",
+          "ani.kubercloud.io/instance": "wr19-exec-a"
+        },
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001"
+      },
+      "spec": {
+        "replicas": 1,
+        "strategy": {
+          "type": "Recreate"
+        },
+        "selector": {
+          "matchLabels": {
+            "ani.goal": "wr19",
+            "ani.run_id": "wr19-session-20260910",
+            "ani.kubercloud.io/tenant-id": "01993000-0019-7000-8000-000000000001",
+            "ani.kubercloud.io/instance": "wr19-exec-a"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "ani.goal": "wr19",
+              "ani.run_id": "wr19-session-20260910",
+              "ani.kubercloud.io/tenant-id": "01993000-0019-7000-8000-000000000001",
+              "ani.kubercloud.io/instance": "wr19-exec-a"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "restartPolicy": "Always",
+            "terminationGracePeriodSeconds": 5,
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 1000,
+              "runAsGroup": 1000,
+              "fsGroup": 1000,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "shell",
+                "image": "docker.changqingyun.cn/mirror/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d",
+                "command": [
+                  "sleep",
+                  "86400"
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "10m",
+                    "memory": "16Mi"
+                  },
+                  "limits": {
+                    "cpu": "100m",
+                    "memory": "64Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "readOnlyRootFilesystem": true,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "volumeMounts": [
+                  {
+                    "name": "scratch",
+                    "mountPath": "/tmp"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "scratch",
+                "emptyDir": {
+                  "sizeLimit": "8Mi"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Namespace",
+      "metadata": {
+        "name": "ani-tenant-01993000-0019-7000-8000-000000000002",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        }
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "wr19-default-deny",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        },
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ]
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "Role",
+      "metadata": {
+        "name": "wr19-session-exec",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        },
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "get",
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods/exec"
+          ],
+          "verbs": [
+            "create"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "wr19-session-exec",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        },
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002"
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "wr19-session-exec"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "wr19-session",
+          "namespace": "ani-cutover-target"
+        }
+      ]
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "wr19-exec-b",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910",
+          "ani.kubercloud.io/tenant-id": "01993000-0019-7000-8000-000000000002",
+          "ani.kubercloud.io/instance": "wr19-exec-b"
+        },
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002"
+      },
+      "spec": {
+        "replicas": 1,
+        "strategy": {
+          "type": "Recreate"
+        },
+        "selector": {
+          "matchLabels": {
+            "ani.goal": "wr19",
+            "ani.run_id": "wr19-session-20260910",
+            "ani.kubercloud.io/tenant-id": "01993000-0019-7000-8000-000000000002",
+            "ani.kubercloud.io/instance": "wr19-exec-b"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "ani.goal": "wr19",
+              "ani.run_id": "wr19-session-20260910",
+              "ani.kubercloud.io/tenant-id": "01993000-0019-7000-8000-000000000002",
+              "ani.kubercloud.io/instance": "wr19-exec-b"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "restartPolicy": "Always",
+            "terminationGracePeriodSeconds": 5,
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 1000,
+              "runAsGroup": 1000,
+              "fsGroup": 1000,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "containers": [
+              {
+                "name": "shell",
+                "image": "docker.changqingyun.cn/mirror/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d",
+                "command": [
+                  "sleep",
+                  "86400"
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "10m",
+                    "memory": "16Mi"
+                  },
+                  "limits": {
+                    "cpu": "100m",
+                    "memory": "64Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "readOnlyRootFilesystem": true,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                },
+                "volumeMounts": [
+                  {
+                    "name": "scratch",
+                    "mountPath": "/tmp"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "scratch",
+                "emptyDir": {
+                  "sizeLimit": "8Mi"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "Role",
+      "metadata": {
+        "name": "wr19-gateway-reader",
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        }
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "apps"
+          ],
+          "resources": [
+            "deployments"
+          ],
+          "resourceNames": [
+            "wr19-exec-a"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "wr19-gateway-reader",
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        }
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "wr19-gateway-reader"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "wr19-gateway-reader",
+          "namespace": "ani-cutover-target"
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "Role",
+      "metadata": {
+        "name": "wr19-gateway-reader",
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        }
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "apps"
+          ],
+          "resources": [
+            "deployments"
+          ],
+          "resourceNames": [
+            "wr19-exec-b"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "wr19-gateway-reader",
+        "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+        "labels": {
+          "ani.goal": "wr19",
+          "ani.run_id": "wr19-session-20260910"
+        }
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "wr19-gateway-reader"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "wr19-gateway-reader",
+          "namespace": "ani-cutover-target"
+        }
+      ]
+    }
+  ]
+}

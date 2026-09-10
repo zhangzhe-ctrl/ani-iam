@@ -1,0 +1,11 @@
+{
+  "run_id": "wr19-20260910T075249Z-c0403252",
+  "exit_code": 1,
+  "stage": "real process chain",
+  "reached": "formal IAM bootstrap, Gateway/Session start, two real Gateway password logins",
+  "failure": "exec REST 403; ANI owner role lacked workload_instances table privilege",
+  "evidence": "private Gateway log: SQLSTATE 42501 on workload_instances",
+  "cause": "fixture omitted explicit owner table grant that follows initial schema in existing migration history",
+  "repair": "execute only the pinned existing workload_instances grant for this fresh owner database; role remains non-owner/non-super/non-BYPASSRLS",
+  "no_claim": "no successful Kubernetes exec in this failed run"
+}

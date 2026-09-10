@@ -1,0 +1,658 @@
+{
+  "status": "frozen_for_session_creation_adapter",
+  "frozen_at": "2026-09-10T04:17:49.081454+00:00",
+  "baseline_head": "d8cebd50fb38c3e0d7b875e2c4a88377eb43cce1",
+  "baseline_tree": "44fc754564f37003074d15a83ea469076c2c8da6",
+  "original": "/home/chabking/workspace/ani-session-gateway",
+  "worktree": "/home/chabking/workspace/ani-session-gateway-wr19",
+  "files": [
+    {
+      "repository": "ani-session-gateway",
+      "path": "go.mod",
+      "state": "existing",
+      "source_sha256": "b6a000a54f2519a4375ee0c759d3985d522057058f35a3e33976ec055dd8ed0e",
+      "reason": "public IAM SDK dependency",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "go.sum",
+      "state": "existing",
+      "source_sha256": "ec0fafdd42611c32b29c520fbab52a396c974ec5cb3aec4dceef76aea9eef7f6",
+      "reason": "fixed module sums",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "CLAUDE.md",
+      "state": "existing",
+      "source_sha256": "5a44c158ce881a639b6a2bc081e37dc805247a2ae63d8cd15e996b9199569f3b",
+      "reason": "narrow WR19 mTLS deferral exception",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "docs/design/realtime-session-gateway-p0-v1.2.md",
+      "state": "existing",
+      "source_sha256": "b66c500d3150e83c72ffd44d6ca292a544eeecf0985c54f96770756f73b6f0f3",
+      "reason": "narrow accepted mTLS receiver contract",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "docs/execution/status.md",
+      "state": "existing",
+      "source_sha256": "b59edc92645b37e66f3944c2c3e62dc3e2fa143740f3a590798afacf16f8fe21",
+      "reason": "WR19 source snapshot reference and truthful partial status",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "docs/execution/records/WR19.md",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "scope acceptance and recovery record",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/grpc/server.go",
+      "state": "existing",
+      "source_sha256": "940328e0281e1610766e77a870cf030c20db11d852b31f654d27130581a29c89",
+      "reason": "server options and resource check at protected create boundary",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/grpc/workload.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "public SDK target registration and typed caller/subject enforcement",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/grpc/workload_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "owner mapping and missing verified context gates",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/config/config.go",
+      "state": "existing",
+      "source_sha256": "a599fcdee05ae70a52064e3fa441cd89beef5df658e2506f36e3d9e3e2b9a4fa",
+      "reason": "explicit IAM mode identity config and test kubeconfig input",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/config/config_test.go",
+      "state": "existing",
+      "source_sha256": "27df33435273658fb0a09f1da06b68813a7d4cb0bda106404fa1b72119a4ce3f",
+      "reason": "fail-closed config validation",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/runtime/kubernetes/config.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "bounded external kubeconfig through Kubernetes adapter",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/runtime/kubernetes/config_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "kubeconfig no insecure TLS or external credential execution",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "cmd/session-gateway/main.go",
+      "state": "existing",
+      "source_sha256": "199d681d33c66a8514e99752eefd95c5be46818c4c81bfd3fbb9abc40cce3790",
+      "reason": "formal mTLS receiver and resource owner wiring; lifecycle-dependent activation deferred",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/session/model.go",
+      "state": "existing",
+      "source_sha256": "02f057dc49c48b4f4b22decc482d5e04468ea41d5b8d14965385f2c500b53158",
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/session/manager.go",
+      "state": "existing",
+      "source_sha256": "de8dc944a7568c5c3c7535718aab532172bfe1dc23ffa92b6ee317d60f4e91ea",
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/session/manager_test.go",
+      "state": "existing",
+      "source_sha256": "52e20e333e36c00025ed6d167191d3c743500dd64292b5719ecbf89b6faaa59b",
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/session/authorization.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/session/authorization_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/store/redis/store.go",
+      "state": "existing",
+      "source_sha256": "5d98c4edfcf90ebabccdbf89d5eb0a153edd9631e875dc68d2bbd1daa1275d38",
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/store/redis/store_test.go",
+      "state": "existing",
+      "source_sha256": "52a14edc8622d3eda51d32b62a5aaa3120c9c8a4bcc04bff0ca75e477ab2d580",
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/grpc/authorization.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/grpc/authorization_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/websocket/connectedsession/module.go",
+      "state": "existing",
+      "source_sha256": "ae4dfeb1461037151c242e1f0d28c4f7636952b99998ebc78faa4afc53003a51",
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/websocket/connectedsession/exec.go",
+      "state": "existing",
+      "source_sha256": "70d428540c053a5d0cd6c69d3f095f68d812585b72a627cac5e8083215f14a8c",
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/websocket/connectedsession/authorization.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/websocket/connectedsession/authorization_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/runtime/kubernetes/resource_check.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/runtime/kubernetes/resource_check_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "accepted WR19 online ticket and connection authorization, real formal chain and bounded revocation tests",
+      "acceptance": [
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/runtime/kubevirt/adapter.go",
+      "state": "existing",
+      "source_sha256": "3ab6584fca6f67a34ae6a8a15d284c14b6433751c6d130736f50f87d154fff03",
+      "reason": "reuse current resource validation for both modes; expose safe authorization denial on ticket redemption",
+      "acceptance": [
+        "E",
+        "1",
+        "2",
+        "3",
+        "5",
+        "7",
+        "10"
+      ]
+    },
+    {
+      "repository": "ani-session-gateway",
+      "path": "internal/transport/websocket/handler.go",
+      "state": "existing",
+      "source_sha256": "ce9bc1a218f966b72afe6fbe78f5cfd1930eae771954db61f1eb0a2a5b9019de",
+      "reason": "reuse current resource validation for both modes; expose safe authorization denial on ticket redemption",
+      "acceptance": [
+        "E",
+        "1",
+        "2",
+        "3",
+        "5",
+        "7",
+        "10"
+      ]
+    }
+  ],
+  "remaining_dependency": "none from prior user decisions; implementation and full-chain verification remain",
+  "forbidden": "no API schema change, no deployment/shared resource mutation, no old credential revocation or Git publication",
+  "amendments": [
+    {
+      "time": "2026-09-10T07:24:07.944958+00:00",
+      "authority": "user-acceptance-20260910.json",
+      "scope": "same WR19 candidate scope, accepted lifecycle exact-file freeze before edits",
+      "paths": [
+        "internal/session/model.go",
+        "internal/session/manager.go",
+        "internal/session/manager_test.go",
+        "internal/session/authorization.go",
+        "internal/session/authorization_test.go",
+        "internal/store/redis/store.go",
+        "internal/store/redis/store_test.go",
+        "internal/transport/grpc/authorization.go",
+        "internal/transport/grpc/authorization_test.go",
+        "internal/transport/websocket/connectedsession/module.go",
+        "internal/transport/websocket/connectedsession/exec.go",
+        "internal/transport/websocket/connectedsession/authorization.go",
+        "internal/transport/websocket/connectedsession/authorization_test.go",
+        "internal/runtime/kubernetes/resource_check.go",
+        "internal/runtime/kubernetes/resource_check_test.go"
+      ]
+    },
+    {
+      "time": "2026-09-10T07:30:07.830665+00:00",
+      "authority": "accepted WR19 lifecycle",
+      "paths": [
+        "internal/runtime/kubevirt/adapter.go",
+        "internal/transport/websocket/handler.go"
+      ],
+      "reason": "concrete owner checks and error mapping discovered in wiring, no new contract or resource permission"
+    }
+  ]
+}

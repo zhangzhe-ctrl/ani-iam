@@ -1,0 +1,22 @@
+{
+  "stage": "bootstrap only",
+  "run_id": "wr19-20260910T031111Z-01ba2941",
+  "source_sha256": "09b65d0e81953341e4a502b8fec3de6f8994009a7d894702059310f1af3b226e",
+  "current_source_matches_tested_snapshot": true,
+  "exit_code": 0,
+  "passed_tests": [
+    "TestWorkloadBootstrapTransactions/concurrent_same_intent_once_and_lost_response_restart",
+    "TestWorkloadBootstrapTransactions/new_expired_intent_has_no_state",
+    "TestWorkloadBootstrapTransactions/audit_failure_rolls_back_identity_grants_and_receipt",
+    "TestWorkloadBootstrapTransactions/runtime_cannot_provision_and_provisioner_cannot_create_Human_or_mutate",
+    "TestWorkloadBootstrapTransactions/runtime_foundation_retains_role_guards",
+    "TestWorkloadBootstrapTransactions",
+    "TestFormalWorkloadBootstrapCommand"
+  ],
+  "failed_tests": [],
+  "new_dependency_containers_created": 2,
+  "all_registered_dependency_containers_terminated": true,
+  "formal_bootstrap_process": "pass",
+  "full_WR19_chain": "not_verified",
+  "limitation_found_after_test": "WR17 same-environment single-consumption was missing; implementation and negative/concurrent tests now corrected, pending new generation/run. Prior run is historical subset evidence, not final bootstrap acceptance."
+}

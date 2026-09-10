@@ -1,0 +1,8 @@
+{
+  "run_id": "wr19-20260910T045650Z-0852f5dd",
+  "source_sha256": "5ccb365a66acc3c7c86859876f5bc7fb6f9604a451593e9056837d2c4b81eb4b",
+  "command_exit": 1,
+  "failure": "two password action positive unit cases use zero NotBefore/NotAfter; runtime current-chain validation rejects the invalid certificate",
+  "remaining_command_stages": "not_run",
+  "remedy": "correct test-only fixture validity; do not relax runtime TLS validation"
+}

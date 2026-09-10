@@ -4,7 +4,7 @@
 
 **Blocked by:** 19 / 删除旧契约、Runtime 与重叠资产
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -37,3 +37,7 @@
 **Recovery:** 不执行新运行状态变更；回开对应实施事项修复后重新验收。
 
 **Human checkpoint:** 人工接受“功能完成”结论；该接受不授权生产部署或 PR0。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-15 取代，最终验收 capability 不取消。新验收以 Human/Workload、secure S2S 和 WR graph 的 artifacts/evidence 为唯一当前基线。

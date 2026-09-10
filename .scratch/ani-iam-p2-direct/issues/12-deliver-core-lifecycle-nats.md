@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 / 冻结 IAM 与 Core 集成契约；04 / 建立无 RLS 持久化基础；09 / 交付 Tenant Access、Membership 与目标授权
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -34,3 +34,7 @@
 **Recovery:** 停止隔离 publisher/consumer，清理专用 Stream/数据库投影并保留 evidence；不修改共享或生产 NATS。
 
 **Human checkpoint:** 创建或修改共享 NATS Account/Stream/ACL、真实 Core 环境或部署前，必须获得精确人工确认；本事项默认只使用隔离测试资源。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-07 取代，capability 不取消。必须先完成新 Workload contract/schema/runtime，避免 producer、consumer、snapshot 或 worker 固化匿名/共享 Service identity；既有正文和 evidence 保留为历史。

@@ -2,7 +2,7 @@
 
 Status: superseded
 
-> 2026-09-03：本文件作为 CP0/P1 路线及转向决定的历史快照保留。当前执行规格是 `../ani-iam-p2-direct/spec.md`；其 ticket plan 已获人工接受并发布，但 DP2-01 尚未领取或启动。
+> 历史快照：下文记录 2026-09-03 的 CP0/P1 → Direct P2 转向，当时的“当前”“尚未领取”均为历史状态。现在唯一执行入口为 [WR spec](../ani-iam-workload-refoundation/spec.md) 与 [ticket-plan](../ani-iam-workload-refoundation/ticket-plan.md)。原结果与正文保留，不据此领取旧事项。
 
 本规格综合完整 Q1–Q300 grilling 对话、当前核心计划、领域词汇、accepted ADR，以及 ANI 来源候选 Git object `0cedae825a489d936cf41815dc27f278f6d3213c` 的代码事实。该对象在 2026-09-03 已与远端 `main` 对齐；动态 `main`、当前分支和工作树内容不进入基线。若这些材料发生冲突，以用户在完整对话中的明确选择和本规格中记录的最新调整为准。
 

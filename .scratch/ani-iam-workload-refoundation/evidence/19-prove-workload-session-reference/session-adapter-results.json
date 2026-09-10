@@ -1,0 +1,11 @@
+{
+  "stage": "Session protected creation adapter and kubeconfig loader; formal protected runtime not enabled",
+  "run_id": "wr19-20260910T042451Z-f723f173",
+  "IAM_source_sha256": "a497b4d4ec60efb7a845eccced6ceeeca8397b51537a30785452108e86a69657",
+  "Session_source_sha256": "2edee99e6115002427860e2e542f1d2c0e7bd6da86d7fb4979b40e88b66f7031",
+  "targeted_race_tests": "pass",
+  "targeted_vet": "pass",
+  "formal_binary_build": "pass",
+  "three_process_resource_chain": "not_verified",
+  "cluster_mutations": "none"
+}

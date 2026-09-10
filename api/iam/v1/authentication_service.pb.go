@@ -1693,31 +1693,29 @@ func (x *ValidatePrincipalResponse) GetPolicyRevision() string {
 	return ""
 }
 
-// IssueServiceTokenRequest requests a short audience-bound subset for the mTLS workload.
-type IssueServiceTokenRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Audience       string                 `protobuf:"bytes,1,opt,name=audience,proto3" json:"audience,omitempty"`
-	OperationIds   []string               `protobuf:"bytes,2,rep,name=operation_ids,json=operationIds,proto3" json:"operation_ids,omitempty"`
-	TenantId       string                 `protobuf:"bytes,3,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	IdempotencyKey string                 `protobuf:"bytes,4,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+// IssueWorkloadTokenRequest requests a short audience-bound subset for the mTLS workload.
+type IssueWorkloadTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Audience      string                 `protobuf:"bytes,1,opt,name=audience,proto3" json:"audience,omitempty"`
+	OperationId   string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
-func (x *IssueServiceTokenRequest) Reset() {
-	*x = IssueServiceTokenRequest{}
+func (x *IssueWorkloadTokenRequest) Reset() {
+	*x = IssueWorkloadTokenRequest{}
 	mi := &file_authentication_service_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *IssueServiceTokenRequest) String() string {
+func (x *IssueWorkloadTokenRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*IssueServiceTokenRequest) ProtoMessage() {}
+func (*IssueWorkloadTokenRequest) ProtoMessage() {}
 
-func (x *IssueServiceTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *IssueWorkloadTokenRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_authentication_service_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1729,63 +1727,49 @@ func (x *IssueServiceTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use IssueServiceTokenRequest.ProtoReflect.Descriptor instead.
-func (*IssueServiceTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use IssueWorkloadTokenRequest.ProtoReflect.Descriptor instead.
+func (*IssueWorkloadTokenRequest) Descriptor() ([]byte, []int) {
 	return file_authentication_service_proto_rawDescGZIP(), []int{28}
 }
 
-func (x *IssueServiceTokenRequest) GetAudience() string {
+func (x *IssueWorkloadTokenRequest) GetAudience() string {
 	if x != nil {
 		return x.Audience
 	}
 	return ""
 }
 
-func (x *IssueServiceTokenRequest) GetOperationIds() []string {
+func (x *IssueWorkloadTokenRequest) GetOperationId() string {
 	if x != nil {
-		return x.OperationIds
-	}
-	return nil
-}
-
-func (x *IssueServiceTokenRequest) GetTenantId() string {
-	if x != nil {
-		return x.TenantId
+		return x.OperationId
 	}
 	return ""
 }
 
-func (x *IssueServiceTokenRequest) GetIdempotencyKey() string {
-	if x != nil {
-		return x.IdempotencyKey
-	}
-	return ""
-}
-
-// IssueServiceTokenResponse returns a non-refreshable token of at most five minutes.
-type IssueServiceTokenResponse struct {
+// IssueWorkloadTokenResponse returns a non-refreshable token of at most five minutes.
+type IssueWorkloadTokenResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceToken  string                 `protobuf:"bytes,1,opt,name=service_token,json=serviceToken,proto3" json:"service_token,omitempty"`
+	WorkloadToken string                 `protobuf:"bytes,1,opt,name=workload_token,json=workloadToken,proto3" json:"workload_token,omitempty"`
 	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	PrincipalId   string                 `protobuf:"bytes,3,opt,name=principal_id,json=principalId,proto3" json:"principal_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *IssueServiceTokenResponse) Reset() {
-	*x = IssueServiceTokenResponse{}
+func (x *IssueWorkloadTokenResponse) Reset() {
+	*x = IssueWorkloadTokenResponse{}
 	mi := &file_authentication_service_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *IssueServiceTokenResponse) String() string {
+func (x *IssueWorkloadTokenResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*IssueServiceTokenResponse) ProtoMessage() {}
+func (*IssueWorkloadTokenResponse) ProtoMessage() {}
 
-func (x *IssueServiceTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *IssueWorkloadTokenResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_authentication_service_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1797,26 +1781,26 @@ func (x *IssueServiceTokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use IssueServiceTokenResponse.ProtoReflect.Descriptor instead.
-func (*IssueServiceTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use IssueWorkloadTokenResponse.ProtoReflect.Descriptor instead.
+func (*IssueWorkloadTokenResponse) Descriptor() ([]byte, []int) {
 	return file_authentication_service_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *IssueServiceTokenResponse) GetServiceToken() string {
+func (x *IssueWorkloadTokenResponse) GetWorkloadToken() string {
 	if x != nil {
-		return x.ServiceToken
+		return x.WorkloadToken
 	}
 	return ""
 }
 
-func (x *IssueServiceTokenResponse) GetExpiresAt() *timestamppb.Timestamp {
+func (x *IssueWorkloadTokenResponse) GetExpiresAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ExpiresAt
 	}
 	return nil
 }
 
-func (x *IssueServiceTokenResponse) GetPrincipalId() string {
+func (x *IssueWorkloadTokenResponse) GetPrincipalId() string {
 	if x != nil {
 		return x.PrincipalId
 	}
@@ -1827,7 +1811,7 @@ var File_authentication_service_proto protoreflect.FileDescriptor
 
 const file_authentication_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1cauthentication_service.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8f\x02\n" +
+	"\x1cauthentication_service.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x0eworkload.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8f\x02\n" +
 	"\x14PasswordLoginRequest\x12\x18\n" +
 	"\aaccount\x18\x01 \x01(\tR\aaccount\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12,\n" +
@@ -1959,18 +1943,15 @@ const file_authentication_service_proto_rawDesc = "" +
 	"\tprincipal\x18\x01 \x01(\v2\x18.iam.v1.PrincipalContextR\tprincipal\x12\x1f\n" +
 	"\vdecision_id\x18\x02 \x01(\tR\n" +
 	"decisionId\x12'\n" +
-	"\x0fpolicy_revision\x18\x03 \x01(\tR\x0epolicyRevision\"\xa1\x01\n" +
-	"\x18IssueServiceTokenRequest\x12\x1a\n" +
-	"\baudience\x18\x01 \x01(\tR\baudience\x12#\n" +
-	"\roperation_ids\x18\x02 \x03(\tR\foperationIds\x12\x1b\n" +
-	"\ttenant_id\x18\x03 \x01(\tR\btenantId\x12'\n" +
-	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\"\x9e\x01\n" +
-	"\x19IssueServiceTokenResponse\x12#\n" +
-	"\rservice_token\x18\x01 \x01(\tR\fserviceToken\x129\n" +
+	"\x0fpolicy_revision\x18\x03 \x01(\tR\x0epolicyRevision\"\x82\x01\n" +
+	"\x19IssueWorkloadTokenRequest\x12\x1a\n" +
+	"\baudience\x18\x01 \x01(\tR\baudience\x12!\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationIdJ\x04\b\x03\x10\x04J\x04\b\x04\x10\x05R\ttenant_idR\x0fidempotency_key\"\xa1\x01\n" +
+	"\x1aIssueWorkloadTokenResponse\x12%\n" +
+	"\x0eworkload_token\x18\x01 \x01(\tR\rworkloadToken\x129\n" +
 	"\n" +
 	"expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12!\n" +
-	"\fprincipal_id\x18\x03 \x01(\tR\vprincipalId2\xc5\n" +
-	"\n" +
+	"\fprincipal_id\x18\x03 \x01(\tR\vprincipalId2\x9c\v\n" +
 	"\x15AuthenticationService\x12L\n" +
 	"\rPasswordLogin\x12\x1c.iam.v1.PasswordLoginRequest\x1a\x1d.iam.v1.PasswordLoginResponse\x12O\n" +
 	"\x0eBeginOIDCLogin\x12\x1d.iam.v1.BeginOIDCLoginRequest\x1a\x1e.iam.v1.BeginOIDCLoginResponse\x12X\n" +
@@ -1985,8 +1966,9 @@ const file_authentication_service_proto_rawDesc = "" +
 	"\fListSessions\x12\x1b.iam.v1.ListSessionsRequest\x1a\x1c.iam.v1.ListSessionsResponse\x12L\n" +
 	"\rRevokeSession\x12\x1c.iam.v1.RevokeSessionRequest\x1a\x1d.iam.v1.RevokeSessionResponse\x12X\n" +
 	"\x11RevokeAllSessions\x12 .iam.v1.RevokeAllSessionsRequest\x1a!.iam.v1.RevokeAllSessionsResponse\x12X\n" +
-	"\x11ValidatePrincipal\x12 .iam.v1.ValidatePrincipalRequest\x1a!.iam.v1.ValidatePrincipalResponse\x12X\n" +
-	"\x11IssueServiceToken\x12 .iam.v1.IssueServiceTokenRequest\x1a!.iam.v1.IssueServiceTokenResponseB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
+	"\x11ValidatePrincipal\x12 .iam.v1.ValidatePrincipalRequest\x1a!.iam.v1.ValidatePrincipalResponse\x12[\n" +
+	"\x12IssueWorkloadToken\x12!.iam.v1.IssueWorkloadTokenRequest\x1a\".iam.v1.IssueWorkloadTokenResponse\x12R\n" +
+	"\x0fIssueDelegation\x12\x1e.iam.v1.IssueDelegationRequest\x1a\x1f.iam.v1.IssueDelegationResponseB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
 
 var (
 	file_authentication_service_proto_rawDescOnce sync.Once
@@ -2030,8 +2012,8 @@ var file_authentication_service_proto_goTypes = []any{
 	(*RevokeAllSessionsResponse)(nil),        // 25: iam.v1.RevokeAllSessionsResponse
 	(*ValidatePrincipalRequest)(nil),         // 26: iam.v1.ValidatePrincipalRequest
 	(*ValidatePrincipalResponse)(nil),        // 27: iam.v1.ValidatePrincipalResponse
-	(*IssueServiceTokenRequest)(nil),         // 28: iam.v1.IssueServiceTokenRequest
-	(*IssueServiceTokenResponse)(nil),        // 29: iam.v1.IssueServiceTokenResponse
+	(*IssueWorkloadTokenRequest)(nil),        // 28: iam.v1.IssueWorkloadTokenRequest
+	(*IssueWorkloadTokenResponse)(nil),       // 29: iam.v1.IssueWorkloadTokenResponse
 	(Audience)(0),                            // 30: iam.v1.Audience
 	(*Boundary)(nil),                         // 31: iam.v1.Boundary
 	(*PrincipalContext)(nil),                 // 32: iam.v1.PrincipalContext
@@ -2041,6 +2023,8 @@ var file_authentication_service_proto_goTypes = []any{
 	(*BearerCredential)(nil),                 // 36: iam.v1.BearerCredential
 	(*MutationResult)(nil),                   // 37: iam.v1.MutationResult
 	(*CursorPageRequest)(nil),                // 38: iam.v1.CursorPageRequest
+	(*IssueDelegationRequest)(nil),           // 39: iam.v1.IssueDelegationRequest
+	(*IssueDelegationResponse)(nil),          // 40: iam.v1.IssueDelegationResponse
 }
 var file_authentication_service_proto_depIdxs = []int32{
 	30, // 0: iam.v1.PasswordLoginRequest.audience:type_name -> iam.v1.Audience
@@ -2072,7 +2056,7 @@ var file_authentication_service_proto_depIdxs = []int32{
 	37, // 26: iam.v1.RevokeAllSessionsResponse.result:type_name -> iam.v1.MutationResult
 	36, // 27: iam.v1.ValidatePrincipalRequest.credential:type_name -> iam.v1.BearerCredential
 	32, // 28: iam.v1.ValidatePrincipalResponse.principal:type_name -> iam.v1.PrincipalContext
-	35, // 29: iam.v1.IssueServiceTokenResponse.expires_at:type_name -> google.protobuf.Timestamp
+	35, // 29: iam.v1.IssueWorkloadTokenResponse.expires_at:type_name -> google.protobuf.Timestamp
 	0,  // 30: iam.v1.AuthenticationService.PasswordLogin:input_type -> iam.v1.PasswordLoginRequest
 	2,  // 31: iam.v1.AuthenticationService.BeginOIDCLogin:input_type -> iam.v1.BeginOIDCLoginRequest
 	4,  // 32: iam.v1.AuthenticationService.CompleteOIDCLogin:input_type -> iam.v1.CompleteOIDCLoginRequest
@@ -2087,24 +2071,26 @@ var file_authentication_service_proto_depIdxs = []int32{
 	22, // 41: iam.v1.AuthenticationService.RevokeSession:input_type -> iam.v1.RevokeSessionRequest
 	24, // 42: iam.v1.AuthenticationService.RevokeAllSessions:input_type -> iam.v1.RevokeAllSessionsRequest
 	26, // 43: iam.v1.AuthenticationService.ValidatePrincipal:input_type -> iam.v1.ValidatePrincipalRequest
-	28, // 44: iam.v1.AuthenticationService.IssueServiceToken:input_type -> iam.v1.IssueServiceTokenRequest
-	1,  // 45: iam.v1.AuthenticationService.PasswordLogin:output_type -> iam.v1.PasswordLoginResponse
-	3,  // 46: iam.v1.AuthenticationService.BeginOIDCLogin:output_type -> iam.v1.BeginOIDCLoginResponse
-	5,  // 47: iam.v1.AuthenticationService.CompleteOIDCLogin:output_type -> iam.v1.CompleteOIDCLoginResponse
-	7,  // 48: iam.v1.AuthenticationService.BeginOIDCIdentityLink:output_type -> iam.v1.BeginOIDCIdentityLinkResponse
-	9,  // 49: iam.v1.AuthenticationService.CompleteOIDCIdentityLink:output_type -> iam.v1.CompleteOIDCIdentityLinkResponse
-	11, // 50: iam.v1.AuthenticationService.RequestPasswordAction:output_type -> iam.v1.RequestPasswordActionResponse
-	13, // 51: iam.v1.AuthenticationService.CompletePasswordAction:output_type -> iam.v1.CompletePasswordActionResponse
-	15, // 52: iam.v1.AuthenticationService.RefreshSession:output_type -> iam.v1.RefreshSessionResponse
-	17, // 53: iam.v1.AuthenticationService.LogoutSession:output_type -> iam.v1.LogoutSessionResponse
-	19, // 54: iam.v1.AuthenticationService.SwitchTenant:output_type -> iam.v1.SwitchTenantResponse
-	21, // 55: iam.v1.AuthenticationService.ListSessions:output_type -> iam.v1.ListSessionsResponse
-	23, // 56: iam.v1.AuthenticationService.RevokeSession:output_type -> iam.v1.RevokeSessionResponse
-	25, // 57: iam.v1.AuthenticationService.RevokeAllSessions:output_type -> iam.v1.RevokeAllSessionsResponse
-	27, // 58: iam.v1.AuthenticationService.ValidatePrincipal:output_type -> iam.v1.ValidatePrincipalResponse
-	29, // 59: iam.v1.AuthenticationService.IssueServiceToken:output_type -> iam.v1.IssueServiceTokenResponse
-	45, // [45:60] is the sub-list for method output_type
-	30, // [30:45] is the sub-list for method input_type
+	28, // 44: iam.v1.AuthenticationService.IssueWorkloadToken:input_type -> iam.v1.IssueWorkloadTokenRequest
+	39, // 45: iam.v1.AuthenticationService.IssueDelegation:input_type -> iam.v1.IssueDelegationRequest
+	1,  // 46: iam.v1.AuthenticationService.PasswordLogin:output_type -> iam.v1.PasswordLoginResponse
+	3,  // 47: iam.v1.AuthenticationService.BeginOIDCLogin:output_type -> iam.v1.BeginOIDCLoginResponse
+	5,  // 48: iam.v1.AuthenticationService.CompleteOIDCLogin:output_type -> iam.v1.CompleteOIDCLoginResponse
+	7,  // 49: iam.v1.AuthenticationService.BeginOIDCIdentityLink:output_type -> iam.v1.BeginOIDCIdentityLinkResponse
+	9,  // 50: iam.v1.AuthenticationService.CompleteOIDCIdentityLink:output_type -> iam.v1.CompleteOIDCIdentityLinkResponse
+	11, // 51: iam.v1.AuthenticationService.RequestPasswordAction:output_type -> iam.v1.RequestPasswordActionResponse
+	13, // 52: iam.v1.AuthenticationService.CompletePasswordAction:output_type -> iam.v1.CompletePasswordActionResponse
+	15, // 53: iam.v1.AuthenticationService.RefreshSession:output_type -> iam.v1.RefreshSessionResponse
+	17, // 54: iam.v1.AuthenticationService.LogoutSession:output_type -> iam.v1.LogoutSessionResponse
+	19, // 55: iam.v1.AuthenticationService.SwitchTenant:output_type -> iam.v1.SwitchTenantResponse
+	21, // 56: iam.v1.AuthenticationService.ListSessions:output_type -> iam.v1.ListSessionsResponse
+	23, // 57: iam.v1.AuthenticationService.RevokeSession:output_type -> iam.v1.RevokeSessionResponse
+	25, // 58: iam.v1.AuthenticationService.RevokeAllSessions:output_type -> iam.v1.RevokeAllSessionsResponse
+	27, // 59: iam.v1.AuthenticationService.ValidatePrincipal:output_type -> iam.v1.ValidatePrincipalResponse
+	29, // 60: iam.v1.AuthenticationService.IssueWorkloadToken:output_type -> iam.v1.IssueWorkloadTokenResponse
+	40, // 61: iam.v1.AuthenticationService.IssueDelegation:output_type -> iam.v1.IssueDelegationResponse
+	46, // [46:62] is the sub-list for method output_type
+	30, // [30:46] is the sub-list for method input_type
 	30, // [30:30] is the sub-list for extension type_name
 	30, // [30:30] is the sub-list for extension extendee
 	0,  // [0:30] is the sub-list for field type_name
@@ -2116,6 +2102,7 @@ func file_authentication_service_proto_init() {
 		return
 	}
 	file_contract_proto_init()
+	file_workload_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

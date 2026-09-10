@@ -1,0 +1,225 @@
+{
+  "observed_at": "2026-09-10T02:58:43.688732+00:00",
+  "ssh_host": "ani",
+  "namespaces": [
+    {
+      "name": "ani-cutover-current",
+      "uid": "aeae0faf-8764-4d74-8e50-2f7ab34e57a0"
+    },
+    {
+      "name": "ani-cutover-target",
+      "uid": "86a86f83-71e2-4c75-bb50-d81d83a73b90"
+    },
+    {
+      "name": "kube-system",
+      "uid": "f5cafbf1-5246-4f8f-b9da-742182f37528"
+    }
+  ],
+  "protected_existing_resources": [
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-current-runtime-846659f5d5-grzwg",
+      "uid": "9e051899-5287-4fd9-9293-df112928528c",
+      "phase": "Running",
+      "images": [
+        "docker.io/library/postgres@sha256:5660c2cbfea50c7a9127d17dc4e48543eedd3d7a41a595a2dfa572471e37e64c",
+        "docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+        "docker.io/library/nats@sha256:b83efabe3e7def1e0a4a31ec6e078999bb17c80363f881df35edc70fcb6bb927",
+        "docker.changqingyun.cn/ani/cf01-auth-service-current@sha256:8e5d4d11662d7fdfab92f3732b07e9b0999c2de2b4bcf50af52a86cd83d1c018",
+        "docker.changqingyun.cn/ani/cf01-ani-gateway-current@sha256:a5513ab4dad4ca1b01c02d9ebd1d9260c98af3a016494ba623afd7fdf5f374d0",
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:f06f2ea4ac8f29e1bb74d0ed7924c972a566af9d50e1fafc8ecac83290797551"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-echo-5cd4b9d7f-fxr7s",
+      "uid": "fd45cda6-0dde-45ed-ba2a-ab009b102ae5",
+      "phase": "Running",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-network-runner",
+      "uid": "52221f1c-e3fd-4546-b4d6-659550ddec76",
+      "phase": "Running",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-registry-pull-canary-427sv",
+      "uid": "4a3482db-a194-48db-bb20-b093fc2e9d95",
+      "phase": "Running",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:36ff3463579a46479b1ac1719ef62f9d6ab003db040376384ae95a9b63694376"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-registry-pull-canary-s5mlc",
+      "uid": "bcf0e773-3ef8-44cf-ad8c-da543972cdb5",
+      "phase": "Running",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:36ff3463579a46479b1ac1719ef62f9d6ab003db040376384ae95a9b63694376"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-registry-pull-canary-tf9k7",
+      "uid": "06edaa40-6c5a-4a53-ad8d-13d89b6f4ca4",
+      "phase": "Running",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:36ff3463579a46479b1ac1719ef62f9d6ab003db040376384ae95a9b63694376"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-storage-canary-vvlk8",
+      "uid": "08be787d-0010-433e-abe2-e70de114cdf4",
+      "phase": "Succeeded",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-current-runtime",
+      "uid": "8e9f62c4-2650-46e7-b171-c3e6c41fc9a1"
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-echo",
+      "uid": "2b4779af-237e-40cf-8084-cf18b22b82bc"
+    },
+    {
+      "kind": "Service",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-echo",
+      "uid": "d5baefd2-d301-4a28-b7ce-61e27b0b3249"
+    },
+    {
+      "kind": "PersistentVolumeClaim",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-current-postgres-data",
+      "uid": "022b7c33-4f93-4eb0-8e22-528e232ccea0"
+    },
+    {
+      "kind": "NetworkPolicy",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-allow-dns-and-same-lane",
+      "uid": "64b80e08-2772-405b-ad8b-6d292f8ed916"
+    },
+    {
+      "kind": "NetworkPolicy",
+      "namespace": "ani-cutover-current",
+      "name": "cf01-default-deny",
+      "uid": "50e58ae6-c1bc-4891-bd3f-7bb3a5412339"
+    },
+    {
+      "kind": "ServiceAccount",
+      "namespace": "ani-cutover-current",
+      "name": "default",
+      "uid": "2bf5f6cc-edb2-4ee9-82b7-e90a1e82367d"
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-echo-5cd4b9d7f-hqz47",
+      "uid": "445ea719-9044-4909-b1bf-4f9dd19c52ba",
+      "phase": "Running",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-network-runner",
+      "uid": "abd1adc7-5cb8-4818-914b-c0b16f2d6fb5",
+      "phase": "Running",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-storage-canary-rclx5",
+      "uid": "cd6764ae-b710-4b38-ac2c-aacccfdb6338",
+      "phase": "Succeeded",
+      "images": [
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:427e694db951cb2f20c071515f59009e47ef188c5bfd30a837094f780ae6cf88"
+      ]
+    },
+    {
+      "kind": "Pod",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-target-runtime-79cb49b955-qwxch",
+      "uid": "7a4aecb4-5cfa-4638-a25f-3b8106c49655",
+      "phase": "Running",
+      "images": [
+        "docker.io/library/postgres@sha256:5660c2cbfea50c7a9127d17dc4e48543eedd3d7a41a595a2dfa572471e37e64c",
+        "docker.io/library/redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:f06f2ea4ac8f29e1bb74d0ed7924c972a566af9d50e1fafc8ecac83290797551",
+        "docker.changqingyun.cn/ani/cf01-ani-iam-target@sha256:ce3a0d4865a7764c44d58c26efe9c1b6fceb58acc013541eaac8235d7ffc087d",
+        "docker.changqingyun.cn/ani/cf01-ani-gateway-target@sha256:156369738bac9df857a69df9b9ec3b7c03a2fe84c9725ee026fa06a5f4bd16fb",
+        "docker.changqingyun.cn/ani/cf01-probe@sha256:f06f2ea4ac8f29e1bb74d0ed7924c972a566af9d50e1fafc8ecac83290797551"
+      ]
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-echo",
+      "uid": "1132de5e-d193-41be-add6-a2b1312f3580"
+    },
+    {
+      "kind": "Deployment",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-target-runtime",
+      "uid": "e91b1c62-9e9d-4cce-ae5e-ed172372dc06"
+    },
+    {
+      "kind": "Service",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-echo",
+      "uid": "b5ce544c-7e09-439a-a2d2-cc8a144e58a6"
+    },
+    {
+      "kind": "PersistentVolumeClaim",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-target-postgres-data",
+      "uid": "9c76730e-0a13-4dd3-be3c-3ad3660b0536"
+    },
+    {
+      "kind": "NetworkPolicy",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-allow-dns-and-same-lane",
+      "uid": "ad6d470e-ec16-4236-a8e1-becfe6cf127a"
+    },
+    {
+      "kind": "NetworkPolicy",
+      "namespace": "ani-cutover-target",
+      "name": "cf01-default-deny",
+      "uid": "46149d47-eea9-49d6-9cf2-5b5e42a2f97f"
+    },
+    {
+      "kind": "ServiceAccount",
+      "namespace": "ani-cutover-target",
+      "name": "default",
+      "uid": "e17dfa29-eb1a-45f7-8c5f-80d58cae4653"
+    }
+  ],
+  "writes_performed": false
+}

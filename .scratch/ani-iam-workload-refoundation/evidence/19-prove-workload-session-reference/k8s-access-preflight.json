@@ -1,0 +1,43 @@
+{
+  "cluster_uid": "f5cafbf1-5246-4f8f-b9da-742182f37528",
+  "expires_at": "2026-09-10T08:47:53Z",
+  "directory": "/home/ubuntu/workspace/ani-iam-runs/wr19-k8s-access-20260910T074751Z",
+  "accounts": [
+    "wr19-session",
+    "wr19-gateway-reader"
+  ],
+  "credentials": "new one-hour restricted SA TokenRequests; values private; fixtures retained",
+  "proxy": "socks5://127.0.0.1:60741",
+  "authenticated_checks": [
+    {
+      "account": "wr19-session",
+      "path": "/api/v1/namespaces/ani-tenant-01993000-0019-7000-8000-000000000001/pods",
+      "expected": 200,
+      "actual": 200
+    },
+    {
+      "account": "wr19-session",
+      "path": "/api/v1/namespaces/default/pods",
+      "expected": 403,
+      "actual": 403
+    },
+    {
+      "account": "wr19-session",
+      "path": "/api/v1/namespaces/ani-tenant-01993000-0019-7000-8000-000000000001/secrets",
+      "expected": 403,
+      "actual": 403
+    },
+    {
+      "account": "wr19-gateway-reader",
+      "path": "/apis/apps/v1/namespaces/ani-tenant-01993000-0019-7000-8000-000000000001/deployments/wr19-exec-a",
+      "expected": 200,
+      "actual": 200
+    },
+    {
+      "account": "wr19-gateway-reader",
+      "path": "/api/v1/namespaces/ani-tenant-01993000-0019-7000-8000-000000000001/pods",
+      "expected": 403,
+      "actual": 403
+    }
+  ]
+}

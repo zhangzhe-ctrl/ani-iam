@@ -1,0 +1,401 @@
+{
+  "status": "frozen_for_bootstrap",
+  "frozen_at": "2026-09-10T02:59:23.694394+00:00",
+  "baseline": "baseline.json",
+  "scope_stage": "WR-19 B, independent of resource environment and pending established-connection policy",
+  "files": [
+    {
+      "repository": "ani-iam",
+      "path": "cmd/server/main.go",
+      "state": "existing",
+      "source_sha256": "d5f7d084defc0c50147350f33bd53146d5d2150d3284f69ec724167fc5a2258d",
+      "reason": "formal_provisioner",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "cmd/server/provision_workloads.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "formal_provisioner",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "cmd/server/provision_workloads_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "formal_provisioner",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/biz/workload_bootstrap.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "bootstrap_domain",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/biz/workload_bootstrap_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "bootstrap_domain",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/data/workload_bootstrap.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "bootstrap_transaction",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/data/workload.go",
+      "state": "existing",
+      "source_sha256": "621532a5367e2841298b572ef206d834ca86f5facf219c7cf5f1d4be506d7257",
+      "reason": "bootstrap_transaction",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/data/queries/workload_bootstrap.sql",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "bootstrap_transaction",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "migrations/202609100003_workload_bootstrap.sql",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "bootstrap_transaction",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/data/sqlcgen/db.go",
+      "state": "existing",
+      "source_sha256": "c40f70c9870c43ddc88f743ec63627bc9af2d57fab48fdb0c055981d090b0cf8",
+      "reason": "generated",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/data/sqlcgen/models.go",
+      "state": "existing",
+      "source_sha256": "ada04dc8fb6ccfa9e16ae7b3770eaf467f67e8b8af90526baebbf0b520d48917",
+      "reason": "generated",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/data/sqlcgen/querier.go",
+      "state": "existing",
+      "source_sha256": "a6d8e5c535ace4f33250806bc2d2691e369794e1c95d9eafa40b1996c015be7f",
+      "reason": "generated",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/data/sqlcgen/persistence.sql.go",
+      "state": "existing",
+      "source_sha256": "2067634a08f507d5bc22990b74bda3eea55ed9f3255550bb0c65547068cf6de8",
+      "reason": "generated",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "internal/data/sqlcgen/workload_bootstrap.sql.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "generated",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "migrations/atlas.sum",
+      "state": "existing",
+      "source_sha256": "cfb2ef79792235b2f6eaca970d9e763ccaadc8fd0c8347981b1744376e50975f",
+      "reason": "generated",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tests/integration/workload_bootstrap_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "verification",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tests/integration/isolation_test.go",
+      "state": "existing",
+      "source_sha256": "b66ed8b98e5737139369a0fd101702094ff12060e5eaad7e188c392204283a0b",
+      "reason": "verification",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tests/integration/workload_runtime_test.go",
+      "state": "existing",
+      "source_sha256": "c84c40a211b4a73d458d3e0fe8482ad6de380e2ded26b7bb0a3c617353fddc28",
+      "reason": "verification",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tests/integration/formal_runtime_test.go",
+      "state": "existing",
+      "source_sha256": "2d247dea8d3c4bed4d5f577e27bc6e532e503280dd6fd2ef45cd89325b9e379d",
+      "reason": "verification",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tests/integration/persistence_test.go",
+      "state": "existing",
+      "source_sha256": "c42835ef6f5324eb3d0aa2b9fdd4e5a02dbe273ccb497df57ec8392c939c34e9",
+      "reason": "verification",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tools/wr19/remote-run.py",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "remote_execution",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tools/wr19/verify-source.py",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "remote_execution",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tools/wr19/generate.sh",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "remote_execution",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ani-iam",
+      "path": "tools/wr19/README.md",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "remote_execution",
+      "acceptance": [
+        "B",
+        "6",
+        "7",
+        "9",
+        "10",
+        "11"
+      ]
+    }
+  ],
+  "generation": [
+    {
+      "inputs": [
+        "migrations/*.sql (WR18 immutable inputs plus exact new migration above)",
+        "internal/data/queries/persistence.sql",
+        "internal/data/queries/workload_bootstrap.sql",
+        "sqlc.yaml"
+      ],
+      "outputs": [
+        "internal/data/sqlcgen/db.go",
+        "internal/data/sqlcgen/models.go",
+        "internal/data/sqlcgen/querier.go",
+        "internal/data/sqlcgen/persistence.sql.go",
+        "internal/data/sqlcgen/workload_bootstrap.sql.go",
+        "migrations/atlas.sum"
+      ],
+      "tools": [
+        "sqlc 1.31.1",
+        "atlas community 1.3.0",
+        "Go 1.26.7"
+      ],
+      "execution": "ubuntu only"
+    }
+  ],
+  "forbidden": [
+    "all unlisted product paths",
+    "other repositories product edits until their exact scope is frozen",
+    "existing DBs/credentials/cluster resources",
+    "Git staging/commit/push/tag/PR",
+    "WR20+"
+  ],
+  "authority": "original IAM issue19 and ticket-plan; product worktree documentation is source snapshot only",
+  "next_stages": "Remaining WR19 caller/receiver/contract paths must be concretely recorded before their edits. No scope expansion beyond the user Goal. Full WR19 acceptance remains mandatory."
+}

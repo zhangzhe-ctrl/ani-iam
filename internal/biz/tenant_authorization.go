@@ -69,8 +69,8 @@ type TenantRoleBinding struct {
 type PrincipalType string
 
 const (
-	PrincipalTypeHuman   PrincipalType = "human"
-	PrincipalTypeService PrincipalType = "service"
+	PrincipalTypeHuman    PrincipalType = "human"
+	PrincipalTypeWorkload PrincipalType = "workload"
 )
 
 type TenantMembershipRecord struct {
@@ -98,6 +98,7 @@ type TenantAuthorizationReader interface {
 }
 
 type TenantAuthorizationActor struct {
+	DirectCaller         DirectCaller
 	PrincipalID          uuid.UUID
 	AuthenticationMethod AuditAuthenticationMethod
 	RequestID            string
@@ -106,6 +107,7 @@ type TenantAuthorizationActor struct {
 }
 
 type TenantAuthorizationTransaction interface {
+	MutationResultTransaction
 	LockAdministrationGuard(context.Context, TenantScope) error
 	GetAccess(context.Context, TenantScope) (TenantAccess, error)
 	UpdateAccessStatus(context.Context, TenantScope, TenantAccessStatus, int64, time.Time) (TenantAccess, error)
@@ -117,16 +119,17 @@ type TenantAuthorizationTransaction interface {
 	IsActiveHumanAdministrator(context.Context, TenantScope, uuid.UUID) (bool, error)
 	BindRole(context.Context, TenantScope, TenantRoleBinding, int64, time.Time) (TenantMembership, TenantRoleBinding, error)
 	UnbindRole(context.Context, TenantScope, uuid.UUID, uuid.UUID, int64, time.Time) (TenantMembership, TenantRoleBinding, error)
-	DisableServicePrincipalForMembership(context.Context, TenantScope, uuid.UUID, time.Time) (ServicePrincipal, int64, error)
+	DisableTenantWorkloadForMembership(context.Context, TenantScope, uuid.UUID, time.Time) (TenantWorkload, int64, error)
 	AppendAudit(context.Context, TenantScope, SecurityAuditEvent) error
 }
 
 type TenantAuthorizationUnitOfWork interface {
 	WithinTenantAuthorization(context.Context, TenantScope, func(context.Context, TenantAuthorizationTransaction) error) error
-	ServicePrincipalUnitOfWork
+	TenantWorkloadUnitOfWork
 }
 
 type UpdateTenantMembershipCommand struct {
+	IdempotencyKey  string
 	MembershipID    uuid.UUID
 	Status          MembershipStatus
 	ExpectedVersion int64
@@ -134,6 +137,7 @@ type UpdateTenantMembershipCommand struct {
 }
 
 type UpdateTenantAccessCommand struct {
+	IdempotencyKey  string
 	Status          TenantAccessStatus
 	ExpectedVersion int64
 	Actor           TenantAuthorizationActor
@@ -145,6 +149,7 @@ type TenantAccessMutationResult struct {
 }
 
 type BindTenantRoleCommand struct {
+	IdempotencyKey            string
 	MembershipID              uuid.UUID
 	RoleID                    uuid.UUID
 	ExpectedMembershipVersion int64
@@ -161,11 +166,11 @@ type TenantMembershipMutationResult struct {
 }
 
 type TenantAuthorizationUsecase struct {
-	uow               TenantAuthorizationUnitOfWork
-	catalog           PermissionCatalog
-	ids               IDGenerator
-	clock             Clock
-	servicePrincipals *ServicePrincipalUsecase
+	uow             TenantAuthorizationUnitOfWork
+	catalog         PermissionCatalog
+	ids             IDGenerator
+	clock           Clock
+	tenantWorkloads *TenantWorkloadUsecase
 }
 
 func NewTenantAuthorizationUsecase(
@@ -177,36 +182,36 @@ func NewTenantAuthorizationUsecase(
 ) *TenantAuthorizationUsecase {
 	return &TenantAuthorizationUsecase{
 		uow: uow, catalog: catalog, ids: ids, clock: clock,
-		servicePrincipals: NewServicePrincipalUsecase(uow, ids, clock, limiter),
+		tenantWorkloads: NewTenantWorkloadUsecase(uow, ids, clock, limiter),
 	}
 }
 
-func (u *TenantAuthorizationUsecase) CreateServicePrincipal(ctx context.Context, scope TenantScope, command CreateServicePrincipalCommand) (CreateServicePrincipalResult, error) {
-	if u.servicePrincipals == nil {
-		return CreateServicePrincipalResult{}, ErrAuthenticationDependency
+func (u *TenantAuthorizationUsecase) CreateTenantWorkload(ctx context.Context, scope TenantScope, command CreateTenantWorkloadCommand) (CreateTenantWorkloadResult, error) {
+	if u.tenantWorkloads == nil {
+		return CreateTenantWorkloadResult{}, ErrAuthenticationDependency
 	}
-	return u.servicePrincipals.CreateServicePrincipal(ctx, scope, command)
+	return u.tenantWorkloads.CreateTenantWorkload(ctx, scope, command)
 }
 
 func (u *TenantAuthorizationUsecase) CreateAPIKey(ctx context.Context, scope TenantScope, command CreateAPIKeyCommand) (CreateAPIKeyResult, error) {
-	if u.servicePrincipals == nil {
+	if u.tenantWorkloads == nil {
 		return CreateAPIKeyResult{}, ErrAuthenticationDependency
 	}
-	return u.servicePrincipals.CreateAPIKey(ctx, scope, command)
+	return u.tenantWorkloads.CreateAPIKey(ctx, scope, command)
 }
 
-func (u *TenantAuthorizationUsecase) UpdateServicePrincipal(ctx context.Context, scope TenantScope, command UpdateServicePrincipalCommand) (UpdateServicePrincipalResult, error) {
-	if u.servicePrincipals == nil {
-		return UpdateServicePrincipalResult{}, ErrAuthenticationDependency
+func (u *TenantAuthorizationUsecase) UpdateTenantWorkload(ctx context.Context, scope TenantScope, command UpdateTenantWorkloadCommand) (UpdateTenantWorkloadResult, error) {
+	if u.tenantWorkloads == nil {
+		return UpdateTenantWorkloadResult{}, ErrAuthenticationDependency
 	}
-	return u.servicePrincipals.UpdateServicePrincipal(ctx, scope, command)
+	return u.tenantWorkloads.UpdateTenantWorkload(ctx, scope, command)
 }
 
 func (u *TenantAuthorizationUsecase) RevokeAPIKey(ctx context.Context, scope TenantScope, command RevokeAPIKeyCommand) (RevokeAPIKeyResult, error) {
-	if u.servicePrincipals == nil {
+	if u.tenantWorkloads == nil {
 		return RevokeAPIKeyResult{}, ErrAuthenticationDependency
 	}
-	return u.servicePrincipals.RevokeAPIKey(ctx, scope, command)
+	return u.tenantWorkloads.RevokeAPIKey(ctx, scope, command)
 }
 
 func (u *TenantAuthorizationUsecase) UpdateAccess(ctx context.Context, scope TenantScope, command UpdateTenantAccessCommand) (TenantAccessMutationResult, error) {
@@ -222,31 +227,40 @@ func (u *TenantAuthorizationUsecase) UpdateAccess(ctx context.Context, scope Ten
 	if command.Status != TenantAccessStatusActive && command.Status != TenantAccessStatusSuspended {
 		return TenantAccessMutationResult{}, ErrTenantAccessInactive
 	}
+	identity, err := mutationIdentity(command.Actor, "updateTenantIAMAccess", command.IdempotencyKey, struct {
+		Status  TenantAccessStatus
+		Version int64
+	}{command.Status, command.ExpectedVersion})
+	if err != nil {
+		return TenantAccessMutationResult{}, err
+	}
 	now := u.clock.Now().UTC()
 	var result TenantAccessMutationResult
-	err := u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
-		current, err := tx.GetAccess(txContext, scope)
-		if err != nil {
-			return err
-		}
-		if current.Version != command.ExpectedVersion {
-			return ErrVersionConflict
-		}
-		auditID, err := u.newID()
-		if err != nil {
-			return err
-		}
-		updated, err := tx.UpdateAccessStatus(txContext, scope, command.Status, command.ExpectedVersion, now)
-		if err != nil {
-			return err
-		}
-		tenantID, _ := scope.TenantID()
-		audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionTenantAccessUpdated, AuditTargetTypeTenantAccess, tenantID, updated.Version, now)
-		if err := tx.AppendAudit(txContext, scope, audit); err != nil {
-			return err
-		}
-		result = TenantAccessMutationResult{Access: updated, AuditEventID: auditID}
-		return nil
+	err = u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
+		return executeMutation(txContext, tx, scope, identity, now, &result, func() error {
+			current, err := tx.GetAccess(txContext, scope)
+			if err != nil {
+				return err
+			}
+			if current.Version != command.ExpectedVersion {
+				return ErrVersionConflict
+			}
+			auditID, err := u.newID()
+			if err != nil {
+				return err
+			}
+			updated, err := tx.UpdateAccessStatus(txContext, scope, command.Status, command.ExpectedVersion, now)
+			if err != nil {
+				return err
+			}
+			tenantID, _ := scope.TenantID()
+			audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionTenantAccessUpdated, AuditTargetTypeTenantAccess, tenantID, updated.Version, now)
+			if err := tx.AppendAudit(txContext, scope, audit); err != nil {
+				return err
+			}
+			result = TenantAccessMutationResult{Access: updated, AuditEventID: auditID}
+			return nil
+		})
 	})
 	return result, err
 }
@@ -258,57 +272,74 @@ func (u *TenantAuthorizationUsecase) UpdateMembership(ctx context.Context, scope
 	if command.Status != MembershipStatusActive && command.Status != MembershipStatusSuspended && command.Status != MembershipStatusRemoved {
 		return TenantMembershipMutationResult{}, ErrMembershipStatusInvalid
 	}
+	operation := "updateTenantIAMMember"
+	if command.Status == MembershipStatusRemoved {
+		operation = "removeTenantIAMMember"
+	}
+	identity, err := mutationIdentity(command.Actor, operation, command.IdempotencyKey, struct {
+		ID      uuid.UUID
+		Status  MembershipStatus
+		Version int64
+	}{command.MembershipID, command.Status, command.ExpectedVersion})
+	if err != nil {
+		return TenantMembershipMutationResult{}, err
+	}
 	now := u.clock.Now().UTC()
 	var result TenantMembershipMutationResult
-	err := u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
-		currentRecord, err := tx.GetMembershipRecord(txContext, scope, command.MembershipID)
-		if err != nil {
-			return err
-		}
-		current := currentRecord.Membership
-		if current.Version != command.ExpectedVersion {
-			return ErrVersionConflict
-		}
-		if current.Status == MembershipStatusActive && command.Status != MembershipStatusActive {
-			if err := u.protectLastAdministrator(txContext, tx, scope, command.MembershipID); err != nil {
-				return err
-			}
-		}
-		auditID, err := u.newID()
-		if err != nil {
-			return err
-		}
-		updated, err := tx.UpdateMembershipStatus(txContext, scope, command.MembershipID, command.Status, command.ExpectedVersion, now)
-		if err != nil {
-			return err
-		}
-		audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionMembershipUpdated, AuditTargetTypeTenantMembership, updated.ID, updated.Version, now)
-		if err := tx.AppendAudit(txContext, scope, audit); err != nil {
-			return err
-		}
-		if command.Status == MembershipStatusRemoved && currentRecord.PrincipalType == PrincipalTypeService {
-			principal, _, err := tx.DisableServicePrincipalForMembership(txContext, scope, updated.ID, now)
+	err = u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
+		return executeMutation(txContext, tx, scope, identity, now, &result, func() error {
+			currentRecord, err := tx.GetMembershipRecord(txContext, scope, command.MembershipID)
 			if err != nil {
 				return err
 			}
-			disableAuditID, err := u.newID()
+			current := currentRecord.Membership
+			if current.Version != command.ExpectedVersion {
+				return ErrVersionConflict
+			}
+			if current.Status == MembershipStatusRemoved && command.Status != MembershipStatusRemoved {
+				return ErrMembershipStatusInvalid
+			}
+			if current.Status == MembershipStatusActive && command.Status != MembershipStatusActive {
+				if err := u.protectLastAdministrator(txContext, tx, scope, command.MembershipID); err != nil {
+					return err
+				}
+			}
+			auditID, err := u.newID()
 			if err != nil {
 				return err
 			}
-			disableAudit := newTenantAuthorizationAudit(
-				disableAuditID, command.Actor, AuditActionServicePrincipalDisabled,
-				AuditTargetTypeServicePrincipal, principal.ID, principal.Version, now,
-			)
-			if err := tx.AppendAudit(txContext, scope, disableAudit); err != nil {
+			updated, err := tx.UpdateMembershipStatus(txContext, scope, command.MembershipID, command.Status, command.ExpectedVersion, now)
+			if err != nil {
 				return err
 			}
-		}
-		record, err := tx.GetMembershipRecord(txContext, scope, updated.ID)
-		if err != nil {
-			return err
-		}
-		result = newTenantMembershipMutationResult(record, auditID)
-		return nil
+			audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionMembershipUpdated, AuditTargetTypeTenantMembership, updated.ID, updated.Version, now)
+			if err := tx.AppendAudit(txContext, scope, audit); err != nil {
+				return err
+			}
+			if command.Status == MembershipStatusRemoved && currentRecord.PrincipalType == PrincipalTypeWorkload {
+				principal, _, err := tx.DisableTenantWorkloadForMembership(txContext, scope, updated.ID, now)
+				if err != nil {
+					return err
+				}
+				disableAuditID, err := u.newID()
+				if err != nil {
+					return err
+				}
+				disableAudit := newTenantAuthorizationAudit(
+					disableAuditID, command.Actor, AuditActionTenantWorkloadDisabled,
+					AuditTargetTypeTenantWorkload, principal.ID, principal.Version, now,
+				)
+				if err := tx.AppendAudit(txContext, scope, disableAudit); err != nil {
+					return err
+				}
+			}
+			record, err := tx.GetMembershipRecord(txContext, scope, updated.ID)
+			if err != nil {
+				return err
+			}
+			result = newTenantMembershipMutationResult(record, auditID)
+			return nil
+		})
 	})
 	return result, err
 }
@@ -320,41 +351,50 @@ func (u *TenantAuthorizationUsecase) BindRole(ctx context.Context, scope TenantS
 	if command.RoleID == uuid.Nil {
 		return TenantMembershipMutationResult{}, ErrRoleNotFound
 	}
+	identity, err := mutationIdentity(command.Actor, "bindTenantIAMRole", command.IdempotencyKey, struct {
+		Membership, Role uuid.UUID
+		Version          int64
+	}{command.MembershipID, command.RoleID, command.ExpectedMembershipVersion})
+	if err != nil {
+		return TenantMembershipMutationResult{}, err
+	}
 	now := u.clock.Now().UTC()
 	var result TenantMembershipMutationResult
-	err := u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
-		role, err := tx.GetRole(txContext, scope, command.RoleID)
-		if err != nil {
-			return err
-		}
-		if err := u.validateRolePermissions(role); err != nil {
-			return err
-		}
-		bindingID, err := u.newID()
-		if err != nil {
-			return err
-		}
-		auditID, err := u.newID()
-		if err != nil {
-			return err
-		}
-		updated, binding, err := tx.BindRole(txContext, scope, TenantRoleBinding{
-			ID: bindingID, MembershipID: command.MembershipID, RoleID: command.RoleID,
-			Version: 1, CreatedAt: now, UpdatedAt: now,
-		}, command.ExpectedMembershipVersion, now)
-		if err != nil {
-			return err
-		}
-		audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionRoleBound, AuditTargetTypeTenantRoleBinding, binding.ID, binding.Version, now)
-		if err := tx.AppendAudit(txContext, scope, audit); err != nil {
-			return err
-		}
-		record, err := tx.GetMembershipRecord(txContext, scope, updated.ID)
-		if err != nil {
-			return err
-		}
-		result = newTenantMembershipMutationResult(record, auditID)
-		return nil
+	err = u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
+		return executeMutation(txContext, tx, scope, identity, now, &result, func() error {
+			role, err := tx.GetRole(txContext, scope, command.RoleID)
+			if err != nil {
+				return err
+			}
+			if err := u.validateRolePermissions(role); err != nil {
+				return err
+			}
+			bindingID, err := u.newID()
+			if err != nil {
+				return err
+			}
+			auditID, err := u.newID()
+			if err != nil {
+				return err
+			}
+			updated, binding, err := tx.BindRole(txContext, scope, TenantRoleBinding{
+				ID: bindingID, MembershipID: command.MembershipID, RoleID: command.RoleID,
+				Version: 1, CreatedAt: now, UpdatedAt: now,
+			}, command.ExpectedMembershipVersion, now)
+			if err != nil {
+				return err
+			}
+			audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionRoleBound, AuditTargetTypeTenantRoleBinding, binding.ID, binding.Version, now)
+			if err := tx.AppendAudit(txContext, scope, audit); err != nil {
+				return err
+			}
+			record, err := tx.GetMembershipRecord(txContext, scope, updated.ID)
+			if err != nil {
+				return err
+			}
+			result = newTenantMembershipMutationResult(record, auditID)
+			return nil
+		})
 	})
 	return result, err
 }
@@ -366,36 +406,45 @@ func (u *TenantAuthorizationUsecase) UnbindRole(ctx context.Context, scope Tenan
 	if command.RoleID == uuid.Nil {
 		return TenantMembershipMutationResult{}, ErrRoleNotFound
 	}
+	identity, err := mutationIdentity(command.Actor, "unbindTenantIAMRole", command.IdempotencyKey, struct {
+		Membership, Role uuid.UUID
+		Version          int64
+	}{command.MembershipID, command.RoleID, command.ExpectedMembershipVersion})
+	if err != nil {
+		return TenantMembershipMutationResult{}, err
+	}
 	now := u.clock.Now().UTC()
 	var result TenantMembershipMutationResult
-	err := u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
-		role, err := tx.GetRole(txContext, scope, command.RoleID)
-		if err != nil {
-			return err
-		}
-		if role.System && role.Code == TenantAdminRoleCode {
-			if err := u.protectLastAdministrator(txContext, tx, scope, command.MembershipID); err != nil {
+	err = u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
+		return executeMutation(txContext, tx, scope, identity, now, &result, func() error {
+			role, err := tx.GetRole(txContext, scope, command.RoleID)
+			if err != nil {
 				return err
 			}
-		}
-		auditID, err := u.newID()
-		if err != nil {
-			return err
-		}
-		updated, binding, err := tx.UnbindRole(txContext, scope, command.MembershipID, command.RoleID, command.ExpectedMembershipVersion, now)
-		if err != nil {
-			return err
-		}
-		audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionRoleUnbound, AuditTargetTypeTenantRoleBinding, binding.ID, binding.Version, now)
-		if err := tx.AppendAudit(txContext, scope, audit); err != nil {
-			return err
-		}
-		record, err := tx.GetMembershipRecord(txContext, scope, updated.ID)
-		if err != nil {
-			return err
-		}
-		result = newTenantMembershipMutationResult(record, auditID)
-		return nil
+			if role.System && role.Code == TenantAdminRoleCode {
+				if err := u.protectLastAdministrator(txContext, tx, scope, command.MembershipID); err != nil {
+					return err
+				}
+			}
+			auditID, err := u.newID()
+			if err != nil {
+				return err
+			}
+			updated, binding, err := tx.UnbindRole(txContext, scope, command.MembershipID, command.RoleID, command.ExpectedMembershipVersion, now)
+			if err != nil {
+				return err
+			}
+			audit := newTenantAuthorizationAudit(auditID, command.Actor, AuditActionRoleUnbound, AuditTargetTypeTenantRoleBinding, binding.ID, binding.Version, now)
+			if err := tx.AppendAudit(txContext, scope, audit); err != nil {
+				return err
+			}
+			record, err := tx.GetMembershipRecord(txContext, scope, updated.ID)
+			if err != nil {
+				return err
+			}
+			result = newTenantMembershipMutationResult(record, auditID)
+			return nil
+		})
 	})
 	return result, err
 }
@@ -482,7 +531,7 @@ func validateTenantActor(actor TenantAuthorizationActor) error {
 
 func newTenantAuthorizationAudit(id uuid.UUID, actor TenantAuthorizationActor, action AuditAction, targetType AuditTargetType, targetID uuid.UUID, targetVersion int64, now time.Time) SecurityAuditEvent {
 	return SecurityAuditEvent{
-		ID: id, ActorID: actor.PrincipalID, AuthenticationMethod: actor.AuthenticationMethod,
+		ID: id, ActorID: actor.PrincipalID, AuthenticationMethod: actor.AuthenticationMethod, DirectCaller: actor.DirectCaller,
 		Boundary: AuditBoundaryTenant, Action: action, TargetType: targetType, TargetID: targetID,
 		TargetVersion: targetVersion, Result: AuditResultSucceeded, Reason: AuditReasonTenantAdminMutation,
 		RequestID: actor.RequestID, CorrelationID: actor.CorrelationID, DecisionID: actor.DecisionID,

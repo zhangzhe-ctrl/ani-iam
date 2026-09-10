@@ -1,0 +1,31 @@
+{
+  "run_id": "wr19-20260910T080445Z-be0b89ea",
+  "command_exit": 0,
+  "created_containers": 5,
+  "registered_containers_still_present": [],
+  "registered_processes_still_running": [],
+  "private_logs_scanned": [
+    {
+      "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080445Z-be0b89ea/private/session-gateway.log",
+      "sha256": "9d89ce616067350f75327f3426b43103f59063c75950c291c56fc710beadf926",
+      "bytes": 9987
+    },
+    {
+      "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080445Z-be0b89ea/private/ani-gateway.log",
+      "sha256": "762ef9064b6d2b59b2e60268777dc7887d1e10422e9c00eed8268dc4e5600ae2",
+      "bytes": 102889
+    },
+    {
+      "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080445Z-be0b89ea/private/ani-gateway-renewed.log",
+      "sha256": "a796dcd990cc8705fed4b48786b822fcff6df699500b7330ffcdd980d1ca8700",
+      "bytes": 96314
+    },
+    {
+      "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080445Z-be0b89ea/private/formal-b62e1924-e980-4b02-a0a2-8308a3ad0a0c/process.log",
+      "sha256": "7e1d5821e742b514921e7c59eaf3b593b99e2d32ad5cdba5ed9bc3a88184cdeb",
+      "bytes": 51884
+    }
+  ],
+  "secret_leak_findings": [],
+  "scan_scope": "named public evidence plus task-private formal process logs; JWT/ticket/terminal patterns and concrete fixture secrets; values never exported"
+}

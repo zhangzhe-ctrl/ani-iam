@@ -70,9 +70,9 @@ type AuthorizationPolicy struct {
 type CredentialKind string
 
 const (
-	CredentialKindAccessToken  CredentialKind = "access_token"
-	CredentialKindAPIKey       CredentialKind = "api_key"
-	CredentialKindServiceToken CredentialKind = "service_token"
+	CredentialKindAccessToken   CredentialKind = "access_token"
+	CredentialKindAPIKey        CredentialKind = "api_key"
+	CredentialKindWorkloadToken CredentialKind = "workload_token"
 )
 
 type PermissionScope string
@@ -317,7 +317,7 @@ func (u *AuthorizationUsecase) CheckPermission(ctx context.Context, command Chec
 }
 
 func (u *AuthorizationUsecase) checkAPIKey(ctx context.Context, rawCredential string, command CheckPermissionCommand, policy AuthorizationPolicy) (AuthorizationDecision, error) {
-	if !credentialKindAllowed(policy.CredentialKinds, CredentialKindAPIKey) || !principalKindAllowed(policy.PrincipalKinds, PrincipalTypeService) {
+	if !credentialKindAllowed(policy.CredentialKinds, CredentialKindAPIKey) || !principalKindAllowed(policy.PrincipalKinds, PrincipalTypeWorkload) {
 		return u.denyUnbound(ctx, command, AuthorizationReasonCredentialKindDenied)
 	}
 	keyID, err := ParseAPIKeyCredential(rawCredential)
@@ -381,7 +381,7 @@ func (u *AuthorizationUsecase) checkAPIKey(ctx context.Context, rawCredential st
 		)
 	}
 	principal := TrustedPrincipalContext{
-		ID: state.APIKey.PrincipalID, Type: PrincipalTypeService, Status: state.PrincipalStatus,
+		ID: state.APIKey.PrincipalID, Type: PrincipalTypeWorkload, Status: state.PrincipalStatus,
 		TenantID: state.TenantID, AuthnMethods: []AuditAuthenticationMethod{AuditAuthenticationMethodAPIKey},
 	}
 	if credentialTenantID != command.TargetTenantID {

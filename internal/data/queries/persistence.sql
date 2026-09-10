@@ -17,53 +17,53 @@ INSERT INTO tenant_memberships (
     sqlc.arg(updated_at)
 );
 
--- name: CreateServicePrincipalBase :exec
+-- name: CreateTenantWorkloadBase :exec
 INSERT INTO principals (
     id, principal_type, status, version, created_at, updated_at
 ) VALUES (
-    sqlc.arg(id), 'service', sqlc.arg(status), sqlc.arg(version),
+    sqlc.arg(id), 'workload', sqlc.arg(status), sqlc.arg(version),
     sqlc.arg(created_at), sqlc.arg(updated_at)
 );
 
--- name: CreateServicePrincipalProfile :exec
-INSERT INTO service_principals (
-    principal_id, tenant_id, membership_id, name, normalized_name,
+-- name: CreateTenantWorkloadProfile :exec
+INSERT INTO workload_principals (
+    principal_id, owner_type, tenant_id, membership_id, name, normalized_name,
     version, created_at, updated_at
 ) VALUES (
-    sqlc.arg(principal_id), sqlc.arg(tenant_id), sqlc.arg(membership_id),
+    sqlc.arg(principal_id), 'tenant', sqlc.arg(tenant_id), sqlc.narg(membership_id),
     sqlc.arg(name), sqlc.arg(normalized_name), sqlc.arg(version),
     sqlc.arg(created_at), sqlc.arg(updated_at)
 );
 
--- name: GetServicePrincipalForUpdate :one
+-- name: GetTenantWorkloadForUpdate :one
 SELECT profile.principal_id, profile.membership_id, profile.name,
        profile.normalized_name, principal.status, profile.version,
        profile.created_at, profile.updated_at
-FROM service_principals AS profile
+FROM workload_principals AS profile
 JOIN principals AS principal ON principal.id = profile.principal_id
 WHERE profile.tenant_id = sqlc.arg(tenant_id)
   AND profile.principal_id = sqlc.arg(principal_id)
 FOR UPDATE OF profile, principal;
 
--- name: GetServicePrincipalBoundary :one
+-- name: GetTenantWorkloadBoundary :one
 SELECT tenant_id
-FROM service_principals
-WHERE principal_id = sqlc.arg(principal_id);
+FROM workload_principals
+WHERE principal_id = sqlc.arg(principal_id) AND owner_type = 'tenant';
 
--- name: GetServicePrincipal :one
+-- name: GetTenantWorkload :one
 SELECT profile.principal_id, profile.membership_id,
        profile.name, profile.normalized_name, principal.status,
        profile.version, profile.created_at, profile.updated_at
-FROM service_principals AS profile
+FROM workload_principals AS profile
 JOIN principals AS principal ON principal.id = profile.principal_id
 WHERE profile.tenant_id = sqlc.arg(tenant_id)
   AND profile.principal_id = sqlc.arg(principal_id);
 
--- name: ListServicePrincipals :many
+-- name: ListTenantWorkloads :many
 SELECT profile.tenant_id, profile.principal_id, profile.membership_id,
        profile.name, profile.normalized_name, principal.status,
        profile.version, profile.created_at, profile.updated_at
-FROM service_principals AS profile
+FROM workload_principals AS profile
 JOIN principals AS principal ON principal.id = profile.principal_id
 WHERE profile.tenant_id = sqlc.arg(tenant_id)
   AND profile.principal_id > sqlc.arg(cursor_id)
@@ -127,30 +127,31 @@ SELECT
             GROUP BY active_key.tenant_id, active_key.principal_id
             HAVING count(*) >= sqlc.arg(unusual_active_count_threshold)
         ) AS unusual_principals
-    ) AS unusual_service_principal_count;
+    ) AS unusual_tenant_workload_count;
 
--- name: GetServicePrincipalByMembershipForUpdate :one
+-- name: GetTenantWorkloadByMembershipForUpdate :one
 SELECT profile.principal_id, profile.membership_id, profile.name,
        profile.normalized_name, principal.status, profile.version,
        profile.created_at, profile.updated_at
-FROM service_principals AS profile
+FROM workload_principals AS profile
 JOIN principals AS principal ON principal.id = profile.principal_id
 WHERE profile.tenant_id = sqlc.arg(tenant_id)
   AND profile.membership_id = sqlc.arg(membership_id)
 FOR UPDATE OF profile, principal;
 
--- name: UpdateServicePrincipalBaseStatus :execrows
+-- name: UpdateTenantWorkloadBaseStatus :execrows
 UPDATE principals
 SET status = sqlc.arg(status),
     version = version + 1,
     updated_at = sqlc.arg(updated_at)
 WHERE id = sqlc.arg(principal_id)
-  AND version = sqlc.arg(expected_version);
+  AND principal_type = 'workload'
+  AND EXISTS (SELECT 1 FROM workload_principals WHERE principal_id = principals.id AND tenant_id = sqlc.arg(tenant_id) AND owner_type = 'tenant')
+  AND principals.version = sqlc.arg(expected_version);
 
--- name: UpdateServicePrincipalProfile :one
-UPDATE service_principals
-SET name = sqlc.arg(name),
-    normalized_name = sqlc.arg(normalized_name),
+-- name: UpdateTenantWorkloadProfile :one
+UPDATE workload_principals
+SET membership_id = sqlc.narg(membership_id),
     version = version + 1,
     updated_at = sqlc.arg(updated_at)
 WHERE tenant_id = sqlc.arg(tenant_id)
@@ -374,7 +375,7 @@ INSERT INTO iam_audit_events (
     decision_id,
     source_service,
     occurred_at,
-    recorded_at
+    recorded_at, caller_principal_id, caller_binding_id, caller_binding_version, caller_grant_version
 ) VALUES (
     sqlc.arg(tenant_id),
     sqlc.arg(event_id),
@@ -392,7 +393,7 @@ INSERT INTO iam_audit_events (
     sqlc.arg(decision_id),
     sqlc.arg(source_service),
     sqlc.arg(occurred_at),
-    sqlc.arg(recorded_at)
+    sqlc.arg(recorded_at), sqlc.narg(caller_principal_id), sqlc.narg(caller_binding_id), sqlc.narg(caller_binding_version), sqlc.narg(caller_grant_version)
 );
 
 -- name: LookupPasswordLogin :one
@@ -1037,7 +1038,7 @@ SELECT
         )
     ) AS permission_allowed
 FROM api_keys AS api_key
-JOIN service_principals AS profile
+JOIN workload_principals AS profile
   ON profile.tenant_id = api_key.tenant_id
  AND profile.principal_id = api_key.principal_id
 JOIN principals AS principal
@@ -1529,3 +1530,55 @@ WHERE tenant_id = sqlc.arg(tenant_id)
   AND status = 'active'
   AND version = sqlc.arg(expected_version)
 RETURNING version;
+
+-- name: ResolveWorkloadIdentity :one
+SELECT binding.principal_id, binding.id AS binding_id,
+       principal.version AS principal_version, binding.version AS binding_version
+FROM workload_identity_bindings AS binding
+JOIN workload_principals AS profile ON profile.principal_id = binding.principal_id
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE binding.environment = sqlc.arg(environment) AND binding.trust_domain = sqlc.arg(trust_domain)
+  AND binding.identity_kind = sqlc.arg(identity_kind) AND binding.identity_value = sqlc.arg(identity_value)
+  AND binding.status = 'active' AND profile.owner_type = 'platform'
+  AND principal.principal_type = 'workload' AND principal.status = 'active';
+
+-- name: CheckWorkloadGrant :one
+SELECT authority.version
+FROM workload_grants AS authority
+JOIN principals AS principal ON principal.id = authority.principal_id
+JOIN workload_principals AS profile ON profile.principal_id = principal.id
+JOIN workload_identity_bindings AS binding ON binding.principal_id = principal.id
+WHERE authority.principal_id = sqlc.arg(principal_id)
+  AND authority.environment = sqlc.arg(environment) AND authority.trust_domain = sqlc.arg(trust_domain)
+  AND authority.audience = sqlc.arg(audience) AND authority.operation = sqlc.arg(operation)
+  AND ((authority.audience = 'ani-iam' AND authority.scope = 'iam_ingress')
+       OR (authority.audience = 'ani-session-gateway' AND authority.operation = 'session.create' AND authority.scope = 'delegated_session'))
+  AND authority.status = 'active'
+  AND principal.principal_type = 'workload' AND principal.status = 'active'
+  AND principal.version = sqlc.arg(principal_version) AND profile.owner_type = 'platform'
+  AND binding.id = sqlc.arg(binding_id) AND binding.version = sqlc.arg(binding_version)
+  AND binding.status = 'active';
+
+-- name: LockTenantMutationResult :exec
+SELECT pg_advisory_xact_lock(hashtextextended(sqlc.arg(lock_key)::text, 0));
+
+-- name: FindTenantMutationResult :one
+SELECT intent_digest, caller_principal_id, result, created_at, expires_at
+FROM tenant_mutation_results
+WHERE tenant_id = sqlc.arg(tenant_id) AND actor_id = sqlc.arg(actor_id)
+  AND operation = sqlc.arg(operation) AND idempotency_key = sqlc.arg(idempotency_key);
+
+-- name: SaveTenantMutationResult :exec
+INSERT INTO tenant_mutation_results (tenant_id, actor_id, operation, idempotency_key,
+    intent_digest, caller_principal_id, result, created_at, expires_at)
+VALUES (sqlc.arg(tenant_id), sqlc.arg(actor_id), sqlc.arg(operation), sqlc.arg(idempotency_key),
+    sqlc.arg(intent_digest), sqlc.narg(caller_principal_id), sqlc.arg(result), sqlc.arg(created_at), sqlc.arg(expires_at));
+
+-- name: AppendWorkloadCredentialSecurityAuditEvent :exec
+INSERT INTO iam_audit_events (tenant_id, event_id, actor_id, authentication_method, boundary, action,
+    target_type, target_id, target_version, result, reason, request_id, correlation_id, decision_id,
+    source_service, occurred_at, recorded_at, caller_principal_id, caller_binding_id, caller_binding_version, caller_grant_version)
+VALUES (sqlc.narg(tenant_id), sqlc.arg(event_id), sqlc.arg(actor_id), 'workload_token', sqlc.arg(boundary), sqlc.arg(action),
+    sqlc.arg(target_type), sqlc.arg(target_id), sqlc.arg(target_version), 'succeeded', 'CURRENT_AUTHORITY_VERIFIED',
+    sqlc.arg(request_id), sqlc.arg(request_id), sqlc.arg(request_id), 'iam-service', sqlc.arg(now), sqlc.arg(now),
+    sqlc.arg(caller_principal_id), sqlc.arg(caller_binding_id), sqlc.arg(caller_binding_version), sqlc.arg(caller_grant_version));

@@ -1,0 +1,780 @@
+{
+  "kind": "WR17 initial implementation input; not WR18 final verified source",
+  "head": "cd38cd90bca3e9d83af09a381051b895d82ae94f",
+  "tree": "a3668037d43bff9a3d938b9cf07500402e4ebd70",
+  "archive_sha256": "24c3b60bee330c9455ac9ea2a3ac296f3abefe20cce381bc770afe96720a2feb",
+  "files": [
+    {
+      "path": "api/iam/v1/authentication_service.pb.go",
+      "mode": "0o644",
+      "sha256": "9875418a17d6d538f5f288b29ecafb3f85e5d07f1ab602bdae7357946549cf0e"
+    },
+    {
+      "path": "api/iam/v1/authentication_service.proto",
+      "mode": "0o644",
+      "sha256": "0d56d271b5961ac7eb0255a34e3eb3ef01faeaa3fc1f784519b467b7d73bd1a3"
+    },
+    {
+      "path": "api/iam/v1/authentication_service_grpc.pb.go",
+      "mode": "0o644",
+      "sha256": "bfa7bf9541f769ec415b8ff0419136999591cfd5707425015ead2ac524b930c5"
+    },
+    {
+      "path": "api/iam/v1/authorization_service.pb.go",
+      "mode": "0o644",
+      "sha256": "fdd780f5f5a945ff74dc918b3a2a75361e3a05362f4dc412d9facfffe2f02a2e"
+    },
+    {
+      "path": "api/iam/v1/authorization_service.proto",
+      "mode": "0o644",
+      "sha256": "7799bef6830dcdd6de8cf19f40b6d4a79361a35c06664e078b8b0ac61cf22050"
+    },
+    {
+      "path": "api/iam/v1/authorization_service_grpc.pb.go",
+      "mode": "0o644",
+      "sha256": "90bff0d32e6350d980e53884cf7d459a62091d194ee7c91bdbccda2d2be4448a"
+    },
+    {
+      "path": "api/iam/v1/buf.gen.yaml",
+      "mode": "0o644",
+      "sha256": "36383d7c9e9e5dfed41358aec66641d4bab4ea6254dea2f9591090a7711b54db"
+    },
+    {
+      "path": "api/iam/v1/buf.lock",
+      "mode": "0o600",
+      "sha256": "dd67624b16fa20c7f3d9cb1ff150a3690425c3de5325f0f6b4bf045df7772db6"
+    },
+    {
+      "path": "api/iam/v1/buf.yaml",
+      "mode": "0o644",
+      "sha256": "c58611a82cf9e548dad4f6acc1c3ab8b974e65b635afb7091b64cd3fd3fae6db"
+    },
+    {
+      "path": "api/iam/v1/contract.pb.go",
+      "mode": "0o644",
+      "sha256": "2fc718a4a44165eb8928520348751b3c456f9c28b79c670ffb03753fa5704ae7"
+    },
+    {
+      "path": "api/iam/v1/contract.proto",
+      "mode": "0o644",
+      "sha256": "1ffc52614f8f98d2d99efb30315c2b82c808dd16257c504e8af5995ac06dda0b"
+    },
+    {
+      "path": "api/iam/v1/iam_admin_service.pb.go",
+      "mode": "0o644",
+      "sha256": "06cf0459771c20f5d0d5cea8c8910a55e5c4fec4f1f14780e9787310a120a196"
+    },
+    {
+      "path": "api/iam/v1/iam_admin_service.proto",
+      "mode": "0o644",
+      "sha256": "332dc8ad82bdc9e7c07618808028316a0c9ab735d0b71177095cb7d2f3a7d316"
+    },
+    {
+      "path": "api/iam/v1/iam_admin_service_grpc.pb.go",
+      "mode": "0o644",
+      "sha256": "410982325722df2060c105a74a9eee9b2006214f7a1f9ed553af8fdd0148d155"
+    },
+    {
+      "path": "api/iam/v1/iam_descriptor.pb",
+      "mode": "0o644",
+      "sha256": "66552fe0a53a1c4956f6ee7943498af1b5309602fec28eb47c1b51f4276f5d9a"
+    },
+    {
+      "path": "atlas.hcl",
+      "mode": "0o644",
+      "sha256": "87c40f8df78d21891a8c196c56177bfc5c097a7d6a115925c9d39df39c404d32"
+    },
+    {
+      "path": "cmd/server/app.go",
+      "mode": "0o644",
+      "sha256": "a31f8d8538f6a841f0b950f269099ece03242d539dfc06999b4440bb49c07f69"
+    },
+    {
+      "path": "cmd/server/app_test.go",
+      "mode": "0o644",
+      "sha256": "a39d045db261b50c1d01e9f165a4a4c7ec07f59d853a9f0eb2340fc9c3bd69cb"
+    },
+    {
+      "path": "cmd/server/main.go",
+      "mode": "0o644",
+      "sha256": "d5f7d084defc0c50147350f33bd53146d5d2150d3284f69ec724167fc5a2258d"
+    },
+    {
+      "path": "cmd/server/main_test.go",
+      "mode": "0o644",
+      "sha256": "7eada4374d086a54665dba02710a1a124737e48db29bcde346eb1e94c2a5b2ed"
+    },
+    {
+      "path": "configs/config.yaml",
+      "mode": "0o644",
+      "sha256": "da73f87acac8708aef9980db212562a31f96f18b0f3b6c838115c4d0a99b1aff"
+    },
+    {
+      "path": "go.mod",
+      "mode": "0o644",
+      "sha256": "d876bf396236a1b60112bcc82df6dd664453b49ee399a8f73d4b8bdf73822e5c"
+    },
+    {
+      "path": "go.sum",
+      "mode": "0o644",
+      "sha256": "76b4b8ce60e1b64e96573f3e0b52fac1dbf47c0efef71fb5be6e214f378c7a23"
+    },
+    {
+      "path": "internal/biz/README.md",
+      "mode": "0o644",
+      "sha256": "b112fe146738abbc9277593578fbaaddbdcc8e9119d8dd59f3c1320114f53a8d"
+    },
+    {
+      "path": "internal/biz/authentication.go",
+      "mode": "0o644",
+      "sha256": "e111a999e812dd1095f4e805533f2d7e20a5edaa6d9bde0989c190e096dcd14c"
+    },
+    {
+      "path": "internal/biz/authentication_test.go",
+      "mode": "0o644",
+      "sha256": "7af041bfd2cafebf6593ec77afe70d0d1719494cf611e8cc6992a87e988aab22"
+    },
+    {
+      "path": "internal/biz/authorization.go",
+      "mode": "0o644",
+      "sha256": "f93e8646418359db984d1d891f578e2379369428723175d59bd96f839da358c9"
+    },
+    {
+      "path": "internal/biz/authorization_test.go",
+      "mode": "0o644",
+      "sha256": "ab72f813635e529db9af40a6eae9189c7f8d9777d8daab6d3e8908771ef8918a"
+    },
+    {
+      "path": "internal/biz/biz.go",
+      "mode": "0o644",
+      "sha256": "d9698848f006e7e25fd3e758699cbec772f724df5b24420d48ff81f58ef510c2"
+    },
+    {
+      "path": "internal/biz/membership.go",
+      "mode": "0o644",
+      "sha256": "cb69387664080a503393a2ebf438b9900a4bc5bbf0886e51ebdf2d8f28bf0b0e"
+    },
+    {
+      "path": "internal/biz/membership_test.go",
+      "mode": "0o644",
+      "sha256": "3628f612815eb61a0a88c167f74fc0c7a56734faf0ddf4fc3fc89a81592a2b32"
+    },
+    {
+      "path": "internal/biz/oidc.go",
+      "mode": "0o644",
+      "sha256": "feaf5417fc24c4a13a75379d519e8c2de798863edde5ba30934949e7c7e9c29b"
+    },
+    {
+      "path": "internal/biz/oidc_test.go",
+      "mode": "0o644",
+      "sha256": "4533a8a9411b981138150524c09674f9350dd4cf4883baa94b5fc3b1c663faf4"
+    },
+    {
+      "path": "internal/biz/password_action.go",
+      "mode": "0o644",
+      "sha256": "f129eca3235d6cdd0a4c21106679e387393369c1655aee2769d3b530b504809d"
+    },
+    {
+      "path": "internal/biz/password_action_notification.go",
+      "mode": "0o644",
+      "sha256": "35a8d3cacfff659fcc7c83fba0b09bce72dea7ca16af3d8d5d3fc22dacfa0263"
+    },
+    {
+      "path": "internal/biz/password_action_notification_test.go",
+      "mode": "0o644",
+      "sha256": "7e85db91dc61634058d266e134c8f8e4e0d0f44a5e587159ebf25746bb87b109"
+    },
+    {
+      "path": "internal/biz/password_action_test.go",
+      "mode": "0o644",
+      "sha256": "bdca36f413760c4946382cf032e9180626ce9c472a901f13dbb37e45517dfbc9"
+    },
+    {
+      "path": "internal/biz/principal_validation.go",
+      "mode": "0o644",
+      "sha256": "898e4d20f4d9d6c9c5193c03fc4899fe917588bbbe8fa9f7cfa9d51dd02b7bf7"
+    },
+    {
+      "path": "internal/biz/principal_validation_test.go",
+      "mode": "0o644",
+      "sha256": "f95d29c8cd3b73dbc99fcdbc6a1b4ee1aa5261566783a023e44a90870ce1b9c7"
+    },
+    {
+      "path": "internal/biz/service_principal.go",
+      "mode": "0o644",
+      "sha256": "6c16c44c0e4a8dd1e6d4bd35ea18232a6dfd8405694ed91c9675e1ae2fe27138"
+    },
+    {
+      "path": "internal/biz/service_principal_test.go",
+      "mode": "0o644",
+      "sha256": "9986796cb74e93fc6bec62b4ed18db9be282c580e317d588c9d34db0984bac31"
+    },
+    {
+      "path": "internal/biz/session.go",
+      "mode": "0o644",
+      "sha256": "4f206f3d963c4626aeb813ebdfeefdc325f7b3021857ee97863761630122e0e5"
+    },
+    {
+      "path": "internal/biz/session_test.go",
+      "mode": "0o644",
+      "sha256": "fe4298510784a6ea4d07d9a23448a57063ba32dcb6a946591da5acdff1f9257b"
+    },
+    {
+      "path": "internal/biz/tenant_authorization.go",
+      "mode": "0o644",
+      "sha256": "de269fb64831cd419ea9bffe9bde63c1a4476b2d5417c3543cdbb3f314be9b3d"
+    },
+    {
+      "path": "internal/biz/tenant_authorization_test.go",
+      "mode": "0o644",
+      "sha256": "06a76424bb419bc1fc1aedf6e2124b6badf6f03d16a17cf1e117162eb2ab4202"
+    },
+    {
+      "path": "internal/biz/tenant_scope.go",
+      "mode": "0o644",
+      "sha256": "0eaf1bb72c8a24b83cf45b8525da7eca1316a7fe99ac66aa388daaf6c98d871e"
+    },
+    {
+      "path": "internal/biz/tenant_scope_test.go",
+      "mode": "0o644",
+      "sha256": "c40d3ff4b7b0f10f59139fc1f081b6c5af5a5d6708e654794337491accc22061"
+    },
+    {
+      "path": "internal/conf/conf.pb.go",
+      "mode": "0o644",
+      "sha256": "32c3ec90ad8de80701c695336e0df0601027144456190bb5a46acc4abc4dec2d"
+    },
+    {
+      "path": "internal/conf/conf.proto",
+      "mode": "0o644",
+      "sha256": "a4812ba9729ad60194488725dfe6ecba9858311381e4824205dbd289d3a9ca0a"
+    },
+    {
+      "path": "internal/conf/validate.go",
+      "mode": "0o644",
+      "sha256": "6e89850925f5aed83c874201826750cab383b181a691b6aa01f06532a4a27ffa"
+    },
+    {
+      "path": "internal/conf/validate_test.go",
+      "mode": "0o644",
+      "sha256": "91940bf840fd33c8f2f0312ff67a0d52bdd75df5730d5d7c0fa9f1b1c41b35b5"
+    },
+    {
+      "path": "internal/data/README.md",
+      "mode": "0o644",
+      "sha256": "72f4a46fb9627152e5abcaf87f7e41fb1b142183e4d7aa7d6ee53f1f89d12452"
+    },
+    {
+      "path": "internal/data/access_token_jwx.go",
+      "mode": "0o644",
+      "sha256": "0e6af2af97bee54c277aaca724f3835b173a484e99dcc080a8eb49fa0d5d90db"
+    },
+    {
+      "path": "internal/data/access_token_jwx_test.go",
+      "mode": "0o644",
+      "sha256": "0d098105896edb266fa710f3b54ffd0c8d9f5aefa462a04bfd9380d0518c0c94"
+    },
+    {
+      "path": "internal/data/access_token_key_file.go",
+      "mode": "0o644",
+      "sha256": "37cb4433659416456dc6a02ffa29b51917e4a651996d77f1bd9601fd0f7894d0"
+    },
+    {
+      "path": "internal/data/access_token_key_file_test.go",
+      "mode": "0o644",
+      "sha256": "24f0f8ee2942bafd187382217fd7b744eb149820c6883619e6ff0bc52c567581"
+    },
+    {
+      "path": "internal/data/api_key_creation_limiter_redis.go",
+      "mode": "0o644",
+      "sha256": "807f74b5b361a6f4cde4c89db5b672043f4198100005d0662fd5b981e4a9d67a"
+    },
+    {
+      "path": "internal/data/api_key_redis_test.go",
+      "mode": "0o644",
+      "sha256": "f068f55bb0c2df4c9a654faa9acef114e7c22ad9db8efdcb162c56a8ea2db373"
+    },
+    {
+      "path": "internal/data/api_key_usage_redis.go",
+      "mode": "0o644",
+      "sha256": "3ba46c95b7a6ab0b409a8cf09529f6538e69d9a8a07fa2918bf6c285d5c23f0a"
+    },
+    {
+      "path": "internal/data/cmd/genoperationregistry/main.go",
+      "mode": "0o644",
+      "sha256": "9c116c937d764132d35152bc511d45cc9d6e73d76ed2cc992e33f675d1bdb02f"
+    },
+    {
+      "path": "internal/data/cmd/genoperationregistry/main_test.go",
+      "mode": "0o644",
+      "sha256": "897435b7df405e635b0795d75400aa35d8c9f2299d3084c69e822a9b1805de5d"
+    },
+    {
+      "path": "internal/data/data.go",
+      "mode": "0o644",
+      "sha256": "e190680a7198f787809f7d7f305152258e05f41b929b8bf0ca5178c8fa193121"
+    },
+    {
+      "path": "internal/data/generated_operation_policies.go",
+      "mode": "0o644",
+      "sha256": "b85d0decea33f6828f16325d40edd845fe329e023eda42109f7379621b97aaba"
+    },
+    {
+      "path": "internal/data/id_generator.go",
+      "mode": "0o644",
+      "sha256": "ad992105fc5a290b6d6ab3a71ba45c2aa152dd4042dc690111ffcbe3e3a14bcf"
+    },
+    {
+      "path": "internal/data/id_generator_test.go",
+      "mode": "0o644",
+      "sha256": "dd95cb68233763729789b342c2f6c772d4fbbe7c087e0283e040b706b8cdb375"
+    },
+    {
+      "path": "internal/data/login_throttle_redis.go",
+      "mode": "0o644",
+      "sha256": "6ad54e343c4afcd16fa37d943342304e9bf9c2ff1d37cd291a53e2f03d03fa66"
+    },
+    {
+      "path": "internal/data/notification_grpc_client.go",
+      "mode": "0o644",
+      "sha256": "c9f3ba6bc1afd5c8df60431d43378db603135703e9d0506da399ab4c11d47702"
+    },
+    {
+      "path": "internal/data/notification_grpc_client_test.go",
+      "mode": "0o644",
+      "sha256": "44e5b43ab9bd6900324bd92889ed746f0e0e37e937a3a9a772541096d4d8b370"
+    },
+    {
+      "path": "internal/data/oidc_postgres.go",
+      "mode": "0o644",
+      "sha256": "fb32378cae4b7f6268fe0ddb518050f0cf96d6e18542bf0dbed3bcedc72c6299"
+    },
+    {
+      "path": "internal/data/oidc_provider.go",
+      "mode": "0o644",
+      "sha256": "cd44357d499fe458c1e4ad6c5734cad28881f4d4c19bfc9eae097defe9d6ed18"
+    },
+    {
+      "path": "internal/data/oidc_provider_test.go",
+      "mode": "0o644",
+      "sha256": "de8183faf4922a4c3f9505358a64234ed69896ff8d2523cf72873f638ce9219f"
+    },
+    {
+      "path": "internal/data/oidc_redis.go",
+      "mode": "0o644",
+      "sha256": "e6812226bec0ced98661b41016582e0663070ce442e2c94d6dbfc2b09be05820"
+    },
+    {
+      "path": "internal/data/operation_registry.go",
+      "mode": "0o644",
+      "sha256": "89bb83a45edbac5c88f68b1f21ad5810f523ff36ba15e3657fa805d62900e695"
+    },
+    {
+      "path": "internal/data/operation_registry_test.go",
+      "mode": "0o644",
+      "sha256": "65acb7e98195452fd91dad947b06ab06941f5f136d5dbc9240de767ae5f1557f"
+    },
+    {
+      "path": "internal/data/password_action_notification_grpc.go",
+      "mode": "0o644",
+      "sha256": "b500002b62d2d3afc64c152199fe4cb87b6eb66dcef76f45f397fc8baba00b91"
+    },
+    {
+      "path": "internal/data/password_action_notification_grpc_test.go",
+      "mode": "0o644",
+      "sha256": "08fbb29875ccd5cbc8e4436d2afca965759ba0823fcc8a03f5e1670d7d858b3f"
+    },
+    {
+      "path": "internal/data/password_action_notification_outbox.go",
+      "mode": "0o644",
+      "sha256": "18525c4a35cc6c907ae9052a3c664f1a330646dee5c8fb227d3c2857a1679e68"
+    },
+    {
+      "path": "internal/data/password_argon2id.go",
+      "mode": "0o644",
+      "sha256": "29f40804c25bd365ab48b5740215f934589908f1787285af21fb37fa1e688e61"
+    },
+    {
+      "path": "internal/data/password_argon2id_test.go",
+      "mode": "0o644",
+      "sha256": "e4828a6d4962866c188abccda3dacfe67283f07df267312575a5f22bdcf7a89d"
+    },
+    {
+      "path": "internal/data/postgres.go",
+      "mode": "0o644",
+      "sha256": "0d732a1ab2d17a014489cc1ed571e9a2e48c98e3357ecd9c92a16af1f3e4a653"
+    },
+    {
+      "path": "internal/data/queries/persistence.sql",
+      "mode": "0o644",
+      "sha256": "3a0b0f7f1c377094e855debb9add0bf1f42fb46d24767f3766af825ab5b33152"
+    },
+    {
+      "path": "internal/data/secret_generator.go",
+      "mode": "0o644",
+      "sha256": "685150592b8a58a94c05e185f940989f58f414c77d297748e952c08898651f17"
+    },
+    {
+      "path": "internal/data/secret_generator_test.go",
+      "mode": "0o644",
+      "sha256": "26435c0e59bc4ebf65b7daa351072b2625ce3361cf4c53421c64f47773f5dd9d"
+    },
+    {
+      "path": "internal/data/service_principal.go",
+      "mode": "0o644",
+      "sha256": "303f6114938b59b4556c5c9a6970f9d3bdf82e5b26fea949da74327e5eef2a30"
+    },
+    {
+      "path": "internal/data/session_postgres.go",
+      "mode": "0o644",
+      "sha256": "c56000a98e24f49695c8e3d5f1370d292625be97f53b0883a9a5b2950382c537"
+    },
+    {
+      "path": "internal/data/sqlcgen/db.go",
+      "mode": "0o644",
+      "sha256": "c40f70c9870c43ddc88f743ec63627bc9af2d57fab48fdb0c055981d090b0cf8"
+    },
+    {
+      "path": "internal/data/sqlcgen/models.go",
+      "mode": "0o644",
+      "sha256": "3b3505c9f432d56b07d3921221c32131b5c669de716fd3b083d5b05684d3b414"
+    },
+    {
+      "path": "internal/data/sqlcgen/persistence.sql.go",
+      "mode": "0o644",
+      "sha256": "d6cb5222799d482b31bd774f4828099575e111a341cc3c15f52a97f736ec796c"
+    },
+    {
+      "path": "internal/data/sqlcgen/querier.go",
+      "mode": "0o644",
+      "sha256": "343e84aff79e2d6c37a60f5400b41c3dcffee0e80c933b0111ce7d36f196af92"
+    },
+    {
+      "path": "internal/data/system_clock.go",
+      "mode": "0o644",
+      "sha256": "59a8549bc926f1c1a9df194a9bf23ef6e89d4c865ae1cd63df484c9c2ce40c40"
+    },
+    {
+      "path": "internal/data/system_clock_test.go",
+      "mode": "0o644",
+      "sha256": "fbc5aead43f1365080d234db2ed92b31fec8087da79fe55205cb165c0dbd4c44"
+    },
+    {
+      "path": "internal/data/target_slice.go",
+      "mode": "0o644",
+      "sha256": "c0e5e3a1523c439c6f0b44aad03aeb3895a5697a6aa902e4d6c30d1904126982"
+    },
+    {
+      "path": "internal/data/tenant_authorization.go",
+      "mode": "0o644",
+      "sha256": "1813a2bc3d3df35b1ee0ab87cd07fb719ac2967d036fc925f82a6fe19d54c304"
+    },
+    {
+      "path": "internal/server/admin.go",
+      "mode": "0o644",
+      "sha256": "574a09d99025d89b720057ec1b8c45653542d7bd8b325f830d3ef78bd3b66501"
+    },
+    {
+      "path": "internal/server/admin_test.go",
+      "mode": "0o644",
+      "sha256": "d6e750057525631965045bde95009b96fd750528557df5fa99125118022b4959"
+    },
+    {
+      "path": "internal/server/grpc.go",
+      "mode": "0o644",
+      "sha256": "dcf68151eefa867de82c6c3bd73739eaefbc05b0ff680c0e46b4a4fd55adf360"
+    },
+    {
+      "path": "internal/server/grpc_test.go",
+      "mode": "0o644",
+      "sha256": "626caf1ba72f497b9573b47b11aa9992126ca6913eeb6e40c59bc44ce0c3ac8e"
+    },
+    {
+      "path": "internal/server/observability.go",
+      "mode": "0o644",
+      "sha256": "818033316100799d4eca9f7039670d3ebb9264d8190c8656e7f032b9a44eaffa"
+    },
+    {
+      "path": "internal/server/observability_test.go",
+      "mode": "0o644",
+      "sha256": "1f48c693a9736dad66398b4dbfae68387a960beb83ae019158689af80aad87cc"
+    },
+    {
+      "path": "internal/server/readiness.go",
+      "mode": "0o644",
+      "sha256": "2dee0511011c2f804a9a3c158a08e0f2e8f162e233e2de57aab6253b59ebf441"
+    },
+    {
+      "path": "internal/server/server.go",
+      "mode": "0o644",
+      "sha256": "143d7c7ee7d6a4928663b9358e204d68b728123253735fd304689ec77e0dbca2"
+    },
+    {
+      "path": "internal/server/tls.go",
+      "mode": "0o644",
+      "sha256": "976285f4f32a2ae5aa6f88437320335bad31e4c55188c9466f48003adebcca0d"
+    },
+    {
+      "path": "internal/server/tls_test.go",
+      "mode": "0o644",
+      "sha256": "0f61ed4fe0290b3ced96981b2e0046647dea79e52dd0de5ee18bb9cb5dea9ab0"
+    },
+    {
+      "path": "internal/server/workload_identity.go",
+      "mode": "0o644",
+      "sha256": "007ce9cc5dd595c38b5ec151d0f9a3d60e97daab9e4e5474021bcc880b1666b5"
+    },
+    {
+      "path": "internal/server/workload_identity_test.go",
+      "mode": "0o644",
+      "sha256": "cf0aa1745d6a46709b209c445ce27a24dbe2366403bc8d4590d1eb8b01240be3"
+    },
+    {
+      "path": "internal/service/README.md",
+      "mode": "0o644",
+      "sha256": "c1a9aa4ff15984caa1119553751943d230e26951d7273dc7cbb1a3d3b077f303"
+    },
+    {
+      "path": "internal/service/authentication.go",
+      "mode": "0o644",
+      "sha256": "e467ef25870911ff172415b7036dd34e318c4379715551a324418b9c3fd4cfdb"
+    },
+    {
+      "path": "internal/service/authentication_test.go",
+      "mode": "0o644",
+      "sha256": "d606c1240cfee248ba3f0d87c44835dd84f62e9add8b184fa4c316f734d563f2"
+    },
+    {
+      "path": "internal/service/authorization.go",
+      "mode": "0o644",
+      "sha256": "b6b50059d2465167720ed2021a67bb7cc04024cf3e0c842868d8ccf6707a8200"
+    },
+    {
+      "path": "internal/service/authorization_test.go",
+      "mode": "0o644",
+      "sha256": "1d9822615496a137871cf8709186d95b0242bb85c071718b4af5740dbbac31c5"
+    },
+    {
+      "path": "internal/service/iam_admin.go",
+      "mode": "0o644",
+      "sha256": "55beb6a47428b1e7ceda4d0e2bafcb79966c45f3b1be3ea55aefdd08e84890d1"
+    },
+    {
+      "path": "internal/service/iam_admin_test.go",
+      "mode": "0o644",
+      "sha256": "8e980d539a74cfbd8f9ab54906adbe321d2d14b75fc98585323a21fd49abfbdc"
+    },
+    {
+      "path": "internal/service/service.go",
+      "mode": "0o644",
+      "sha256": "0ea32648379830d5b3e6f7ce9241499565675f4dff6cecd9b369d9ca7c4830e6"
+    },
+    {
+      "path": "migrations/202609040001_persistence_foundation.sql",
+      "mode": "0o644",
+      "sha256": "0bb28594601bb666e045c5a957feb0dacf9de8c6840247a7bc15f9a298393483"
+    },
+    {
+      "path": "migrations/202609040002_target_vertical_slice.sql",
+      "mode": "0o644",
+      "sha256": "2ae71907884a815b992a6d84587dd20f9fdcb818e7a79bd105e81db582e82f98"
+    },
+    {
+      "path": "migrations/202609060001_password_authentication.sql",
+      "mode": "0o644",
+      "sha256": "8a4b5f50dac1313dbb906ed06ed3464117dbaee16b85f9c8540e1e896b03bad2"
+    },
+    {
+      "path": "migrations/202609070001_oidc_identity.sql",
+      "mode": "0o644",
+      "sha256": "3e6e16ec9031922acfe8138ac646827bce4d703c7babefb42c90c6a4e0fa084a"
+    },
+    {
+      "path": "migrations/202609070002_session_continuity.sql",
+      "mode": "0o644",
+      "sha256": "91776cbf15a21d6307242d5ed5fa3f68729340ab03d62f95a9142044f0ca80b6"
+    },
+    {
+      "path": "migrations/202609080001_tenant_authorization.sql",
+      "mode": "0o644",
+      "sha256": "c46c9bfd399d3f74731b522662a7a991da6a8510c749a6e17dbfb73ac1641633"
+    },
+    {
+      "path": "migrations/202609080002_permission_catalog.sql",
+      "mode": "0o644",
+      "sha256": "814e31cd79eef9fb750a7a439bb09ab74f37ec3230dff63cf0b457ce7ef59dd4"
+    },
+    {
+      "path": "migrations/202609080003_service_principal_api_key.sql",
+      "mode": "0o644",
+      "sha256": "7c84d12542cd04a8031c6a7749ddd57ce7f2654cfc01cbf37fd97d1f18b950b0"
+    },
+    {
+      "path": "migrations/atlas.sum",
+      "mode": "0o644",
+      "sha256": "b0acaa5ab88e6c04d4cdf2427182fde53f028e5819d2d08b00951573a50acae9"
+    },
+    {
+      "path": "sqlc.yaml",
+      "mode": "0o644",
+      "sha256": "486a757be88a0ce95c69915a0bdab6e8250a090904f810114c35989dae37509f"
+    },
+    {
+      "path": "tests/contracts/artifacts/core_tenant_integration_v1_descriptor.pb",
+      "mode": "0o644",
+      "sha256": "7dd40f9053b7c1c0c8905decab0f81b07173d0b25651113147bde9a5370d352a"
+    },
+    {
+      "path": "tests/contracts/contract_pins.json",
+      "mode": "0o644",
+      "sha256": "0e69d1c0993c5bf1bac8b1f5ae3eb9181762f4800db8ea16acbd52660a0dc112"
+    },
+    {
+      "path": "tests/contracts/contracts_test.go",
+      "mode": "0o644",
+      "sha256": "11e47a7302388babbab37fadfa23969cd0629ab690c1c51f0447e8c8a8e2f1a6"
+    },
+    {
+      "path": "tests/contracts/fixtures/core_error_contract.v1.json",
+      "mode": "0o644",
+      "sha256": "f90d9aed3e369ddd2b310771aee9da7a0fd39f99af55ac514f0a4581b6f94865"
+    },
+    {
+      "path": "tests/contracts/fixtures/core_tenant_iam_bootstrap_requested.v1.json",
+      "mode": "0o644",
+      "sha256": "545017fd5dc4f023bc12fbaca1829dda88924c2872f2cff220424a8c2ad221e8"
+    },
+    {
+      "path": "tests/contracts/fixtures/core_tenant_lifecycle_changed.v1.json",
+      "mode": "0o644",
+      "sha256": "637443dffaf6f60dc9165cae2f2f87b875b90baaa280fa1315e4a3fd5a7436f7"
+    },
+    {
+      "path": "tests/contracts/fixtures/core_tenant_lifecycle_heartbeat.v1.json",
+      "mode": "0o644",
+      "sha256": "05b9715e8262d3a547605bce9312bb6e26b4ccc859ed2e0c18158042395acc00"
+    },
+    {
+      "path": "tests/contracts/fixtures/core_tenant_lifecycle_snapshot_page.v1.json",
+      "mode": "0o644",
+      "sha256": "539a59fcc0691bbdefa13ec5c85081738436b118f6221edd9f026cc816903546"
+    },
+    {
+      "path": "tests/contracts/fixtures/iam_check_permission.v1.json",
+      "mode": "0o644",
+      "sha256": "92c1d517ff3c49532ca08e0f6b24eace2569a8fdb702af8d1d134bc7e846c4c2"
+    },
+    {
+      "path": "tests/contracts/fixtures/iam_error_contract.v1.json",
+      "mode": "0o644",
+      "sha256": "c7a488d5ce5d409d1de25845dd3dc3af7a32c1ce853f81c490d541b8a4448e3c"
+    },
+    {
+      "path": "tests/contracts/fixtures/iam_password_login.v1.json",
+      "mode": "0o644",
+      "sha256": "cb4df637172faae8551d42abd55b9167195d9a21693080a06e713ae9c6483cc4"
+    },
+    {
+      "path": "tests/cp0/runtime_test.go",
+      "mode": "0o644",
+      "sha256": "c54a92448434a6fd156b3110daae8d82479266cefc5541ee0f5514044de7753f"
+    },
+    {
+      "path": "tests/integration/api_key_redis_control_test.go",
+      "mode": "0o644",
+      "sha256": "66e936ad2698f3ef718cd5d70146a809460f6d25412d654b88ebad6e46e5c117"
+    },
+    {
+      "path": "tests/integration/envoy_adapter_real_iam_test.go",
+      "mode": "0o644",
+      "sha256": "b007a10b65a486dced1dd3a3f5ee5d0c729b0c3b1f30be609bfae75ca1dafdc5"
+    },
+    {
+      "path": "tests/integration/notification_l3_process_test.go",
+      "mode": "0o644",
+      "sha256": "622ad6213188a5f86465a68a6f4bde4fce7f367f5f98e7b2bab8ef09ddd47ce9"
+    },
+    {
+      "path": "tests/integration/oidc_dex_test.go",
+      "mode": "0o644",
+      "sha256": "bf27899f6541bd54103c529e1507e24f9855cc4b74e673de2d544fd24aa5db5e"
+    },
+    {
+      "path": "tests/integration/oidc_persistence_test.go",
+      "mode": "0o644",
+      "sha256": "845e73196542ca3fe7ca618dd7f9f10ece906ed63c525914a97b6aa36eedc92d"
+    },
+    {
+      "path": "tests/integration/oidc_state_test.go",
+      "mode": "0o644",
+      "sha256": "5d0070485cf68e3df3b8b844987299993f49ee08854b72e154bd9fffe115fde4"
+    },
+    {
+      "path": "tests/integration/password_action_notification_outbox_test.go",
+      "mode": "0o644",
+      "sha256": "8a0fda929db96ee266418a4d29c817473846688e96dbfcf0ed872fa00cb2f0ac"
+    },
+    {
+      "path": "tests/integration/password_action_test.go",
+      "mode": "0o644",
+      "sha256": "d98cbd92b5045965671ae39162db22e6e823113b2a4d87a63b7cc9aaf6e7199e"
+    },
+    {
+      "path": "tests/integration/password_login_lock_test.go",
+      "mode": "0o644",
+      "sha256": "ca9d2c9937e2771fc5ebb179481b6c95286eb6804dcd5da85555229ab0b3bee3"
+    },
+    {
+      "path": "tests/integration/persistence_test.go",
+      "mode": "0o644",
+      "sha256": "22f0101d5fcc6f4dc88bf08eb1e46bc015c8b55c9fd1574275bc9cfe564b9a28"
+    },
+    {
+      "path": "tests/integration/redis_throttle_test.go",
+      "mode": "0o644",
+      "sha256": "104740638a025bb29e26eb7e6ebdb6d80ef0a4a50c76673ac5d9f20007847f8d"
+    },
+    {
+      "path": "tests/integration/runtime_gateway_e2e_test.go",
+      "mode": "0o644",
+      "sha256": "94d78f5cbd6abedd2374f21d29094eb785cf1a2c2492b6ffc72a759bba874e67"
+    },
+    {
+      "path": "tests/integration/service_principal_test.go",
+      "mode": "0o644",
+      "sha256": "57a24e3dd41e8eabe1456dd7f39527d2165114956ac0b13ffac3aef38063bf0c"
+    },
+    {
+      "path": "tests/integration/session_continuity_test.go",
+      "mode": "0o644",
+      "sha256": "b9a00866ccf20bf2a7b1957bb88296272d788c435cb0c1a28d1403e1b8fb9456"
+    },
+    {
+      "path": "tests/integration/session_test_support_test.go",
+      "mode": "0o644",
+      "sha256": "68e52cf37484e67036d437bad66c7220ebcc2f2bf69c3976f88c6a057a8a65f6"
+    },
+    {
+      "path": "tests/integration/tenant_authorization_test.go",
+      "mode": "0o644",
+      "sha256": "879be206c5e8c3735bc58a9101bd2b8d74a50614e296683ca70940fd135e9fe9"
+    },
+    {
+      "path": "tests/integration/vertical_slice_test.go",
+      "mode": "0o644",
+      "sha256": "2aa364567e60df2d2dd2e352b5ba363784f1cf0c01a9a0290b02a98cacc2fda2"
+    },
+    {
+      "path": "tests/password_action_workload_identity_test.go",
+      "mode": "0o644",
+      "sha256": "e81825700f7b61537b59740919e1e9e8272df33783db0f84400926bbbec25e8f"
+    },
+    {
+      "path": "tests/password_login_source_ip_contract_test.go",
+      "mode": "0o644",
+      "sha256": "1bd56a1688343790433bd442593dcc07a46f8faa04d0014eca65f4608523a083"
+    }
+  ],
+  "documents": "current-documents.json plus separate WR17 freeze artifacts; snapshot issue copies are not state authority",
+  "transferred_to_remote": false
+}

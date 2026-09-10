@@ -20,7 +20,7 @@ func TestValidatePrincipalAuthenticatesAPIKeyWithoutSessionOrGrant(t *testing.T)
 	reader := &recordingPrincipalValidationReader{
 		registry: staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
 			OperationID: "createInstance", Resource: "instances", Actions: []string{"create"}, Scope: PermissionScopeTenant,
-			CredentialKinds: []CredentialKind{CredentialKindAccessToken, CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeHuman, PrincipalTypeService},
+			CredentialKinds: []CredentialKind{CredentialKindAccessToken, CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeHuman, PrincipalTypeWorkload},
 		}},
 		boundaryTenantID: tenantID,
 		apiKeyState: APIKeyAuthorizationState{
@@ -42,7 +42,7 @@ func TestValidatePrincipalAuthenticatesAPIKeyWithoutSessionOrGrant(t *testing.T)
 	if result.DecisionID != decisionID || result.PolicyRevision != testPolicyRevision {
 		t.Fatalf("result identity = %#v", result)
 	}
-	if result.Principal.ID != principalID || result.Principal.Type != PrincipalTypeService || result.Principal.TenantID != tenantID ||
+	if result.Principal.ID != principalID || result.Principal.Type != PrincipalTypeWorkload || result.Principal.TenantID != tenantID ||
 		result.Principal.SessionID != uuid.Nil || result.Principal.GrantID != uuid.Nil ||
 		len(result.Principal.AuthnMethods) != 1 || result.Principal.AuthnMethods[0] != AuditAuthenticationMethodAPIKey {
 		t.Fatalf("principal context = %#v", result.Principal)
@@ -70,7 +70,7 @@ func TestValidatePrincipalFailsClosedWhenRequiredAPIKeyUsageObserverIsMissing(t 
 	reader := &recordingPrincipalValidationReader{
 		registry: staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
 			OperationID: "createInstance", Resource: "instances", Actions: []string{"create"}, Scope: PermissionScopeTenant,
-			CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeService},
+			CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeWorkload},
 		}},
 		boundaryTenantID: tenantID,
 		apiKeyState: APIKeyAuthorizationState{
@@ -133,7 +133,7 @@ func TestValidatePrincipalFailsClosedWhenRequiredAuditCannotBeRecorded(t *testin
 	reader := &recordingPrincipalValidationReader{
 		registry: staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
 			OperationID: "createInstance", Resource: "instances", Actions: []string{"create"}, Scope: PermissionScopeTenant,
-			CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeService},
+			CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeWorkload},
 		}},
 		boundaryTenantID: tenantID,
 		apiKeyState: APIKeyAuthorizationState{
@@ -167,7 +167,7 @@ func TestValidatePrincipalAPIKeyFailureMatrix(t *testing.T) {
 		return &recordingPrincipalValidationReader{
 			registry: staticPolicyRegistry{revision: testPolicyRevision, policy: AuthorizationPolicy{
 				OperationID: "createInstance", Resource: "instances", Actions: []string{"create"}, Scope: PermissionScopeTenant,
-				CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeService},
+				CredentialKinds: []CredentialKind{CredentialKindAPIKey}, PrincipalKinds: []PrincipalType{PrincipalTypeWorkload},
 			}},
 			boundaryTenantID: tenantID,
 			apiKeyState: APIKeyAuthorizationState{

@@ -238,7 +238,7 @@ INSERT INTO iam_audit_events (
     decision_id,
     source_service,
     occurred_at,
-    recorded_at
+    recorded_at, caller_principal_id, caller_binding_id, caller_binding_version, caller_grant_version
 ) VALUES (
     $1,
     $2,
@@ -256,7 +256,7 @@ INSERT INTO iam_audit_events (
     $14,
     $15,
     $16,
-    $17
+    $17, $18, $19, $20, $21
 )
 `
 
@@ -278,6 +278,10 @@ type AppendSecurityAuditEventParams struct {
 	SourceService        string
 	OccurredAt           pgtype.Timestamptz
 	RecordedAt           pgtype.Timestamptz
+	CallerPrincipalID    pgtype.UUID
+	CallerBindingID      pgtype.UUID
+	CallerBindingVersion pgtype.Int8
+	CallerGrantVersion   pgtype.Int8
 }
 
 func (q *Queries) AppendSecurityAuditEvent(ctx context.Context, arg AppendSecurityAuditEventParams) error {
@@ -299,6 +303,57 @@ func (q *Queries) AppendSecurityAuditEvent(ctx context.Context, arg AppendSecuri
 		arg.SourceService,
 		arg.OccurredAt,
 		arg.RecordedAt,
+		arg.CallerPrincipalID,
+		arg.CallerBindingID,
+		arg.CallerBindingVersion,
+		arg.CallerGrantVersion,
+	)
+	return err
+}
+
+const appendWorkloadCredentialSecurityAuditEvent = `-- name: AppendWorkloadCredentialSecurityAuditEvent :exec
+INSERT INTO iam_audit_events (tenant_id, event_id, actor_id, authentication_method, boundary, action,
+    target_type, target_id, target_version, result, reason, request_id, correlation_id, decision_id,
+    source_service, occurred_at, recorded_at, caller_principal_id, caller_binding_id, caller_binding_version, caller_grant_version)
+VALUES ($1, $2, $3, 'workload_token', $4, $5,
+    $6, $7, $8, 'succeeded', 'CURRENT_AUTHORITY_VERIFIED',
+    $9, $9, $9, 'iam-service', $10, $10,
+    $11, $12, $13, $14)
+`
+
+type AppendWorkloadCredentialSecurityAuditEventParams struct {
+	TenantID             pgtype.UUID
+	EventID              uuid.UUID
+	ActorID              pgtype.UUID
+	Boundary             string
+	Action               string
+	TargetType           string
+	TargetID             uuid.UUID
+	TargetVersion        int64
+	RequestID            string
+	Now                  pgtype.Timestamptz
+	CallerPrincipalID    pgtype.UUID
+	CallerBindingID      pgtype.UUID
+	CallerBindingVersion pgtype.Int8
+	CallerGrantVersion   pgtype.Int8
+}
+
+func (q *Queries) AppendWorkloadCredentialSecurityAuditEvent(ctx context.Context, arg AppendWorkloadCredentialSecurityAuditEventParams) error {
+	_, err := q.db.Exec(ctx, appendWorkloadCredentialSecurityAuditEvent,
+		arg.TenantID,
+		arg.EventID,
+		arg.ActorID,
+		arg.Boundary,
+		arg.Action,
+		arg.TargetType,
+		arg.TargetID,
+		arg.TargetVersion,
+		arg.RequestID,
+		arg.Now,
+		arg.CallerPrincipalID,
+		arg.CallerBindingID,
+		arg.CallerBindingVersion,
+		arg.CallerGrantVersion,
 	)
 	return err
 }
@@ -391,6 +446,51 @@ type CancelReplacedPasswordActionNotificationsParams struct {
 func (q *Queries) CancelReplacedPasswordActionNotifications(ctx context.Context, arg CancelReplacedPasswordActionNotificationsParams) error {
 	_, err := q.db.Exec(ctx, cancelReplacedPasswordActionNotifications, arg.UpdatedAt, arg.PrincipalID, arg.ReplacedBy)
 	return err
+}
+
+const checkWorkloadGrant = `-- name: CheckWorkloadGrant :one
+SELECT authority.version
+FROM workload_grants AS authority
+JOIN principals AS principal ON principal.id = authority.principal_id
+JOIN workload_principals AS profile ON profile.principal_id = principal.id
+JOIN workload_identity_bindings AS binding ON binding.principal_id = principal.id
+WHERE authority.principal_id = $1
+  AND authority.environment = $2 AND authority.trust_domain = $3
+  AND authority.audience = $4 AND authority.operation = $5
+  AND ((authority.audience = 'ani-iam' AND authority.scope = 'iam_ingress')
+       OR (authority.audience = 'ani-session-gateway' AND authority.operation = 'session.create' AND authority.scope = 'delegated_session'))
+  AND authority.status = 'active'
+  AND principal.principal_type = 'workload' AND principal.status = 'active'
+  AND principal.version = $6 AND profile.owner_type = 'platform'
+  AND binding.id = $7 AND binding.version = $8
+  AND binding.status = 'active'
+`
+
+type CheckWorkloadGrantParams struct {
+	PrincipalID      uuid.UUID
+	Environment      string
+	TrustDomain      string
+	Audience         string
+	Operation        string
+	PrincipalVersion int64
+	BindingID        uuid.UUID
+	BindingVersion   int64
+}
+
+func (q *Queries) CheckWorkloadGrant(ctx context.Context, arg CheckWorkloadGrantParams) (int64, error) {
+	row := q.db.QueryRow(ctx, checkWorkloadGrant,
+		arg.PrincipalID,
+		arg.Environment,
+		arg.TrustDomain,
+		arg.Audience,
+		arg.Operation,
+		arg.PrincipalVersion,
+		arg.BindingID,
+		arg.BindingVersion,
+	)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
 }
 
 const claimPasswordActionNotification = `-- name: ClaimPasswordActionNotification :one
@@ -888,70 +988,6 @@ func (q *Queries) CreateRefreshTokenFamily(ctx context.Context, arg CreateRefres
 	return err
 }
 
-const createServicePrincipalBase = `-- name: CreateServicePrincipalBase :exec
-INSERT INTO principals (
-    id, principal_type, status, version, created_at, updated_at
-) VALUES (
-    $1, 'service', $2, $3,
-    $4, $5
-)
-`
-
-type CreateServicePrincipalBaseParams struct {
-	ID        uuid.UUID
-	Status    string
-	Version   int64
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-}
-
-func (q *Queries) CreateServicePrincipalBase(ctx context.Context, arg CreateServicePrincipalBaseParams) error {
-	_, err := q.db.Exec(ctx, createServicePrincipalBase,
-		arg.ID,
-		arg.Status,
-		arg.Version,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
-	return err
-}
-
-const createServicePrincipalProfile = `-- name: CreateServicePrincipalProfile :exec
-INSERT INTO service_principals (
-    principal_id, tenant_id, membership_id, name, normalized_name,
-    version, created_at, updated_at
-) VALUES (
-    $1, $2, $3,
-    $4, $5, $6,
-    $7, $8
-)
-`
-
-type CreateServicePrincipalProfileParams struct {
-	PrincipalID    uuid.UUID
-	TenantID       uuid.UUID
-	MembershipID   uuid.UUID
-	Name           string
-	NormalizedName string
-	Version        int64
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
-func (q *Queries) CreateServicePrincipalProfile(ctx context.Context, arg CreateServicePrincipalProfileParams) error {
-	_, err := q.db.Exec(ctx, createServicePrincipalProfile,
-		arg.PrincipalID,
-		arg.TenantID,
-		arg.MembershipID,
-		arg.Name,
-		arg.NormalizedName,
-		arg.Version,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-	)
-	return err
-}
-
 const createSession = `-- name: CreateSession :exec
 INSERT INTO sessions (
     id, principal_id, audience, status, authn_methods, device_name, idle_expires_at,
@@ -1106,6 +1142,70 @@ func (q *Queries) CreateTenantRoleBinding(ctx context.Context, arg CreateTenantR
 	return err
 }
 
+const createTenantWorkloadBase = `-- name: CreateTenantWorkloadBase :exec
+INSERT INTO principals (
+    id, principal_type, status, version, created_at, updated_at
+) VALUES (
+    $1, 'workload', $2, $3,
+    $4, $5
+)
+`
+
+type CreateTenantWorkloadBaseParams struct {
+	ID        uuid.UUID
+	Status    string
+	Version   int64
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+func (q *Queries) CreateTenantWorkloadBase(ctx context.Context, arg CreateTenantWorkloadBaseParams) error {
+	_, err := q.db.Exec(ctx, createTenantWorkloadBase,
+		arg.ID,
+		arg.Status,
+		arg.Version,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
+const createTenantWorkloadProfile = `-- name: CreateTenantWorkloadProfile :exec
+INSERT INTO workload_principals (
+    principal_id, owner_type, tenant_id, membership_id, name, normalized_name,
+    version, created_at, updated_at
+) VALUES (
+    $1, 'tenant', $2, $3,
+    $4, $5, $6,
+    $7, $8
+)
+`
+
+type CreateTenantWorkloadProfileParams struct {
+	PrincipalID    uuid.UUID
+	TenantID       pgtype.UUID
+	MembershipID   pgtype.UUID
+	Name           string
+	NormalizedName string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) CreateTenantWorkloadProfile(ctx context.Context, arg CreateTenantWorkloadProfileParams) error {
+	_, err := q.db.Exec(ctx, createTenantWorkloadProfile,
+		arg.PrincipalID,
+		arg.TenantID,
+		arg.MembershipID,
+		arg.Name,
+		arg.NormalizedName,
+		arg.Version,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
 const createUnknownPasswordActionRequest = `-- name: CreateUnknownPasswordActionRequest :exec
 INSERT INTO password_action_requests (
     operation_id, account_digest, audience, expires_at,
@@ -1170,6 +1270,46 @@ func (q *Queries) DeleteTenantRoleBinding(ctx context.Context, arg DeleteTenantR
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const findTenantMutationResult = `-- name: FindTenantMutationResult :one
+SELECT intent_digest, caller_principal_id, result, created_at, expires_at
+FROM tenant_mutation_results
+WHERE tenant_id = $1 AND actor_id = $2
+  AND operation = $3 AND idempotency_key = $4
+`
+
+type FindTenantMutationResultParams struct {
+	TenantID       uuid.UUID
+	ActorID        uuid.UUID
+	Operation      string
+	IdempotencyKey string
+}
+
+type FindTenantMutationResultRow struct {
+	IntentDigest      []byte
+	CallerPrincipalID pgtype.UUID
+	Result            []byte
+	CreatedAt         pgtype.Timestamptz
+	ExpiresAt         pgtype.Timestamptz
+}
+
+func (q *Queries) FindTenantMutationResult(ctx context.Context, arg FindTenantMutationResultParams) (FindTenantMutationResultRow, error) {
+	row := q.db.QueryRow(ctx, findTenantMutationResult,
+		arg.TenantID,
+		arg.ActorID,
+		arg.Operation,
+		arg.IdempotencyKey,
+	)
+	var i FindTenantMutationResultRow
+	err := row.Scan(
+		&i.IntentDigest,
+		&i.CallerPrincipalID,
+		&i.Result,
+		&i.CreatedAt,
+		&i.ExpiresAt,
 	)
 	return i, err
 }
@@ -1297,7 +1437,7 @@ SELECT
             GROUP BY active_key.tenant_id, active_key.principal_id
             HAVING count(*) >= $3
         ) AS unusual_principals
-    ) AS unusual_service_principal_count
+    ) AS unusual_tenant_workload_count
 `
 
 type GetAPIKeyOperationalSnapshotParams struct {
@@ -1307,14 +1447,14 @@ type GetAPIKeyOperationalSnapshotParams struct {
 }
 
 type GetAPIKeyOperationalSnapshotRow struct {
-	StaleNonExpiringCount        int64
-	UnusualServicePrincipalCount int64
+	StaleNonExpiringCount      int64
+	UnusualTenantWorkloadCount int64
 }
 
 func (q *Queries) GetAPIKeyOperationalSnapshot(ctx context.Context, arg GetAPIKeyOperationalSnapshotParams) (GetAPIKeyOperationalSnapshotRow, error) {
 	row := q.db.QueryRow(ctx, getAPIKeyOperationalSnapshot, arg.StaleBefore, arg.ObservedAt, arg.UnusualActiveCountThreshold)
 	var i GetAPIKeyOperationalSnapshotRow
-	err := row.Scan(&i.StaleNonExpiringCount, &i.UnusualServicePrincipalCount)
+	err := row.Scan(&i.StaleNonExpiringCount, &i.UnusualTenantWorkloadCount)
 	return i, err
 }
 
@@ -1368,151 +1508,6 @@ func (q *Queries) GetPasswordActionRequestByIdempotencyKey(ctx context.Context, 
 		&i.AccountDigest,
 		&i.Audience,
 		&i.ExpiresAt,
-	)
-	return i, err
-}
-
-const getServicePrincipal = `-- name: GetServicePrincipal :one
-SELECT profile.principal_id, profile.membership_id,
-       profile.name, profile.normalized_name, principal.status,
-       profile.version, profile.created_at, profile.updated_at
-FROM service_principals AS profile
-JOIN principals AS principal ON principal.id = profile.principal_id
-WHERE profile.tenant_id = $1
-  AND profile.principal_id = $2
-`
-
-type GetServicePrincipalParams struct {
-	TenantID    uuid.UUID
-	PrincipalID uuid.UUID
-}
-
-type GetServicePrincipalRow struct {
-	PrincipalID    uuid.UUID
-	MembershipID   uuid.UUID
-	Name           string
-	NormalizedName string
-	Status         string
-	Version        int64
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
-func (q *Queries) GetServicePrincipal(ctx context.Context, arg GetServicePrincipalParams) (GetServicePrincipalRow, error) {
-	row := q.db.QueryRow(ctx, getServicePrincipal, arg.TenantID, arg.PrincipalID)
-	var i GetServicePrincipalRow
-	err := row.Scan(
-		&i.PrincipalID,
-		&i.MembershipID,
-		&i.Name,
-		&i.NormalizedName,
-		&i.Status,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getServicePrincipalBoundary = `-- name: GetServicePrincipalBoundary :one
-SELECT tenant_id
-FROM service_principals
-WHERE principal_id = $1
-`
-
-type GetServicePrincipalBoundaryParams struct {
-	PrincipalID uuid.UUID
-}
-
-func (q *Queries) GetServicePrincipalBoundary(ctx context.Context, arg GetServicePrincipalBoundaryParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, getServicePrincipalBoundary, arg.PrincipalID)
-	var tenant_id uuid.UUID
-	err := row.Scan(&tenant_id)
-	return tenant_id, err
-}
-
-const getServicePrincipalByMembershipForUpdate = `-- name: GetServicePrincipalByMembershipForUpdate :one
-SELECT profile.principal_id, profile.membership_id, profile.name,
-       profile.normalized_name, principal.status, profile.version,
-       profile.created_at, profile.updated_at
-FROM service_principals AS profile
-JOIN principals AS principal ON principal.id = profile.principal_id
-WHERE profile.tenant_id = $1
-  AND profile.membership_id = $2
-FOR UPDATE OF profile, principal
-`
-
-type GetServicePrincipalByMembershipForUpdateParams struct {
-	TenantID     uuid.UUID
-	MembershipID uuid.UUID
-}
-
-type GetServicePrincipalByMembershipForUpdateRow struct {
-	PrincipalID    uuid.UUID
-	MembershipID   uuid.UUID
-	Name           string
-	NormalizedName string
-	Status         string
-	Version        int64
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
-func (q *Queries) GetServicePrincipalByMembershipForUpdate(ctx context.Context, arg GetServicePrincipalByMembershipForUpdateParams) (GetServicePrincipalByMembershipForUpdateRow, error) {
-	row := q.db.QueryRow(ctx, getServicePrincipalByMembershipForUpdate, arg.TenantID, arg.MembershipID)
-	var i GetServicePrincipalByMembershipForUpdateRow
-	err := row.Scan(
-		&i.PrincipalID,
-		&i.MembershipID,
-		&i.Name,
-		&i.NormalizedName,
-		&i.Status,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getServicePrincipalForUpdate = `-- name: GetServicePrincipalForUpdate :one
-SELECT profile.principal_id, profile.membership_id, profile.name,
-       profile.normalized_name, principal.status, profile.version,
-       profile.created_at, profile.updated_at
-FROM service_principals AS profile
-JOIN principals AS principal ON principal.id = profile.principal_id
-WHERE profile.tenant_id = $1
-  AND profile.principal_id = $2
-FOR UPDATE OF profile, principal
-`
-
-type GetServicePrincipalForUpdateParams struct {
-	TenantID    uuid.UUID
-	PrincipalID uuid.UUID
-}
-
-type GetServicePrincipalForUpdateRow struct {
-	PrincipalID    uuid.UUID
-	MembershipID   uuid.UUID
-	Name           string
-	NormalizedName string
-	Status         string
-	Version        int64
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
-func (q *Queries) GetServicePrincipalForUpdate(ctx context.Context, arg GetServicePrincipalForUpdateParams) (GetServicePrincipalForUpdateRow, error) {
-	row := q.db.QueryRow(ctx, getServicePrincipalForUpdate, arg.TenantID, arg.PrincipalID)
-	var i GetServicePrincipalForUpdateRow
-	err := row.Scan(
-		&i.PrincipalID,
-		&i.MembershipID,
-		&i.Name,
-		&i.NormalizedName,
-		&i.Status,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1685,6 +1680,151 @@ func (q *Queries) GetTenantMembership(ctx context.Context, arg GetTenantMembersh
 	err := row.Scan(
 		&i.ID,
 		&i.PrincipalID,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTenantWorkload = `-- name: GetTenantWorkload :one
+SELECT profile.principal_id, profile.membership_id,
+       profile.name, profile.normalized_name, principal.status,
+       profile.version, profile.created_at, profile.updated_at
+FROM workload_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = $1
+  AND profile.principal_id = $2
+`
+
+type GetTenantWorkloadParams struct {
+	TenantID    pgtype.UUID
+	PrincipalID uuid.UUID
+}
+
+type GetTenantWorkloadRow struct {
+	PrincipalID    uuid.UUID
+	MembershipID   pgtype.UUID
+	Name           string
+	NormalizedName string
+	Status         string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) GetTenantWorkload(ctx context.Context, arg GetTenantWorkloadParams) (GetTenantWorkloadRow, error) {
+	row := q.db.QueryRow(ctx, getTenantWorkload, arg.TenantID, arg.PrincipalID)
+	var i GetTenantWorkloadRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.MembershipID,
+		&i.Name,
+		&i.NormalizedName,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTenantWorkloadBoundary = `-- name: GetTenantWorkloadBoundary :one
+SELECT tenant_id
+FROM workload_principals
+WHERE principal_id = $1 AND owner_type = 'tenant'
+`
+
+type GetTenantWorkloadBoundaryParams struct {
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) GetTenantWorkloadBoundary(ctx context.Context, arg GetTenantWorkloadBoundaryParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getTenantWorkloadBoundary, arg.PrincipalID)
+	var tenant_id pgtype.UUID
+	err := row.Scan(&tenant_id)
+	return tenant_id, err
+}
+
+const getTenantWorkloadByMembershipForUpdate = `-- name: GetTenantWorkloadByMembershipForUpdate :one
+SELECT profile.principal_id, profile.membership_id, profile.name,
+       profile.normalized_name, principal.status, profile.version,
+       profile.created_at, profile.updated_at
+FROM workload_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = $1
+  AND profile.membership_id = $2
+FOR UPDATE OF profile, principal
+`
+
+type GetTenantWorkloadByMembershipForUpdateParams struct {
+	TenantID     pgtype.UUID
+	MembershipID pgtype.UUID
+}
+
+type GetTenantWorkloadByMembershipForUpdateRow struct {
+	PrincipalID    uuid.UUID
+	MembershipID   pgtype.UUID
+	Name           string
+	NormalizedName string
+	Status         string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) GetTenantWorkloadByMembershipForUpdate(ctx context.Context, arg GetTenantWorkloadByMembershipForUpdateParams) (GetTenantWorkloadByMembershipForUpdateRow, error) {
+	row := q.db.QueryRow(ctx, getTenantWorkloadByMembershipForUpdate, arg.TenantID, arg.MembershipID)
+	var i GetTenantWorkloadByMembershipForUpdateRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.MembershipID,
+		&i.Name,
+		&i.NormalizedName,
+		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getTenantWorkloadForUpdate = `-- name: GetTenantWorkloadForUpdate :one
+SELECT profile.principal_id, profile.membership_id, profile.name,
+       profile.normalized_name, principal.status, profile.version,
+       profile.created_at, profile.updated_at
+FROM workload_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = $1
+  AND profile.principal_id = $2
+FOR UPDATE OF profile, principal
+`
+
+type GetTenantWorkloadForUpdateParams struct {
+	TenantID    pgtype.UUID
+	PrincipalID uuid.UUID
+}
+
+type GetTenantWorkloadForUpdateRow struct {
+	PrincipalID    uuid.UUID
+	MembershipID   pgtype.UUID
+	Name           string
+	NormalizedName string
+	Status         string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) GetTenantWorkloadForUpdate(ctx context.Context, arg GetTenantWorkloadForUpdateParams) (GetTenantWorkloadForUpdateRow, error) {
+	row := q.db.QueryRow(ctx, getTenantWorkloadForUpdate, arg.TenantID, arg.PrincipalID)
+	var i GetTenantWorkloadForUpdateRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.MembershipID,
+		&i.Name,
+		&i.NormalizedName,
 		&i.Status,
 		&i.Version,
 		&i.CreatedAt,
@@ -1879,73 +2019,6 @@ func (q *Queries) ListAPIKeys(ctx context.Context, arg ListAPIKeysParams) ([]Lis
 	return items, nil
 }
 
-const listServicePrincipals = `-- name: ListServicePrincipals :many
-SELECT profile.tenant_id, profile.principal_id, profile.membership_id,
-       profile.name, profile.normalized_name, principal.status,
-       profile.version, profile.created_at, profile.updated_at
-FROM service_principals AS profile
-JOIN principals AS principal ON principal.id = profile.principal_id
-WHERE profile.tenant_id = $1
-  AND profile.principal_id > $2
-  AND ($3::text = '' OR principal.status = $3::text)
-ORDER BY profile.principal_id
-LIMIT $4
-`
-
-type ListServicePrincipalsParams struct {
-	TenantID  uuid.UUID
-	CursorID  uuid.UUID
-	Status    string
-	PageLimit int32
-}
-
-type ListServicePrincipalsRow struct {
-	TenantID       uuid.UUID
-	PrincipalID    uuid.UUID
-	MembershipID   uuid.UUID
-	Name           string
-	NormalizedName string
-	Status         string
-	Version        int64
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
-func (q *Queries) ListServicePrincipals(ctx context.Context, arg ListServicePrincipalsParams) ([]ListServicePrincipalsRow, error) {
-	rows, err := q.db.Query(ctx, listServicePrincipals,
-		arg.TenantID,
-		arg.CursorID,
-		arg.Status,
-		arg.PageLimit,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListServicePrincipalsRow{}
-	for rows.Next() {
-		var i ListServicePrincipalsRow
-		if err := rows.Scan(
-			&i.TenantID,
-			&i.PrincipalID,
-			&i.MembershipID,
-			&i.Name,
-			&i.NormalizedName,
-			&i.Status,
-			&i.Version,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listTenantAuthorizationMembershipRoleIDs = `-- name: ListTenantAuthorizationMembershipRoleIDs :many
 SELECT role_id
 FROM tenant_role_bindings
@@ -2120,6 +2193,73 @@ func (q *Queries) ListTenantAuthorizationRoles(ctx context.Context, arg ListTena
 			&i.Code,
 			&i.SystemRole,
 			&i.SystemDefinitionVersion,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTenantWorkloads = `-- name: ListTenantWorkloads :many
+SELECT profile.tenant_id, profile.principal_id, profile.membership_id,
+       profile.name, profile.normalized_name, principal.status,
+       profile.version, profile.created_at, profile.updated_at
+FROM workload_principals AS profile
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE profile.tenant_id = $1
+  AND profile.principal_id > $2
+  AND ($3::text = '' OR principal.status = $3::text)
+ORDER BY profile.principal_id
+LIMIT $4
+`
+
+type ListTenantWorkloadsParams struct {
+	TenantID  pgtype.UUID
+	CursorID  uuid.UUID
+	Status    string
+	PageLimit int32
+}
+
+type ListTenantWorkloadsRow struct {
+	TenantID       pgtype.UUID
+	PrincipalID    uuid.UUID
+	MembershipID   pgtype.UUID
+	Name           string
+	NormalizedName string
+	Status         string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) ListTenantWorkloads(ctx context.Context, arg ListTenantWorkloadsParams) ([]ListTenantWorkloadsRow, error) {
+	rows, err := q.db.Query(ctx, listTenantWorkloads,
+		arg.TenantID,
+		arg.CursorID,
+		arg.Status,
+		arg.PageLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTenantWorkloadsRow{}
+	for rows.Next() {
+		var i ListTenantWorkloadsRow
+		if err := rows.Scan(
+			&i.TenantID,
+			&i.PrincipalID,
+			&i.MembershipID,
+			&i.Name,
+			&i.NormalizedName,
+			&i.Status,
 			&i.Version,
 			&i.CreatedAt,
 			&i.UpdatedAt,
@@ -2727,6 +2867,19 @@ func (q *Queries) LockTenantAuthorizationMembership(ctx context.Context, arg Loc
 	return i, err
 }
 
+const lockTenantMutationResult = `-- name: LockTenantMutationResult :exec
+SELECT pg_advisory_xact_lock(hashtextextended($1::text, 0))
+`
+
+type LockTenantMutationResultParams struct {
+	LockKey string
+}
+
+func (q *Queries) LockTenantMutationResult(ctx context.Context, arg LockTenantMutationResultParams) error {
+	_, err := q.db.Exec(ctx, lockTenantMutationResult, arg.LockKey)
+	return err
+}
+
 const lockTenantSwitchBoundary = `-- name: LockTenantSwitchBoundary :one
 SELECT
     source_grant.tenant_id AS source_tenant_id,
@@ -2892,7 +3045,7 @@ SELECT
         )
     ) AS permission_allowed
 FROM api_keys AS api_key
-JOIN service_principals AS profile
+JOIN workload_principals AS profile
   ON profile.tenant_id = api_key.tenant_id
  AND profile.principal_id = api_key.principal_id
 JOIN principals AS principal
@@ -3978,6 +4131,49 @@ func (q *Queries) ResetPasswordLoginFailures(ctx context.Context, arg ResetPassw
 	return version, err
 }
 
+const resolveWorkloadIdentity = `-- name: ResolveWorkloadIdentity :one
+SELECT binding.principal_id, binding.id AS binding_id,
+       principal.version AS principal_version, binding.version AS binding_version
+FROM workload_identity_bindings AS binding
+JOIN workload_principals AS profile ON profile.principal_id = binding.principal_id
+JOIN principals AS principal ON principal.id = profile.principal_id
+WHERE binding.environment = $1 AND binding.trust_domain = $2
+  AND binding.identity_kind = $3 AND binding.identity_value = $4
+  AND binding.status = 'active' AND profile.owner_type = 'platform'
+  AND principal.principal_type = 'workload' AND principal.status = 'active'
+`
+
+type ResolveWorkloadIdentityParams struct {
+	Environment   string
+	TrustDomain   string
+	IdentityKind  string
+	IdentityValue string
+}
+
+type ResolveWorkloadIdentityRow struct {
+	PrincipalID      uuid.UUID
+	BindingID        uuid.UUID
+	PrincipalVersion int64
+	BindingVersion   int64
+}
+
+func (q *Queries) ResolveWorkloadIdentity(ctx context.Context, arg ResolveWorkloadIdentityParams) (ResolveWorkloadIdentityRow, error) {
+	row := q.db.QueryRow(ctx, resolveWorkloadIdentity,
+		arg.Environment,
+		arg.TrustDomain,
+		arg.IdentityKind,
+		arg.IdentityValue,
+	)
+	var i ResolveWorkloadIdentityRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.BindingID,
+		&i.PrincipalVersion,
+		&i.BindingVersion,
+	)
+	return i, err
+}
+
 const revokeAPIKey = `-- name: RevokeAPIKey :one
 UPDATE api_keys
 SET status = 'revoked',
@@ -4314,6 +4510,40 @@ func (q *Queries) RevokeSessionsForPrincipal(ctx context.Context, arg RevokeSess
 	return err
 }
 
+const saveTenantMutationResult = `-- name: SaveTenantMutationResult :exec
+INSERT INTO tenant_mutation_results (tenant_id, actor_id, operation, idempotency_key,
+    intent_digest, caller_principal_id, result, created_at, expires_at)
+VALUES ($1, $2, $3, $4,
+    $5, $6, $7, $8, $9)
+`
+
+type SaveTenantMutationResultParams struct {
+	TenantID          uuid.UUID
+	ActorID           uuid.UUID
+	Operation         string
+	IdempotencyKey    string
+	IntentDigest      []byte
+	CallerPrincipalID pgtype.UUID
+	Result            []byte
+	CreatedAt         pgtype.Timestamptz
+	ExpiresAt         pgtype.Timestamptz
+}
+
+func (q *Queries) SaveTenantMutationResult(ctx context.Context, arg SaveTenantMutationResultParams) error {
+	_, err := q.db.Exec(ctx, saveTenantMutationResult,
+		arg.TenantID,
+		arg.ActorID,
+		arg.Operation,
+		arg.IdempotencyKey,
+		arg.IntentDigest,
+		arg.CallerPrincipalID,
+		arg.Result,
+		arg.CreatedAt,
+		arg.ExpiresAt,
+	)
+	return err
+}
+
 const updatePasswordCredentialForReset = `-- name: UpdatePasswordCredentialForReset :one
 UPDATE password_credentials
 SET password_hash = $1,
@@ -4336,89 +4566,6 @@ func (q *Queries) UpdatePasswordCredentialForReset(ctx context.Context, arg Upda
 	var version int64
 	err := row.Scan(&version)
 	return version, err
-}
-
-const updateServicePrincipalBaseStatus = `-- name: UpdateServicePrincipalBaseStatus :execrows
-UPDATE principals
-SET status = $1,
-    version = version + 1,
-    updated_at = $2
-WHERE id = $3
-  AND version = $4
-`
-
-type UpdateServicePrincipalBaseStatusParams struct {
-	Status          string
-	UpdatedAt       pgtype.Timestamptz
-	PrincipalID     uuid.UUID
-	ExpectedVersion int64
-}
-
-func (q *Queries) UpdateServicePrincipalBaseStatus(ctx context.Context, arg UpdateServicePrincipalBaseStatusParams) (int64, error) {
-	result, err := q.db.Exec(ctx, updateServicePrincipalBaseStatus,
-		arg.Status,
-		arg.UpdatedAt,
-		arg.PrincipalID,
-		arg.ExpectedVersion,
-	)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
-}
-
-const updateServicePrincipalProfile = `-- name: UpdateServicePrincipalProfile :one
-UPDATE service_principals
-SET name = $1,
-    normalized_name = $2,
-    version = version + 1,
-    updated_at = $3
-WHERE tenant_id = $4
-  AND principal_id = $5
-  AND version = $6
-RETURNING principal_id, membership_id, name, normalized_name,
-          version, created_at, updated_at
-`
-
-type UpdateServicePrincipalProfileParams struct {
-	Name            string
-	NormalizedName  string
-	UpdatedAt       pgtype.Timestamptz
-	TenantID        uuid.UUID
-	PrincipalID     uuid.UUID
-	ExpectedVersion int64
-}
-
-type UpdateServicePrincipalProfileRow struct {
-	PrincipalID    uuid.UUID
-	MembershipID   uuid.UUID
-	Name           string
-	NormalizedName string
-	Version        int64
-	CreatedAt      pgtype.Timestamptz
-	UpdatedAt      pgtype.Timestamptz
-}
-
-func (q *Queries) UpdateServicePrincipalProfile(ctx context.Context, arg UpdateServicePrincipalProfileParams) (UpdateServicePrincipalProfileRow, error) {
-	row := q.db.QueryRow(ctx, updateServicePrincipalProfile,
-		arg.Name,
-		arg.NormalizedName,
-		arg.UpdatedAt,
-		arg.TenantID,
-		arg.PrincipalID,
-		arg.ExpectedVersion,
-	)
-	var i UpdateServicePrincipalProfileRow
-	err := row.Scan(
-		&i.PrincipalID,
-		&i.MembershipID,
-		&i.Name,
-		&i.NormalizedName,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
 }
 
 const updateSessionIdleExpiry = `-- name: UpdateSessionIdleExpiry :one
@@ -4535,6 +4682,90 @@ func (q *Queries) UpdateTenantMembershipStatus(ctx context.Context, arg UpdateTe
 		&i.ID,
 		&i.PrincipalID,
 		&i.Status,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateTenantWorkloadBaseStatus = `-- name: UpdateTenantWorkloadBaseStatus :execrows
+UPDATE principals
+SET status = $1,
+    version = version + 1,
+    updated_at = $2
+WHERE id = $3
+  AND principal_type = 'workload'
+  AND EXISTS (SELECT 1 FROM workload_principals WHERE principal_id = principals.id AND tenant_id = $4 AND owner_type = 'tenant')
+  AND principals.version = $5
+`
+
+type UpdateTenantWorkloadBaseStatusParams struct {
+	Status          string
+	UpdatedAt       pgtype.Timestamptz
+	PrincipalID     uuid.UUID
+	TenantID        pgtype.UUID
+	ExpectedVersion int64
+}
+
+func (q *Queries) UpdateTenantWorkloadBaseStatus(ctx context.Context, arg UpdateTenantWorkloadBaseStatusParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateTenantWorkloadBaseStatus,
+		arg.Status,
+		arg.UpdatedAt,
+		arg.PrincipalID,
+		arg.TenantID,
+		arg.ExpectedVersion,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const updateTenantWorkloadProfile = `-- name: UpdateTenantWorkloadProfile :one
+UPDATE workload_principals
+SET membership_id = $1,
+    version = version + 1,
+    updated_at = $2
+WHERE tenant_id = $3
+  AND principal_id = $4
+  AND version = $5
+RETURNING principal_id, membership_id, name, normalized_name,
+          version, created_at, updated_at
+`
+
+type UpdateTenantWorkloadProfileParams struct {
+	MembershipID    pgtype.UUID
+	UpdatedAt       pgtype.Timestamptz
+	TenantID        pgtype.UUID
+	PrincipalID     uuid.UUID
+	ExpectedVersion int64
+}
+
+type UpdateTenantWorkloadProfileRow struct {
+	PrincipalID    uuid.UUID
+	MembershipID   pgtype.UUID
+	Name           string
+	NormalizedName string
+	Version        int64
+	CreatedAt      pgtype.Timestamptz
+	UpdatedAt      pgtype.Timestamptz
+}
+
+func (q *Queries) UpdateTenantWorkloadProfile(ctx context.Context, arg UpdateTenantWorkloadProfileParams) (UpdateTenantWorkloadProfileRow, error) {
+	row := q.db.QueryRow(ctx, updateTenantWorkloadProfile,
+		arg.MembershipID,
+		arg.UpdatedAt,
+		arg.TenantID,
+		arg.PrincipalID,
+		arg.ExpectedVersion,
+	)
+	var i UpdateTenantWorkloadProfileRow
+	err := row.Scan(
+		&i.PrincipalID,
+		&i.MembershipID,
+		&i.Name,
+		&i.NormalizedName,
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,

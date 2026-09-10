@@ -33,29 +33,29 @@ const (
 var iamServices = map[string][]string{
 	"iam.v1.AuthenticationService": {
 		"BeginOIDCIdentityLink", "BeginOIDCLogin", "CompleteOIDCIdentityLink",
-		"CompleteOIDCLogin", "CompletePasswordAction", "IssueServiceToken",
+		"CompleteOIDCLogin", "CompletePasswordAction", "IssueDelegation", "IssueWorkloadToken",
 		"ListSessions", "LogoutSession", "PasswordLogin", "RefreshSession",
 		"RequestPasswordAction", "RevokeAllSessions", "RevokeSession",
 		"SwitchTenant", "ValidatePrincipal",
 	},
-	"iam.v1.AuthorizationService": {"CheckPermission"},
+	"iam.v1.AuthorizationService": {"CheckPermission", "VerifyWorkloadInvocation", "VerifySessionContinuation"},
 	"iam.v1.IAMAdminService": {
 		"AcceptPlatformInvitation", "AcceptTenantInvitation", "ApproveRecoveryBootstrap",
 		"ApproveRestoreTenantAdmin", "BindPlatformRole", "BindTenantRole",
 		"CancelPlatformInvitation", "CancelTenantInvitation", "CreateAPIKey",
-		"CreatePlatformInvitation", "CreatePlatformRole", "CreateServicePrincipal",
+		"CreatePlatformInvitation", "CreatePlatformRole", "CreateTenantWorkload",
 		"CreateTenantInvitation", "CreateTenantRole", "DeletePlatformRole",
 		"DeleteTenantRole", "ExecuteRecoveryBootstrap", "ExecuteRestoreTenantAdmin",
 		"GetAuditEvent", "GetPlatformAuditEvent", "GetPlatformInvitation",
-		"GetPlatformMembership", "GetPlatformRole", "GetServicePrincipal",
+		"GetPlatformMembership", "GetPlatformRole", "GetTenantWorkload",
 		"GetTenantAccess", "GetTenantInvitation", "GetTenantMembership", "GetTenantRole",
 		"ListAPIKeys", "ListAuditEvents", "ListPlatformAuditEvents",
 		"ListPlatformInvitations", "ListPlatformMemberships", "ListPlatformRoles",
-		"ListServicePrincipals", "ListTenantInvitations", "ListTenantMemberships",
+		"ListTenantWorkloads", "ListTenantInvitations", "ListTenantMemberships",
 		"ListTenantRoles", "RemovePlatformMembership", "RemoveTenantMembership",
 		"RequestRecoveryBootstrap", "RequestRestoreTenantAdmin", "ResendPlatformInvitation",
 		"ResendTenantInvitation", "RevokeAPIKey", "UnbindPlatformRole", "UnbindTenantRole",
-		"UpdatePlatformMembership", "UpdatePlatformRole", "UpdateServicePrincipal",
+		"UpdatePlatformMembership", "UpdatePlatformRole", "UpdateTenantWorkload",
 		"UpdateTenantAccess", "UpdateTenantMembership", "UpdateTenantRole",
 	},
 }
@@ -88,15 +88,36 @@ type errorRule struct {
 	RequiredMetadata []string `json:"required_metadata"`
 }
 
+type workloadRefoundationPin struct {
+	IAMBaselineCommit       string `json:"iam_baseline_commit"`
+	SourceRegistrySHA256    string `json:"source_registry_sha256"`
+	CandidateRegistrySHA256 string `json:"candidate_registry_sha256"`
+	CandidatePolicyRevision string `json:"candidate_policy_revision"`
+	Status                  string `json:"status"`
+}
+
 type contractPins struct {
-	SchemaVersion  string             `json:"schema_version"`
-	IAMStartCommit string             `json:"iam_start_commit"`
-	ANIStartCommit string             `json:"ani_start_commit"`
-	PolicyRevision string             `json:"policy_revision"`
-	Notification   notificationPin    `json:"notification"`
-	Toolchain      map[string]toolPin `json:"toolchain"`
-	Artifacts      map[string]string  `json:"artifacts"`
-	Fixtures       map[string]string  `json:"fixtures"`
+	Invocation           invocationPin           `json:"wr19_invocation"`
+	WorkloadRefoundation workloadRefoundationPin `json:"workload_refoundation"`
+	SchemaVersion        string                  `json:"schema_version"`
+	IAMStartCommit       string                  `json:"iam_start_commit"`
+	ANIStartCommit       string                  `json:"ani_start_commit"`
+	PolicyRevision       string                  `json:"policy_revision"`
+	Notification         notificationPin         `json:"notification"`
+	Toolchain            map[string]toolPin      `json:"toolchain"`
+	Artifacts            map[string]string       `json:"artifacts"`
+	Fixtures             map[string]string       `json:"fixtures"`
+}
+
+type invocationPin struct {
+	ContinuationRPC string `json:"continuation_rpc"`
+	APIModule       string `json:"api_module"`
+	APIVersion      string `json:"api_candidate_version"`
+	SDKModule       string `json:"sdk_module"`
+	SDKVersion      string `json:"sdk_candidate_version"`
+	Published       bool   `json:"published"`
+	TargetMethod    string `json:"target_method"`
+	BindingVersion  string `json:"binding_version"`
 }
 
 type toolPin struct {
@@ -325,6 +346,13 @@ func TestImmutableContractPins(t *testing.T) {
 	if pins.PolicyRevision != "sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa" {
 		t.Fatalf("policy revision = %q", pins.PolicyRevision)
 	}
+	w := pins.WorkloadRefoundation
+	if w.IAMBaselineCommit != "cd38cd90bca3e9d83af09a381051b895d82ae94f" || w.SourceRegistrySHA256 != "27e3637976a824c4efcd4a77ad9491d58f97ceb7c0ba3885e133ad14eebab7f3" || w.CandidateRegistrySHA256 != "135196cdc34b858a9236ccb47ec94b918abc9dce8c6c1a1332ff9712da6fc570" || w.CandidatePolicyRevision != "sha256:655690090ed17bf49e0eab57baad643f90ec69ef3a412aa092fd3a24671a0e62" {
+		t.Fatalf("Workload frozen candidate pins differ: %#v", w)
+	}
+	if sha256Hex(readFile(t, "tests/contracts/inputs/ani-operation-registry.v1.json")) != w.SourceRegistrySHA256 || sha256Hex(readFile(t, "tests/contracts/workload-operation-registry.v1.json")) != w.CandidateRegistrySHA256 {
+		t.Fatal("Workload source or candidate registry differs from pin")
+	}
 	wantNotification := notificationPin{
 		Repository:       "github.com/zhangzhe-ctrl/ani-notification-service",
 		Commit:           "0e3f0a2b47fcc1fa96fa926cae2b9ab55bd25d84",
@@ -338,6 +366,13 @@ func TestImmutableContractPins(t *testing.T) {
 		t.Fatalf("Notification pin = %#v, want %#v", pins.Notification, wantNotification)
 	}
 	goMod := string(readFile(t, "go.mod"))
+	i := pins.Invocation
+	if i != (invocationPin{ContinuationRPC: "/iam.v1.AuthorizationService/VerifySessionContinuation", APIModule: "github.com/zhangzhe-ctrl/ani-iam/api", APIVersion: "v0.1.0-rc.1", SDKModule: "github.com/zhangzhe-ctrl/ani-iam/sdk", SDKVersion: "v0.1.0-rc.1", TargetMethod: "/ani.session.v1.SessionService/CreateSession", BindingVersion: "ani.grpc.invocation.v1"}) {
+		t.Fatal("WR19 invocation module or binding contract drift")
+	}
+	if !strings.Contains(goMod, i.APIModule+" "+i.APIVersion) || !strings.Contains(string(readFile(t, "sdk/go.mod")), "module "+i.SDKModule) || !strings.Contains(string(readFile(t, "api/go.mod")), "module "+i.APIModule) {
+		t.Fatal("WR19 public module dependencies differ from contract")
+	}
 	if !strings.Contains(goMod, "github.com/zhangzhe-ctrl/ani-notification-service "+wantNotification.ModuleVersion) {
 		t.Fatalf("go.mod does not require frozen Notification module %s", wantNotification.ModuleVersion)
 	}

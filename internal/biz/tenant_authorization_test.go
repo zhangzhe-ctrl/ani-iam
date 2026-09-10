@@ -19,7 +19,7 @@ func TestTenantAuthorizationUpdateMembershipRejectsLastActiveHumanAdmin(t *testi
 	tx.activeHumanAdminCount = 1
 	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{}, &fixedIDs{}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
-	_, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{
+	_, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: membershipID, Status: MembershipStatusSuspended, ExpectedVersion: 4,
 		Actor: validTenantAuthorizationActor(),
 	})
@@ -42,7 +42,7 @@ func TestTenantAuthorizationUnbindRejectsLastActiveHumanAdmin(t *testing.T) {
 	tx.activeHumanAdminCount = 1
 	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{}, &fixedIDs{}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
-	_, err := usecase.UnbindRole(context.Background(), scope, UnbindTenantRoleCommand{
+	_, err := usecase.UnbindRole(context.Background(), scope, UnbindTenantRoleCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: membershipID, RoleID: roleID, ExpectedMembershipVersion: 3,
 		Actor: validTenantAuthorizationActor(),
 	})
@@ -64,7 +64,7 @@ func TestTenantAuthorizationBindRoleRejectsUncataloguedPermission(t *testing.T) 
 	}
 	usecase := NewTenantAuthorizationUsecase(&fakeTenantAuthorizationUnitOfWork{tx: tx}, denyAllPermissions{}, &fixedIDs{}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
-	_, err := usecase.BindRole(context.Background(), scope, BindTenantRoleCommand{
+	_, err := usecase.BindRole(context.Background(), scope, BindTenantRoleCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: uuid.MustParse("0199c85a-1000-7001-9000-000000000023"), RoleID: tx.role.ID,
 		ExpectedMembershipVersion: 1, Actor: validTenantAuthorizationActor(),
 	})
@@ -92,14 +92,14 @@ func TestTenantAuthorizationRoleBindingAuditsUseBindingVersion(t *testing.T) {
 		&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{},
 		&fixedIDs{values: []uuid.UUID{bindingID, bindAuditID, unbindAuditID}}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
-	if _, err := usecase.BindRole(context.Background(), scope, BindTenantRoleCommand{
+	if _, err := usecase.BindRole(context.Background(), scope, BindTenantRoleCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: membershipID, RoleID: roleID, ExpectedMembershipVersion: 7,
 		Actor: validTenantAuthorizationActor(),
 	}); err != nil {
 		t.Fatalf("BindRole() error = %v", err)
 	}
 	tx.membership.Version = 9
-	if _, err := usecase.UnbindRole(context.Background(), scope, UnbindTenantRoleCommand{
+	if _, err := usecase.UnbindRole(context.Background(), scope, UnbindTenantRoleCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: membershipID, RoleID: roleID, ExpectedMembershipVersion: 8,
 		Actor: validTenantAuthorizationActor(),
 	}); err != nil {
@@ -128,7 +128,7 @@ func TestTenantAuthorizationUpdateMembershipCommitsMutationAndAudit(t *testing.T
 		&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{},
 		&fixedIDs{values: []uuid.UUID{auditID}}, fixedAuthClock{now: now}, allowingAPIKeyCreationLimiter{})
 
-	result, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{
+	result, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: membershipID, Status: MembershipStatusSuspended, ExpectedVersion: 7,
 		Actor: validTenantAuthorizationActor(),
 	})
@@ -152,22 +152,22 @@ func TestTenantAuthorizationRemoveServiceMembershipDisablesPrincipalAndRevokesKe
 	scope, _ := NewTenantScope(tenantID)
 	tx := newFakeTenantAuthorizationTransaction()
 	tx.membership = TenantMembership{ID: membershipID, PrincipalID: principalID, Status: MembershipStatusActive, Version: 2}
-	tx.principalType = PrincipalTypeService
+	tx.principalType = PrincipalTypeWorkload
 	usecase := NewTenantAuthorizationUsecase(
 		&fakeTenantAuthorizationUnitOfWork{tx: tx}, allowAllTenantPermissions{},
 		&fixedIDs{values: []uuid.UUID{membershipAuditID, principalAuditID}}, fixedAuthClock{}, allowingAPIKeyCreationLimiter{})
 
-	_, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{
+	_, err := usecase.UpdateMembership(context.Background(), scope, UpdateTenantMembershipCommand{IdempotencyKey: uuid.NewString(),
 		MembershipID: membershipID, Status: MembershipStatusRemoved, ExpectedVersion: 2,
 		Actor: validTenantAuthorizationActor(),
 	})
 	if err != nil {
 		t.Fatalf("UpdateMembership() error = %v", err)
 	}
-	if tx.servicePrincipalDisables != 1 || tx.revokedAPIKeys != 3 {
-		t.Fatalf("service principal disables/revoked keys = %d/%d", tx.servicePrincipalDisables, tx.revokedAPIKeys)
+	if tx.tenantWorkloadDisables != 1 || tx.revokedAPIKeys != 3 {
+		t.Fatalf("tenant workload disables/revoked keys = %d/%d", tx.tenantWorkloadDisables, tx.revokedAPIKeys)
 	}
-	if len(tx.audits) != 2 || tx.audits[1].Action != AuditActionServicePrincipalDisabled || tx.audits[1].TargetID != principalID {
+	if len(tx.audits) != 2 || tx.audits[1].Action != AuditActionTenantWorkloadDisabled || tx.audits[1].TargetID != principalID {
 		t.Fatalf("audits = %#v", tx.audits)
 	}
 }
@@ -188,25 +188,26 @@ func (u *fakeTenantAuthorizationUnitOfWork) WithinTenantAuthorization(ctx contex
 	return fn(ctx, u.tx)
 }
 
-func (u *fakeTenantAuthorizationUnitOfWork) WithinServicePrincipal(ctx context.Context, _ TenantScope, fn func(context.Context, ServicePrincipalTransaction) error) error {
-	return fn(ctx, &recordingServicePrincipalTransaction{})
+func (u *fakeTenantAuthorizationUnitOfWork) WithinTenantWorkload(ctx context.Context, _ TenantScope, fn func(context.Context, TenantWorkloadTransaction) error) error {
+	return fn(ctx, &recordingTenantWorkloadTransaction{})
 }
 
 type fakeTenantAuthorizationTransaction struct {
-	access                   TenantAccess
-	membership               TenantMembership
-	role                     TenantRole
-	activeHumanAdmin         bool
-	activeHumanAdminCount    int
-	guardLocks               int
-	membershipUpdates        int
-	binds                    int
-	unbinds                  int
-	bindingID                uuid.UUID
-	audits                   []SecurityAuditEvent
-	principalType            PrincipalType
-	servicePrincipalDisables int
-	revokedAPIKeys           int64
+	memoryMutationResults
+	access                 TenantAccess
+	membership             TenantMembership
+	role                   TenantRole
+	activeHumanAdmin       bool
+	activeHumanAdminCount  int
+	guardLocks             int
+	membershipUpdates      int
+	binds                  int
+	unbinds                int
+	bindingID              uuid.UUID
+	audits                 []SecurityAuditEvent
+	principalType          PrincipalType
+	tenantWorkloadDisables int
+	revokedAPIKeys         int64
 }
 
 func newFakeTenantAuthorizationTransaction() *fakeTenantAuthorizationTransaction {
@@ -268,10 +269,10 @@ func (t *fakeTenantAuthorizationTransaction) AppendAudit(_ context.Context, _ Te
 	return nil
 }
 
-func (t *fakeTenantAuthorizationTransaction) DisableServicePrincipalForMembership(_ context.Context, _ TenantScope, _ uuid.UUID, updatedAt time.Time) (ServicePrincipal, int64, error) {
-	t.servicePrincipalDisables++
+func (t *fakeTenantAuthorizationTransaction) DisableTenantWorkloadForMembership(_ context.Context, _ TenantScope, _ uuid.UUID, updatedAt time.Time) (TenantWorkload, int64, error) {
+	t.tenantWorkloadDisables++
 	t.revokedAPIKeys = 3
-	return ServicePrincipal{ID: t.membership.PrincipalID, Status: PrincipalStatusDisabled, Version: 2, UpdatedAt: updatedAt}, t.revokedAPIKeys, nil
+	return TenantWorkload{ID: t.membership.PrincipalID, Status: PrincipalStatusDisabled, Version: 2, UpdatedAt: updatedAt}, t.revokedAPIKeys, nil
 }
 
 type allowAllTenantPermissions struct{}

@@ -3,6 +3,7 @@ syntax = "proto3";
 package iam.v1;
 
 import "contract.proto";
+import "workload.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
@@ -23,7 +24,8 @@ service AuthenticationService {
   rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
   rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
   rpc ValidatePrincipal(ValidatePrincipalRequest) returns (ValidatePrincipalResponse);
-  rpc IssueServiceToken(IssueServiceTokenRequest) returns (IssueServiceTokenResponse);
+  rpc IssueWorkloadToken(IssueWorkloadTokenRequest) returns (IssueWorkloadTokenResponse);
+  rpc IssueDelegation(IssueDelegationRequest) returns (IssueDelegationResponse);
 }
 
 // PasswordLoginRequest starts a Console or BOSS human session.
@@ -221,17 +223,17 @@ message ValidatePrincipalResponse {
   string policy_revision = 3;
 }
 
-// IssueServiceTokenRequest requests a short audience-bound subset for the mTLS workload.
-message IssueServiceTokenRequest {
+// IssueWorkloadTokenRequest requests a short audience-bound subset for the mTLS workload.
+message IssueWorkloadTokenRequest {
   string audience = 1;
-  repeated string operation_ids = 2;
-  string tenant_id = 3;
-  string idempotency_key = 4;
+  string operation_id = 2;
+  reserved 3, 4;
+  reserved "tenant_id", "idempotency_key";
 }
 
-// IssueServiceTokenResponse returns a non-refreshable token of at most five minutes.
-message IssueServiceTokenResponse {
-  string service_token = 1;
+// IssueWorkloadTokenResponse returns a non-refreshable token of at most five minutes.
+message IssueWorkloadTokenResponse {
+  string workload_token = 1;
   google.protobuf.Timestamp expires_at = 2;
   string principal_id = 3;
 }

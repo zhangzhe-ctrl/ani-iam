@@ -1,0 +1,27 @@
+{
+  "run_id": "wr19-20260910T080911Z-a44e7efd",
+  "remote": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080911Z-a44e7efd",
+  "ssh": [
+    "ssh",
+    "-F",
+    "/home/chabking/.ssh/config",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=12",
+    "-o",
+    "ControlMaster=auto",
+    "-o",
+    "ControlPersist=30",
+    "-o",
+    "ControlPath=/tmp/wr19-20260910T080911Z-a44e7efd.sock",
+    "-o",
+    "ServerAliveInterval=15",
+    "-o",
+    "ServerAliveCountMax=3",
+    "ubuntu"
+  ],
+  "source_sha256": "c092ea9e40aef50aa9b47986b329d00f4ef0e44dff07e6bc7d51bd09a6d8f872",
+  "state": "dispatched",
+  "dispatch_exit": 0
+}

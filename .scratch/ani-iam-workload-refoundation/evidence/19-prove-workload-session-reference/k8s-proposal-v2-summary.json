@@ -1,0 +1,13 @@
+{
+  "status": "accepted_for_exact_creation_and_bounded_tests",
+  "supersedes": "k8s-proposal.json (11-object draft, never applied)",
+  "manifest": "k8s-proposal-v2.json",
+  "sha256": "75872bb74d664e4d9fab3a58433d00a9e6e1cc246404a2ea671038a79aafe976",
+  "objects": 16,
+  "reason": "Formal Gateway owner status adapter supports Deployment resource refs, not bare Pod refs; use real Deployments and a separate least-privilege read identity, preserving all provider apply/lifecycle/ops disables.",
+  "ubuntu_api_tcp": "pass: 10.10.1.66:6443",
+  "cluster_writes": "none",
+  "captured_at": "2026-09-10T04:52:06.959456+00:00",
+  "acceptance": "user-acceptance-20260910.json",
+  "retention": "retain reusable namespaces, deployments, NetworkPolicies, Roles, RoleBindings and ServiceAccounts; record actual UIDs and current state; fresh restricted short-lived access tokens expire; no automatic fixture deletion"
+}

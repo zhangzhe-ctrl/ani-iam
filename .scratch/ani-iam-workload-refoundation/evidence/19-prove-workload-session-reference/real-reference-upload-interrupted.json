@@ -1,0 +1,15 @@
+{
+  "run_id": "wr19-20260910T075606Z-5edb5081",
+  "result": "preparation_interrupted",
+  "ssh_exit": 255,
+  "same_run_checked": true,
+  "files": [
+    {
+      "name": "source.tar.gz",
+      "bytes": 462508
+    }
+  ],
+  "command_pid_present": false,
+  "command_exit": null,
+  "action": "new snapshot permitted; no tests were dispatched"
+}

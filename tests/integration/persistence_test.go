@@ -28,11 +28,12 @@ import (
 )
 
 const (
-	postgresImage = "postgres:16.4-alpine@sha256:5660c2cbfea50c7a9127d17dc4e48543eedd3d7a41a595a2dfa572471e37e64c"
-	migrationRole = "ani_iam_migrator"
-	runtimeRole   = "ani_iam_runtime"
-	primaryDB     = "ani_iam_dp2_04_a"
-	replayDB      = "ani_iam_dp2_04_b"
+	postgresImage   = "postgres:16.4-alpine@sha256:5660c2cbfea50c7a9127d17dc4e48543eedd3d7a41a595a2dfa572471e37e64c"
+	migrationRole   = "ani_iam_migrator"
+	provisionerRole = "ani_iam_provisioner"
+	runtimeRole     = "ani_iam_runtime"
+	primaryDB       = "ani_iam_wr18_a"
+	replayDB        = "ani_iam_wr18_b"
 )
 
 var (
@@ -168,15 +169,17 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 		for _, privilege := range []string{"INSERT", "SELECT"} {
 			expectedGrants["iam_audit_events/"+privilege] = struct{}{}
 		}
+		expectedGrants["tenant_mutation_results/SELECT"] = struct{}{}
+		expectedGrants["tenant_mutation_results/INSERT"] = struct{}{}
 		expectedGrants["tenant_role_bindings/DELETE"] = struct{}{}
-		for _, tableName := range []string{"verified_emails", "tenant_lifecycle_projections", "tenant_role_permissions"} {
+		for _, tableName := range []string{"verified_emails", "tenant_lifecycle_projections", "tenant_role_permissions", "workload_identity_bindings", "workload_grants", "iam_schema_revision"} {
 			expectedGrants[tableName+"/SELECT"] = struct{}{}
 		}
 		for _, tableName := range []string{
 			"identities", "password_credentials", "sessions", "session_grants",
 			"refresh_token_families", "refresh_tokens", "password_action_requests",
 			"password_actions", "notification_outbox", "password_action_completions",
-			"service_principals", "api_keys",
+			"workload_principals", "api_keys",
 		} {
 			for _, privilege := range []string{"INSERT", "SELECT", "UPDATE"} {
 				expectedGrants[tableName+"/"+privilege] = struct{}{}
@@ -563,10 +566,11 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 }
 
 type postgresEnvironment struct {
-	runtimePool   *pgxpool.Pool
-	host          string
-	migrationPass string
-	runtimePass   string
+	runtimePool     *pgxpool.Pool
+	host            string
+	migrationPass   string
+	provisionerPass string
+	runtimePass     string
 }
 
 func newPostgresEnvironment(t *testing.T) *postgresEnvironment {
@@ -591,6 +595,7 @@ func newPostgresEnvironment(t *testing.T) *postgresEnvironment {
 		postgres.WithUsername("postgres"),
 		postgres.WithPassword(superPassword),
 		postgres.BasicWaitStrategies(),
+		isolatedContainer(t, "postgres", "5432/tcp"),
 	)
 	if err != nil {
 		t.Fatalf("start pinned PostgreSQL container: %v", err)
@@ -613,7 +618,9 @@ func newPostgresEnvironment(t *testing.T) *postgresEnvironment {
 	}
 
 	migrationPassword := randomPassword(t)
+	provisionerPassword := randomPassword(t)
 	runtimePassword := randomPassword(t)
+	recordFixtureSecrets(t, map[string]string{"provisioner-db": provisionerPassword, "runtime-db": runtimePassword, "migration-db": migrationPassword})
 	super, err := pgx.Connect(ctx, connectionString)
 	if err != nil {
 		t.Fatalf("connect isolated PostgreSQL bootstrap superuser: %v", err)
@@ -623,6 +630,7 @@ func newPostgresEnvironment(t *testing.T) *postgresEnvironment {
 	bootstrap := []string{
 		fmt.Sprintf("CREATE ROLE %s LOGIN PASSWORD '%s' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS", migrationRole, migrationPassword),
 		fmt.Sprintf("CREATE ROLE %s LOGIN PASSWORD '%s' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS", runtimeRole, runtimePassword),
+		fmt.Sprintf("CREATE ROLE %s LOGIN PASSWORD '%s' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS", provisionerRole, provisionerPassword),
 		fmt.Sprintf("CREATE DATABASE %s OWNER %s", primaryDB, migrationRole),
 		fmt.Sprintf("CREATE DATABASE %s OWNER %s", replayDB, migrationRole),
 	}
@@ -633,9 +641,10 @@ func newPostgresEnvironment(t *testing.T) *postgresEnvironment {
 	}
 
 	environment := &postgresEnvironment{
-		host:          parsed.Host,
-		migrationPass: migrationPassword,
-		runtimePass:   runtimePassword,
+		host:            normalizeProcessE2ELoopbackAddress(t, parsed.Host),
+		migrationPass:   migrationPassword,
+		provisionerPass: provisionerPassword,
+		runtimePass:     runtimePassword,
 	}
 	for _, database := range []string{primaryDB, replayDB} {
 		applyAtlasMigrations(t, ctx, atlasBinary, repositoryRoot, environment.migrationDSN(database))

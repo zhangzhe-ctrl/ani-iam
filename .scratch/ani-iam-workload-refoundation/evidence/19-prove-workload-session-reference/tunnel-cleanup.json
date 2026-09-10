@@ -1,0 +1,19 @@
+{
+  "closed_at": "2026-09-10T08:17:20.827891+00:00",
+  "registered_tunnels": [
+    {
+      "name": "ani-socks",
+      "pid": 241573,
+      "start_identity_verified": true,
+      "still_running": false
+    },
+    {
+      "name": "ubuntu-reverse",
+      "pid": 241581,
+      "start_identity_verified": true,
+      "still_running": false
+    }
+  ],
+  "fixtures": "retained without deletion",
+  "tokens": "new one-hour SA tokens expire at 2026-09-10T08:47:53Z; stored privately, no old credential invalidation"
+}

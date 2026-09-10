@@ -437,8 +437,8 @@ func (x *Invitation) GetBootstrapOperationId() string {
 	return ""
 }
 
-// ServicePrincipal is fixed to one Core-owned Tenant ID.
-type ServicePrincipal struct {
+// TenantWorkload is fixed to one Core-owned Tenant ID.
+type TenantWorkload struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PrincipalId   string                 `protobuf:"bytes,1,opt,name=principal_id,json=principalId,proto3" json:"principal_id,omitempty"`
 	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
@@ -450,20 +450,20 @@ type ServicePrincipal struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ServicePrincipal) Reset() {
-	*x = ServicePrincipal{}
+func (x *TenantWorkload) Reset() {
+	*x = TenantWorkload{}
 	mi := &file_iam_admin_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ServicePrincipal) String() string {
+func (x *TenantWorkload) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ServicePrincipal) ProtoMessage() {}
+func (*TenantWorkload) ProtoMessage() {}
 
-func (x *ServicePrincipal) ProtoReflect() protoreflect.Message {
+func (x *TenantWorkload) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -475,47 +475,47 @@ func (x *ServicePrincipal) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServicePrincipal.ProtoReflect.Descriptor instead.
-func (*ServicePrincipal) Descriptor() ([]byte, []int) {
+// Deprecated: Use TenantWorkload.ProtoReflect.Descriptor instead.
+func (*TenantWorkload) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ServicePrincipal) GetPrincipalId() string {
+func (x *TenantWorkload) GetPrincipalId() string {
 	if x != nil {
 		return x.PrincipalId
 	}
 	return ""
 }
 
-func (x *ServicePrincipal) GetTenantId() string {
+func (x *TenantWorkload) GetTenantId() string {
 	if x != nil {
 		return x.TenantId
 	}
 	return ""
 }
 
-func (x *ServicePrincipal) GetName() string {
+func (x *TenantWorkload) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *ServicePrincipal) GetStatus() PrincipalStatus {
+func (x *TenantWorkload) GetStatus() PrincipalStatus {
 	if x != nil {
 		return x.Status
 	}
 	return PrincipalStatus_PRINCIPAL_STATUS_UNSPECIFIED
 }
 
-func (x *ServicePrincipal) GetMembershipId() string {
+func (x *TenantWorkload) GetMembershipId() string {
 	if x != nil {
 		return x.MembershipId
 	}
 	return ""
 }
 
-func (x *ServicePrincipal) GetVersion() uint64 {
+func (x *TenantWorkload) GetVersion() uint64 {
 	if x != nil {
 		return x.Version
 	}
@@ -1966,9 +1966,11 @@ func (x *CreateAPIKeyRequest) GetIdempotencyKey() string {
 }
 
 type CreateAPIKeyResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ApiKey        *APIKey                `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
-	ApiKeySecret  string                 `protobuf:"bytes,2,opt,name=api_key_secret,json=apiKeySecret,proto3" json:"api_key_secret,omitempty"`
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	ApiKey       *APIKey                `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	ApiKeySecret string                 `protobuf:"bytes,2,opt,name=api_key_secret,json=apiKeySecret,proto3" json:"api_key_secret,omitempty"`
+	// A committed replay returns metadata only; the secret is revealed once.
+	Replayed      bool `protobuf:"varint,3,opt,name=replayed,proto3" json:"replayed,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2015,6 +2017,13 @@ func (x *CreateAPIKeyResponse) GetApiKeySecret() string {
 		return x.ApiKeySecret
 	}
 	return ""
+}
+
+func (x *CreateAPIKeyResponse) GetReplayed() bool {
+	if x != nil {
+		return x.Replayed
+	}
+	return false
 }
 
 type CreatePlatformInvitationRequest struct {
@@ -2265,7 +2274,7 @@ func (x *CreatePlatformRoleResponse) GetRole() *Role {
 	return nil
 }
 
-type CreateServicePrincipalRequest struct {
+type CreateTenantWorkloadRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Credential     *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	TenantId       string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
@@ -2276,20 +2285,20 @@ type CreateServicePrincipalRequest struct {
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *CreateServicePrincipalRequest) Reset() {
-	*x = CreateServicePrincipalRequest{}
+func (x *CreateTenantWorkloadRequest) Reset() {
+	*x = CreateTenantWorkloadRequest{}
 	mi := &file_iam_admin_service_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateServicePrincipalRequest) String() string {
+func (x *CreateTenantWorkloadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateServicePrincipalRequest) ProtoMessage() {}
+func (*CreateTenantWorkloadRequest) ProtoMessage() {}
 
-func (x *CreateServicePrincipalRequest) ProtoReflect() protoreflect.Message {
+func (x *CreateTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2301,68 +2310,68 @@ func (x *CreateServicePrincipalRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateServicePrincipalRequest.ProtoReflect.Descriptor instead.
-func (*CreateServicePrincipalRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateTenantWorkloadRequest.ProtoReflect.Descriptor instead.
+func (*CreateTenantWorkloadRequest) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *CreateServicePrincipalRequest) GetCredential() *BearerCredential {
+func (x *CreateTenantWorkloadRequest) GetCredential() *BearerCredential {
 	if x != nil {
 		return x.Credential
 	}
 	return nil
 }
 
-func (x *CreateServicePrincipalRequest) GetTenantId() string {
+func (x *CreateTenantWorkloadRequest) GetTenantId() string {
 	if x != nil {
 		return x.TenantId
 	}
 	return ""
 }
 
-func (x *CreateServicePrincipalRequest) GetName() string {
+func (x *CreateTenantWorkloadRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *CreateServicePrincipalRequest) GetRoleIds() []string {
+func (x *CreateTenantWorkloadRequest) GetRoleIds() []string {
 	if x != nil {
 		return x.RoleIds
 	}
 	return nil
 }
 
-func (x *CreateServicePrincipalRequest) GetIdempotencyKey() string {
+func (x *CreateTenantWorkloadRequest) GetIdempotencyKey() string {
 	if x != nil {
 		return x.IdempotencyKey
 	}
 	return ""
 }
 
-type CreateServicePrincipalResponse struct {
+type CreateTenantWorkloadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Principal     *ServicePrincipal      `protobuf:"bytes,1,opt,name=principal,proto3" json:"principal,omitempty"`
+	Principal     *TenantWorkload        `protobuf:"bytes,1,opt,name=principal,proto3" json:"principal,omitempty"`
 	Membership    *Membership            `protobuf:"bytes,2,opt,name=membership,proto3" json:"membership,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CreateServicePrincipalResponse) Reset() {
-	*x = CreateServicePrincipalResponse{}
+func (x *CreateTenantWorkloadResponse) Reset() {
+	*x = CreateTenantWorkloadResponse{}
 	mi := &file_iam_admin_service_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CreateServicePrincipalResponse) String() string {
+func (x *CreateTenantWorkloadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateServicePrincipalResponse) ProtoMessage() {}
+func (*CreateTenantWorkloadResponse) ProtoMessage() {}
 
-func (x *CreateServicePrincipalResponse) ProtoReflect() protoreflect.Message {
+func (x *CreateTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2374,19 +2383,19 @@ func (x *CreateServicePrincipalResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateServicePrincipalResponse.ProtoReflect.Descriptor instead.
-func (*CreateServicePrincipalResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateTenantWorkloadResponse.ProtoReflect.Descriptor instead.
+func (*CreateTenantWorkloadResponse) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{31}
 }
 
-func (x *CreateServicePrincipalResponse) GetPrincipal() *ServicePrincipal {
+func (x *CreateTenantWorkloadResponse) GetPrincipal() *TenantWorkload {
 	if x != nil {
 		return x.Principal
 	}
 	return nil
 }
 
-func (x *CreateServicePrincipalResponse) GetMembership() *Membership {
+func (x *CreateTenantWorkloadResponse) GetMembership() *Membership {
 	if x != nil {
 		return x.Membership
 	}
@@ -3649,7 +3658,7 @@ func (x *GetPlatformRoleResponse) GetRole() *Role {
 	return nil
 }
 
-type GetServicePrincipalRequest struct {
+type GetTenantWorkloadRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Credential    *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	PrincipalId   string                 `protobuf:"bytes,2,opt,name=principal_id,json=principalId,proto3" json:"principal_id,omitempty"`
@@ -3657,20 +3666,20 @@ type GetServicePrincipalRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetServicePrincipalRequest) Reset() {
-	*x = GetServicePrincipalRequest{}
+func (x *GetTenantWorkloadRequest) Reset() {
+	*x = GetTenantWorkloadRequest{}
 	mi := &file_iam_admin_service_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetServicePrincipalRequest) String() string {
+func (x *GetTenantWorkloadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetServicePrincipalRequest) ProtoMessage() {}
+func (*GetTenantWorkloadRequest) ProtoMessage() {}
 
-func (x *GetServicePrincipalRequest) ProtoReflect() protoreflect.Message {
+func (x *GetTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3682,46 +3691,46 @@ func (x *GetServicePrincipalRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetServicePrincipalRequest.ProtoReflect.Descriptor instead.
-func (*GetServicePrincipalRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetTenantWorkloadRequest.ProtoReflect.Descriptor instead.
+func (*GetTenantWorkloadRequest) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{54}
 }
 
-func (x *GetServicePrincipalRequest) GetCredential() *BearerCredential {
+func (x *GetTenantWorkloadRequest) GetCredential() *BearerCredential {
 	if x != nil {
 		return x.Credential
 	}
 	return nil
 }
 
-func (x *GetServicePrincipalRequest) GetPrincipalId() string {
+func (x *GetTenantWorkloadRequest) GetPrincipalId() string {
 	if x != nil {
 		return x.PrincipalId
 	}
 	return ""
 }
 
-type GetServicePrincipalResponse struct {
+type GetTenantWorkloadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Principal     *ServicePrincipal      `protobuf:"bytes,1,opt,name=principal,proto3" json:"principal,omitempty"`
+	Principal     *TenantWorkload        `protobuf:"bytes,1,opt,name=principal,proto3" json:"principal,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetServicePrincipalResponse) Reset() {
-	*x = GetServicePrincipalResponse{}
+func (x *GetTenantWorkloadResponse) Reset() {
+	*x = GetTenantWorkloadResponse{}
 	mi := &file_iam_admin_service_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetServicePrincipalResponse) String() string {
+func (x *GetTenantWorkloadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetServicePrincipalResponse) ProtoMessage() {}
+func (*GetTenantWorkloadResponse) ProtoMessage() {}
 
-func (x *GetServicePrincipalResponse) ProtoReflect() protoreflect.Message {
+func (x *GetTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3733,12 +3742,12 @@ func (x *GetServicePrincipalResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetServicePrincipalResponse.ProtoReflect.Descriptor instead.
-func (*GetServicePrincipalResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetTenantWorkloadResponse.ProtoReflect.Descriptor instead.
+func (*GetTenantWorkloadResponse) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{55}
 }
 
-func (x *GetServicePrincipalResponse) GetPrincipal() *ServicePrincipal {
+func (x *GetTenantWorkloadResponse) GetPrincipal() *TenantWorkload {
 	if x != nil {
 		return x.Principal
 	}
@@ -4841,7 +4850,7 @@ func (x *ListPlatformRolesResponse) GetNextCursor() string {
 	return ""
 }
 
-type ListServicePrincipalsRequest struct {
+type ListTenantWorkloadsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Credential    *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
@@ -4851,20 +4860,20 @@ type ListServicePrincipalsRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListServicePrincipalsRequest) Reset() {
-	*x = ListServicePrincipalsRequest{}
+func (x *ListTenantWorkloadsRequest) Reset() {
+	*x = ListTenantWorkloadsRequest{}
 	mi := &file_iam_admin_service_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListServicePrincipalsRequest) String() string {
+func (x *ListTenantWorkloadsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListServicePrincipalsRequest) ProtoMessage() {}
+func (*ListTenantWorkloadsRequest) ProtoMessage() {}
 
-func (x *ListServicePrincipalsRequest) ProtoReflect() protoreflect.Message {
+func (x *ListTenantWorkloadsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4876,61 +4885,61 @@ func (x *ListServicePrincipalsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListServicePrincipalsRequest.ProtoReflect.Descriptor instead.
-func (*ListServicePrincipalsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListTenantWorkloadsRequest.ProtoReflect.Descriptor instead.
+func (*ListTenantWorkloadsRequest) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{76}
 }
 
-func (x *ListServicePrincipalsRequest) GetCredential() *BearerCredential {
+func (x *ListTenantWorkloadsRequest) GetCredential() *BearerCredential {
 	if x != nil {
 		return x.Credential
 	}
 	return nil
 }
 
-func (x *ListServicePrincipalsRequest) GetTenantId() string {
+func (x *ListTenantWorkloadsRequest) GetTenantId() string {
 	if x != nil {
 		return x.TenantId
 	}
 	return ""
 }
 
-func (x *ListServicePrincipalsRequest) GetStatus() PrincipalStatus {
+func (x *ListTenantWorkloadsRequest) GetStatus() PrincipalStatus {
 	if x != nil {
 		return x.Status
 	}
 	return PrincipalStatus_PRINCIPAL_STATUS_UNSPECIFIED
 }
 
-func (x *ListServicePrincipalsRequest) GetPage() *CursorPageRequest {
+func (x *ListTenantWorkloadsRequest) GetPage() *CursorPageRequest {
 	if x != nil {
 		return x.Page
 	}
 	return nil
 }
 
-type ListServicePrincipalsResponse struct {
+type ListTenantWorkloadsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Principals    []*ServicePrincipal    `protobuf:"bytes,1,rep,name=principals,proto3" json:"principals,omitempty"`
+	Principals    []*TenantWorkload      `protobuf:"bytes,1,rep,name=principals,proto3" json:"principals,omitempty"`
 	NextCursor    string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListServicePrincipalsResponse) Reset() {
-	*x = ListServicePrincipalsResponse{}
+func (x *ListTenantWorkloadsResponse) Reset() {
+	*x = ListTenantWorkloadsResponse{}
 	mi := &file_iam_admin_service_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListServicePrincipalsResponse) String() string {
+func (x *ListTenantWorkloadsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListServicePrincipalsResponse) ProtoMessage() {}
+func (*ListTenantWorkloadsResponse) ProtoMessage() {}
 
-func (x *ListServicePrincipalsResponse) ProtoReflect() protoreflect.Message {
+func (x *ListTenantWorkloadsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4942,19 +4951,19 @@ func (x *ListServicePrincipalsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListServicePrincipalsResponse.ProtoReflect.Descriptor instead.
-func (*ListServicePrincipalsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListTenantWorkloadsResponse.ProtoReflect.Descriptor instead.
+func (*ListTenantWorkloadsResponse) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{77}
 }
 
-func (x *ListServicePrincipalsResponse) GetPrincipals() []*ServicePrincipal {
+func (x *ListTenantWorkloadsResponse) GetPrincipals() []*TenantWorkload {
 	if x != nil {
 		return x.Principals
 	}
 	return nil
 }
 
-func (x *ListServicePrincipalsResponse) GetNextCursor() string {
+func (x *ListTenantWorkloadsResponse) GetNextCursor() string {
 	if x != nil {
 		return x.NextCursor
 	}
@@ -6681,11 +6690,10 @@ func (x *UpdatePlatformRoleResponse) GetRole() *Role {
 	return nil
 }
 
-type UpdateServicePrincipalRequest struct {
+type UpdateTenantWorkloadRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Credential      *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	PrincipalId     string                 `protobuf:"bytes,2,opt,name=principal_id,json=principalId,proto3" json:"principal_id,omitempty"`
-	Name            string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	Status          PrincipalStatus        `protobuf:"varint,4,opt,name=status,proto3,enum=iam.v1.PrincipalStatus" json:"status,omitempty"`
 	ExpectedVersion uint64                 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
 	IdempotencyKey  string                 `protobuf:"bytes,6,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
@@ -6693,20 +6701,20 @@ type UpdateServicePrincipalRequest struct {
 	sizeCache       protoimpl.SizeCache
 }
 
-func (x *UpdateServicePrincipalRequest) Reset() {
-	*x = UpdateServicePrincipalRequest{}
+func (x *UpdateTenantWorkloadRequest) Reset() {
+	*x = UpdateTenantWorkloadRequest{}
 	mi := &file_iam_admin_service_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateServicePrincipalRequest) String() string {
+func (x *UpdateTenantWorkloadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateServicePrincipalRequest) ProtoMessage() {}
+func (*UpdateTenantWorkloadRequest) ProtoMessage() {}
 
-func (x *UpdateServicePrincipalRequest) ProtoReflect() protoreflect.Message {
+func (x *UpdateTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6718,74 +6726,67 @@ func (x *UpdateServicePrincipalRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateServicePrincipalRequest.ProtoReflect.Descriptor instead.
-func (*UpdateServicePrincipalRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdateTenantWorkloadRequest.ProtoReflect.Descriptor instead.
+func (*UpdateTenantWorkloadRequest) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{106}
 }
 
-func (x *UpdateServicePrincipalRequest) GetCredential() *BearerCredential {
+func (x *UpdateTenantWorkloadRequest) GetCredential() *BearerCredential {
 	if x != nil {
 		return x.Credential
 	}
 	return nil
 }
 
-func (x *UpdateServicePrincipalRequest) GetPrincipalId() string {
+func (x *UpdateTenantWorkloadRequest) GetPrincipalId() string {
 	if x != nil {
 		return x.PrincipalId
 	}
 	return ""
 }
 
-func (x *UpdateServicePrincipalRequest) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *UpdateServicePrincipalRequest) GetStatus() PrincipalStatus {
+func (x *UpdateTenantWorkloadRequest) GetStatus() PrincipalStatus {
 	if x != nil {
 		return x.Status
 	}
 	return PrincipalStatus_PRINCIPAL_STATUS_UNSPECIFIED
 }
 
-func (x *UpdateServicePrincipalRequest) GetExpectedVersion() uint64 {
+func (x *UpdateTenantWorkloadRequest) GetExpectedVersion() uint64 {
 	if x != nil {
 		return x.ExpectedVersion
 	}
 	return 0
 }
 
-func (x *UpdateServicePrincipalRequest) GetIdempotencyKey() string {
+func (x *UpdateTenantWorkloadRequest) GetIdempotencyKey() string {
 	if x != nil {
 		return x.IdempotencyKey
 	}
 	return ""
 }
 
-type UpdateServicePrincipalResponse struct {
+type UpdateTenantWorkloadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Principal     *ServicePrincipal      `protobuf:"bytes,1,opt,name=principal,proto3" json:"principal,omitempty"`
+	Principal     *TenantWorkload        `protobuf:"bytes,1,opt,name=principal,proto3" json:"principal,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UpdateServicePrincipalResponse) Reset() {
-	*x = UpdateServicePrincipalResponse{}
+func (x *UpdateTenantWorkloadResponse) Reset() {
+	*x = UpdateTenantWorkloadResponse{}
 	mi := &file_iam_admin_service_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateServicePrincipalResponse) String() string {
+func (x *UpdateTenantWorkloadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateServicePrincipalResponse) ProtoMessage() {}
+func (*UpdateTenantWorkloadResponse) ProtoMessage() {}
 
-func (x *UpdateServicePrincipalResponse) ProtoReflect() protoreflect.Message {
+func (x *UpdateTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_iam_admin_service_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6797,12 +6798,12 @@ func (x *UpdateServicePrincipalResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateServicePrincipalResponse.ProtoReflect.Descriptor instead.
-func (*UpdateServicePrincipalResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdateTenantWorkloadResponse.ProtoReflect.Descriptor instead.
+func (*UpdateTenantWorkloadResponse) Descriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{107}
 }
 
-func (x *UpdateServicePrincipalResponse) GetPrincipal() *ServicePrincipal {
+func (x *UpdateTenantWorkloadResponse) GetPrincipal() *TenantWorkload {
 	if x != nil {
 		return x.Principal
 	}
@@ -7230,8 +7231,8 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\n" +
 	"expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x18\n" +
 	"\aversion\x18\a \x01(\x04R\aversion\x124\n" +
-	"\x16bootstrap_operation_id\x18\b \x01(\tR\x14bootstrapOperationId\"\xd6\x01\n" +
-	"\x10ServicePrincipal\x12!\n" +
+	"\x16bootstrap_operation_id\x18\b \x01(\tR\x14bootstrapOperationId\"\xd4\x01\n" +
+	"\x0eTenantWorkload\x12!\n" +
 	"\fprincipal_id\x18\x01 \x01(\tR\vprincipalId\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12/\n" +
@@ -7391,10 +7392,11 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\rnever_expires\x18\x03 \x01(\bR\fneverExpires\x129\n" +
 	"\n" +
 	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12'\n" +
-	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"e\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"\x81\x01\n" +
 	"\x14CreateAPIKeyResponse\x12'\n" +
 	"\aapi_key\x18\x01 \x01(\v2\x0e.iam.v1.APIKeyR\x06apiKey\x12$\n" +
-	"\x0eapi_key_secret\x18\x02 \x01(\tR\fapiKeySecret\"\xe2\x01\n" +
+	"\x0eapi_key_secret\x18\x02 \x01(\tR\fapiKeySecret\x12\x1a\n" +
+	"\breplayed\x18\x03 \x01(\bR\breplayed\"\xe2\x01\n" +
 	"\x1fCreatePlatformInvitationRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
@@ -7417,17 +7419,17 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\vpermissions\x18\x04 \x03(\tR\vpermissions\x12'\n" +
 	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\">\n" +
 	"\x1aCreatePlatformRoleResponse\x12 \n" +
-	"\x04role\x18\x01 \x01(\v2\f.iam.v1.RoleR\x04role\"\xce\x01\n" +
-	"\x1dCreateServicePrincipalRequest\x128\n" +
+	"\x04role\x18\x01 \x01(\v2\f.iam.v1.RoleR\x04role\"\xcc\x01\n" +
+	"\x1bCreateTenantWorkloadRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x19\n" +
 	"\brole_ids\x18\x04 \x03(\tR\aroleIds\x12'\n" +
-	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"\x8c\x01\n" +
-	"\x1eCreateServicePrincipalResponse\x126\n" +
-	"\tprincipal\x18\x01 \x01(\v2\x18.iam.v1.ServicePrincipalR\tprincipal\x122\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"\x88\x01\n" +
+	"\x1cCreateTenantWorkloadResponse\x124\n" +
+	"\tprincipal\x18\x01 \x01(\v2\x16.iam.v1.TenantWorkloadR\tprincipal\x122\n" +
 	"\n" +
 	"membership\x18\x02 \x01(\v2\x12.iam.v1.MembershipR\n" +
 	"membership\"\xfd\x01\n" +
@@ -7540,14 +7542,14 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"credential\x12\x17\n" +
 	"\arole_id\x18\x02 \x01(\tR\x06roleId\";\n" +
 	"\x17GetPlatformRoleResponse\x12 \n" +
-	"\x04role\x18\x01 \x01(\v2\f.iam.v1.RoleR\x04role\"y\n" +
-	"\x1aGetServicePrincipalRequest\x128\n" +
+	"\x04role\x18\x01 \x01(\v2\f.iam.v1.RoleR\x04role\"w\n" +
+	"\x18GetTenantWorkloadRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12!\n" +
-	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\"U\n" +
-	"\x1bGetServicePrincipalResponse\x126\n" +
-	"\tprincipal\x18\x01 \x01(\v2\x18.iam.v1.ServicePrincipalR\tprincipal\"o\n" +
+	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\"Q\n" +
+	"\x19GetTenantWorkloadResponse\x124\n" +
+	"\tprincipal\x18\x01 \x01(\v2\x16.iam.v1.TenantWorkloadR\tprincipal\"o\n" +
 	"\x16GetTenantAccessRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
@@ -7644,17 +7646,17 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x19ListPlatformRolesResponse\x12\"\n" +
 	"\x05roles\x18\x01 \x03(\v2\f.iam.v1.RoleR\x05roles\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\"\xd5\x01\n" +
-	"\x1cListServicePrincipalsRequest\x128\n" +
+	"nextCursor\"\xd3\x01\n" +
+	"\x1aListTenantWorkloadsRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12/\n" +
 	"\x06status\x18\x03 \x01(\x0e2\x17.iam.v1.PrincipalStatusR\x06status\x12-\n" +
-	"\x04page\x18\x04 \x01(\v2\x19.iam.v1.CursorPageRequestR\x04page\"z\n" +
-	"\x1dListServicePrincipalsResponse\x128\n" +
+	"\x04page\x18\x04 \x01(\v2\x19.iam.v1.CursorPageRequestR\x04page\"v\n" +
+	"\x1bListTenantWorkloadsResponse\x126\n" +
 	"\n" +
-	"principals\x18\x01 \x03(\v2\x18.iam.v1.ServicePrincipalR\n" +
+	"principals\x18\x01 \x03(\v2\x16.iam.v1.TenantWorkloadR\n" +
 	"principals\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
 	"nextCursor\"\xd6\x01\n" +
@@ -7819,18 +7821,17 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x10expected_version\x18\x05 \x01(\x04R\x0fexpectedVersion\x12'\n" +
 	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKey\">\n" +
 	"\x1aUpdatePlatformRoleResponse\x12 \n" +
-	"\x04role\x18\x01 \x01(\v2\f.iam.v1.RoleR\x04role\"\x95\x02\n" +
-	"\x1dUpdateServicePrincipalRequest\x128\n" +
+	"\x04role\x18\x01 \x01(\v2\f.iam.v1.RoleR\x04role\"\x8b\x02\n" +
+	"\x1bUpdateTenantWorkloadRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12!\n" +
-	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12/\n" +
+	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\x12/\n" +
 	"\x06status\x18\x04 \x01(\x0e2\x17.iam.v1.PrincipalStatusR\x06status\x12)\n" +
 	"\x10expected_version\x18\x05 \x01(\x04R\x0fexpectedVersion\x12'\n" +
-	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKey\"X\n" +
-	"\x1eUpdateServicePrincipalResponse\x126\n" +
-	"\tprincipal\x18\x01 \x01(\v2\x18.iam.v1.ServicePrincipalR\tprincipal\"\xfa\x01\n" +
+	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKeyJ\x04\b\x03\x10\x04R\x04name\"T\n" +
+	"\x1cUpdateTenantWorkloadResponse\x124\n" +
+	"\tprincipal\x18\x01 \x01(\v2\x16.iam.v1.TenantWorkloadR\tprincipal\"\xfa\x01\n" +
 	"\x19UpdateTenantAccessRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
@@ -7872,7 +7873,7 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\"RECOVERY_OPERATION_STATUS_APPROVED\x10\x02\x12&\n" +
 	"\"RECOVERY_OPERATION_STATUS_EXECUTED\x10\x03\x12%\n" +
 	"!RECOVERY_OPERATION_STATUS_EXPIRED\x10\x04\x12&\n" +
-	"\"RECOVERY_OPERATION_STATUS_REJECTED\x10\x052\xd7(\n" +
+	"\"RECOVERY_OPERATION_STATUS_REJECTED\x10\x052\xbf(\n" +
 	"\x0fIAMAdminService\x12m\n" +
 	"\x18AcceptPlatformInvitation\x12'.iam.v1.AcceptPlatformInvitationRequest\x1a(.iam.v1.AcceptPlatformInvitationResponse\x12g\n" +
 	"\x16AcceptTenantInvitation\x12%.iam.v1.AcceptTenantInvitationRequest\x1a&.iam.v1.AcceptTenantInvitationResponse\x12m\n" +
@@ -7884,8 +7885,8 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x16CancelTenantInvitation\x12%.iam.v1.CancelTenantInvitationRequest\x1a&.iam.v1.CancelTenantInvitationResponse\x12I\n" +
 	"\fCreateAPIKey\x12\x1b.iam.v1.CreateAPIKeyRequest\x1a\x1c.iam.v1.CreateAPIKeyResponse\x12m\n" +
 	"\x18CreatePlatformInvitation\x12'.iam.v1.CreatePlatformInvitationRequest\x1a(.iam.v1.CreatePlatformInvitationResponse\x12[\n" +
-	"\x12CreatePlatformRole\x12!.iam.v1.CreatePlatformRoleRequest\x1a\".iam.v1.CreatePlatformRoleResponse\x12g\n" +
-	"\x16CreateServicePrincipal\x12%.iam.v1.CreateServicePrincipalRequest\x1a&.iam.v1.CreateServicePrincipalResponse\x12g\n" +
+	"\x12CreatePlatformRole\x12!.iam.v1.CreatePlatformRoleRequest\x1a\".iam.v1.CreatePlatformRoleResponse\x12a\n" +
+	"\x14CreateTenantWorkload\x12#.iam.v1.CreateTenantWorkloadRequest\x1a$.iam.v1.CreateTenantWorkloadResponse\x12g\n" +
 	"\x16CreateTenantInvitation\x12%.iam.v1.CreateTenantInvitationRequest\x1a&.iam.v1.CreateTenantInvitationResponse\x12U\n" +
 	"\x10CreateTenantRole\x12\x1f.iam.v1.CreateTenantRoleRequest\x1a .iam.v1.CreateTenantRoleResponse\x12[\n" +
 	"\x12DeletePlatformRole\x12!.iam.v1.DeletePlatformRoleRequest\x1a\".iam.v1.DeletePlatformRoleResponse\x12U\n" +
@@ -7896,8 +7897,8 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x15GetPlatformAuditEvent\x12$.iam.v1.GetPlatformAuditEventRequest\x1a%.iam.v1.GetPlatformAuditEventResponse\x12d\n" +
 	"\x15GetPlatformInvitation\x12$.iam.v1.GetPlatformInvitationRequest\x1a%.iam.v1.GetPlatformInvitationResponse\x12d\n" +
 	"\x15GetPlatformMembership\x12$.iam.v1.GetPlatformMembershipRequest\x1a%.iam.v1.GetPlatformMembershipResponse\x12R\n" +
-	"\x0fGetPlatformRole\x12\x1e.iam.v1.GetPlatformRoleRequest\x1a\x1f.iam.v1.GetPlatformRoleResponse\x12^\n" +
-	"\x13GetServicePrincipal\x12\".iam.v1.GetServicePrincipalRequest\x1a#.iam.v1.GetServicePrincipalResponse\x12R\n" +
+	"\x0fGetPlatformRole\x12\x1e.iam.v1.GetPlatformRoleRequest\x1a\x1f.iam.v1.GetPlatformRoleResponse\x12X\n" +
+	"\x11GetTenantWorkload\x12 .iam.v1.GetTenantWorkloadRequest\x1a!.iam.v1.GetTenantWorkloadResponse\x12R\n" +
 	"\x0fGetTenantAccess\x12\x1e.iam.v1.GetTenantAccessRequest\x1a\x1f.iam.v1.GetTenantAccessResponse\x12^\n" +
 	"\x13GetTenantInvitation\x12\".iam.v1.GetTenantInvitationRequest\x1a#.iam.v1.GetTenantInvitationResponse\x12^\n" +
 	"\x13GetTenantMembership\x12\".iam.v1.GetTenantMembershipRequest\x1a#.iam.v1.GetTenantMembershipResponse\x12L\n" +
@@ -7907,8 +7908,8 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x17ListPlatformAuditEvents\x12&.iam.v1.ListPlatformAuditEventsRequest\x1a'.iam.v1.ListPlatformAuditEventsResponse\x12j\n" +
 	"\x17ListPlatformInvitations\x12&.iam.v1.ListPlatformInvitationsRequest\x1a'.iam.v1.ListPlatformInvitationsResponse\x12j\n" +
 	"\x17ListPlatformMemberships\x12&.iam.v1.ListPlatformMembershipsRequest\x1a'.iam.v1.ListPlatformMembershipsResponse\x12X\n" +
-	"\x11ListPlatformRoles\x12 .iam.v1.ListPlatformRolesRequest\x1a!.iam.v1.ListPlatformRolesResponse\x12d\n" +
-	"\x15ListServicePrincipals\x12$.iam.v1.ListServicePrincipalsRequest\x1a%.iam.v1.ListServicePrincipalsResponse\x12d\n" +
+	"\x11ListPlatformRoles\x12 .iam.v1.ListPlatformRolesRequest\x1a!.iam.v1.ListPlatformRolesResponse\x12^\n" +
+	"\x13ListTenantWorkloads\x12\".iam.v1.ListTenantWorkloadsRequest\x1a#.iam.v1.ListTenantWorkloadsResponse\x12d\n" +
 	"\x15ListTenantInvitations\x12$.iam.v1.ListTenantInvitationsRequest\x1a%.iam.v1.ListTenantInvitationsResponse\x12d\n" +
 	"\x15ListTenantMemberships\x12$.iam.v1.ListTenantMembershipsRequest\x1a%.iam.v1.ListTenantMembershipsResponse\x12R\n" +
 	"\x0fListTenantRoles\x12\x1e.iam.v1.ListTenantRolesRequest\x1a\x1f.iam.v1.ListTenantRolesResponse\x12m\n" +
@@ -7922,8 +7923,8 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x12UnbindPlatformRole\x12!.iam.v1.UnbindPlatformRoleRequest\x1a\".iam.v1.UnbindPlatformRoleResponse\x12U\n" +
 	"\x10UnbindTenantRole\x12\x1f.iam.v1.UnbindTenantRoleRequest\x1a .iam.v1.UnbindTenantRoleResponse\x12m\n" +
 	"\x18UpdatePlatformMembership\x12'.iam.v1.UpdatePlatformMembershipRequest\x1a(.iam.v1.UpdatePlatformMembershipResponse\x12[\n" +
-	"\x12UpdatePlatformRole\x12!.iam.v1.UpdatePlatformRoleRequest\x1a\".iam.v1.UpdatePlatformRoleResponse\x12g\n" +
-	"\x16UpdateServicePrincipal\x12%.iam.v1.UpdateServicePrincipalRequest\x1a&.iam.v1.UpdateServicePrincipalResponse\x12[\n" +
+	"\x12UpdatePlatformRole\x12!.iam.v1.UpdatePlatformRoleRequest\x1a\".iam.v1.UpdatePlatformRoleResponse\x12a\n" +
+	"\x14UpdateTenantWorkload\x12#.iam.v1.UpdateTenantWorkloadRequest\x1a$.iam.v1.UpdateTenantWorkloadResponse\x12[\n" +
 	"\x12UpdateTenantAccess\x12!.iam.v1.UpdateTenantAccessRequest\x1a\".iam.v1.UpdateTenantAccessResponse\x12g\n" +
 	"\x16UpdateTenantMembership\x12%.iam.v1.UpdateTenantMembershipRequest\x1a&.iam.v1.UpdateTenantMembershipResponse\x12U\n" +
 	"\x10UpdateTenantRole\x12\x1f.iam.v1.UpdateTenantRoleRequest\x1a .iam.v1.UpdateTenantRoleResponseB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
@@ -7948,7 +7949,7 @@ var file_iam_admin_service_proto_goTypes = []any{
 	(*Membership)(nil),                        // 2: iam.v1.Membership
 	(*Role)(nil),                              // 3: iam.v1.Role
 	(*Invitation)(nil),                        // 4: iam.v1.Invitation
-	(*ServicePrincipal)(nil),                  // 5: iam.v1.ServicePrincipal
+	(*TenantWorkload)(nil),                    // 5: iam.v1.TenantWorkload
 	(*APIKey)(nil),                            // 6: iam.v1.APIKey
 	(*AuditEvent)(nil),                        // 7: iam.v1.AuditEvent
 	(*RecoveryOperation)(nil),                 // 8: iam.v1.RecoveryOperation
@@ -7974,8 +7975,8 @@ var file_iam_admin_service_proto_goTypes = []any{
 	(*CreatePlatformInvitationResponse)(nil),  // 28: iam.v1.CreatePlatformInvitationResponse
 	(*CreatePlatformRoleRequest)(nil),         // 29: iam.v1.CreatePlatformRoleRequest
 	(*CreatePlatformRoleResponse)(nil),        // 30: iam.v1.CreatePlatformRoleResponse
-	(*CreateServicePrincipalRequest)(nil),     // 31: iam.v1.CreateServicePrincipalRequest
-	(*CreateServicePrincipalResponse)(nil),    // 32: iam.v1.CreateServicePrincipalResponse
+	(*CreateTenantWorkloadRequest)(nil),       // 31: iam.v1.CreateTenantWorkloadRequest
+	(*CreateTenantWorkloadResponse)(nil),      // 32: iam.v1.CreateTenantWorkloadResponse
 	(*CreateTenantInvitationRequest)(nil),     // 33: iam.v1.CreateTenantInvitationRequest
 	(*CreateTenantInvitationResponse)(nil),    // 34: iam.v1.CreateTenantInvitationResponse
 	(*CreateTenantRoleRequest)(nil),           // 35: iam.v1.CreateTenantRoleRequest
@@ -7998,8 +7999,8 @@ var file_iam_admin_service_proto_goTypes = []any{
 	(*GetPlatformMembershipResponse)(nil),     // 52: iam.v1.GetPlatformMembershipResponse
 	(*GetPlatformRoleRequest)(nil),            // 53: iam.v1.GetPlatformRoleRequest
 	(*GetPlatformRoleResponse)(nil),           // 54: iam.v1.GetPlatformRoleResponse
-	(*GetServicePrincipalRequest)(nil),        // 55: iam.v1.GetServicePrincipalRequest
-	(*GetServicePrincipalResponse)(nil),       // 56: iam.v1.GetServicePrincipalResponse
+	(*GetTenantWorkloadRequest)(nil),          // 55: iam.v1.GetTenantWorkloadRequest
+	(*GetTenantWorkloadResponse)(nil),         // 56: iam.v1.GetTenantWorkloadResponse
 	(*GetTenantAccessRequest)(nil),            // 57: iam.v1.GetTenantAccessRequest
 	(*GetTenantAccessResponse)(nil),           // 58: iam.v1.GetTenantAccessResponse
 	(*GetTenantInvitationRequest)(nil),        // 59: iam.v1.GetTenantInvitationRequest
@@ -8020,8 +8021,8 @@ var file_iam_admin_service_proto_goTypes = []any{
 	(*ListPlatformMembershipsResponse)(nil),   // 74: iam.v1.ListPlatformMembershipsResponse
 	(*ListPlatformRolesRequest)(nil),          // 75: iam.v1.ListPlatformRolesRequest
 	(*ListPlatformRolesResponse)(nil),         // 76: iam.v1.ListPlatformRolesResponse
-	(*ListServicePrincipalsRequest)(nil),      // 77: iam.v1.ListServicePrincipalsRequest
-	(*ListServicePrincipalsResponse)(nil),     // 78: iam.v1.ListServicePrincipalsResponse
+	(*ListTenantWorkloadsRequest)(nil),        // 77: iam.v1.ListTenantWorkloadsRequest
+	(*ListTenantWorkloadsResponse)(nil),       // 78: iam.v1.ListTenantWorkloadsResponse
 	(*ListTenantInvitationsRequest)(nil),      // 79: iam.v1.ListTenantInvitationsRequest
 	(*ListTenantInvitationsResponse)(nil),     // 80: iam.v1.ListTenantInvitationsResponse
 	(*ListTenantMembershipsRequest)(nil),      // 81: iam.v1.ListTenantMembershipsRequest
@@ -8050,8 +8051,8 @@ var file_iam_admin_service_proto_goTypes = []any{
 	(*UpdatePlatformMembershipResponse)(nil),  // 104: iam.v1.UpdatePlatformMembershipResponse
 	(*UpdatePlatformRoleRequest)(nil),         // 105: iam.v1.UpdatePlatformRoleRequest
 	(*UpdatePlatformRoleResponse)(nil),        // 106: iam.v1.UpdatePlatformRoleResponse
-	(*UpdateServicePrincipalRequest)(nil),     // 107: iam.v1.UpdateServicePrincipalRequest
-	(*UpdateServicePrincipalResponse)(nil),    // 108: iam.v1.UpdateServicePrincipalResponse
+	(*UpdateTenantWorkloadRequest)(nil),       // 107: iam.v1.UpdateTenantWorkloadRequest
+	(*UpdateTenantWorkloadResponse)(nil),      // 108: iam.v1.UpdateTenantWorkloadResponse
 	(*UpdateTenantAccessRequest)(nil),         // 109: iam.v1.UpdateTenantAccessRequest
 	(*UpdateTenantAccessResponse)(nil),        // 110: iam.v1.UpdateTenantAccessResponse
 	(*UpdateTenantMembershipRequest)(nil),     // 111: iam.v1.UpdateTenantMembershipRequest
@@ -8081,7 +8082,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	118, // 5: iam.v1.Invitation.boundary:type_name -> iam.v1.Boundary
 	120, // 6: iam.v1.Invitation.status:type_name -> iam.v1.InvitationStatus
 	121, // 7: iam.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
-	122, // 8: iam.v1.ServicePrincipal.status:type_name -> iam.v1.PrincipalStatus
+	122, // 8: iam.v1.TenantWorkload.status:type_name -> iam.v1.PrincipalStatus
 	123, // 9: iam.v1.APIKey.status:type_name -> iam.v1.APIKeyStatus
 	121, // 10: iam.v1.APIKey.expires_at:type_name -> google.protobuf.Timestamp
 	121, // 11: iam.v1.APIKey.created_at:type_name -> google.protobuf.Timestamp
@@ -8117,9 +8118,9 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	4,   // 41: iam.v1.CreatePlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
 	125, // 42: iam.v1.CreatePlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
 	3,   // 43: iam.v1.CreatePlatformRoleResponse.role:type_name -> iam.v1.Role
-	125, // 44: iam.v1.CreateServicePrincipalRequest.credential:type_name -> iam.v1.BearerCredential
-	5,   // 45: iam.v1.CreateServicePrincipalResponse.principal:type_name -> iam.v1.ServicePrincipal
-	2,   // 46: iam.v1.CreateServicePrincipalResponse.membership:type_name -> iam.v1.Membership
+	125, // 44: iam.v1.CreateTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 45: iam.v1.CreateTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
+	2,   // 46: iam.v1.CreateTenantWorkloadResponse.membership:type_name -> iam.v1.Membership
 	125, // 47: iam.v1.CreateTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
 	4,   // 48: iam.v1.CreateTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
 	125, // 49: iam.v1.CreateTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
@@ -8146,8 +8147,8 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	2,   // 70: iam.v1.GetPlatformMembershipResponse.membership:type_name -> iam.v1.Membership
 	125, // 71: iam.v1.GetPlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
 	3,   // 72: iam.v1.GetPlatformRoleResponse.role:type_name -> iam.v1.Role
-	125, // 73: iam.v1.GetServicePrincipalRequest.credential:type_name -> iam.v1.BearerCredential
-	5,   // 74: iam.v1.GetServicePrincipalResponse.principal:type_name -> iam.v1.ServicePrincipal
+	125, // 73: iam.v1.GetTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 74: iam.v1.GetTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
 	125, // 75: iam.v1.GetTenantAccessRequest.credential:type_name -> iam.v1.BearerCredential
 	1,   // 76: iam.v1.GetTenantAccessResponse.tenant_access:type_name -> iam.v1.TenantAccess
 	125, // 77: iam.v1.GetTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
@@ -8176,10 +8177,10 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	125, // 100: iam.v1.ListPlatformRolesRequest.credential:type_name -> iam.v1.BearerCredential
 	127, // 101: iam.v1.ListPlatformRolesRequest.page:type_name -> iam.v1.CursorPageRequest
 	3,   // 102: iam.v1.ListPlatformRolesResponse.roles:type_name -> iam.v1.Role
-	125, // 103: iam.v1.ListServicePrincipalsRequest.credential:type_name -> iam.v1.BearerCredential
-	122, // 104: iam.v1.ListServicePrincipalsRequest.status:type_name -> iam.v1.PrincipalStatus
-	127, // 105: iam.v1.ListServicePrincipalsRequest.page:type_name -> iam.v1.CursorPageRequest
-	5,   // 106: iam.v1.ListServicePrincipalsResponse.principals:type_name -> iam.v1.ServicePrincipal
+	125, // 103: iam.v1.ListTenantWorkloadsRequest.credential:type_name -> iam.v1.BearerCredential
+	122, // 104: iam.v1.ListTenantWorkloadsRequest.status:type_name -> iam.v1.PrincipalStatus
+	127, // 105: iam.v1.ListTenantWorkloadsRequest.page:type_name -> iam.v1.CursorPageRequest
+	5,   // 106: iam.v1.ListTenantWorkloadsResponse.principals:type_name -> iam.v1.TenantWorkload
 	125, // 107: iam.v1.ListTenantInvitationsRequest.credential:type_name -> iam.v1.BearerCredential
 	120, // 108: iam.v1.ListTenantInvitationsRequest.status:type_name -> iam.v1.InvitationStatus
 	127, // 109: iam.v1.ListTenantInvitationsRequest.page:type_name -> iam.v1.CursorPageRequest
@@ -8216,9 +8217,9 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	2,   // 140: iam.v1.UpdatePlatformMembershipResponse.membership:type_name -> iam.v1.Membership
 	125, // 141: iam.v1.UpdatePlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
 	3,   // 142: iam.v1.UpdatePlatformRoleResponse.role:type_name -> iam.v1.Role
-	125, // 143: iam.v1.UpdateServicePrincipalRequest.credential:type_name -> iam.v1.BearerCredential
-	122, // 144: iam.v1.UpdateServicePrincipalRequest.status:type_name -> iam.v1.PrincipalStatus
-	5,   // 145: iam.v1.UpdateServicePrincipalResponse.principal:type_name -> iam.v1.ServicePrincipal
+	125, // 143: iam.v1.UpdateTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
+	122, // 144: iam.v1.UpdateTenantWorkloadRequest.status:type_name -> iam.v1.PrincipalStatus
+	5,   // 145: iam.v1.UpdateTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
 	125, // 146: iam.v1.UpdateTenantAccessRequest.credential:type_name -> iam.v1.BearerCredential
 	116, // 147: iam.v1.UpdateTenantAccessRequest.status:type_name -> iam.v1.TenantAccessStatus
 	1,   // 148: iam.v1.UpdateTenantAccessResponse.tenant_access:type_name -> iam.v1.TenantAccess
@@ -8238,7 +8239,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	25,  // 162: iam.v1.IAMAdminService.CreateAPIKey:input_type -> iam.v1.CreateAPIKeyRequest
 	27,  // 163: iam.v1.IAMAdminService.CreatePlatformInvitation:input_type -> iam.v1.CreatePlatformInvitationRequest
 	29,  // 164: iam.v1.IAMAdminService.CreatePlatformRole:input_type -> iam.v1.CreatePlatformRoleRequest
-	31,  // 165: iam.v1.IAMAdminService.CreateServicePrincipal:input_type -> iam.v1.CreateServicePrincipalRequest
+	31,  // 165: iam.v1.IAMAdminService.CreateTenantWorkload:input_type -> iam.v1.CreateTenantWorkloadRequest
 	33,  // 166: iam.v1.IAMAdminService.CreateTenantInvitation:input_type -> iam.v1.CreateTenantInvitationRequest
 	35,  // 167: iam.v1.IAMAdminService.CreateTenantRole:input_type -> iam.v1.CreateTenantRoleRequest
 	37,  // 168: iam.v1.IAMAdminService.DeletePlatformRole:input_type -> iam.v1.DeletePlatformRoleRequest
@@ -8250,7 +8251,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	49,  // 174: iam.v1.IAMAdminService.GetPlatformInvitation:input_type -> iam.v1.GetPlatformInvitationRequest
 	51,  // 175: iam.v1.IAMAdminService.GetPlatformMembership:input_type -> iam.v1.GetPlatformMembershipRequest
 	53,  // 176: iam.v1.IAMAdminService.GetPlatformRole:input_type -> iam.v1.GetPlatformRoleRequest
-	55,  // 177: iam.v1.IAMAdminService.GetServicePrincipal:input_type -> iam.v1.GetServicePrincipalRequest
+	55,  // 177: iam.v1.IAMAdminService.GetTenantWorkload:input_type -> iam.v1.GetTenantWorkloadRequest
 	57,  // 178: iam.v1.IAMAdminService.GetTenantAccess:input_type -> iam.v1.GetTenantAccessRequest
 	59,  // 179: iam.v1.IAMAdminService.GetTenantInvitation:input_type -> iam.v1.GetTenantInvitationRequest
 	61,  // 180: iam.v1.IAMAdminService.GetTenantMembership:input_type -> iam.v1.GetTenantMembershipRequest
@@ -8261,7 +8262,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	71,  // 185: iam.v1.IAMAdminService.ListPlatformInvitations:input_type -> iam.v1.ListPlatformInvitationsRequest
 	73,  // 186: iam.v1.IAMAdminService.ListPlatformMemberships:input_type -> iam.v1.ListPlatformMembershipsRequest
 	75,  // 187: iam.v1.IAMAdminService.ListPlatformRoles:input_type -> iam.v1.ListPlatformRolesRequest
-	77,  // 188: iam.v1.IAMAdminService.ListServicePrincipals:input_type -> iam.v1.ListServicePrincipalsRequest
+	77,  // 188: iam.v1.IAMAdminService.ListTenantWorkloads:input_type -> iam.v1.ListTenantWorkloadsRequest
 	79,  // 189: iam.v1.IAMAdminService.ListTenantInvitations:input_type -> iam.v1.ListTenantInvitationsRequest
 	81,  // 190: iam.v1.IAMAdminService.ListTenantMemberships:input_type -> iam.v1.ListTenantMembershipsRequest
 	83,  // 191: iam.v1.IAMAdminService.ListTenantRoles:input_type -> iam.v1.ListTenantRolesRequest
@@ -8276,7 +8277,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	101, // 200: iam.v1.IAMAdminService.UnbindTenantRole:input_type -> iam.v1.UnbindTenantRoleRequest
 	103, // 201: iam.v1.IAMAdminService.UpdatePlatformMembership:input_type -> iam.v1.UpdatePlatformMembershipRequest
 	105, // 202: iam.v1.IAMAdminService.UpdatePlatformRole:input_type -> iam.v1.UpdatePlatformRoleRequest
-	107, // 203: iam.v1.IAMAdminService.UpdateServicePrincipal:input_type -> iam.v1.UpdateServicePrincipalRequest
+	107, // 203: iam.v1.IAMAdminService.UpdateTenantWorkload:input_type -> iam.v1.UpdateTenantWorkloadRequest
 	109, // 204: iam.v1.IAMAdminService.UpdateTenantAccess:input_type -> iam.v1.UpdateTenantAccessRequest
 	111, // 205: iam.v1.IAMAdminService.UpdateTenantMembership:input_type -> iam.v1.UpdateTenantMembershipRequest
 	113, // 206: iam.v1.IAMAdminService.UpdateTenantRole:input_type -> iam.v1.UpdateTenantRoleRequest
@@ -8291,7 +8292,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	26,  // 215: iam.v1.IAMAdminService.CreateAPIKey:output_type -> iam.v1.CreateAPIKeyResponse
 	28,  // 216: iam.v1.IAMAdminService.CreatePlatformInvitation:output_type -> iam.v1.CreatePlatformInvitationResponse
 	30,  // 217: iam.v1.IAMAdminService.CreatePlatformRole:output_type -> iam.v1.CreatePlatformRoleResponse
-	32,  // 218: iam.v1.IAMAdminService.CreateServicePrincipal:output_type -> iam.v1.CreateServicePrincipalResponse
+	32,  // 218: iam.v1.IAMAdminService.CreateTenantWorkload:output_type -> iam.v1.CreateTenantWorkloadResponse
 	34,  // 219: iam.v1.IAMAdminService.CreateTenantInvitation:output_type -> iam.v1.CreateTenantInvitationResponse
 	36,  // 220: iam.v1.IAMAdminService.CreateTenantRole:output_type -> iam.v1.CreateTenantRoleResponse
 	38,  // 221: iam.v1.IAMAdminService.DeletePlatformRole:output_type -> iam.v1.DeletePlatformRoleResponse
@@ -8303,7 +8304,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	50,  // 227: iam.v1.IAMAdminService.GetPlatformInvitation:output_type -> iam.v1.GetPlatformInvitationResponse
 	52,  // 228: iam.v1.IAMAdminService.GetPlatformMembership:output_type -> iam.v1.GetPlatformMembershipResponse
 	54,  // 229: iam.v1.IAMAdminService.GetPlatformRole:output_type -> iam.v1.GetPlatformRoleResponse
-	56,  // 230: iam.v1.IAMAdminService.GetServicePrincipal:output_type -> iam.v1.GetServicePrincipalResponse
+	56,  // 230: iam.v1.IAMAdminService.GetTenantWorkload:output_type -> iam.v1.GetTenantWorkloadResponse
 	58,  // 231: iam.v1.IAMAdminService.GetTenantAccess:output_type -> iam.v1.GetTenantAccessResponse
 	60,  // 232: iam.v1.IAMAdminService.GetTenantInvitation:output_type -> iam.v1.GetTenantInvitationResponse
 	62,  // 233: iam.v1.IAMAdminService.GetTenantMembership:output_type -> iam.v1.GetTenantMembershipResponse
@@ -8314,7 +8315,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	72,  // 238: iam.v1.IAMAdminService.ListPlatformInvitations:output_type -> iam.v1.ListPlatformInvitationsResponse
 	74,  // 239: iam.v1.IAMAdminService.ListPlatformMemberships:output_type -> iam.v1.ListPlatformMembershipsResponse
 	76,  // 240: iam.v1.IAMAdminService.ListPlatformRoles:output_type -> iam.v1.ListPlatformRolesResponse
-	78,  // 241: iam.v1.IAMAdminService.ListServicePrincipals:output_type -> iam.v1.ListServicePrincipalsResponse
+	78,  // 241: iam.v1.IAMAdminService.ListTenantWorkloads:output_type -> iam.v1.ListTenantWorkloadsResponse
 	80,  // 242: iam.v1.IAMAdminService.ListTenantInvitations:output_type -> iam.v1.ListTenantInvitationsResponse
 	82,  // 243: iam.v1.IAMAdminService.ListTenantMemberships:output_type -> iam.v1.ListTenantMembershipsResponse
 	84,  // 244: iam.v1.IAMAdminService.ListTenantRoles:output_type -> iam.v1.ListTenantRolesResponse
@@ -8329,7 +8330,7 @@ var file_iam_admin_service_proto_depIdxs = []int32{
 	102, // 253: iam.v1.IAMAdminService.UnbindTenantRole:output_type -> iam.v1.UnbindTenantRoleResponse
 	104, // 254: iam.v1.IAMAdminService.UpdatePlatformMembership:output_type -> iam.v1.UpdatePlatformMembershipResponse
 	106, // 255: iam.v1.IAMAdminService.UpdatePlatformRole:output_type -> iam.v1.UpdatePlatformRoleResponse
-	108, // 256: iam.v1.IAMAdminService.UpdateServicePrincipal:output_type -> iam.v1.UpdateServicePrincipalResponse
+	108, // 256: iam.v1.IAMAdminService.UpdateTenantWorkload:output_type -> iam.v1.UpdateTenantWorkloadResponse
 	110, // 257: iam.v1.IAMAdminService.UpdateTenantAccess:output_type -> iam.v1.UpdateTenantAccessResponse
 	112, // 258: iam.v1.IAMAdminService.UpdateTenantMembership:output_type -> iam.v1.UpdateTenantMembershipResponse
 	114, // 259: iam.v1.IAMAdminService.UpdateTenantRole:output_type -> iam.v1.UpdateTenantRoleResponse

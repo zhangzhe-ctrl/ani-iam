@@ -28,14 +28,14 @@ import (
 )
 
 type Observability struct {
-	registry                       *prometheus.Registry
-	meterProvider                  *metricSdk.MeterProvider
-	tracerProvider                 *traceSdk.TracerProvider
-	requests                       metric.Int64Counter
-	seconds                        metric.Float64Histogram
-	apiKeyStaleNonExpiring         atomic.Int64
-	apiKeyUnusualServicePrincipals atomic.Int64
-	apiKeySnapshotTimestamp        atomic.Int64
+	registry                     *prometheus.Registry
+	meterProvider                *metricSdk.MeterProvider
+	tracerProvider               *traceSdk.TracerProvider
+	requests                     metric.Int64Counter
+	seconds                      metric.Float64Histogram
+	apiKeyStaleNonExpiring       atomic.Int64
+	apiKeyUnusualTenantWorkloads atomic.Int64
+	apiKeySnapshotTimestamp      atomic.Int64
 }
 
 func NewObservability(name, version string, readiness *Readiness) (*Observability, error) {
@@ -114,10 +114,10 @@ func NewObservability(name, version string, readiness *Readiness) (*Observabilit
 		return nil, fmt.Errorf("create stale non-expiring API key gauge: %w", err)
 	}
 	if _, err := meter.Int64ObservableGauge(
-		"ani_iam_service_principal_unusual_active_api_keys_count",
-		metric.WithDescription("Number of service principals with an unusual active API key count."),
+		"ani_iam_tenant_workload_unusual_active_api_keys_count",
+		metric.WithDescription("Number of tenant workloads with an unusual active API key count."),
 		metric.WithInt64Callback(func(_ context.Context, observer metric.Int64Observer) error {
-			observer.Observe(observability.apiKeyUnusualServicePrincipals.Load())
+			observer.Observe(observability.apiKeyUnusualTenantWorkloads.Load())
 			return nil
 		}),
 	); err != nil {
@@ -144,11 +144,11 @@ func NewObservability(name, version string, readiness *Readiness) (*Observabilit
 }
 
 func (o *Observability) SetAPIKeyOperationalSnapshot(snapshot biz.APIKeyOperationalSnapshot) error {
-	if snapshot.StaleNonExpiringCount < 0 || snapshot.UnusualServicePrincipalCount < 0 || snapshot.ObservedAt.IsZero() {
+	if snapshot.StaleNonExpiringCount < 0 || snapshot.UnusualTenantWorkloadCount < 0 || snapshot.ObservedAt.IsZero() {
 		return errors.New("API key operational snapshot is invalid")
 	}
 	o.apiKeyStaleNonExpiring.Store(snapshot.StaleNonExpiringCount)
-	o.apiKeyUnusualServicePrincipals.Store(snapshot.UnusualServicePrincipalCount)
+	o.apiKeyUnusualTenantWorkloads.Store(snapshot.UnusualTenantWorkloadCount)
 	o.apiKeySnapshotTimestamp.Store(snapshot.ObservedAt.UTC().Unix())
 	return nil
 }

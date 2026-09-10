@@ -1,0 +1,50 @@
+{
+  "run_id": "wr19-20260910T031420Z-0a95e009",
+  "exit_code": 0,
+  "go_test_all": "pass",
+  "go_vet_all": "pass",
+  "targeted_unit_race": "pass",
+  "regression-tests.jsonl": {
+    "passed": [
+      "TestFormalIAMWorkloadAndHumanRuntime",
+      "TestFormalIAMRejectsInvalidConfiguration",
+      "TestNoRLSPersistenceFoundation/empty_database_migration_replay",
+      "TestNoRLSPersistenceFoundation/migration_and_runtime_roles_stay_separated",
+      "TestNoRLSPersistenceFoundation/schema_has_no_RLS_and_tenant-owned_relations_keep_non-null_tenant_boundaries",
+      "TestNoRLSPersistenceFoundation/security_audit_schema_requires_complete_identities",
+      "TestNoRLSPersistenceFoundation/runtime_DML_and_mutation_plus_audit_commit_atomically",
+      "TestNoRLSPersistenceFoundation/Tenant_B_cannot_read_or_mutate_Tenant_A",
+      "TestNoRLSPersistenceFoundation/transaction_rejects_a_different_TenantScope",
+      "TestNoRLSPersistenceFoundation/composite_foreign_keys_reject_cross-Tenant_relations",
+      "TestNoRLSPersistenceFoundation/commit_failure_is_returned_and_leaves_no_partial_transaction",
+      "TestNoRLSPersistenceFoundation/required_audit_failure_rolls_mutation_back",
+      "TestNoRLSPersistenceFoundation/optimistic_version_permits_one_concurrent_mutation",
+      "TestNoRLSPersistenceFoundation/tenant_predicate_mutation_exposes_the_negative_control",
+      "TestNoRLSPersistenceFoundation",
+      "TestSessionContinuityWithRealPostgresAndRedis/rotation_and_reuse_stay_inside_one_boundary",
+      "TestSessionContinuityWithRealPostgresAndRedis/required_Audit_failure_rolls_back_refresh_state",
+      "TestSessionContinuityWithRealPostgresAndRedis/concurrent_refresh_admits_one_rotation_then_revokes_reused_boundary",
+      "TestSessionContinuityWithRealPostgresAndRedis/stale_refresh_after_same-boundary_switch_resolves_as_reuse",
+      "TestSessionContinuityWithRealPostgresAndRedis/tenant_switch_denies_suspended_target_membership_without_creating_a_boundary",
+      "TestSessionContinuityWithRealPostgresAndRedis/logout_revokes_only_current_Session_and_audits_once",
+      "TestSessionContinuityWithRealPostgresAndRedis",
+      "TestTenantAuthorizationAuditFailureRollsBackMembershipMutation",
+      "TestRemovingTenantWorkloadMembershipDisablesPrincipalAndRevokesEveryKey",
+      "TestWorkloadRuntimeFoundationUsesCurrentOwnerTrustAndEnforcesRelations"
+    ],
+    "failed": []
+  },
+  "bootstrap-race.jsonl": {
+    "passed": [
+      "TestWorkloadBootstrapTransactions/concurrent_same_intent_once_and_lost_response_restart",
+      "TestWorkloadBootstrapTransactions/new_expired_intent_has_no_state",
+      "TestWorkloadBootstrapTransactions/audit_failure_rolls_back_identity_grants_and_receipt",
+      "TestWorkloadBootstrapTransactions/runtime_cannot_provision_and_provisioner_cannot_create_Human_or_mutate",
+      "TestWorkloadBootstrapTransactions/runtime_foundation_retains_role_guards",
+      "TestWorkloadBootstrapTransactions"
+    ],
+    "failed": []
+  },
+  "new_containers": 9,
+  "all_registered_containers_terminated": true
+}

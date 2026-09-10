@@ -4,7 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"github.com/google/uuid"
+	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 	"testing"
+	"time"
 
 	"github.com/go-kratos/kratos/v3/transport"
 	"google.golang.org/grpc/codes"
@@ -14,7 +17,7 @@ import (
 )
 
 func TestGatewayWorkloadIdentityMiddlewareAuthorizesConfiguredDNSNamePerRPC(t *testing.T) {
-	authorize, err := NewGatewayWorkloadIdentityMiddleware("ani-gateway")
+	authorize, err := NewWorkloadIdentityMiddleware("test", "iam.test", biz.NewWorkloadAuthentication(workloadTestReader{}), biz.NewWorkloadAuthorization(workloadTestReader{}))
 	if err != nil {
 		t.Fatalf("NewGatewayWorkloadIdentityMiddleware() error = %v", err)
 	}
@@ -65,21 +68,21 @@ func TestGatewayWorkloadIdentityMiddlewareAuthorizesConfiguredDNSNamePerRPC(t *t
 			name:      "same CA different identity is denied",
 			dnsNames:  []string{"other-workload"},
 			operation: "/iam.v1.AuthenticationService/PasswordLogin",
-			wantCode:  codes.PermissionDenied,
+			wantCode:  codes.Unauthenticated,
 		},
 		{
 			name:      "gateway can get tenant access",
 			dnsNames:  []string{"ani-gateway"},
 			operation: "/iam.v1.IAMAdminService/GetTenantAccess",
-			wantCode:  codes.OK,
-			called:    true,
+			wantCode:  codes.PermissionDenied,
+			called:    false,
 		},
 		{
 			name:      "gateway can update tenant access",
 			dnsNames:  []string{"ani-gateway"},
 			operation: "/iam.v1.IAMAdminService/UpdateTenantAccess",
-			wantCode:  codes.OK,
-			called:    true,
+			wantCode:  codes.PermissionDenied,
+			called:    false,
 		},
 		{
 			name:      "gateway can get tenant membership",
@@ -162,7 +165,7 @@ func TestGatewayWorkloadIdentityMiddlewareAuthorizesConfiguredDNSNamePerRPC(t *t
 }
 
 func TestGatewayWorkloadIdentityMiddlewareDoesNotInterceptAdminHTTP(t *testing.T) {
-	authorize, err := NewGatewayWorkloadIdentityMiddleware("ani-gateway")
+	authorize, err := NewWorkloadIdentityMiddleware("test", "iam.test", biz.NewWorkloadAuthentication(workloadTestReader{}), biz.NewWorkloadAuthorization(workloadTestReader{}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,9 +185,9 @@ func TestGatewayWorkloadIdentityMiddlewareDoesNotInterceptAdminHTTP(t *testing.T
 }
 
 func workloadRPCContext(operation string, dnsNames []string) context.Context {
-	certificate := &x509.Certificate{DNSNames: dnsNames}
+	certificate := &x509.Certificate{NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(time.Hour), DNSNames: dnsNames, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}}
 	tlsInfo := credentials.TLSInfo{State: tls.ConnectionState{
-		VerifiedChains: [][]*x509.Certificate{{certificate}},
+		VerifiedChains: [][]*x509.Certificate{{certificate}}, PeerCertificates: []*x509.Certificate{certificate},
 	}}
 	ctx := peer.NewContext(context.Background(), &peer.Peer{AuthInfo: tlsInfo})
 	return transport.NewServerContext(ctx, workloadTestTransport{kind: transport.KindGRPC, operation: operation})
@@ -200,3 +203,25 @@ func (t workloadTestTransport) Endpoint() string                { return "grpc:/
 func (t workloadTestTransport) Operation() string               { return t.operation }
 func (t workloadTestTransport) RequestHeader() transport.Header { return nil }
 func (t workloadTestTransport) ReplyHeader() transport.Header   { return nil }
+
+type workloadTestReader struct{}
+
+func (workloadTestReader) ResolveWorkloadIdentity(_ context.Context, peer biz.VerifiedWorkloadPeer) (biz.WorkloadIdentity, error) {
+	if peer.IdentityValue != "ani-gateway" {
+		return biz.WorkloadIdentity{}, biz.ErrWorkloadIdentityInvalid
+	}
+	return biz.WorkloadIdentity{PrincipalID: uuid.MustParse("01993000-0000-7000-8000-000000000001"), BindingID: uuid.MustParse("01993000-0000-7000-8000-000000000002"), PrincipalVersion: 1, BindingVersion: 1, Peer: peer}, nil
+}
+func (workloadTestReader) CheckWorkloadGrant(context.Context, biz.WorkloadIdentity, biz.WorkloadTarget) (int64, error) {
+	return 1, nil
+}
+
+func TestExpiredCertificateIsRejectedOnAnExistingIAMConnection(t *testing.T) {
+	ctx := workloadRPCContext("/iam.v1.AuthenticationService/PasswordLogin", []string{"ani-gateway"})
+	remote, _ := peer.FromContext(ctx)
+	info := remote.AuthInfo.(credentials.TLSInfo)
+	info.State.PeerCertificates[0].NotAfter = time.Now().Add(-time.Second)
+	if _, ok := verifiedWorkloadDNS(ctx); ok {
+		t.Fatal("expired certificate on an existing TLS connection was accepted")
+	}
+}

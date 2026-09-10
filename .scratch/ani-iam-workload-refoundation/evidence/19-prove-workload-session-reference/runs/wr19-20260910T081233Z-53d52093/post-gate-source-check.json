@@ -1,0 +1,33 @@
+[
+  {
+    "manifest": "source.json",
+    "content_changes": [],
+    "mode_changes": [],
+    "explanation": "temporary ANI go.work candidate mapping; Session buf regeneration retains byte-identical output but private umask077 changes 0644 to0600; no delivery source changed"
+  },
+  {
+    "manifest": "session-source.json",
+    "content_changes": [],
+    "mode_changes": [
+      {
+        "path": "api/gen/session/v1/session.pb.go",
+        "expected": "0o644",
+        "actual": "0o600"
+      },
+      {
+        "path": "api/gen/session/v1/session_grpc.pb.go",
+        "expected": "0o644",
+        "actual": "0o600"
+      }
+    ],
+    "explanation": "temporary ANI go.work candidate mapping; Session buf regeneration retains byte-identical output but private umask077 changes 0644 to0600; no delivery source changed"
+  },
+  {
+    "manifest": "ani-source.json",
+    "content_changes": [
+      "repo/go.work"
+    ],
+    "mode_changes": [],
+    "explanation": "temporary ANI go.work candidate mapping; Session buf regeneration retains byte-identical output but private umask077 changes 0644 to0600; no delivery source changed"
+  }
+]

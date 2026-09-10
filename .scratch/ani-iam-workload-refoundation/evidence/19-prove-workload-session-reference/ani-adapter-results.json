@@ -1,0 +1,13 @@
+{
+  "stage": "Gateway public SDK and Session caller integration",
+  "run_id": "wr19-20260910T044533Z-ec1ad5e6",
+  "IAM_source_sha256": "b6c140cbb3feae96fbc0bc7090704787ba4c13e90d89ae431b9b4a222db63df6",
+  "ANI_source_sha256": "a2a4159a380652e9b80219d40240d09b0d7ed2014a2d6a685054c1da042f18d5",
+  "adapter_unit_tests": "pass",
+  "gateway_authz_middleware_router_main_tests": "pass",
+  "targeted_vet": "pass",
+  "formal_binary_build": "pass",
+  "command_exit": 0,
+  "three_process_resource_chain": "not_verified",
+  "cluster_mutations": "none"
+}

@@ -1,0 +1,681 @@
+{
+  "status": "frozen_for_gateway_reference",
+  "frozen_at": "2026-09-10T04:30:23.240115+00:00",
+  "baseline_head": "50aa9fe2099b7ff4c276f883939a8d26c9d9eff8",
+  "baseline_tree": "e13564198e9a80082f8a46a5fc7c682b5eba239c",
+  "worktree": "/home/chabking/workspace/ANI-wr19",
+  "files": [
+    {
+      "repository": "ANI",
+      "path": "repo/pkg/ports/target_iam.go",
+      "state": "existing",
+      "source_sha256": "84405819b133f14a720eebbe3af191278604bd2f5891cc362014022a405733c8",
+      "reason": "transport-neutral authorized invocation context and owner check",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/pkg/adapters/iam/client.go",
+      "state": "existing",
+      "source_sha256": "6d6aba81aee78f93f9a6a17945200d8aa553471f8c0a031279ca6d986c12a170",
+      "reason": "consume independent public IAM API",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/pkg/adapters/iam/client_test.go",
+      "state": "existing",
+      "source_sha256": "d31423365c6492296dbd892257a4c87567fca1577a0aa5d6a031602e77b19d05",
+      "reason": "public API and Workload mapping regressions",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/pkg/adapters/iam/workload.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "public SDK subject authorization adapter",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/pkg/adapters/iam/workload_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "configuration and resource obligation failures",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/pkg/go.mod",
+      "state": "existing",
+      "source_sha256": "64f7c0778c5f5552db7cacd0747ae490dd4b492f1a3c0c6ff726524f6a6bd682",
+      "reason": "public API/SDK exact candidate versions",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/pkg/go.sum",
+      "state": "existing",
+      "source_sha256": "0c87e55790cbae887247646f52d1c445672d42a893747bc5537664df006d6a49",
+      "reason": "dependency lock",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/go.mod",
+      "state": "existing",
+      "source_sha256": "d6555ee30511ab851cf3ddce7d82f9b04eb6b6ecc2baba5cfac5256143a2e728",
+      "reason": "public API/SDK exact candidate versions",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/go.sum",
+      "state": "existing",
+      "source_sha256": "d9d2f778823a57c1050b14237da33e6375ca3f548da72eb0b149ed4b145019ac",
+      "reason": "dependency lock",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/main.go",
+      "state": "existing",
+      "source_sha256": "dc23da61691008b22e85a43f3cdf8a554d3b3688402abc325bc7d779ada08845",
+      "reason": "formal isolated WR19 composition and resource checker",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/main_test.go",
+      "state": "existing",
+      "source_sha256": "0dd731d1dcd4fdc2efcc22c9c1477633ba8cc577e8c0759c303985d914c57b4a",
+      "reason": "isolated mode fail-closed configuration",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/instance_session_runtime.go",
+      "state": "existing",
+      "source_sha256": "f290cd6d7d66906056240dcd0f4ec54b5e3691f66482b5d7636e1359ac2ad7e1",
+      "reason": "authenticated Session caller wiring",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/instance_session_runtime_test.go",
+      "state": "existing",
+      "source_sha256": "ee70288223bc5a4610fd0538060d03bc1456afb57268964cf680e42327c38e06",
+      "reason": "mTLS caller config regression",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/router/session_grpc_client.go",
+      "state": "existing",
+      "source_sha256": "b8322dfd4623d2ff7c76a9d953b110def867f95f5f342a26e39b6a87437bab1b",
+      "reason": "use SDK transport on normalized owner DTO",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/router/session_grpc_client_test.go",
+      "state": "existing",
+      "source_sha256": "61d68a9acd36655c7bef27e99f0620b56eaa2554f094015a608986cf3aa65072",
+      "reason": "owner request mapping and failure behavior",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/router/workload_session.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "exact Session DTO target mapping",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/middleware/chain.go",
+      "state": "existing",
+      "source_sha256": "2d6bbeb2cb3ecdb133309416eb4ac08ea07fbb03c37d530b48892a4bf4e4636d",
+      "reason": "choose WR19 frozen source registry in explicit mode",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/middleware/target_iam.go",
+      "state": "existing",
+      "source_sha256": "6501c4f84cf9cec5eabb9d9e6654a03bc5dc67b4850b665e04e629a408245557",
+      "reason": "preserve old isolated tracer and public API Human/Workload mapping",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/middleware/workload_iam.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "source authorization through SDK adapter before legacy middleware",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/middleware/workload_iam_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "no legacy fallback and hostile request boundary tests",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/middleware/target_iam_test.go",
+      "state": "existing",
+      "source_sha256": "d219cc3d7e53aa1f94fa7582a8632675065005e74a078c05ae819ceeda6a11a8",
+      "reason": "affected target principal regressions",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/authz/workload_reference.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "four-operation reference registry constructor",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/authz/workload_reference_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "frozen scope and permission invariants",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/authz/zz_generated_workload_reference.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "generated exact selected WR17 owner operations",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/tools/wr19_operation_registry.py",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "fixed candidate/source verification and deterministic subset generation",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/api/openapi/wr19-workload-operation-registry.v1.json",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "immutable WR17 accepted candidate input; no public route activation beyond reference chain",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/development-records/WR19.md",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "bounded implementation and acceptance evidence",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/development-records/README.md",
+      "state": "existing",
+      "source_sha256": "5716a1cb6ef6b8edcaeda3411da7b90b316604493294cdc75ce5cbce729dfb34",
+      "reason": "required batch index",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/CURRENT-SPRINT.md",
+      "state": "existing",
+      "source_sha256": "73d9486a3d83fca6961c1d4f2010a32afc6792840d5c95dc9f04294f9d05aa6a",
+      "reason": "required truthful isolated slice status",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "ANI-06-\u5f00\u53d1\u8ba1\u5212.md",
+      "state": "existing",
+      "source_sha256": "e083e73d6861efe6a57fc7c2e8e28e95451cb1ef2dc526d76bf6b8750871eb22",
+      "reason": "required batch summary",
+      "acceptance": [
+        "C",
+        "D",
+        "E",
+        "1",
+        "2",
+        "3",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/middleware/idempotency.go",
+      "state": "existing",
+      "source_sha256": "901abd1f69a8fa2ddcc0bb8844242297a087d8cf8da6a003a864701bf6c685a6",
+      "reason": "observed generic response replay can retain Session ticket and bypass Session owner idempotency; bypass only authenticated WR19 exec/console",
+      "acceptance": [
+        "D",
+        "E",
+        "6",
+        "7",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/internal/middleware/idempotency_test.go",
+      "state": "existing",
+      "source_sha256": "f8b2438578f552c3645d2ed03426fa418cd73c460d5867a9a0a85a93edff70d1",
+      "reason": "observed generic response replay can retain Session ticket and bypass Session owner idempotency; bypass only authenticated WR19 exec/console",
+      "acceptance": [
+        "D",
+        "E",
+        "6",
+        "7",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/runtime_admin.go",
+      "state": "existing",
+      "source_sha256": "c2d69e90890c65b2023de689efd6809070ab7d97df39cdf4ab535c12a70517b1",
+      "reason": "explicit loopback-only runtime admin listener required by WR19 isolated process gate; preserve default outside WR19",
+      "acceptance": [
+        "E",
+        "1",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "repository": "ANI",
+      "path": "repo/services/ani-gateway/runtime_admin_test.go",
+      "state": "planned_create",
+      "source_sha256": null,
+      "reason": "explicit loopback-only runtime admin listener required by WR19 isolated process gate; preserve default outside WR19",
+      "acceptance": [
+        "E",
+        "1",
+        "10",
+        "11"
+      ]
+    }
+  ],
+  "contract": "explicit isolated WR19 mode with four frozen owner operations: PasswordLogin, listInstances, createInstanceExecSession, createInstanceConsoleSession; source and target authorization use matching WR17 revision; old public REST route/schema and legacy registry unchanged",
+  "forbidden": "no other service source, Core writer removal, new Tenant Workload public route implementation, frontend, shared cutover, publication or existing cluster asset mutation",
+  "amendment": {
+    "time": "2026-09-10T04:36:06.342435+00:00",
+    "observed_code": "idempotency.go caches completed Body before invoking Session owner; Goal explicitly requires retries to reach current IAM and Session owner, with no ticket leakage",
+    "scope": "two existing middleware files; no generic idempotency redesign"
+  },
+  "amendments": [
+    {
+      "time": "2026-09-10T07:46:30.879172+00:00",
+      "authority": "WR19 Goal isolated ports and necessary configuration",
+      "paths": [
+        "repo/services/ani-gateway/runtime_admin.go",
+        "repo/services/ani-gateway/runtime_admin_test.go"
+      ],
+      "scope": "loopback listener configuration only, no domain/permission/deployment change"
+    }
+  ]
+}

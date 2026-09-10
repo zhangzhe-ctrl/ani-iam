@@ -1,0 +1,90 @@
+{
+  "WR19": "pass",
+  "criteria": [
+    {
+      "id": "1",
+      "criterion": "正式 IAM/Gateway/Session、两个 Tenant 的真实 Kubernetes exec",
+      "status": "pass",
+      "evidence": "real-reference-results.json",
+      "level": "formal processes + real resource"
+    },
+    {
+      "id": "2",
+      "criterion": "无身份、伪造/type/issuer/audience/peer/过期/撤销、Workload/Binding/Grant 禁用拒绝",
+      "status": "pass",
+      "evidence": "invocation-results.json; continuation-results.json; final-verification-results.json",
+      "level": "unit + formal IAM + real dependencies"
+    },
+    {
+      "id": "3",
+      "criterion": "缺失委托、subject/Tenant/resource/digest/operation/exec-console 替换、read 冒充 create 拒绝",
+      "status": "pass",
+      "evidence": "invocation-results.json; final-verification-results.json",
+      "level": "formal IAM + real dependencies + SDK"
+    },
+    {
+      "id": "4",
+      "criterion": "接收方缺失自己的 exact verification Grant 拒绝",
+      "status": "pass",
+      "evidence": "invocation-results.json; continuation-results.json",
+      "level": "formal IAM"
+    },
+    {
+      "id": "5",
+      "criterion": "IAM 故障/超时、恢复、接受的 30 秒/2 秒既有连接关闭",
+      "status": "pass",
+      "evidence": "real-reference-results.json; continuation-results.json",
+      "level": "real exec + targeted component deadline/race"
+    },
+    {
+      "id": "6",
+      "criterion": "初始化并发/重启/响应丢失、凭据续期、业务幂等与撤权重放",
+      "status": "pass",
+      "evidence": "bootstrap-final-results.json; real-reference-results.json",
+      "level": "formal bootstrap + real Redis/exec"
+    },
+    {
+      "id": "7",
+      "criterion": "两 Tenant 隔离、状态/Audit 回滚、日志无凭据/ticket/终端内容",
+      "status": "pass",
+      "evidence": "final-verification-results.json; real-reference-results.json",
+      "level": "real PG/Redis + process log scan"
+    },
+    {
+      "id": "8",
+      "criterion": "公共 SDK 独立模块/示例、Handler 无认证实现复制",
+      "status": "pass",
+      "evidence": "sdk-standalone-results.json; example-runtime-results.json; final-verification-results.json",
+      "level": "independent module/build + formal example"
+    },
+    {
+      "id": "9",
+      "criterion": "WR18 Human/Session/权限/no-RLS 持久化受影响回归",
+      "status": "pass",
+      "evidence": "final-verification-results.json",
+      "level": "58 named real-dependency/formal-IAM results"
+    },
+    {
+      "id": "10",
+      "criterion": "固定生成、相称测试/build/vet/race、相关仓库门禁",
+      "status": "pass",
+      "evidence": "final-verification-results.json; continuation-results.json",
+      "level": "final serial remote gates"
+    },
+    {
+      "id": "11",
+      "criterion": "逐文件源码/允许路径/diff/生成物/敏感信息/恢复核对",
+      "status": "pass",
+      "evidence": "final-source-consistency.json; final-fixture-verification.json; tunnel-cleanup.json",
+      "level": "source SHA and resource UID/PID/container checks"
+    }
+  ],
+  "not_claimed": [
+    "complete M1",
+    "real serial/VNC",
+    "all callers",
+    "shared cutover",
+    "production readiness",
+    "SDK publication"
+  ]
+}

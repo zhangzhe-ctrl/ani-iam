@@ -4,7 +4,7 @@
 
 **Blocked by:** 18 / 重建测试数据并最终整组切换
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -34,3 +34,7 @@
 **Recovery:** 每组删除前停止并修复依赖；若已执行，按 18 固定镜像/snapshot 恢复整个测试单元。
 
 **Human checkpoint:** 每组旧运行资产、契约、Credential 结构或数据表删除前，都必须获得针对精确目标和动作的人工确认。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-14 取代，删除能力与独立人工确认不取消。新 manifest 还必须覆盖 Service Principal/Service Token 和 plaintext/shared-secret/dev-header S2S 残留。

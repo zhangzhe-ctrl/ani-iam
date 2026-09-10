@@ -218,8 +218,8 @@ func credentialKindExpression(kind string) (string, error) {
 		return "biz.CredentialKindAccessToken", nil
 	case "api_key":
 		return "biz.CredentialKindAPIKey", nil
-	case "service_token":
-		return "biz.CredentialKindServiceToken", nil
+	case "workload_token":
+		return "biz.CredentialKindWorkloadToken", nil
 	default:
 		return "", fmt.Errorf("unsupported credential kind %q", kind)
 	}
@@ -229,8 +229,8 @@ func principalKindExpression(kind string) (string, error) {
 	switch kind {
 	case "human":
 		return "biz.PrincipalTypeHuman", nil
-	case "service":
-		return "biz.PrincipalTypeService", nil
+	case "workload":
+		return "biz.PrincipalTypeWorkload", nil
 	default:
 		return "", fmt.Errorf("unsupported principal kind %q", kind)
 	}

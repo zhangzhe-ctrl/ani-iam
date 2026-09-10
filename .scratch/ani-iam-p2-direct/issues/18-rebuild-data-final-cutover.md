@@ -4,7 +4,7 @@
 
 **Blocked by:** 17 / 完成目标调用方与全功能 UI E2E
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -34,3 +34,7 @@
 **Recovery:** 按固定旧镜像、配置和 snapshot/reseed 人工恢复完整测试单元；结果按 `pass/fail/not_verified` 留证。
 
 **Human checkpoint:** 执行快照后破坏性写入、数据重建、Credential 失效和最终切流前，必须确认精确环境、数据、Artifact、窗口和恢复动作。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-13 取代，破坏性 checkpoint 不变。新票以 clean Human/Workload schema、重新冻结的 Credential 和调用方 artifacts 为输入。

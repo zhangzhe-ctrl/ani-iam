@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package iam.v1;
+
+import "contract.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
+
+// InvocationBinding identifies the normalized business request, not authority.
+// The request digest covers the entire actual owner DTO under the v1 contract.
+message InvocationBinding {
+  string audience = 1;
+  string operation_id = 2;
+  string rpc_method = 3;
+  string source_operation_id = 4;
+  string tenant_id = 5;
+  string subject_id = 6;
+  string resource_id = 7;
+  string mode = 8;
+  bytes request_sha256 = 9;
+  string policy_revision = 10;
+}
+
+// WorkloadPeer is reported only by an authenticated receiver after mTLS
+// verification. A business caller cannot self-assert these fields at ingress.
+message WorkloadPeer {
+  string environment = 1;
+  string trust_domain = 2;
+  string identity_kind = 3;
+  string identity_value = 4;
+}
+
+// DirectWorkloadCaller is the current identity and authority for one hop.
+message DirectWorkloadCaller {
+  string principal_id = 1;
+  string binding_id = 2;
+  int64 principal_version = 3;
+  int64 binding_version = 4;
+  int64 grant_version = 5;
+  WorkloadPeer peer = 6;
+}
+
+// IssueDelegationRequest reauthorizes the actual subject for this exact request.
+// The original credential is sent only to IAM, never to the business receiver.
+message IssueDelegationRequest {
+  BearerCredential subject_credential = 1;
+  string workload_token = 2;
+  InvocationBinding binding = 3;
+}
+
+// IssueDelegationResponse expires in at most sixty seconds and cannot refresh.
+message IssueDelegationResponse {
+  string delegation = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+
+// VerifyWorkloadInvocationRequest is sent with the receiver's own mTLS identity
+// and exact verification Grant. IAM reads current caller and subject authority.
+message VerifyWorkloadInvocationRequest {
+  string workload_token = 1;
+  string delegation = 2;
+  InvocationBinding binding = 3;
+  WorkloadPeer observed_peer = 4;
+}
+
+// VerifyWorkloadInvocationResponse is typed, request-bound verification output.
+// It is not a reusable credential or an authorization for another operation.
+message VerifyWorkloadInvocationResponse {
+  // Opaque receiver-bound reference; only usable for online continuation checks.
+  string continuation = 5;
+  google.protobuf.Timestamp continuation_expires_at = 6;
+  DirectWorkloadCaller caller = 1;
+  PrincipalContext subject = 2;
+  InvocationBinding binding = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+// Receiver-only online recheck of a previously admitted request. This reference
+// cannot mint a new delegation, WAT or Session, and is not renewable.
+message VerifySessionContinuationRequest {
+  string continuation = 1;
+  InvocationBinding binding = 2;
+}
+message VerifySessionContinuationResponse {
+  DirectWorkloadCaller caller = 1;
+  PrincipalContext subject = 2;
+  InvocationBinding binding = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}

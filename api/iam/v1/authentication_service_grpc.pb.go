@@ -33,7 +33,8 @@ const (
 	AuthenticationService_RevokeSession_FullMethodName            = "/iam.v1.AuthenticationService/RevokeSession"
 	AuthenticationService_RevokeAllSessions_FullMethodName        = "/iam.v1.AuthenticationService/RevokeAllSessions"
 	AuthenticationService_ValidatePrincipal_FullMethodName        = "/iam.v1.AuthenticationService/ValidatePrincipal"
-	AuthenticationService_IssueServiceToken_FullMethodName        = "/iam.v1.AuthenticationService/IssueServiceToken"
+	AuthenticationService_IssueWorkloadToken_FullMethodName       = "/iam.v1.AuthenticationService/IssueWorkloadToken"
+	AuthenticationService_IssueDelegation_FullMethodName          = "/iam.v1.AuthenticationService/IssueDelegation"
 )
 
 // AuthenticationServiceClient is the client API for AuthenticationService service.
@@ -56,7 +57,8 @@ type AuthenticationServiceClient interface {
 	RevokeSession(ctx context.Context, in *RevokeSessionRequest, opts ...grpc.CallOption) (*RevokeSessionResponse, error)
 	RevokeAllSessions(ctx context.Context, in *RevokeAllSessionsRequest, opts ...grpc.CallOption) (*RevokeAllSessionsResponse, error)
 	ValidatePrincipal(ctx context.Context, in *ValidatePrincipalRequest, opts ...grpc.CallOption) (*ValidatePrincipalResponse, error)
-	IssueServiceToken(ctx context.Context, in *IssueServiceTokenRequest, opts ...grpc.CallOption) (*IssueServiceTokenResponse, error)
+	IssueWorkloadToken(ctx context.Context, in *IssueWorkloadTokenRequest, opts ...grpc.CallOption) (*IssueWorkloadTokenResponse, error)
+	IssueDelegation(ctx context.Context, in *IssueDelegationRequest, opts ...grpc.CallOption) (*IssueDelegationResponse, error)
 }
 
 type authenticationServiceClient struct {
@@ -207,10 +209,20 @@ func (c *authenticationServiceClient) ValidatePrincipal(ctx context.Context, in 
 	return out, nil
 }
 
-func (c *authenticationServiceClient) IssueServiceToken(ctx context.Context, in *IssueServiceTokenRequest, opts ...grpc.CallOption) (*IssueServiceTokenResponse, error) {
+func (c *authenticationServiceClient) IssueWorkloadToken(ctx context.Context, in *IssueWorkloadTokenRequest, opts ...grpc.CallOption) (*IssueWorkloadTokenResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(IssueServiceTokenResponse)
-	err := c.cc.Invoke(ctx, AuthenticationService_IssueServiceToken_FullMethodName, in, out, cOpts...)
+	out := new(IssueWorkloadTokenResponse)
+	err := c.cc.Invoke(ctx, AuthenticationService_IssueWorkloadToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authenticationServiceClient) IssueDelegation(ctx context.Context, in *IssueDelegationRequest, opts ...grpc.CallOption) (*IssueDelegationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IssueDelegationResponse)
+	err := c.cc.Invoke(ctx, AuthenticationService_IssueDelegation_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +249,8 @@ type AuthenticationServiceServer interface {
 	RevokeSession(context.Context, *RevokeSessionRequest) (*RevokeSessionResponse, error)
 	RevokeAllSessions(context.Context, *RevokeAllSessionsRequest) (*RevokeAllSessionsResponse, error)
 	ValidatePrincipal(context.Context, *ValidatePrincipalRequest) (*ValidatePrincipalResponse, error)
-	IssueServiceToken(context.Context, *IssueServiceTokenRequest) (*IssueServiceTokenResponse, error)
+	IssueWorkloadToken(context.Context, *IssueWorkloadTokenRequest) (*IssueWorkloadTokenResponse, error)
+	IssueDelegation(context.Context, *IssueDelegationRequest) (*IssueDelegationResponse, error)
 	mustEmbedUnimplementedAuthenticationServiceServer()
 }
 
@@ -290,8 +303,11 @@ func (UnimplementedAuthenticationServiceServer) RevokeAllSessions(context.Contex
 func (UnimplementedAuthenticationServiceServer) ValidatePrincipal(context.Context, *ValidatePrincipalRequest) (*ValidatePrincipalResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ValidatePrincipal not implemented")
 }
-func (UnimplementedAuthenticationServiceServer) IssueServiceToken(context.Context, *IssueServiceTokenRequest) (*IssueServiceTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method IssueServiceToken not implemented")
+func (UnimplementedAuthenticationServiceServer) IssueWorkloadToken(context.Context, *IssueWorkloadTokenRequest) (*IssueWorkloadTokenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method IssueWorkloadToken not implemented")
+}
+func (UnimplementedAuthenticationServiceServer) IssueDelegation(context.Context, *IssueDelegationRequest) (*IssueDelegationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method IssueDelegation not implemented")
 }
 func (UnimplementedAuthenticationServiceServer) mustEmbedUnimplementedAuthenticationServiceServer() {}
 func (UnimplementedAuthenticationServiceServer) testEmbeddedByValue()                               {}
@@ -566,20 +582,38 @@ func _AuthenticationService_ValidatePrincipal_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthenticationService_IssueServiceToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IssueServiceTokenRequest)
+func _AuthenticationService_IssueWorkloadToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IssueWorkloadTokenRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthenticationServiceServer).IssueServiceToken(ctx, in)
+		return srv.(AuthenticationServiceServer).IssueWorkloadToken(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AuthenticationService_IssueServiceToken_FullMethodName,
+		FullMethod: AuthenticationService_IssueWorkloadToken_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthenticationServiceServer).IssueServiceToken(ctx, req.(*IssueServiceTokenRequest))
+		return srv.(AuthenticationServiceServer).IssueWorkloadToken(ctx, req.(*IssueWorkloadTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthenticationService_IssueDelegation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IssueDelegationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationServiceServer).IssueDelegation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthenticationService_IssueDelegation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationServiceServer).IssueDelegation(ctx, req.(*IssueDelegationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -648,8 +682,12 @@ var AuthenticationService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AuthenticationService_ValidatePrincipal_Handler,
 		},
 		{
-			MethodName: "IssueServiceToken",
-			Handler:    _AuthenticationService_IssueServiceToken_Handler,
+			MethodName: "IssueWorkloadToken",
+			Handler:    _AuthenticationService_IssueWorkloadToken_Handler,
+		},
+		{
+			MethodName: "IssueDelegation",
+			Handler:    _AuthenticationService_IssueDelegation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -3,6 +3,7 @@ module github.com/zhangzhe-ctrl/ani-iam
 go 1.26.7
 
 require (
+	github.com/zhangzhe-ctrl/ani-iam/api v0.1.0-rc.1
 	github.com/alexedwards/argon2id v1.0.0
 	github.com/coreos/go-oidc/v3 v3.20.0
 	github.com/go-kratos/kratos/contrib/otel/v3 v3.0.0-20260515082355-1ddb58e407c5

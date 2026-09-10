@@ -1,0 +1,474 @@
+{
+  "baseline_head": "d8cebd50fb38c3e0d7b875e2c4a88377eb43cce1",
+  "baseline_tree": "44fc754564f37003074d15a83ea469076c2c8da6",
+  "scope_sha256": "117ce9d650c2aab0e28983a5d514932dd38d96386ee507ae4ea3b2f512eca269",
+  "input_list_sha256": "8b04b1ccb7021fd84405453f2ab37639493a265bfeddcb402b2437eb25dd48c0",
+  "files": [
+    {
+      "path": ".dockerignore",
+      "sha256": "9c26acb0fe1d46effe70ae9401f54cd1e565f99e69dff0800c417f9d5c910434",
+      "mode": "0o644"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "66b2d744c11faa191603a3ee7f1b8cd12a022d59da20e7b6a9d779f50247605a",
+      "mode": "0o644"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "da198f86c696555ebf8ec60f601bc07b3ea3f49a73d093d0605cadfb619eabb9",
+      "mode": "0o644"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "3d578fd8c89abc20973f5fd361e7c1118ab5a511d25970da323554aa7aa7586e",
+      "mode": "0o644"
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "eba391f4e50eef781e62d98273d779cf578f388056a3fe7639dd174918541706",
+      "mode": "0o644"
+    },
+    {
+      "path": "Dockerfile",
+      "sha256": "6dfd95dbd226406688acaf475fed24fd89ffeea8e5e10c8057d563832303db28",
+      "mode": "0o644"
+    },
+    {
+      "path": "Makefile",
+      "sha256": "39f01192b6d437aa1bb6e87983a7addd17cdbe82da85a823f8df5cbb6e00cbfc",
+      "mode": "0o644"
+    },
+    {
+      "path": "README.md",
+      "sha256": "b784d0ae87c58876c24da11c4e6261aa103b122533c6bd13177992976f2bb008",
+      "mode": "0o644"
+    },
+    {
+      "path": "api/gen/session/v1/session.pb.go",
+      "sha256": "f29e9887de9bd117ba7bef8ae50e4efbdf4ba4652115aff1bd6ca6df3bbcfbc5",
+      "mode": "0o644"
+    },
+    {
+      "path": "api/gen/session/v1/session_grpc.pb.go",
+      "sha256": "b65a97d061aa7a00baa06645fbdf8ee981ad07466499152459e13b203a0aa025",
+      "mode": "0o644"
+    },
+    {
+      "path": "api/go.mod",
+      "sha256": "082550526257ed7fad4f918cf5ee8afcec5fdfe5cf691b0fd8dd7284d56209fc",
+      "mode": "0o644"
+    },
+    {
+      "path": "api/go.sum",
+      "sha256": "75e23fcdb389d09405f74e00df38f944b5cbb29bdef6e708a652ea9e184f183d",
+      "mode": "0o644"
+    },
+    {
+      "path": "api/openapi/contract_test.go",
+      "sha256": "f14fc91ab250ef8187d3f563473cddcd181a7fee87978aecc7edaff7878e7ecd",
+      "mode": "0o644"
+    },
+    {
+      "path": "api/openapi/session-v1.yaml",
+      "sha256": "98c504ce54ff77702bd793cfaa78c65786b51c4decb6d3c120432d25d4dd18dd",
+      "mode": "0o644"
+    },
+    {
+      "path": "api/proto/session/v1/session.proto",
+      "sha256": "a7ac8ebe9dd66fbc50831fc3008407dea1b97bd56d483c4e38cd965253690a88",
+      "mode": "0o644"
+    },
+    {
+      "path": "buf.gen.yaml",
+      "sha256": "f0763b3288ca0dce7a884c565058d2dd3e9178fef4763bf7ed8b2b62a210e651",
+      "mode": "0o644"
+    },
+    {
+      "path": "buf.yaml",
+      "sha256": "228c2c1a7a9a9fd9bd877b3f7d5ca1f7aac228226f99aacfa23712754c406ea6",
+      "mode": "0o644"
+    },
+    {
+      "path": "cmd/session-gateway/main.go",
+      "sha256": "667c6b7a4fc4d2b3ad9b99f8879f901c58687c313419ec42d49e308e9d4afc98",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/README.md",
+      "sha256": "0ddc5526fa87965683156d5bc70f07bdb0a1ebf3dd1ffe3618a58b9d31b9ec10",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/base/config-map.yaml",
+      "sha256": "bffd59e3e4f01649211e481a5bcbfc4874bc7f63b9306dae1f3dfe5e11847e87",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/base/deployment.yaml",
+      "sha256": "261c4e473f041efa22c2c95eb038cd03f79a36055fbec391116ebb6b8ac62200",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/base/kustomization.yaml",
+      "sha256": "f54ec415bfc21b7359908d4f9877e7497d0c0c7702e7233c7ff2e3e5e776eb7f",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/base/network-policy.yaml",
+      "sha256": "fbcac7d6bbbdc7490573fab77156d57bb6fad3df34bb9225539ca425f9c97519",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/base/rbac.yaml",
+      "sha256": "b27b8f8713ff8a18452b4921ef4b6c0cd2ba08773c0a5a0eb2d0ce01dfb7480b",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/base/service-account.yaml",
+      "sha256": "7770743a24b1ffebfe35d4d2616a02a157f6222d54a0f086a19236978862d204",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/base/service-grpc.yaml",
+      "sha256": "2b205e38f93daa3ffade94423fbe88899ba65a8ffc80b4633e04eb556c63faf0",
+      "mode": "0o644"
+    },
+    {
+      "path": "deploy/base/service-websocket.yaml",
+      "sha256": "20ffabf1f28c55d87bb9e371ba560babee8d561a7d1ad18caf4f441af1b748f8",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/agents/development-contract.md",
+      "sha256": "b84bf5a1be50395db7e12d7624a4549d40020620ef530dde0336aabcb7f5aafa",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/design/realtime-session-gateway-p0-v1.1.md",
+      "sha256": "ea929c259712d8ca4e294e40670a12ca7337e40b7e310080ec47bb9ef226f000",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/design/realtime-session-gateway-p0-v1.2.md",
+      "sha256": "d57cb6be982640a25259013e86f5e19c4fa596b8cee94ff42aba7b9c3d699d30",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/execution/goal-prompts.md",
+      "sha256": "3550d10e7de506c76b412e1efe5ece36670cf560d1768b39e2a67c12808021d7",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/execution/records/SG-CONNECTED-SESSION-ARCH-20260903.md",
+      "sha256": "952c28d519d56662af86f18b0e3e26fd27e60b51bcc66feb9bfb0b6f121844b6",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/execution/records/SG-CONNECTED-SESSION-DEPLOY-20260903.md",
+      "sha256": "e8d65cf5f0ec1cf276ece6a5a5caf93ab3807ab11250ea4f2a8a457f18e12209",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/execution/records/SG-LIVE-DEPLOY-20260903.md",
+      "sha256": "61814561d60a13cf386076b2932c5e59bdeb7852d7c3bec499d962098399cbbf",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/execution/records/SG-P0-LOCAL.md",
+      "sha256": "bb8e21194be4825fd4aa2555d81c1983b7c43dca2db187189be33eeb9c980b19",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/execution/records/WR19.md",
+      "sha256": "f8a3bcc9583d9e4b8883d790cfa66a447b9fa527f276e934a91712fa1d73e9a6",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/execution/resume-SG-P0-LOCAL.md",
+      "sha256": "83bf8a55df265d71c9b52b93144c821da631821cad801678e8539beaed41c6d9",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/execution/status.md",
+      "sha256": "13bf893fc9eecba3a6ae0d6672cc068b45ed427fc0443e4ab55b798044d1f478",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/websocket-protocol.md",
+      "sha256": "06e7f4453d807e05bd096948bba80fffc0b29e19085269e014a304b88bd25383",
+      "mode": "0o644"
+    },
+    {
+      "path": "go.mod",
+      "sha256": "e8f5e47ad2773862d2b5f090e7dda91cbe54fddd97081500bb2577d6981ec896",
+      "mode": "0o644"
+    },
+    {
+      "path": "go.sum",
+      "sha256": "ec0fafdd42611c32b29c520fbab52a396c974ec5cb3aec4dceef76aea9eef7f6",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/config/config.go",
+      "sha256": "d74b3f1525805b739e696a73c4bd763764b500b7b16b6b1fd4ce121315249744",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/config/config_test.go",
+      "sha256": "5ba629b45c9d0eca4856a95b87ead14beb8fa23a1d46097860df523f376d14c0",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/deployment/manifests_test.go",
+      "sha256": "5c5d05cceef46711b7346237249e53639538db5e188694cb80a107e09c1b786d",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/observability/connected_session.go",
+      "sha256": "65670693567e9a3eab30a27ea1d3ece66507a5d7ee2ae7663037c7e5eddb2626",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/observability/http.go",
+      "sha256": "a1249766c3e719fcf6fdb34f4aa24898f3616c40d5835def53bfcfc7a2b36fc0",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/observability/http_test.go",
+      "sha256": "8fc488bb1039973330ecdb8075f1e7227209c0a241502a42361fb1d7eb09b986",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/observability/metrics.go",
+      "sha256": "2527b4a066f501baf809b700748620851f133772053e9dee940876fe51ffc583",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/observability/metrics_test.go",
+      "sha256": "ee7454d29f68bef400a467d16763faf8c5dadaf64b328a5807f0cffb05cad0f3",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/observability/store.go",
+      "sha256": "52a37de9f57b9420a7f92754a897102d25f64bd052c5a62938abff4462e12044",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/observability/tracing.go",
+      "sha256": "82c3d70f766c32ff0b96999386c787bc9d1092ed4b058d8727541eae29a03f02",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/observability/tracing_test.go",
+      "sha256": "c72d3a4fa848aa60c1f7ac44f9fb6b06b566d701262b1df85cc2b6833a65924a",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubernetes/config.go",
+      "sha256": "db6ae3635f8d177fe39b7e6300d3c821e9db02a9dec7e378d292550875a60701",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubernetes/config_test.go",
+      "sha256": "a8b9ca97e236498904bc670f5792bf90a02c5985063f7c2ba68fb4cef7929ccd",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubernetes/exec.go",
+      "sha256": "721dbea39460a41f1e6da05e349015861175f3a80ea0fbe0d16e1ec0fca118dc",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubernetes/exec_test.go",
+      "sha256": "4a0120c3c83ef719f937a7049e1c9f5889a65279765b97f5c505b78ab31de38a",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubernetes/pod_resolver.go",
+      "sha256": "81582fe6705c9d0c80c2adf2d766fef3669d9c3cae3665cc84b179c868c635ff",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubernetes/pod_resolver_test.go",
+      "sha256": "a9b61b412166bc1bb8788238d80a87bb56754823971358082fe95b98c7486a0c",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubernetes/resource_check.go",
+      "sha256": "0dc3c6e17953f5ddb592f11ab49bfc3893eb7f3454f415bb72b10ec528a20c70",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubevirt/adapter.go",
+      "sha256": "5c062d3383a89205ded9ac983bd4576b471b35ecc68ea5c345f2d24a9813f34e",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/kubevirt/adapter_test.go",
+      "sha256": "59d8a7202bc8677be28c410d7d48168a2e8b5089ee686a6f87de8d95a033d6a9",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/runtime/stream.go",
+      "sha256": "a720b9a855ae4d36ef405e3759d6fd2a2158b4c629171d53dbf880a606830af4",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/session/authorization.go",
+      "sha256": "07c4018e48a9b53c5facd5f4ad77d1db7702ff08f07366832d2dc74d74095087",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/session/authorization_test.go",
+      "sha256": "adfb1fdf00e1cff0f4de3204fee5446afb108037402fba6b97d09ce2ec3d30c7",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/session/manager.go",
+      "sha256": "9758d9f83c5f0a4a979d97a29ea00c9444c34fcee5c5263541151d880a43b13c",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/session/manager_test.go",
+      "sha256": "52e20e333e36c00025ed6d167191d3c743500dd64292b5719ecbf89b6faaa59b",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/session/model.go",
+      "sha256": "bf71ca66c18db5ed96fa75b63b588d7b51562ae3672c4b98bea54ebbb78ac042",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/session/store.go",
+      "sha256": "bdc19a46ddd613f3adfa88b29d95fdb123dcd8ac99d6b257b7ccf382b8191c8b",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/store/memory/store.go",
+      "sha256": "43cc761d52d2e49ecf7854d4f72b2f089388a9d3badb54847767709a5d56388a",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/store/memory/store_test.go",
+      "sha256": "7aaeef794511ce7f80708a9079c5f8fef370e2b47490eaba2500fdca26ffbfba",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/store/redis/store.go",
+      "sha256": "6ad23d4badda29322b40ee0f742fa7bc8b14812f708a9eb2fdc1ab4557d2c4a3",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/store/redis/store_test.go",
+      "sha256": "52a14edc8622d3eda51d32b62a5aaa3120c9c8a4bcc04bff0ca75e477ab2d580",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/store/select.go",
+      "sha256": "3c4e8d2a94a7a9fee8809f95915e43356a6617aabd1e7051cf8c712d791bd9ff",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/store/select_test.go",
+      "sha256": "1608a8f1d53e6f95b42377c44b31e3258fe63031fbf400f35eaa107f29e06c65",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/store/storetest/contract.go",
+      "sha256": "1f53c1e31177a6430be84257fbca402797bccba3d0fee22b9468094475911d90",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/grpc/authorization.go",
+      "sha256": "46b2cecdea8367c6f4541318e998f0af94bdd7115a39502de858124dfb13f8b9",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/grpc/server.go",
+      "sha256": "cd2a884c9bc192cae52ae471efeae0e822d0d2d03ab72fd235edc3ad092bbe51",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/grpc/server_test.go",
+      "sha256": "8f77a89f86a906fd5ae2a5abd727de9789b99923d83c2991fae619631a7875e4",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/grpc/workload.go",
+      "sha256": "4ad9154fdd04286265d099123ee36dc77d2703a584b0278b3c7984c4a9fd987b",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/grpc/workload_test.go",
+      "sha256": "b4faa3d845e9f2930e392852d02a05504acd6f0d20e003daec881a9da17a72d4",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/http/router.go",
+      "sha256": "141988bd43f4306d20c4dddf9007fab26dfe50fb33b29387822c91d8610b4fc5",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/http/router_test.go",
+      "sha256": "63b418ce0757bb7b7a3a63873b6f8c340d49767ed5a17387a5445c7fc4c6cc21",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/websocket/connectedsession/authorization.go",
+      "sha256": "3bd7e05f6249574d738a5173df6d30679d442480e874551ba5a60a942776aa1c",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/websocket/connectedsession/authorization_test.go",
+      "sha256": "c1e011679b8ed5e22a456c9a1369d06027ea638719607d416afe1d5310ffcae4",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/websocket/connectedsession/clock.go",
+      "sha256": "b9a3a064c30314e7c546307dd78e058255aed2e0193f297d148df779ee9915b0",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/websocket/connectedsession/exec.go",
+      "sha256": "548a8b9ef7a64d09a80f6a82fc4c9520351a0afc6c67845d0711bc85b2289d5a",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/websocket/connectedsession/module.go",
+      "sha256": "bc5647bc8471f5fa392d8e4984ef41d6f495f08f96f1abbf98cf5729562c1835",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/websocket/connectedsession/module_test.go",
+      "sha256": "8d5ea2036a596d89e4be7d80abaf84e1c43307372243104445c2f2ad2fdf5b3d",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/websocket/handler.go",
+      "sha256": "96eef78c135f4fa30b31e3ae9bc22a621f49583fd4769a6c7f04715c0cb21ece",
+      "mode": "0o644"
+    },
+    {
+      "path": "internal/transport/websocket/handler_test.go",
+      "sha256": "ea0d74046239f7b5db20410370ce7391aad865af7b4f02a1ffbe7c90f67688e3",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/check-generated.sh",
+      "sha256": "e74baf50a63c1f696850bfae225d5154300f281531728d41898269771397dc37",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/check-manifests.sh",
+      "sha256": "87fe28fd65bae6d5144ff26351f63df83331b145b32fcef40e82b5d61f5d100b",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/check-ticket-key.sh",
+      "sha256": "4ad88f3a1bb1a31989d5e4add7b200f8e1e2a77d465866fac702a2399ff70a7d",
+      "mode": "0o755"
+    }
+  ],
+  "archive_sha256": "4cf3cedeb36af286cc8d47069a86fe16b4bf270f4eaf20bcc6afc65707ef605b"
+}

@@ -1,0 +1,19 @@
+{
+  "run_id": "wr19-20260910T045819Z-886165e6",
+  "IAM_source_sha256": "24d347c260f65f5a2bc4d7f8946f543e642a1786c80c539e1a5735762086c119",
+  "Session_source_sha256": "2edee99e6115002427860e2e542f1d2c0e7bd6da86d7fb4979b40e88b66f7031",
+  "command_exit": 0,
+  "IAM_root_tests_and_vet": "pass",
+  "SDK_race_and_vet": "pass",
+  "example_build_vet_and_real_process_call": "pass",
+  "example_process_records": "two starts and two clean exits, PID and binary hashes recorded",
+  "named_integration_results": 50,
+  "integration_failures": 0,
+  "integration_skips": 0,
+  "Session_full_module_unit_tests_and_vet": "pass",
+  "registered_containers_created": 7,
+  "registered_containers_still_present": 0,
+  "formal_protected_Session_runtime": "not_verified",
+  "three_process_resource_chain": "not_verified",
+  "cluster_mutations": "none"
+}

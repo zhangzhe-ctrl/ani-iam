@@ -1,0 +1,9 @@
+{
+  "run_id": "wr19-20260910T080356Z-96d06a85",
+  "ssh_exit": 255,
+  "same_run_inspected": true,
+  "files": [],
+  "command_pid_present": false,
+  "command_exit": null,
+  "recovery": "task-specific SSH connection reuse; no automatic test replay"
+}

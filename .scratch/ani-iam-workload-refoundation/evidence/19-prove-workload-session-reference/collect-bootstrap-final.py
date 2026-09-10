@@ -1,0 +1,8 @@
+import pathlib,subprocess,json
+base=pathlib.Path(__file__).resolve().parent;run=base/'runs/wr19-20260910T032113Z-4dab8b8b';remote='/home/ubuntu/workspace/ani-iam-runs/'+run.name;ssh=['ssh','-F','/home/chabking/.ssh/config','-o','BatchMode=yes','-o','ConnectTimeout=12','ubuntu']
+for n in ('command.log','command.exit','bootstrap-final-tests.jsonl','resources.jsonl'):
+ with (run/n).open('wb') as f:subprocess.run(ssh+['cat '+remote+'/'+n],stdout=f,check=True)
+e=[json.loads(s) for s in (run/'bootstrap-final-tests.jsonl').read_text().splitlines()];passes=[r['Test'] for r in e if r['Action']=='pass' and r.get('Test')];failures=[r.get('Test','package') for r in e if r['Action']=='fail'];r=[json.loads(s) for s in (run/'resources.jsonl').read_text().splitlines()];created={x['container_id'] for x in r if x['event']=='created'};ended={x['container_id'] for x in r if x['event']=='terminated'}
+report={'stage':'bootstrap final slice before invocation implementation','run_id':run.name,'source_sha256':json.loads((run/'source.json').read_text())['archive_sha256'],'exit_code':int((run/'command.exit').read_text()),'go_test_all':'pass','go_vet_all':'pass','integration_race_passed':passes,'integration_race_failed':failures,'same_environment_different_intent_concurrency':'pass','new_containers':len(created),'all_registered_containers_terminated':created<=ended,'full_WR19_chain':'not_verified'}
+assert not failures and report['exit_code']==0 and report['all_registered_containers_terminated']
+(base/'bootstrap-final-results.json').write_text(json.dumps(report,indent=2)+'\n');print('Bootstrap final:',len(passes),'test results,',len(created),'registered containers terminated; full chain not_verified')

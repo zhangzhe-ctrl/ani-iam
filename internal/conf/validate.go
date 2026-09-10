@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-const IsolatedProfile = "direct-p2-isolated"
+const IsolatedProfile = "workload-isolated"
 
 func (c *Bootstrap) Validate() error {
 	if c == nil {
@@ -106,6 +106,11 @@ func validateRuntime(runtime *Runtime) error {
 	if runtime == nil || runtime.Postgresql == nil || runtime.Redis == nil || runtime.AccessToken == nil ||
 		runtime.Notification == nil || runtime.Oidc == nil {
 		return fmt.Errorf("PostgreSQL, Redis, access-token, Notification, and OIDC runtime config are required")
+	}
+	for name, value := range map[string]string{"environment": runtime.Environment, "trust_domain": runtime.TrustDomain} {
+		if value == "" || value != strings.ToLower(strings.TrimSpace(value)) || strings.ContainsAny(value, " /\t\r\n") {
+			return fmt.Errorf("runtime %s must be an explicit canonical identity domain", name)
+		}
 	}
 	if err := validatePostgreSQL(runtime.Postgresql); err != nil {
 		return err

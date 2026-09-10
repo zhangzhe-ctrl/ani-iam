@@ -27,6 +27,18 @@
 - 重新生成无差异的验证结果，或所有预期差异的解释；
 - 未运行或受环境限制的检查，明确标为 `not_verified`。
 
+## IAM 当前固定生成输入
+
+当前 WR-17/18 的工具/输入清单见 [isolation-manifest.json](../../.scratch/ani-iam-workload-refoundation/evidence/17-freeze-api-replacement-contracts/isolation-manifest.json)，精确输出清单见 [implementation-scope.json](../../.scratch/ani-iam-workload-refoundation/evidence/17-freeze-api-replacement-contracts/implementation-scope.json)。以下是 WR-18 领取后的实际命令约定；WR-17 只准备，不执行重任务。
+
+- Go 1.26.7；Buf 1.72.0；protoc-gen-go v1.36.12；protoc-gen-go-grpc 1.6.2；sqlc 1.31.1；Atlas Community 1.3.0。可执行文件 SHA-256 必须核验。Buf 内置编译器承载 Proto 编译，不额外引入未固定的系统 protoc。
+- Proto 输入：`api/iam/v1/{contract,authentication_service,authorization_service,iam_admin_service}.proto`，同目录的 buf.yaml/buf.gen.yaml/buf.lock；googleapis module commit/digest 由 buf.lock 固定。
+- 在隔离源副本的 `api/iam/v1` 执行 `buf generate . --template buf.gen.yaml`；然后 `buf build . --as-file-descriptor-set --exclude-source-info -o iam_descriptor.pb`。
+- 配置输入 `internal/conf/conf.proto`；在隔离输出目录使用 Buf v2 inline template、local protoc-gen-go、`paths=source_relative`，只生成 `internal/conf/conf.pb.go`。执行脚本须记录完整 template 与工作目录；不要使用不存在的 Makefile 或 Wire。
+- registry 输入是由 WR-17 固定的 ANI 公共 source blob 及 WR-18 明确变换后的 IAM 目标候选 JSON；用仓库自己的 `go run ./internal/data/cmd/genoperationregistry -input <target.json> -expected-sha256 <target-sha> -go-output internal/data/generated_operation_policies.go -sql-output migrations/202609080002_permission_catalog.sql`。原 ANI 源摘要与新候选摘要分别记录，不静默映射旧 service 值。
+- 从隔离源根执行 `sqlc generate -f sqlc.yaml`，输入 migrations/*.sql 与 internal/data/queries/persistence.sql；然后 `ATLAS_NO_UPDATE_NOTIFIER=1 atlas migrate hash --dir file://migrations` 和 `atlas migrate validate --dir file://migrations`。
+- 相同输入在第二个干净临时输出目录重复以上生成，逐文件比对；远端产物先回传临时目录，校验本地输入未变后合入产品 worktree。禁止手改 *.pb.go、sqlcgen、generated_operation_policies.go 或 atlas.sum。
+
 ## 停止条件
 
 出现下列任一情况不得自行绕过，也不得把事项标为 `resolved`：

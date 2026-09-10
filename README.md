@@ -1,30 +1,21 @@
-# ANI IAM 重构规划仓库
+# ANI IAM
 
-本仓库承载 ANI IAM 重构的当前规格、设计决策与实施计划。当前产物由完整的 Q1–Q300 grilling 结论综合而成；运行时实现尚未开始，文档完成也不等于授权修改代码、数据或外部环境。
+独立的身份与访问控制服务，替换 ANI 的 auth-service 和用户/权限管理；Core 保留 Tenant 生命周期与 Quota，资源服务保留自己的业务状态与执行。
 
-## 当前状态
+## 当前工作入口
 
-- Q1–Q300 决策：已综合进入当前规格和追踪矩阵
-- ANI 兼容性基线：`main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`
-- Git 身份：已验证；Proto、PostgreSQL/RLS、Redis、Dex 和三个调用方的兼容性证据仍待采集
-- 实施状态：未开始
-- 生产就绪：否；当前目标是测试/演示环境的功能交付
+1. [当前规格](.scratch/ani-iam-workload-refoundation/spec.md)：M1/M2、范围与架构。
+2. [唯一事项图](.scratch/ani-iam-workload-refoundation/ticket-plan.md)：顺序、依赖和进度。
+3. [接口能力矩阵](.scratch/ani-iam-workload-refoundation/capability-matrix.md)：替换需要通过哪些行为。
+4. [有限未决点](.scratch/ani-iam-workload-refoundation/decisions.md)：技术选择与待冻结输入。
 
-## 阅读顺序
+先在隔离环境验证正式接口，达到 **M1 接口替换就绪** 后，才裁剪 Core 的旧身份代码并启动前端对接；实际消费者切换和整体回归形成 **M2 实际替换完成**。旧资产清理及 Production Ready 分别验收。代码/历史证据存在不等于新目标已通过。
 
-1. [当前规格](.scratch/ani-iam-rebuild/spec.md)
-2. [IAM Service 重构方案](docs/plans/plan-iam-service-refactor.md)
-3. [Kratos 分阶段替换方案](docs/plans/plan-iam-kratos-phased.md)
-4. [Q1–Q300 决策追踪矩阵](docs/plans/plan-iam-decision-traceability.md)
-5. [领域词汇](CONTEXT.md)
-6. [架构决策记录](docs/adr/)
+## 按需参考
 
-## 实施方式
+- [CLAUDE.md](CLAUDE.md)：工作与分层规则。
+- [CONTEXT.md](CONTEXT.md)、[ADR](docs/adr/)：词汇与已接受决定。
+- [基础设计](docs/plans/plan-iam-service-refactor.md)、[Workload 模块设计](docs/plans/plan-workload-principal-refoundation.md)：稳定业务规则与机制设计。
+- [历史路线索引](docs/plans/plan-iam-kratos-phased.md)、[Q1–Q300 历史追踪](docs/plans/plan-iam-decision-traceability.md)：只供追溯，不提供另一套执行顺序。
 
-实现事项从当前规格生成到 `.scratch/ani-iam-rebuild/issues/`。只读分析可以直接进行；任何会改变仓库或外部状态的工作，必须先有一个状态为 `claimed` 的本地事项，写明目标、范围、固定基线、依赖、验收、测试、恢复和停止条件。同一时间只推进一个会改变状态的事项。
-
-删除、切流、Credential 失效、数据重建、生产操作或其他难以恢复的动作，必须在执行前获得针对精确目标和动作的人工确认。
-
-## 项目边界
-
-IAM 是独立项目，可以复用 PostgreSQL、Redis、Dex、NATS 和 Kubernetes 等共享基础设施，但不得导入 ANI/Core 的内部实现。ANI 的公开 REST 契约仍由 `repo/api/openapi/v1.yaml` 定义；跨项目契约通过不可变版本和摘要固定，不动态跟随 `main` 或 `latest`。
+契约由各 owner 维护，跨仓库消费固定版本；IAM 不导入 ANI 内部代码。当前产品实现与新 Human/Workload 目标的差异由能力矩阵和后续事项验证，不用文档完成代替运行验收。

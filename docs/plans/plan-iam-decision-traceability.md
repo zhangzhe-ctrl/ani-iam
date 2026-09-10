@@ -1,12 +1,28 @@
-# ANI IAM Q1-Q300 决策追踪矩阵
+# ANI IAM Q1–Q300 历史决策追踪
 
-> 状态：Accepted
->
-> 目标文档：`plan-iam-service-refactor.md`
->
-> 范围：用户在 grilling 中确认的 Q1-Q300；本矩阵是完整性索引，不替代核心方案和 ADR 理由。
+本表保留原答案及当时的章节索引。它不维护执行顺序，也不把历史“当前”“未来 P2”或旧票号解释为今天的 frontier。原章节号对应 [整理前基础设计](../../.scratch/ani-iam-workload-refoundation/evidence/16-organize-docs-and-replan/before/docs/plans/plan-iam-service-refactor.md)，当前规则以 accepted ADR、[spec](../../.scratch/ani-iam-workload-refoundation/spec.md) 和 [能力矩阵](../../.scratch/ani-iam-workload-refoundation/capability-matrix.md)为准。
 
-> 当前调整：Q291-Q300 中与文档版本和旧执行治理有关的答案已由用户最新决定替换；其余业务、架构、安全和验证结论保持不变。
+## 本次接口优先修订
+
+| 范围 | 当前有效解释 |
+| --- | --- |
+| 阶段与完成定义 | 用户明确 M1 隔离接口就绪在先；Core 旧代码裁剪和前端对接在后；M2 实际替换另验收 |
+| Q88 / Core fixture | 历史 fixture-only 范围不再定义 M1；C09 必须验证真实 Core producer/Snapshot/NATS，物理拆出 Core 服务不是前置 |
+| Q104 / Q291–300 文档与执行 | spec+ticket-plan 唯一执行入口；基础设计/Workload 设计提供规则与说明；旧计划仅为历史 |
+| Q110 / Q111 | CP0/P1 已停止，不要求先修好旧 RLS 才能开发目标；C01/C14 验证新 schema/受限 role |
+| Q201–220 浏览器行为 | Cookie/CSRF/Origin/refresh 的协议在 M1 测；Console/BOSS 页面和多 Tab 产品交互在 R02 |
+| Q250 / Q252 清理 | 历史无审计 DBA 清理文字不授权当前 Audit 删除；以 ADR-0014/0017 的有效边界及 D04 为准 |
+| Q286–288 并发 | 全量性能/Fuzz/生产规模硬化可延期；当前安全状态机定向并发/race 不能延期（ADR-0021） |
+| Q295 / 固定输入 | 新 WR-17 与各实现事项固定自身 immutable inputs；旧 main/Oracle 不作为今天基线 |
+| 恢复/切流/删除 | 已接受安全规则保留；未接受 Lineage/PONR 扩展转 D07，针对其保护的实际动作定稿，不统一阻塞 M1 |
+
+Human/Workload 分类修订仍由 ADR-0022 解释。下列旧选项与限定语保持历史原文，既不回填用户尚未作出的选择，也不恢复已停止路线。
+
+## 0. 2026-09-09 override
+
+本表保留 grilling 的原始答案索引，但不再允许从旧选项字母推导出第三种 `Service Principal`。当前有效解释为：Principal 只有 `human | workload`；旧 Service Principal 是 Tenant-owned Workload，内部服务是 Platform-owned Workload；API Key 与 WAT 是 Credential，Membership/Role 与 Workload Grant 是不同 owner 的 Authority。`plan-workload-principal-refoundation.md`、当前 WR 规格和 ADR-0022 优先于受影响行的旧术语。
+
+受影响答案的其余约束继续有效：API Key 仍是有主体、可撤销、无 permission snapshot 的外部自动化 Credential；WAT 仍短期、audience/operation/Tenant-bound、不可 refresh、无 Session；Gateway 仍只做一次入口 IAM decision；后续每个同步业务 gRPC/HTTP hop 另行认证直接 caller Workload，Delegated Subject 不替代其 Authority；Audit 仍事务化、append-only 且不保存 Secret。
 
 ## 1. 使用规则
 
@@ -271,14 +287,14 @@
 | Q250 | B | 核心方案 §§9,11 | ADR 0017 |
 | Q251 | A | 核心方案 §§9,11 | ADR 0017 |
 | Q252 | C | 核心方案 §§9,11 | ADR 0017 |
-| Q253 | A | 核心方案 §§6.1,9.2,10 | ADR 0018 |
-| Q254 | A | 核心方案 §§6.1,9.2,10 | ADR 0018 |
-| Q255 | A | 核心方案 §§6.1,9.2,10 | ADR 0018 |
-| Q256 | A | 核心方案 §§6.1,9.2,10 | ADR 0018 |
-| Q257 | A | 核心方案 §§6.1,9.2,10 | ADR 0018 |
-| Q258 | A | 核心方案 §§6.1,9.2,10 | ADR 0018 |
-| Q259 | A | 核心方案 §§6.1,9.2,10 | ADR 0018 |
-| Q260 | A | 核心方案 §§6.1,9.2,10 | ADR 0018 |
+| Q253 | A (historical; superseded 2026-09-09) | Workload 方案 §§1-7 | ADR 0022 supersedes 0018 Principal classification |
+| Q254 | A (historical; superseded 2026-09-09) | Workload 方案 §§1-7 | ADR 0022 supersedes 0018 Principal classification |
+| Q255 | A (historical; superseded 2026-09-09) | Workload 方案 §§1-7 | ADR 0022 supersedes 0018 Principal classification |
+| Q256 | A (historical; superseded 2026-09-09) | Workload 方案 §§1-7 | ADR 0022 supersedes 0018 Principal classification |
+| Q257 | A (historical; superseded 2026-09-09) | Workload 方案 §§1-7 | ADR 0022 supersedes 0018 Principal classification |
+| Q258 | A (historical; superseded 2026-09-09) | Workload 方案 §§1-7 | ADR 0022 supersedes 0018 Principal classification |
+| Q259 | A (historical; superseded 2026-09-09) | Workload 方案 §§1-7 | ADR 0022 supersedes 0018 Principal classification |
+| Q260 | A (historical; superseded 2026-09-09) | Workload 方案 §§1-7 | ADR 0022 supersedes 0018 Principal classification |
 | Q261 | B | 核心方案 §4 | ADR 0019 |
 | Q262 | A | 核心方案 §4 | ADR 0019 |
 | Q263 | A | 核心方案 §4 | ADR 0019 |
@@ -313,18 +329,19 @@
 | Q292 | 当前决定 | 当前规格、核心方案 §§1,12.3,14-15 | 当前规格 |
 | Q293 | 当前决定 | 当前规格、核心方案 §§1,12.3,14-15 | 当前规格 |
 | Q294 | 当前决定 | 当前规格、核心方案 §§1,12.3,14-15 | 当前规格 |
-| Q295 | A | 当前规格、核心方案 §§1,12.3,14-15 | ADR 0001、0021 |
+| Q295 | A (historical; superseded 2026-09-09) | 当前 WR 规格、Workload 方案 §§1,12-13 | 当前 WR-02 baseline checkpoint |
 | Q296 | B | 当前规格、核心方案 §§1,12.3,14-15 | 当前规格 |
 | Q297 | 当前决定 | 当前规格、核心方案 §§1,12.3,14-15 | 当前规格 |
 | Q298 | 当前决定 | 当前规格、核心方案 §§1,12.3,14-15 | 当前规格 |
 | Q299 | 当前决定 | 当前规格、核心方案 §§1,12.3,14-15 | 当前规格 |
 | Q300 | 当前决定 | 当前规格、核心方案 §§1,12.3,14-15 | 当前规格 |
 
-## 3. 不能从字母中丢失的限定
+## 3. 历史限定语（原文；现行修订见顶部）
 
 | 问题 | 限定 |
 | --- | --- |
-| Q3/Q295 | 基线由用户指定为 ANI `main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`；Git 身份已验证，兼容性证据仍待采集，禁止以动态 HEAD 或其他提交替代。 |
+| Q3 | 历史 grilling 基线曾由用户指定为 ANI `main@963bc88836c54a1b09cf100b37eb2f2cb2a5a4be`；它只保留为历史决定，不是当前 WR baseline。 |
+| Q295 | 当前 WR-02 必须重新冻结 IAM、ANI、Session Gateway 等所有消费者的精确 commit/tree 与 artifact digest；在人工接受前 baseline 为 pending，动态 HEAD/main/latest 仍禁止。 |
 | Q4/Q8 | 删除和替换旧契约、实现和 RLS 本身就是重构动机，不再讨论是否维持兼容。 |
 | Q12 | Tenant Lifecycle 与 IAM Access 分离，Core Control 与 IAM 使用不同所有权和数据库。 |
 | Q38 | 缺失 `tenant_access` 返回 retryable `TENANT_IAM_NOT_READY`，不是普通 deny/not-found，也不能由普通操作补行。 |
@@ -334,7 +351,12 @@
 | Q104/Q291-Q294 | 当前规格、核心方案、分阶段方案和追踪矩阵共同构成自包含当前态；已删除材料不提供执行默认值。 |
 | Q110/Q111 | RLS 只在 P2 目标删除；CP0/P1 仍必须复现旧 RLS oracle。 |
 | Q115-Q117 | 无 RLS 后以复合 Tenant key/FK、TenantScope repository、两 Tenant negative 和 query mutation 约束隔离；不声称等价于 RLS。 |
-| Q121 | API Key 是用户主动创建/吊销并供 SDK 使用的 Service Principal Credential，不是无主体 Secret。 |
+| Q118-Q140 | API Key 的安全与生命周期答案继续有效；其主体按 ADR-0022 解释为 Tenant-owned Workload Principal，不再存在 Service Principal 类型。 |
+| Q121 | API Key 是用户主动管理并供 SDK 使用的 Tenant-owned Workload Credential，不是无主体 Secret，也不复制创建者权限。 |
+| Q181-Q190 | 旧 Service Token 术语统一为 Workload Access Token；短 TTL、audience/operation subset、无 Session/Refresh 不变量保留。 |
+| Q191-Q200 | Audit 对象扩展为 Workload Principal、Identity Binding、Grant 和 WAT；事务、append-only、redaction 语义保留。 |
+| Q221-Q230 | Gateway first-hop one-call 规则保留；后续每个同步业务 gRPC/HTTP hop 另行验证 direct Workload caller，Delegated Subject 不能授权。 |
+| Q253-Q260 | Human/Service/Workload 分类由 ADR-0022 破坏性替换为 Human/Workload；Owner、Identity、Credential、Authority 正交。 |
 | Q124/Q241 | Purge 当前不做；Audit 至少 180 天，项目存续到该时点再交付删除/retention 功能。 |
 | Q149 | delegated administrator 属于高级功能，基础版本仅 tenant-admin 管理 Role/Binding。 |
 | Q158/Q161 | 初版彻底移除 member_count Quota/TCC，不留 dormant API、reservation 或 worker。 |
@@ -348,30 +370,6 @@
 | Q296 | 旧 Gateway drift/protected-path 门禁本身被否决；不要求强行变绿，也不能记 pass。首个基线事项必须评审可复现的新检查后方可进入 CP0。 |
 | Q297 | 文档完成不构成启动；状态变更必须由一个 `claimed` 本地事项承载，破坏性动作还需针对精确目标的人工确认。 |
 
-## 4. 覆盖检查
+## 4. 当前覆盖入口
 
-本表从 Q1 连续到 Q300，无跳号。核心方案的主题到 ADR 或当前规格映射为：
-
-| 主题 | 问题范围 | ADR |
-| --- | --- | --- |
-| 破坏性重建、测试交付 | Q1-Q19、Q105-Q110 | 0001、0006、0007 |
-| Lifecycle/Access/异步 Bootstrap | Q20-Q38、Q55-Q91 | 0002-0004 |
-| 独立项目、跨项目契约/基础设施 | Q39-Q54、Q84-Q104 | 0005 |
-| 无 RLS 与 TenantScope | Q111-Q117 | 0007 |
-| 显式授权关系与 API Key | Q118-Q140 | 0008 |
-| Permission/Role | Q141-Q149 | 0009 |
-| Invitation/Membership | Q150-Q160 | 0010 |
-| Principal/Boundary Token | Q161-Q170 | 0011 |
-| Token/OIDC lifetime | Q171-Q180 | 0012 |
-| Session Grant/Service Token | Q181-Q190 | 0013 |
-| Audit | Q191-Q200 | 0014 |
-| Browser Cookie/CSRF | Q201-Q220 | 0015 |
-| Gateway one-call authz | Q221-Q230 | 0016 |
-| 数据库/删除/保留 | Q231-Q252 | 0017 |
-| Principal 类型/Integration state | Q253-Q260 | 0018 |
-| Kratos 边界 | Q261-Q270 | 0019 |
-| 成熟依赖 | Q271-Q280 | 0020 |
-| 验证矩阵 | Q281-Q290 | 0021 |
-| 当前权威、基线与实施边界 | Q291-Q300 | 当前规格 |
-
-
+历史答案与有效 ADR 的追溯继续保留；本轮可执行覆盖见 capability-matrix.md 的 C01–C14/R01–R04、ticket-plan 的旧票映射，以及 WR-16 文档评审证据。旧字母答案不能直接填充 pending 的 receiver/evidence/引导/恢复合同。

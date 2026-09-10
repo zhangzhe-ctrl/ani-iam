@@ -1,6 +1,8 @@
 # ANI IAM Direct P2 Ticket Plan
 
-Status: accepted / published
+Status: superseded after DP2-10
+
+2026-09-09 起，当前事项图改为 `../ani-iam-workload-refoundation/ticket-plan.md`。DP2-00–10 的已完成状态和证据保留；DP2-11–20 的 capability 没有取消，但旧票的 baseline、contracts、Allowed paths 和依赖图已被 Human/Workload refoundation 取代。以下内容只作为历史 ticket graph，不再产生可领取 frontier。
 
 用户于 2026-09-03 接受本拆分、依赖边和交付行为。DP2-01–DP2-20 已发布到 `.scratch/ani-iam-p2-direct/issues/` 并设为 `ready-for-agent`；随后用户精确授权并完成 DP2-00，归档并移除未投入使用的事项03/04实验代码。发布和前置清理不等于领取后续事项，DP2-01 仍未启动。
 
@@ -39,7 +41,7 @@ Status: accepted / published
 
 ## Dependency Audit
 
-依赖只指向更小 ID，因此已发布图无环。一次性 DP2-00 已解决，当前唯一 frontier 是 DP2-01。`ready-for-agent` 只表示规格完整；执行器仍必须检查 `Blocked by`，且每次只能领取一个事项。
+依赖只指向更小 ID，因此旧发布图无环。在 2026-09-03 的历史快照中，一次性 DP2-00 已解决、当时唯一 frontier 是 DP2-01；这句话不再描述当前 frontier。`ready-for-agent` 当时只表示规格完整，且执行器仍必须检查 `Blocked by`、每次只能领取一个事项。
 
 ## Accepted Delivery Behavior
 

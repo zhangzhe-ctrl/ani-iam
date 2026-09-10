@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-09-10T08:43:25.278801+00:00",
+  "product_files_matched": 215,
+  "deletions_matched": 5,
+  "runtime_source_changes_after_tests": [],
+  "generated_artifact_bytes_match": true,
+  "main_baseline_matches": true,
+  "remote_ancestor_before_commit": true,
+  "existing_unpushed_commits": [
+    "13e709f4",
+    "cd38cd90"
+  ],
+  "remote_before": "fb862d75854e2a31d60ac5a40182dc678ae88c44",
+  "verification": "exact final source snapshot plus staged checks; real-resource and regression tests reused for identical product bytes",
+  "unpublished_candidate_modules": "documented; no tags requested"
+}

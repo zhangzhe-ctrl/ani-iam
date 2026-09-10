@@ -90,7 +90,7 @@ func TestValidatePrincipalMapsAPIKeyContextWithoutHumanSessionFields(t *testing.
 	decisionID := uuid.MustParse("0199d080-2000-7001-9000-000000000003")
 	usecase := &recordingAuthenticationUsecase{validateResult: biz.ValidatePrincipalResult{
 		Principal: biz.TrustedPrincipalContext{
-			ID: principalID, Type: biz.PrincipalTypeService, Status: biz.PrincipalStatusActive,
+			ID: principalID, Type: biz.PrincipalTypeWorkload, Status: biz.PrincipalStatusActive,
 			TenantID: tenantID, AuthnMethods: []biz.AuditAuthenticationMethod{biz.AuditAuthenticationMethodAPIKey},
 		},
 		DecisionID: decisionID, PolicyRevision: "sha256:test-revision",
@@ -111,7 +111,7 @@ func TestValidatePrincipalMapsAPIKeyContextWithoutHumanSessionFields(t *testing.
 		t.Fatalf("ValidatePrincipal() response identity = %#v", response)
 	}
 	principal := response.GetPrincipal()
-	if principal.GetPrincipalId() != principalID.String() || principal.GetPrincipalType() != iamv1.PrincipalType_PRINCIPAL_TYPE_SERVICE ||
+	if principal.GetPrincipalId() != principalID.String() || principal.GetPrincipalType() != iamv1.PrincipalType_PRINCIPAL_TYPE_WORKLOAD ||
 		principal.GetBoundary().GetTenant().GetTenantId() != tenantID.String() || principal.GetSessionId() != "" || principal.GetGrantId() != "" ||
 		len(principal.GetAuthnMethods()) != 1 || principal.GetAuthnMethods()[0] != iamv1.AuthnMethod_AUTHN_METHOD_API_KEY {
 		t.Fatalf("ValidatePrincipal() principal = %#v", principal)

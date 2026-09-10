@@ -4,11 +4,19 @@ status: accepted
 
 # Separate Principal types and persist integration state explicitly
 
+[ADR-0022](0022-unify-software-actors-as-workload-principals.md) supersedes only this document's Principal classification and Service/Workload terminology. The Tenant Access, lifecycle projection, bootstrap-operation, and purpose-specific notification-outbox decisions remain accepted and are incorporated by reference into ADR-0022. This is a partial supersession, not retirement of the whole ADR.
+
+## Principal classification (historical; superseded by ADR-0022)
+
+The following classification records the former decision. Use ADR-0022 for the current Human/Workload model and its owner-specific constraints.
+
 Human and Service identities share an immutable `principals` base containing their UUIDv7 identity, type, status, timestamps, and version. Type-specific relations hold Human and Service attributes instead of placing unrelated nullable fields on the base row. Human verified-email and login Identity data cannot appear on a Service Principal profile.
 
 A Service Principal profile fixes one Core-generated Tenant ID and has a name unique after normalization within that Tenant. Its profile, sole active Tenant Membership, and initial Role Bindings commit atomically. Database uniqueness and a constraint or constraint trigger reject a second non-removed Tenant Membership or a Membership whose Tenant differs from the fixed profile Tenant. Disabling the Service Principal does not release its name for ambiguous reuse.
 
 Platform Memberships accept only Human Principals. Internal workloads use mTLS or SPIFFE and a short Service Token instead of manufacturing a Platform Service Principal.
+
+## Integration state (accepted)
 
 `tenant_access` has exactly `bootstrap_pending`, `active`, and `suspended` states. A missing row is not another state and returns the previously accepted `TENANT_IAM_NOT_READY` availability result.
 

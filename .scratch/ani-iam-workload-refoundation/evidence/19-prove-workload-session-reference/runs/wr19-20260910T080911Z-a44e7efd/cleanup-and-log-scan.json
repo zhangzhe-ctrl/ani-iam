@@ -1,0 +1,26 @@
+{
+  "run_id": "wr19-20260910T080911Z-a44e7efd",
+  "command_exit": 2,
+  "created_containers": 7,
+  "registered_containers_still_present": [],
+  "registered_processes_still_running": [],
+  "private_logs_scanned": [
+    {
+      "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080911Z-a44e7efd/private/formal-f1650b7f-2bba-4a4b-9fbd-ba5905946edf/process.log",
+      "sha256": "40a59e6efbf4a5f53fa459846df0c5ac2d0b8d95f27eb69d16ca13722a2e9cca",
+      "bytes": 174270
+    },
+    {
+      "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080911Z-a44e7efd/private/formal-17cb940b-d295-49a4-bdde-b01cbc53330b/example-receiver.log",
+      "sha256": "d624ad17e0e1a1eb9691ca8002d7fdbf894bf0a4fa3cdbe1941845bf81a10831",
+      "bytes": 48
+    },
+    {
+      "path": "/home/ubuntu/workspace/ani-iam-runs/wr19-20260910T080911Z-a44e7efd/private/formal-17cb940b-d295-49a4-bdde-b01cbc53330b/process.log",
+      "sha256": "3ba9df3ef192a282a8afe861029f9e8aa5eacf6197a77430ce7c3f0d6d3107eb",
+      "bytes": 54839
+    }
+  ],
+  "secret_leak_findings": [],
+  "scan_scope": "named public evidence plus task-private formal process logs; JWT/ticket/terminal patterns and concrete fixture secrets; values never exported"
+}

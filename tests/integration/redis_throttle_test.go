@@ -11,10 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redis/go-redis/v9"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/data"
 )
@@ -23,38 +19,7 @@ const redisImage = "redis:7.4-alpine@sha256:ff02b58f971e7d7d156a1267e283fcbbeee9
 
 func TestRedisLoginThrottleIsolatesHashedAccountAndSourceIPLocks(t *testing.T) {
 	ctx := context.Background()
-	container, err := testcontainers.Run(
-		ctx,
-		redisImage,
-		testcontainers.WithExposedPorts("6379/tcp"),
-		testcontainers.WithWaitStrategy(wait.ForLog("Ready to accept connections").WithStartupTimeout(time.Minute)),
-	)
-	if err != nil {
-		t.Fatalf("start pinned Redis container: %v", err)
-	}
-	t.Cleanup(func() {
-		terminateContext, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
-		if err := testcontainers.TerminateContainer(container, testcontainers.StopContext(terminateContext)); err != nil {
-			t.Errorf("terminate Redis container: %v", err)
-		}
-	})
-
-	endpoint, err := container.Endpoint(ctx, "")
-	if err != nil {
-		t.Fatalf("Redis endpoint: %v", err)
-	}
-	client := redis.NewClient(&redis.Options{
-		Addr:         endpoint,
-		MaxRetries:   -1,
-		DialTimeout:  time.Second,
-		ReadTimeout:  time.Second,
-		WriteTimeout: time.Second,
-	})
-	t.Cleanup(func() { _ = client.Close() })
-	if err := client.Ping(ctx).Err(); err != nil {
-		t.Fatalf("ping pinned Redis container: %v", err)
-	}
+	client, container := newIsolatedRedis(t, ctx)
 
 	const baseDelay = 10 * time.Millisecond
 	throttle, err := data.NewRedisLoginThrottle(client, data.RedisLoginThrottleConfig{

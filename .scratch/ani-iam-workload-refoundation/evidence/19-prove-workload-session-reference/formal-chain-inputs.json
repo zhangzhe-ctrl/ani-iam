@@ -1,0 +1,120 @@
+{
+  "status": "executed_pass",
+  "captured_at": "2026-09-10T05:00:25.111800+00:00",
+  "mode": "ordinary_container_exec",
+  "owner": "ANI existing Instance metadata owner; Session Kubernetes resolver and Redis SessionStore",
+  "kubernetes_manifest": "k8s-proposal-v2.json",
+  "api_address": "https://10.10.1.66:6443",
+  "gateway_runtime": {
+    "IAM_TARGET_MODE": "wr19",
+    "WORKLOAD_PROVIDER": "kubernetes_rest",
+    "WORKLOAD_PROVIDER_APPLY_ENABLED": "false",
+    "WORKLOAD_LIFECYCLE_APPLY_ENABLED": "false",
+    "WORKLOAD_OPS_ENABLED": "false",
+    "DATABASE_URL": "new isolated ANI owner database, private reference only",
+    "GATEWAY_REDIS_URL": "new isolated Gateway cache, private reference only",
+    "KUBERNETES_SERVICE_ACCOUNT_TOKEN_FILE": "new wr19-gateway-reader short-lived credential, private reference only"
+  },
+  "resources": [
+    {
+      "tenant_id": "01993000-0019-7000-8000-000000000001",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000001",
+      "instance_id": "01993000-0019-7000-9000-000000000001",
+      "workload_name": "wr19-exec-a",
+      "kind": "container",
+      "provider": "kubernetes",
+      "resource_ref": "kubernetes/Deployment/wr19-exec-a",
+      "state_precondition": "actual Deployment available and eligible Pod ready before seeding Running owner fixture"
+    },
+    {
+      "tenant_id": "01993000-0019-7000-8000-000000000002",
+      "namespace": "ani-tenant-01993000-0019-7000-8000-000000000002",
+      "instance_id": "01993000-0019-7000-9000-000000000002",
+      "workload_name": "wr19-exec-b",
+      "kind": "container",
+      "provider": "kubernetes",
+      "resource_ref": "kubernetes/Deployment/wr19-exec-b",
+      "state_precondition": "actual Deployment available and eligible Pod ready before seeding Running owner fixture"
+    }
+  ],
+  "schema_inputs": [
+    {
+      "path": "repo/deploy/migrations/20260501000100_init_schema.sql",
+      "sha256": "269c60113fe43c3f6fba2bda7861cca2e883231b3a40e28da79548294dfecf15"
+    },
+    {
+      "path": "repo/deploy/migrations/20260502000200_operations_idempotency.sql",
+      "sha256": "599b2afd632fcaded6ea1d4cb3122249d21f28efa20d658dc0d4c4561d85dd07"
+    },
+    {
+      "path": "repo/deploy/migrations/20260519000400_instance_u_vm_protection.sql",
+      "sha256": "c5e7cfdc33f5759b05cc317e6647d4f22c55d45cd5956cbbc3f33d82db09b694"
+    },
+    {
+      "path": "repo/deploy/migrations/20260520000700_workload_identity_api_keys.sql",
+      "sha256": "53ee7ec6ffd9231036ce4889da218b4fd38434364b20c6d83026a358a4b93c6f"
+    },
+    {
+      "path": "repo/deploy/migrations/20260730000100_instance_management_lifecycle_ops.sql",
+      "sha256": "3ddab05c6b488c507258e6ffcd89007da7ab35dd2c813262ff27db7ab975479e"
+    },
+    {
+      "path": "repo/deploy/migrations/20260812000100_quota_tx_ids.sql",
+      "sha256": "32bede0a9ece264725c977f0a2485a5b9e19805bcdaaa609f6a4a420f56dc8c1"
+    },
+    {
+      "path": "repo/deploy/migrations/20260825000100_workload_instances_rls_fix.sql",
+      "sha256": "34edcd417b791d5f77d7dba52e45b9b182a6fff3a4e7267946375f4f1fbdf9c5"
+    }
+  ],
+  "schema_contract": "Use unchanged owner DDL in a fresh separate ANI database; runtime login is not DB owner/superuser/BYPASSRLS. Only task-owned resource status reads/writes are needed. No existing ANI or IAM database is reused. Additional startup schema dependencies must be derived and pinned before application.",
+  "request": {
+    "method": "POST",
+    "path": "/api/v1/instances/{instance_id}/exec",
+    "source_operation": "createInstanceExecSession",
+    "permission": "tenant/instances:create",
+    "command": [
+      "/bin/sh"
+    ],
+    "tty": true,
+    "rows": 24,
+    "cols": 80,
+    "container": "shell",
+    "idempotency_key": "fresh UUID per test intent, same UUID on lost-response retries",
+    "request_id": "fresh request ID, included in delegation digest; owner existing business fingerprint excludes it"
+  },
+  "assertions": [
+    "formal Gateway PasswordLogin against IAM",
+    "resource owner lookup using IAM verified Tenant",
+    "real Session CreateSession and Redis issuance",
+    "current authorization at ticket redemption per accepted lifecycle decision",
+    "one-time ticket consumption and replay denial",
+    "actual exec WebSocket handshake and resource command assertion; no terminal bytes in logs/evidence",
+    "graceful closure and lease cleanup",
+    "same business intent retry goes to current IAM and Session idempotency",
+    "current permission revoke denies retry",
+    "two Tenant owner lookup and resource label negatives"
+  ],
+  "pending": [],
+  "no_claim": [
+    "real serial/VNC",
+    "all callers",
+    "complete M1",
+    "shared cutover",
+    "production readiness"
+  ],
+  "kubernetes_access": "k8s-access-preflight.json; task-owned SSH SOCKS transport and fresh one-hour restricted tokens",
+  "lifecycle": "continuation-contract.md; accepted and component-verified",
+  "runtime_grant_inputs": [
+    {
+      "path": "repo/deploy/migrations/20260828000200_app_role_privileges.sql",
+      "sha256": "ed341f29d78f339af21b7faebaba01a1d74ff46956883a02873b0a2018f8bd8c",
+      "statements": [
+        "GRANT SELECT, INSERT, UPDATE ON workload_instances TO ani_app;"
+      ],
+      "reason": "explicit table privileges from existing owner grant migration, missing from initial DDL because its ALL TABLES grant precedes table creation; no full privileged role fallback"
+    }
+  ],
+  "executed_run": "wr19-20260910T080445Z-be0b89ea",
+  "final_verification": "final-verification-results.json"
+}

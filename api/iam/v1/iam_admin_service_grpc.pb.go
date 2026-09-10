@@ -30,7 +30,7 @@ const (
 	IAMAdminService_CreateAPIKey_FullMethodName              = "/iam.v1.IAMAdminService/CreateAPIKey"
 	IAMAdminService_CreatePlatformInvitation_FullMethodName  = "/iam.v1.IAMAdminService/CreatePlatformInvitation"
 	IAMAdminService_CreatePlatformRole_FullMethodName        = "/iam.v1.IAMAdminService/CreatePlatformRole"
-	IAMAdminService_CreateServicePrincipal_FullMethodName    = "/iam.v1.IAMAdminService/CreateServicePrincipal"
+	IAMAdminService_CreateTenantWorkload_FullMethodName      = "/iam.v1.IAMAdminService/CreateTenantWorkload"
 	IAMAdminService_CreateTenantInvitation_FullMethodName    = "/iam.v1.IAMAdminService/CreateTenantInvitation"
 	IAMAdminService_CreateTenantRole_FullMethodName          = "/iam.v1.IAMAdminService/CreateTenantRole"
 	IAMAdminService_DeletePlatformRole_FullMethodName        = "/iam.v1.IAMAdminService/DeletePlatformRole"
@@ -42,7 +42,7 @@ const (
 	IAMAdminService_GetPlatformInvitation_FullMethodName     = "/iam.v1.IAMAdminService/GetPlatformInvitation"
 	IAMAdminService_GetPlatformMembership_FullMethodName     = "/iam.v1.IAMAdminService/GetPlatformMembership"
 	IAMAdminService_GetPlatformRole_FullMethodName           = "/iam.v1.IAMAdminService/GetPlatformRole"
-	IAMAdminService_GetServicePrincipal_FullMethodName       = "/iam.v1.IAMAdminService/GetServicePrincipal"
+	IAMAdminService_GetTenantWorkload_FullMethodName         = "/iam.v1.IAMAdminService/GetTenantWorkload"
 	IAMAdminService_GetTenantAccess_FullMethodName           = "/iam.v1.IAMAdminService/GetTenantAccess"
 	IAMAdminService_GetTenantInvitation_FullMethodName       = "/iam.v1.IAMAdminService/GetTenantInvitation"
 	IAMAdminService_GetTenantMembership_FullMethodName       = "/iam.v1.IAMAdminService/GetTenantMembership"
@@ -53,7 +53,7 @@ const (
 	IAMAdminService_ListPlatformInvitations_FullMethodName   = "/iam.v1.IAMAdminService/ListPlatformInvitations"
 	IAMAdminService_ListPlatformMemberships_FullMethodName   = "/iam.v1.IAMAdminService/ListPlatformMemberships"
 	IAMAdminService_ListPlatformRoles_FullMethodName         = "/iam.v1.IAMAdminService/ListPlatformRoles"
-	IAMAdminService_ListServicePrincipals_FullMethodName     = "/iam.v1.IAMAdminService/ListServicePrincipals"
+	IAMAdminService_ListTenantWorkloads_FullMethodName       = "/iam.v1.IAMAdminService/ListTenantWorkloads"
 	IAMAdminService_ListTenantInvitations_FullMethodName     = "/iam.v1.IAMAdminService/ListTenantInvitations"
 	IAMAdminService_ListTenantMemberships_FullMethodName     = "/iam.v1.IAMAdminService/ListTenantMemberships"
 	IAMAdminService_ListTenantRoles_FullMethodName           = "/iam.v1.IAMAdminService/ListTenantRoles"
@@ -68,7 +68,7 @@ const (
 	IAMAdminService_UnbindTenantRole_FullMethodName          = "/iam.v1.IAMAdminService/UnbindTenantRole"
 	IAMAdminService_UpdatePlatformMembership_FullMethodName  = "/iam.v1.IAMAdminService/UpdatePlatformMembership"
 	IAMAdminService_UpdatePlatformRole_FullMethodName        = "/iam.v1.IAMAdminService/UpdatePlatformRole"
-	IAMAdminService_UpdateServicePrincipal_FullMethodName    = "/iam.v1.IAMAdminService/UpdateServicePrincipal"
+	IAMAdminService_UpdateTenantWorkload_FullMethodName      = "/iam.v1.IAMAdminService/UpdateTenantWorkload"
 	IAMAdminService_UpdateTenantAccess_FullMethodName        = "/iam.v1.IAMAdminService/UpdateTenantAccess"
 	IAMAdminService_UpdateTenantMembership_FullMethodName    = "/iam.v1.IAMAdminService/UpdateTenantMembership"
 	IAMAdminService_UpdateTenantRole_FullMethodName          = "/iam.v1.IAMAdminService/UpdateTenantRole"
@@ -91,7 +91,7 @@ type IAMAdminServiceClient interface {
 	CreateAPIKey(ctx context.Context, in *CreateAPIKeyRequest, opts ...grpc.CallOption) (*CreateAPIKeyResponse, error)
 	CreatePlatformInvitation(ctx context.Context, in *CreatePlatformInvitationRequest, opts ...grpc.CallOption) (*CreatePlatformInvitationResponse, error)
 	CreatePlatformRole(ctx context.Context, in *CreatePlatformRoleRequest, opts ...grpc.CallOption) (*CreatePlatformRoleResponse, error)
-	CreateServicePrincipal(ctx context.Context, in *CreateServicePrincipalRequest, opts ...grpc.CallOption) (*CreateServicePrincipalResponse, error)
+	CreateTenantWorkload(ctx context.Context, in *CreateTenantWorkloadRequest, opts ...grpc.CallOption) (*CreateTenantWorkloadResponse, error)
 	CreateTenantInvitation(ctx context.Context, in *CreateTenantInvitationRequest, opts ...grpc.CallOption) (*CreateTenantInvitationResponse, error)
 	CreateTenantRole(ctx context.Context, in *CreateTenantRoleRequest, opts ...grpc.CallOption) (*CreateTenantRoleResponse, error)
 	DeletePlatformRole(ctx context.Context, in *DeletePlatformRoleRequest, opts ...grpc.CallOption) (*DeletePlatformRoleResponse, error)
@@ -103,7 +103,7 @@ type IAMAdminServiceClient interface {
 	GetPlatformInvitation(ctx context.Context, in *GetPlatformInvitationRequest, opts ...grpc.CallOption) (*GetPlatformInvitationResponse, error)
 	GetPlatformMembership(ctx context.Context, in *GetPlatformMembershipRequest, opts ...grpc.CallOption) (*GetPlatformMembershipResponse, error)
 	GetPlatformRole(ctx context.Context, in *GetPlatformRoleRequest, opts ...grpc.CallOption) (*GetPlatformRoleResponse, error)
-	GetServicePrincipal(ctx context.Context, in *GetServicePrincipalRequest, opts ...grpc.CallOption) (*GetServicePrincipalResponse, error)
+	GetTenantWorkload(ctx context.Context, in *GetTenantWorkloadRequest, opts ...grpc.CallOption) (*GetTenantWorkloadResponse, error)
 	GetTenantAccess(ctx context.Context, in *GetTenantAccessRequest, opts ...grpc.CallOption) (*GetTenantAccessResponse, error)
 	GetTenantInvitation(ctx context.Context, in *GetTenantInvitationRequest, opts ...grpc.CallOption) (*GetTenantInvitationResponse, error)
 	GetTenantMembership(ctx context.Context, in *GetTenantMembershipRequest, opts ...grpc.CallOption) (*GetTenantMembershipResponse, error)
@@ -114,7 +114,7 @@ type IAMAdminServiceClient interface {
 	ListPlatformInvitations(ctx context.Context, in *ListPlatformInvitationsRequest, opts ...grpc.CallOption) (*ListPlatformInvitationsResponse, error)
 	ListPlatformMemberships(ctx context.Context, in *ListPlatformMembershipsRequest, opts ...grpc.CallOption) (*ListPlatformMembershipsResponse, error)
 	ListPlatformRoles(ctx context.Context, in *ListPlatformRolesRequest, opts ...grpc.CallOption) (*ListPlatformRolesResponse, error)
-	ListServicePrincipals(ctx context.Context, in *ListServicePrincipalsRequest, opts ...grpc.CallOption) (*ListServicePrincipalsResponse, error)
+	ListTenantWorkloads(ctx context.Context, in *ListTenantWorkloadsRequest, opts ...grpc.CallOption) (*ListTenantWorkloadsResponse, error)
 	ListTenantInvitations(ctx context.Context, in *ListTenantInvitationsRequest, opts ...grpc.CallOption) (*ListTenantInvitationsResponse, error)
 	ListTenantMemberships(ctx context.Context, in *ListTenantMembershipsRequest, opts ...grpc.CallOption) (*ListTenantMembershipsResponse, error)
 	ListTenantRoles(ctx context.Context, in *ListTenantRolesRequest, opts ...grpc.CallOption) (*ListTenantRolesResponse, error)
@@ -129,7 +129,7 @@ type IAMAdminServiceClient interface {
 	UnbindTenantRole(ctx context.Context, in *UnbindTenantRoleRequest, opts ...grpc.CallOption) (*UnbindTenantRoleResponse, error)
 	UpdatePlatformMembership(ctx context.Context, in *UpdatePlatformMembershipRequest, opts ...grpc.CallOption) (*UpdatePlatformMembershipResponse, error)
 	UpdatePlatformRole(ctx context.Context, in *UpdatePlatformRoleRequest, opts ...grpc.CallOption) (*UpdatePlatformRoleResponse, error)
-	UpdateServicePrincipal(ctx context.Context, in *UpdateServicePrincipalRequest, opts ...grpc.CallOption) (*UpdateServicePrincipalResponse, error)
+	UpdateTenantWorkload(ctx context.Context, in *UpdateTenantWorkloadRequest, opts ...grpc.CallOption) (*UpdateTenantWorkloadResponse, error)
 	UpdateTenantAccess(ctx context.Context, in *UpdateTenantAccessRequest, opts ...grpc.CallOption) (*UpdateTenantAccessResponse, error)
 	UpdateTenantMembership(ctx context.Context, in *UpdateTenantMembershipRequest, opts ...grpc.CallOption) (*UpdateTenantMembershipResponse, error)
 	UpdateTenantRole(ctx context.Context, in *UpdateTenantRoleRequest, opts ...grpc.CallOption) (*UpdateTenantRoleResponse, error)
@@ -253,10 +253,10 @@ func (c *iAMAdminServiceClient) CreatePlatformRole(ctx context.Context, in *Crea
 	return out, nil
 }
 
-func (c *iAMAdminServiceClient) CreateServicePrincipal(ctx context.Context, in *CreateServicePrincipalRequest, opts ...grpc.CallOption) (*CreateServicePrincipalResponse, error) {
+func (c *iAMAdminServiceClient) CreateTenantWorkload(ctx context.Context, in *CreateTenantWorkloadRequest, opts ...grpc.CallOption) (*CreateTenantWorkloadResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateServicePrincipalResponse)
-	err := c.cc.Invoke(ctx, IAMAdminService_CreateServicePrincipal_FullMethodName, in, out, cOpts...)
+	out := new(CreateTenantWorkloadResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_CreateTenantWorkload_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -373,10 +373,10 @@ func (c *iAMAdminServiceClient) GetPlatformRole(ctx context.Context, in *GetPlat
 	return out, nil
 }
 
-func (c *iAMAdminServiceClient) GetServicePrincipal(ctx context.Context, in *GetServicePrincipalRequest, opts ...grpc.CallOption) (*GetServicePrincipalResponse, error) {
+func (c *iAMAdminServiceClient) GetTenantWorkload(ctx context.Context, in *GetTenantWorkloadRequest, opts ...grpc.CallOption) (*GetTenantWorkloadResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetServicePrincipalResponse)
-	err := c.cc.Invoke(ctx, IAMAdminService_GetServicePrincipal_FullMethodName, in, out, cOpts...)
+	out := new(GetTenantWorkloadResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_GetTenantWorkload_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -483,10 +483,10 @@ func (c *iAMAdminServiceClient) ListPlatformRoles(ctx context.Context, in *ListP
 	return out, nil
 }
 
-func (c *iAMAdminServiceClient) ListServicePrincipals(ctx context.Context, in *ListServicePrincipalsRequest, opts ...grpc.CallOption) (*ListServicePrincipalsResponse, error) {
+func (c *iAMAdminServiceClient) ListTenantWorkloads(ctx context.Context, in *ListTenantWorkloadsRequest, opts ...grpc.CallOption) (*ListTenantWorkloadsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListServicePrincipalsResponse)
-	err := c.cc.Invoke(ctx, IAMAdminService_ListServicePrincipals_FullMethodName, in, out, cOpts...)
+	out := new(ListTenantWorkloadsResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_ListTenantWorkloads_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -633,10 +633,10 @@ func (c *iAMAdminServiceClient) UpdatePlatformRole(ctx context.Context, in *Upda
 	return out, nil
 }
 
-func (c *iAMAdminServiceClient) UpdateServicePrincipal(ctx context.Context, in *UpdateServicePrincipalRequest, opts ...grpc.CallOption) (*UpdateServicePrincipalResponse, error) {
+func (c *iAMAdminServiceClient) UpdateTenantWorkload(ctx context.Context, in *UpdateTenantWorkloadRequest, opts ...grpc.CallOption) (*UpdateTenantWorkloadResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateServicePrincipalResponse)
-	err := c.cc.Invoke(ctx, IAMAdminService_UpdateServicePrincipal_FullMethodName, in, out, cOpts...)
+	out := new(UpdateTenantWorkloadResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_UpdateTenantWorkload_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -690,7 +690,7 @@ type IAMAdminServiceServer interface {
 	CreateAPIKey(context.Context, *CreateAPIKeyRequest) (*CreateAPIKeyResponse, error)
 	CreatePlatformInvitation(context.Context, *CreatePlatformInvitationRequest) (*CreatePlatformInvitationResponse, error)
 	CreatePlatformRole(context.Context, *CreatePlatformRoleRequest) (*CreatePlatformRoleResponse, error)
-	CreateServicePrincipal(context.Context, *CreateServicePrincipalRequest) (*CreateServicePrincipalResponse, error)
+	CreateTenantWorkload(context.Context, *CreateTenantWorkloadRequest) (*CreateTenantWorkloadResponse, error)
 	CreateTenantInvitation(context.Context, *CreateTenantInvitationRequest) (*CreateTenantInvitationResponse, error)
 	CreateTenantRole(context.Context, *CreateTenantRoleRequest) (*CreateTenantRoleResponse, error)
 	DeletePlatformRole(context.Context, *DeletePlatformRoleRequest) (*DeletePlatformRoleResponse, error)
@@ -702,7 +702,7 @@ type IAMAdminServiceServer interface {
 	GetPlatformInvitation(context.Context, *GetPlatformInvitationRequest) (*GetPlatformInvitationResponse, error)
 	GetPlatformMembership(context.Context, *GetPlatformMembershipRequest) (*GetPlatformMembershipResponse, error)
 	GetPlatformRole(context.Context, *GetPlatformRoleRequest) (*GetPlatformRoleResponse, error)
-	GetServicePrincipal(context.Context, *GetServicePrincipalRequest) (*GetServicePrincipalResponse, error)
+	GetTenantWorkload(context.Context, *GetTenantWorkloadRequest) (*GetTenantWorkloadResponse, error)
 	GetTenantAccess(context.Context, *GetTenantAccessRequest) (*GetTenantAccessResponse, error)
 	GetTenantInvitation(context.Context, *GetTenantInvitationRequest) (*GetTenantInvitationResponse, error)
 	GetTenantMembership(context.Context, *GetTenantMembershipRequest) (*GetTenantMembershipResponse, error)
@@ -713,7 +713,7 @@ type IAMAdminServiceServer interface {
 	ListPlatformInvitations(context.Context, *ListPlatformInvitationsRequest) (*ListPlatformInvitationsResponse, error)
 	ListPlatformMemberships(context.Context, *ListPlatformMembershipsRequest) (*ListPlatformMembershipsResponse, error)
 	ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error)
-	ListServicePrincipals(context.Context, *ListServicePrincipalsRequest) (*ListServicePrincipalsResponse, error)
+	ListTenantWorkloads(context.Context, *ListTenantWorkloadsRequest) (*ListTenantWorkloadsResponse, error)
 	ListTenantInvitations(context.Context, *ListTenantInvitationsRequest) (*ListTenantInvitationsResponse, error)
 	ListTenantMemberships(context.Context, *ListTenantMembershipsRequest) (*ListTenantMembershipsResponse, error)
 	ListTenantRoles(context.Context, *ListTenantRolesRequest) (*ListTenantRolesResponse, error)
@@ -728,7 +728,7 @@ type IAMAdminServiceServer interface {
 	UnbindTenantRole(context.Context, *UnbindTenantRoleRequest) (*UnbindTenantRoleResponse, error)
 	UpdatePlatformMembership(context.Context, *UpdatePlatformMembershipRequest) (*UpdatePlatformMembershipResponse, error)
 	UpdatePlatformRole(context.Context, *UpdatePlatformRoleRequest) (*UpdatePlatformRoleResponse, error)
-	UpdateServicePrincipal(context.Context, *UpdateServicePrincipalRequest) (*UpdateServicePrincipalResponse, error)
+	UpdateTenantWorkload(context.Context, *UpdateTenantWorkloadRequest) (*UpdateTenantWorkloadResponse, error)
 	UpdateTenantAccess(context.Context, *UpdateTenantAccessRequest) (*UpdateTenantAccessResponse, error)
 	UpdateTenantMembership(context.Context, *UpdateTenantMembershipRequest) (*UpdateTenantMembershipResponse, error)
 	UpdateTenantRole(context.Context, *UpdateTenantRoleRequest) (*UpdateTenantRoleResponse, error)
@@ -775,8 +775,8 @@ func (UnimplementedIAMAdminServiceServer) CreatePlatformInvitation(context.Conte
 func (UnimplementedIAMAdminServiceServer) CreatePlatformRole(context.Context, *CreatePlatformRoleRequest) (*CreatePlatformRoleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreatePlatformRole not implemented")
 }
-func (UnimplementedIAMAdminServiceServer) CreateServicePrincipal(context.Context, *CreateServicePrincipalRequest) (*CreateServicePrincipalResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateServicePrincipal not implemented")
+func (UnimplementedIAMAdminServiceServer) CreateTenantWorkload(context.Context, *CreateTenantWorkloadRequest) (*CreateTenantWorkloadResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateTenantWorkload not implemented")
 }
 func (UnimplementedIAMAdminServiceServer) CreateTenantInvitation(context.Context, *CreateTenantInvitationRequest) (*CreateTenantInvitationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateTenantInvitation not implemented")
@@ -811,8 +811,8 @@ func (UnimplementedIAMAdminServiceServer) GetPlatformMembership(context.Context,
 func (UnimplementedIAMAdminServiceServer) GetPlatformRole(context.Context, *GetPlatformRoleRequest) (*GetPlatformRoleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetPlatformRole not implemented")
 }
-func (UnimplementedIAMAdminServiceServer) GetServicePrincipal(context.Context, *GetServicePrincipalRequest) (*GetServicePrincipalResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetServicePrincipal not implemented")
+func (UnimplementedIAMAdminServiceServer) GetTenantWorkload(context.Context, *GetTenantWorkloadRequest) (*GetTenantWorkloadResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetTenantWorkload not implemented")
 }
 func (UnimplementedIAMAdminServiceServer) GetTenantAccess(context.Context, *GetTenantAccessRequest) (*GetTenantAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetTenantAccess not implemented")
@@ -844,8 +844,8 @@ func (UnimplementedIAMAdminServiceServer) ListPlatformMemberships(context.Contex
 func (UnimplementedIAMAdminServiceServer) ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPlatformRoles not implemented")
 }
-func (UnimplementedIAMAdminServiceServer) ListServicePrincipals(context.Context, *ListServicePrincipalsRequest) (*ListServicePrincipalsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListServicePrincipals not implemented")
+func (UnimplementedIAMAdminServiceServer) ListTenantWorkloads(context.Context, *ListTenantWorkloadsRequest) (*ListTenantWorkloadsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListTenantWorkloads not implemented")
 }
 func (UnimplementedIAMAdminServiceServer) ListTenantInvitations(context.Context, *ListTenantInvitationsRequest) (*ListTenantInvitationsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListTenantInvitations not implemented")
@@ -889,8 +889,8 @@ func (UnimplementedIAMAdminServiceServer) UpdatePlatformMembership(context.Conte
 func (UnimplementedIAMAdminServiceServer) UpdatePlatformRole(context.Context, *UpdatePlatformRoleRequest) (*UpdatePlatformRoleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdatePlatformRole not implemented")
 }
-func (UnimplementedIAMAdminServiceServer) UpdateServicePrincipal(context.Context, *UpdateServicePrincipalRequest) (*UpdateServicePrincipalResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateServicePrincipal not implemented")
+func (UnimplementedIAMAdminServiceServer) UpdateTenantWorkload(context.Context, *UpdateTenantWorkloadRequest) (*UpdateTenantWorkloadResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateTenantWorkload not implemented")
 }
 func (UnimplementedIAMAdminServiceServer) UpdateTenantAccess(context.Context, *UpdateTenantAccessRequest) (*UpdateTenantAccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateTenantAccess not implemented")
@@ -1120,20 +1120,20 @@ func _IAMAdminService_CreatePlatformRole_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _IAMAdminService_CreateServicePrincipal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateServicePrincipalRequest)
+func _IAMAdminService_CreateTenantWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTenantWorkloadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IAMAdminServiceServer).CreateServicePrincipal(ctx, in)
+		return srv.(IAMAdminServiceServer).CreateTenantWorkload(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: IAMAdminService_CreateServicePrincipal_FullMethodName,
+		FullMethod: IAMAdminService_CreateTenantWorkload_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IAMAdminServiceServer).CreateServicePrincipal(ctx, req.(*CreateServicePrincipalRequest))
+		return srv.(IAMAdminServiceServer).CreateTenantWorkload(ctx, req.(*CreateTenantWorkloadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1336,20 +1336,20 @@ func _IAMAdminService_GetPlatformRole_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _IAMAdminService_GetServicePrincipal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetServicePrincipalRequest)
+func _IAMAdminService_GetTenantWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTenantWorkloadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IAMAdminServiceServer).GetServicePrincipal(ctx, in)
+		return srv.(IAMAdminServiceServer).GetTenantWorkload(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: IAMAdminService_GetServicePrincipal_FullMethodName,
+		FullMethod: IAMAdminService_GetTenantWorkload_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IAMAdminServiceServer).GetServicePrincipal(ctx, req.(*GetServicePrincipalRequest))
+		return srv.(IAMAdminServiceServer).GetTenantWorkload(ctx, req.(*GetTenantWorkloadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1534,20 +1534,20 @@ func _IAMAdminService_ListPlatformRoles_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _IAMAdminService_ListServicePrincipals_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListServicePrincipalsRequest)
+func _IAMAdminService_ListTenantWorkloads_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTenantWorkloadsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IAMAdminServiceServer).ListServicePrincipals(ctx, in)
+		return srv.(IAMAdminServiceServer).ListTenantWorkloads(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: IAMAdminService_ListServicePrincipals_FullMethodName,
+		FullMethod: IAMAdminService_ListTenantWorkloads_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IAMAdminServiceServer).ListServicePrincipals(ctx, req.(*ListServicePrincipalsRequest))
+		return srv.(IAMAdminServiceServer).ListTenantWorkloads(ctx, req.(*ListTenantWorkloadsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1804,20 +1804,20 @@ func _IAMAdminService_UpdatePlatformRole_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _IAMAdminService_UpdateServicePrincipal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateServicePrincipalRequest)
+func _IAMAdminService_UpdateTenantWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTenantWorkloadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IAMAdminServiceServer).UpdateServicePrincipal(ctx, in)
+		return srv.(IAMAdminServiceServer).UpdateTenantWorkload(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: IAMAdminService_UpdateServicePrincipal_FullMethodName,
+		FullMethod: IAMAdminService_UpdateTenantWorkload_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IAMAdminServiceServer).UpdateServicePrincipal(ctx, req.(*UpdateServicePrincipalRequest))
+		return srv.(IAMAdminServiceServer).UpdateTenantWorkload(ctx, req.(*UpdateTenantWorkloadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1928,8 +1928,8 @@ var IAMAdminService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _IAMAdminService_CreatePlatformRole_Handler,
 		},
 		{
-			MethodName: "CreateServicePrincipal",
-			Handler:    _IAMAdminService_CreateServicePrincipal_Handler,
+			MethodName: "CreateTenantWorkload",
+			Handler:    _IAMAdminService_CreateTenantWorkload_Handler,
 		},
 		{
 			MethodName: "CreateTenantInvitation",
@@ -1976,8 +1976,8 @@ var IAMAdminService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _IAMAdminService_GetPlatformRole_Handler,
 		},
 		{
-			MethodName: "GetServicePrincipal",
-			Handler:    _IAMAdminService_GetServicePrincipal_Handler,
+			MethodName: "GetTenantWorkload",
+			Handler:    _IAMAdminService_GetTenantWorkload_Handler,
 		},
 		{
 			MethodName: "GetTenantAccess",
@@ -2020,8 +2020,8 @@ var IAMAdminService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _IAMAdminService_ListPlatformRoles_Handler,
 		},
 		{
-			MethodName: "ListServicePrincipals",
-			Handler:    _IAMAdminService_ListServicePrincipals_Handler,
+			MethodName: "ListTenantWorkloads",
+			Handler:    _IAMAdminService_ListTenantWorkloads_Handler,
 		},
 		{
 			MethodName: "ListTenantInvitations",
@@ -2080,8 +2080,8 @@ var IAMAdminService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _IAMAdminService_UpdatePlatformRole_Handler,
 		},
 		{
-			MethodName: "UpdateServicePrincipal",
-			Handler:    _IAMAdminService_UpdateServicePrincipal_Handler,
+			MethodName: "UpdateTenantWorkload",
+			Handler:    _IAMAdminService_UpdateTenantWorkload_Handler,
 		},
 		{
 			MethodName: "UpdateTenantAccess",

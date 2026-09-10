@@ -1,0 +1,19 @@
+{
+  "wr17": "resolved",
+  "wr18": "resolved",
+  "wr19": "needs-triage",
+  "claimed": [],
+  "scope_and_final_source": "pass",
+  "original_protection": "pass",
+  "local_links": "pass",
+  "documents": {
+    "issues/18-refound-human-workload-runtime.md": "0de2aa063d810eb5f4b08e5fbd256a1dc59052ebbca416f11c330aeb58a1539c",
+    "ticket-plan.md": "cb60dfb1fc988e32363bf0aa9411174bb73851d2e1a83d7499419edde1d7b3ab",
+    "spec.md": "d4f13e50e078be07d81f654f89910279c8f882000a7ca040eeac66e468d496ca",
+    "capability-matrix.md": "30d1b7e7f45f24a22affcb4897d37ea2f34073feb0fca23e0bea2c403a3af11b",
+    "decisions.md": "b4bcd6c34824c8425babd0a661a01d000fb6da71b55eea4a6386c7465f753314",
+    "evidence/18-refound-human-workload-runtime/README.md": "c46560290aa885b72cec1ddb64904cb7cbc63d8935773b32286d8739bb7065b6"
+  },
+  "m1": "not_verified",
+  "publication": "not_performed"
+}

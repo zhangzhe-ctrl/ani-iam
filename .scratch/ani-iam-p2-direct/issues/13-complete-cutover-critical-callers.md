@@ -4,7 +4,7 @@
 
 **Blocked by:** 08 / 交付 Session、Refresh 与浏览器边界；09 / 交付 Tenant Access、Membership 与目标授权；10 / 交付 Service Principal、API Key 与 Envoy 验证；11 / 交付 Workload Service Token 与 Inference 调用链；12 / 交付 Core Lifecycle、Bootstrap 与 NATS 恢复链路
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -37,3 +37,7 @@ DP2-08 已冻结浏览器入口为 `/auth/{audience}/*`，其中 `audience` 只�
 本文件对冻结契约的记录不构成 ANI Allowed-path 扩展或修改授权。领取 DP2-13 并进入统一 ANI 测试窗口时，必须先取得当时最新 `main` 的精确 SHA，展示其相对 `50f7b422707c2ab78462bd9bb8186bae018a14fe` 的提交和重叠路径，等待人工接受，并针对 OpenAPI/operation registry/Gateway 的精确路径另行扩展；此前相关实现与门禁保持 `not_verified`/`fail` 原状。
 
 **Recovery:** 所有调用方保持隔离目标轨道，恢复其测试配置；主测试环境仍使用旧系统。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-08 取代，capability 不取消。新票增加统一 direct-caller Workload、Session Gateway 和每跳 WAT 证据；旧 baseline 与 Allowed paths 不再可执行。

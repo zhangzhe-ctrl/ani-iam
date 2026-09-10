@@ -4,7 +4,7 @@
 
 **Blocked by:** 14 / 演练隔离测试轨道整组切入与回退（Go/No-Go B 已人工接受）
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -34,3 +34,7 @@
 **Recovery:** 清理隔离 Invitation/Role/Membership/Platform/Recovery 数据；已提交恢复只能通过受控反向变更，不删除 Audit。
 
 **Human checkpoint:** 任何真实 RestoreTenantAdmin/RecoveryBootstrap 执行前，必须确认精确 Tenant、目标 Principal、payload hash 和 approval reference。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-10 取代，capability 不取消。新票使用 owner-specific Workload 管理入口，禁止 Tenant 调用方构造 Platform-owned Workload。

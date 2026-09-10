@@ -326,6 +326,7 @@ func newTenantIAMAdminRuntime(
 	ids biz.IDGenerator,
 	clock biz.Clock,
 	apiKeyCreationLimiter biz.APIKeyCreationLimiter,
+	adminAuthorization ...*service.AdminAuthorization,
 ) (*service.IAMAdminService, error) {
 	if apiKeyCreationLimiter == nil {
 		return nil, errors.New("API key creation limiter is required")
@@ -344,6 +345,7 @@ func newTenantIAMAdminRuntime(
 	return service.NewTenantIAMAdminService(
 		data.NewPostgresTenantAuthorizationReader(postgresData),
 		mutations,
+		adminAuthorization...,
 	), nil
 }
 
@@ -428,6 +430,10 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		return nil, fmt.Errorf("configure Redis login throttle: %w", err)
 	}
 	postgresData := data.NewData(postgresPool)
+	if err := data.ValidateRuntimeFoundation(startupContext, postgresData); err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
 	ids := data.NewUUIDv7Generator()
 	secrets := data.NewSecretGenerator()
 	apiKeyCreationLimiter, err := data.NewRedisAPIKeyCreationLimiter(redisClient, data.RedisAPIKeyCreationLimiterConfig{
@@ -446,11 +452,6 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	if err != nil {
 		_ = closeRuntime(context.Background())
 		return nil, fmt.Errorf("configure Redis API key usage aggregator: %w", err)
-	}
-	adminService, err := newTenantIAMAdminRuntime(postgresData, runtime.PolicyRevision, ids, clock, apiKeyCreationLimiter)
-	if err != nil {
-		_ = closeRuntime(context.Background())
-		return nil, err
 	}
 	oidcProvider, err := data.NewCoreOSOIDCProvider(startupContext, data.CoreOSOIDCProviderConfig{
 		Name:         runtime.Oidc.Provider,
@@ -508,6 +509,12 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		clock,
 		apiKeyUsageAggregator,
 	)
+	adminService, err := newTenantIAMAdminRuntime(postgresData, runtime.PolicyRevision, ids, clock, apiKeyCreationLimiter,
+		service.NewAdminAuthorization(authentication, authorization, runtime.PolicyRevision))
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
 	notificationWorker, notificationClient, err := newPasswordActionNotificationRuntime(
 		runtime.Notification,
 		data.NewPostgresPasswordActionNotificationOutbox(postgresData),
@@ -522,10 +529,20 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	closeNotification := func(context.Context) error {
 		return notificationClient.Close()
 	}
-	authenticationService := service.NewAuthenticationService(authentication, oidcUsecase)
-	authorizationService := service.NewAuthorizationService(authorization)
+	workloadInvocation := biz.NewWorkloadInvocation(
+		biz.NewWorkloadAuthentication(data.NewWorkloadIdentityReader(postgresData)),
+		biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(postgresData)),
+		authorization, tokenCodec, data.NewWorkloadCredentialAudit(postgresData), ids, clock,
+	)
+	authenticationService := service.NewAuthenticationServiceWithWorkload(authentication, oidcUsecase, workloadInvocation)
+	authorizationService := service.NewAuthorizationServiceWithWorkload(authorization, workloadInvocation)
 
-	readiness := server.NewReadiness()
+	readiness := server.NewDependencyReadiness(func(ctx context.Context) error {
+		if err := data.ValidateRuntimeFoundation(ctx, postgresData); err != nil {
+			return err
+		}
+		return redisClient.Ping(ctx).Err()
+	})
 	observability, err := server.NewObservability(Name, Version, readiness)
 	if err != nil {
 		_ = closeNotification(context.Background())
@@ -547,7 +564,9 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		_ = closeRuntime(context.Background())
 		return nil, fmt.Errorf("configure API key maintenance worker: %w", err)
 	}
-	workloadIdentity, err := server.NewGatewayWorkloadIdentityMiddleware(bc.Server.Grpc.Tls.GatewayClientDnsName)
+	workloadIdentity, err := server.NewWorkloadIdentityMiddleware(runtime.Environment, runtime.TrustDomain,
+		biz.NewWorkloadAuthentication(data.NewWorkloadIdentityReader(postgresData)),
+		biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(postgresData)))
 	if err != nil {
 		_ = observability.Shutdown(context.Background())
 		_ = closeNotification(context.Background())
@@ -602,7 +621,7 @@ func newApp(
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{"runtime.profile": conf.IsolatedProfile}),
 		kratos.Logger(logger),
-		kratos.Server(grpcServer, adminServer, notificationWorker, apiKeyMaintenanceWorker),
+		kratos.Server(grpcServer, adminServer, notificationWorker, apiKeyMaintenanceWorker, readiness),
 		kratos.AfterStart(func(context.Context) error {
 			readiness.Set(true)
 			return nil

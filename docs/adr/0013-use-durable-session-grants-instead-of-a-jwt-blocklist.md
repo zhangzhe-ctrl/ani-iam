@@ -4,6 +4,8 @@ status: accepted
 
 # Use durable Session Grants instead of a JWT Blocklist
 
+The Workload Principal terminology in this decision was amended by ADR-0022; every other decision remains accepted.
+
 P2 does not maintain a per-`jti` JWT Blocklist. PostgreSQL is authoritative for Session, boundary grant, and Refresh Token state, and every Access Token authorization validates that current state online. This replaces the old PostgreSQL-plus-Redis `jwt_blocklist` contract rather than copying it into the new project.
 
 `sessions` own the Human Principal, authentication methods, normalized device metadata, global status, activity deadlines, and absolute expiry. `session_grants` own one Tenant or Platform boundary and a monotonically increasing version. `refresh_token_families` belong to one Grant, and single-use `refresh_tokens` belong to one Family and record issuance, consumption, replacement, and revocation state. Access Tokens identify their Session Grant and version; a mismatch or inactive row fails closed.
@@ -18,4 +20,4 @@ Session listings retain a user-assigned or normalized device type, authenticatio
 
 Logout is idempotent. Repeating a request against the same already revoked Session succeeds without revealing whether the Session previously existed, and only the first effective state transition produces the revocation audit event.
 
-API Keys and Service Tokens remain distinct. An API Key is a long-lived external SDK credential of a single-Tenant Service Principal. A Service Token is issued only to an allowlisted internal workload authenticated with mTLS or SPIFFE, is bound to an audience and permitted operation subset, expires within five minutes, cannot refresh, and creates no Session. Console users cannot mint it and internal workloads do not substitute API Keys for it.
+API Keys and Workload Access Tokens remain distinct Workload credentials. An API Key is a long-lived external SDK credential of a single-Tenant-owned Workload Principal whose authority comes from its Tenant Membership and Role Bindings. A Workload Access Token is issued only to a Platform-owned Workload Principal with verified mTLS/SPIFFE identity and an effective Workload Grant; it is bound to an audience and permitted operation subset, expires within five minutes, cannot refresh, and creates no Human Session. Console users cannot mint it and Platform-owned Workloads do not substitute API Keys for it.

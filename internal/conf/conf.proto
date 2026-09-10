@@ -45,6 +45,8 @@ message Runtime {
   string policy_revision = 4;
   Notification notification = 5;
   OIDC oidc = 6;
+  string environment = 7;
+  string trust_domain = 8;
 }
 
 message PostgreSQL {

@@ -224,7 +224,7 @@ var File_authorization_service_proto protoreflect.FileDescriptor
 
 const file_authorization_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1bauthorization_service.proto\x12\x06iam.v1\x1a\x0econtract.proto\"\xd3\x01\n" +
+	"\x1bauthorization_service.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x0eworkload.proto\"\xd3\x01\n" +
 	"\x16CheckPermissionRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
@@ -241,9 +241,11 @@ const file_authorization_service_proto_rawDesc = "" +
 	"\vobligations\x18\x05 \x03(\v2\x1f.iam.v1.AuthorizationObligationR\vobligations\x12'\n" +
 	"\x0fpolicy_revision\x18\x06 \x01(\tR\x0epolicyRevision\"T\n" +
 	"\x17CheckPermissionResponse\x129\n" +
-	"\bdecision\x18\x01 \x01(\v2\x1d.iam.v1.AuthorizationDecisionR\bdecision2j\n" +
-	"\x14AuthorizationService\x12R\n" +
-	"\x0fCheckPermission\x12\x1e.iam.v1.CheckPermissionRequest\x1a\x1f.iam.v1.CheckPermissionResponseB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
+	"\bdecision\x18\x01 \x01(\v2\x1d.iam.v1.AuthorizationDecisionR\bdecision2\xcb\x02\n" +
+	"\x14AuthorizationService\x12p\n" +
+	"\x19VerifySessionContinuation\x12(.iam.v1.VerifySessionContinuationRequest\x1a).iam.v1.VerifySessionContinuationResponse\x12R\n" +
+	"\x0fCheckPermission\x12\x1e.iam.v1.CheckPermissionRequest\x1a\x1f.iam.v1.CheckPermissionResponse\x12m\n" +
+	"\x18VerifyWorkloadInvocation\x12'.iam.v1.VerifyWorkloadInvocationRequest\x1a(.iam.v1.VerifyWorkloadInvocationResponseB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
 
 var (
 	file_authorization_service_proto_rawDescOnce sync.Once
@@ -259,27 +261,35 @@ func file_authorization_service_proto_rawDescGZIP() []byte {
 
 var file_authorization_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_authorization_service_proto_goTypes = []any{
-	(*CheckPermissionRequest)(nil),  // 0: iam.v1.CheckPermissionRequest
-	(*AuthorizationDecision)(nil),   // 1: iam.v1.AuthorizationDecision
-	(*CheckPermissionResponse)(nil), // 2: iam.v1.CheckPermissionResponse
-	(*BearerCredential)(nil),        // 3: iam.v1.BearerCredential
-	(*AuthorizationTarget)(nil),     // 4: iam.v1.AuthorizationTarget
-	(*PrincipalContext)(nil),        // 5: iam.v1.PrincipalContext
-	(*AuthorizationObligation)(nil), // 6: iam.v1.AuthorizationObligation
+	(*CheckPermissionRequest)(nil),            // 0: iam.v1.CheckPermissionRequest
+	(*AuthorizationDecision)(nil),             // 1: iam.v1.AuthorizationDecision
+	(*CheckPermissionResponse)(nil),           // 2: iam.v1.CheckPermissionResponse
+	(*BearerCredential)(nil),                  // 3: iam.v1.BearerCredential
+	(*AuthorizationTarget)(nil),               // 4: iam.v1.AuthorizationTarget
+	(*PrincipalContext)(nil),                  // 5: iam.v1.PrincipalContext
+	(*AuthorizationObligation)(nil),           // 6: iam.v1.AuthorizationObligation
+	(*VerifySessionContinuationRequest)(nil),  // 7: iam.v1.VerifySessionContinuationRequest
+	(*VerifyWorkloadInvocationRequest)(nil),   // 8: iam.v1.VerifyWorkloadInvocationRequest
+	(*VerifySessionContinuationResponse)(nil), // 9: iam.v1.VerifySessionContinuationResponse
+	(*VerifyWorkloadInvocationResponse)(nil),  // 10: iam.v1.VerifyWorkloadInvocationResponse
 }
 var file_authorization_service_proto_depIdxs = []int32{
-	3, // 0: iam.v1.CheckPermissionRequest.credential:type_name -> iam.v1.BearerCredential
-	4, // 1: iam.v1.CheckPermissionRequest.target:type_name -> iam.v1.AuthorizationTarget
-	5, // 2: iam.v1.AuthorizationDecision.principal:type_name -> iam.v1.PrincipalContext
-	6, // 3: iam.v1.AuthorizationDecision.obligations:type_name -> iam.v1.AuthorizationObligation
-	1, // 4: iam.v1.CheckPermissionResponse.decision:type_name -> iam.v1.AuthorizationDecision
-	0, // 5: iam.v1.AuthorizationService.CheckPermission:input_type -> iam.v1.CheckPermissionRequest
-	2, // 6: iam.v1.AuthorizationService.CheckPermission:output_type -> iam.v1.CheckPermissionResponse
-	6, // [6:7] is the sub-list for method output_type
-	5, // [5:6] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	3,  // 0: iam.v1.CheckPermissionRequest.credential:type_name -> iam.v1.BearerCredential
+	4,  // 1: iam.v1.CheckPermissionRequest.target:type_name -> iam.v1.AuthorizationTarget
+	5,  // 2: iam.v1.AuthorizationDecision.principal:type_name -> iam.v1.PrincipalContext
+	6,  // 3: iam.v1.AuthorizationDecision.obligations:type_name -> iam.v1.AuthorizationObligation
+	1,  // 4: iam.v1.CheckPermissionResponse.decision:type_name -> iam.v1.AuthorizationDecision
+	7,  // 5: iam.v1.AuthorizationService.VerifySessionContinuation:input_type -> iam.v1.VerifySessionContinuationRequest
+	0,  // 6: iam.v1.AuthorizationService.CheckPermission:input_type -> iam.v1.CheckPermissionRequest
+	8,  // 7: iam.v1.AuthorizationService.VerifyWorkloadInvocation:input_type -> iam.v1.VerifyWorkloadInvocationRequest
+	9,  // 8: iam.v1.AuthorizationService.VerifySessionContinuation:output_type -> iam.v1.VerifySessionContinuationResponse
+	2,  // 9: iam.v1.AuthorizationService.CheckPermission:output_type -> iam.v1.CheckPermissionResponse
+	10, // 10: iam.v1.AuthorizationService.VerifyWorkloadInvocation:output_type -> iam.v1.VerifyWorkloadInvocationResponse
+	8,  // [8:11] is the sub-list for method output_type
+	5,  // [5:8] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_authorization_service_proto_init() }
@@ -288,6 +298,7 @@ func file_authorization_service_proto_init() {
 		return
 	}
 	file_contract_proto_init()
+	file_workload_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

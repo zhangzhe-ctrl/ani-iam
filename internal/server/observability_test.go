@@ -20,21 +20,21 @@ func TestObservabilityPublishesCredentialFreeAPIKeyOperationalGauges(t *testing.
 		}
 	})
 	assertGaugeValues(t, observability, map[string]float64{
-		"ani_iam_api_key_stale_non_expiring_count":                0,
-		"ani_iam_service_principal_unusual_active_api_keys_count": 0,
-		"ani_iam_api_key_operational_snapshot_timestamp_seconds":  0,
+		"ani_iam_api_key_stale_non_expiring_count":               0,
+		"ani_iam_tenant_workload_unusual_active_api_keys_count":  0,
+		"ani_iam_api_key_operational_snapshot_timestamp_seconds": 0,
 	})
 
 	observability.SetAPIKeyOperationalSnapshot(biz.APIKeyOperationalSnapshot{
-		StaleNonExpiringCount:        7,
-		UnusualServicePrincipalCount: 3,
-		ObservedAt:                   time.Date(2026, 9, 9, 1, 2, 3, 0, time.UTC),
+		StaleNonExpiringCount:      7,
+		UnusualTenantWorkloadCount: 3,
+		ObservedAt:                 time.Date(2026, 9, 9, 1, 2, 3, 0, time.UTC),
 	})
 
 	assertGaugeValues(t, observability, map[string]float64{
-		"ani_iam_api_key_stale_non_expiring_count":                7,
-		"ani_iam_service_principal_unusual_active_api_keys_count": 3,
-		"ani_iam_api_key_operational_snapshot_timestamp_seconds":  1788915723,
+		"ani_iam_api_key_stale_non_expiring_count":               7,
+		"ani_iam_tenant_workload_unusual_active_api_keys_count":  3,
+		"ani_iam_api_key_operational_snapshot_timestamp_seconds": 1788915723,
 	})
 }
 

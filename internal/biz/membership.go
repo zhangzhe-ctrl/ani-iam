@@ -49,11 +49,11 @@ const AuditResultFailed AuditResult = "failed"
 type AuditAuthenticationMethod string
 
 const (
-	AuditAuthenticationMethodPassword     AuditAuthenticationMethod = "password"
-	AuditAuthenticationMethodOIDC         AuditAuthenticationMethod = "oidc"
-	AuditAuthenticationMethodAPIKey       AuditAuthenticationMethod = "api_key"
-	AuditAuthenticationMethodServiceToken AuditAuthenticationMethod = "service_token"
-	AuditAuthenticationMethodInternal     AuditAuthenticationMethod = "internal"
+	AuditAuthenticationMethodPassword      AuditAuthenticationMethod = "password"
+	AuditAuthenticationMethodOIDC          AuditAuthenticationMethod = "oidc"
+	AuditAuthenticationMethodAPIKey        AuditAuthenticationMethod = "api_key"
+	AuditAuthenticationMethodWorkloadToken AuditAuthenticationMethod = "workload_token"
+	AuditAuthenticationMethodInternal      AuditAuthenticationMethod = "internal"
 )
 
 type AuditBoundary string
@@ -87,6 +87,7 @@ type TenantMembership struct {
 // SecurityAuditEvent is the allowlisted domain shape written atomically with a
 // security mutation. It intentionally excludes arbitrary payloads and secrets.
 type SecurityAuditEvent struct {
+	DirectCaller         DirectCaller
 	ID                   uuid.UUID
 	ActorID              uuid.UUID
 	AuthenticationMethod AuditAuthenticationMethod

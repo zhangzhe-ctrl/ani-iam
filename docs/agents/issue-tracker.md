@@ -11,7 +11,7 @@
 - Triage 状态记录在事项文件顶部附近的 `Status:` 行中，角色字符串见 `triage-labels.md`
 - 评论与对话历史追加在文件底部的 `## Comments` 标题下
 
-当前 IAM Direct P2 功能目录是 `.scratch/ani-iam-p2-direct/`。`.scratch/ani-iam-rebuild/` 保留历史 CP0/P1 路线、事项01–39和重排证据，不再产生新的实现事项。
+当前 IAM 功能目录是 `.scratch/ani-iam-workload-refoundation/`。`.scratch/ani-iam-p2-direct/` 保留到 DP2-10 的执行记录以及 DP2-11–20 supersession，`.scratch/ani-iam-rebuild/` 保留历史 CP0/P1 路线、事项01–39和重排证据；两个历史目录都不再产生新的实现事项。WR 目录内标明 superseded 的旧票同样不产生 frontier；当前顺序只由该目录 spec + ticket-plan 定义。
 
 ## 当技能要求“发布到 Issue Tracker”时
 

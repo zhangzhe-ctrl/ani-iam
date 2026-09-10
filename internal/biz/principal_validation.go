@@ -121,7 +121,7 @@ func (u *AuthenticationUsecase) validateAPIKeyPrincipal(
 	rawCredential string,
 	command ValidatePrincipalCommand,
 ) (ValidatePrincipalResult, error) {
-	if !credentialKindAllowed(policy.CredentialKinds, CredentialKindAPIKey) || !principalKindAllowed(policy.PrincipalKinds, PrincipalTypeService) {
+	if !credentialKindAllowed(policy.CredentialKinds, CredentialKindAPIKey) || !principalKindAllowed(policy.PrincipalKinds, PrincipalTypeWorkload) {
 		return ValidatePrincipalResult{}, u.recordPrincipalValidationFailure(
 			ctx, nil, command, uuid.Nil, AuditAuthenticationMethodAnonymous,
 			AuditTargetTypeAPIKey, uuid.Nil, 1, ErrAuthenticationCredentialKindDenied,
@@ -211,7 +211,7 @@ func (u *AuthenticationUsecase) validateAPIKeyPrincipal(
 		return ValidatePrincipalResult{}, fmt.Errorf("observe API key authentication: %w", errors.Join(ErrAuthenticationDependency, err))
 	}
 	return u.validatedPrincipalResult(ctx, scope, command, TrustedPrincipalContext{
-		ID: state.APIKey.PrincipalID, Type: PrincipalTypeService, Status: state.PrincipalStatus,
+		ID: state.APIKey.PrincipalID, Type: PrincipalTypeWorkload, Status: state.PrincipalStatus,
 		TenantID: tenantID, AuthnMethods: []AuditAuthenticationMethod{AuditAuthenticationMethodAPIKey},
 	}, AuditTargetTypeAPIKey, keyID, state.APIKey.Version)
 }

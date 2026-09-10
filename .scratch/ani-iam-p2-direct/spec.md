@@ -1,8 +1,10 @@
 # ANI IAM Direct P2 规格
 
-Status: accepted
+Status: superseded after DP2-10
 
-本规格是当前执行方向的权威材料。它综合已接受的目标设计、事项01–04的历史证据，以及用户于 2026-09-03 作出的“停止 CP0/P1、改走 Direct P2、尽早验证能否切换”决定；规格与 ticket plan 已于同日获得人工接受。旧规格保留在 `.scratch/ani-iam-rebuild/spec.md` 作为决策快照，不再作为新事项的执行入口。
+2026-09-09 起，当前候选规格改为 `../ani-iam-workload-refoundation/spec.md`。DP2-00–10 的状态、证据和当时结论保持历史真实性；DP2-11–20 的旧票版本不再执行，因为用户接受将 Service Principal 破坏性统一为 Workload Principal，并要求先重冻 contract/schema/runtime/caller 架构。以下正文保留为 Direct P2 历史决策快照，不再提供当前执行默认值。
+
+本规格在 2026-09-03 至 DP2-10 期间曾是当时执行方向的权威材料。它综合当时已接受的目标设计、事项01–04的历史证据，以及用户作出的“停止 CP0/P1、改走 Direct P2、尽早验证能否切换”决定；规格与 ticket plan 于同日获得人工接受。旧规格保留在 `.scratch/ani-iam-rebuild/spec.md` 作为更早决策快照；两者现在都不作为新事项的执行入口。
 
 ANI 来源候选固定为 Git object `0cedae825a489d936cf41815dc27f278f6d3213c`。动态 `main`、当前分支和工作树不属于基线。该对象只能作为来源与契约盘点输入，不能作为可运行兼容 Oracle：旧 Auth migration 的 RLS 已被事项04证明会让受限 runtime role 对同 Tenant 正向访问也被拒绝。
 
@@ -34,7 +36,7 @@ ANI 来源候选固定为 Git object `0cedae825a489d936cf41815dc27f278f6d3213c`�
 - 状态变更与 Security Audit 同事务；公开 mutation 使用统一 Idempotency Ledger。
 - Core/IAM/ANI 之间只使用固定 Commit、Tag、descriptor 或 digest，不动态消费 `main`、`latest` 或另一个工作树。
 
-详细领域、不变量、接口、安全和数据决定继续以 `docs/plans/plan-iam-service-refactor.md`、`CONTEXT.md` 和 accepted ADR 为依据；若出现冲突，必须先更新当前规格或 ADR，不能由实现自行选择。
+在该历史阶段，详细领域、不变量、接口、安全和数据决定以当时的 `docs/plans/plan-iam-service-refactor.md`、`CONTEXT.md` 和 accepted ADR 为依据；若出现冲突，当时必须先更新规格或 ADR，不能由实现自行选择。当前冲突按新的 Workload refoundation 权威顺序处理。
 
 ## User-visible and Caller Outcomes
 
@@ -86,7 +88,7 @@ ANI 来源候选固定为 Git object `0cedae825a489d936cf41815dc27f278f6d3213c`�
 
 ## Human Checkpoints
 
-- 当前规格和 ticket graph 已由用户接受并发布为 `ready-for-agent`；用户随后于 2026-09-03 精确接受并完成 DP2-00 的本地归档与实现基线清理，DP2-01 仍未领取。
+- 在 2026-09-03 历史快照中，本规格和 ticket graph 已由用户接受并发布为 `ready-for-agent`；用户随后精确接受并完成 DP2-00 的本地归档与实现基线清理，当时 DP2-01 仍未领取。该状态不再描述当前 frontier。
 - Go/No-Go A 和 B 的证据分别需要人工接受；前一个通过不自动授权后一个阶段。
 - 任何契约 breaking 发布、真实 Core/NATS 写入、测试轨道切入、数据重建、Credential 失效、最终切流和旧资产删除，都需要针对精确事项、环境和动作的单独确认。
 - 同一时间只允许一个会改变代码、数据、契约或外部状态的事项为 `claimed`。
@@ -101,4 +103,4 @@ ANI 来源候选固定为 Git object `0cedae825a489d936cf41815dc27f278f6d3213c`�
 
 ## Ticket Publication
 
-已接受的纵向拆分、依赖边和交付行为位于 `ticket-plan.md`。DP2-01–20 已发布到 `.scratch/ani-iam-p2-direct/issues/`；一次性前置事项 DP2-00 已解决。当前唯一 frontier 是 DP2-01，但它尚未被领取或启动。
+历史上已接受的纵向拆分、依赖边和交付行为位于 `ticket-plan.md`。DP2-01–20 曾发布到 `.scratch/ani-iam-p2-direct/issues/`；一次性前置事项 DP2-00 已解决。在当时快照中唯一 frontier 是 DP2-01；当前 frontier 以 Human/Workload refoundation 规格为准。

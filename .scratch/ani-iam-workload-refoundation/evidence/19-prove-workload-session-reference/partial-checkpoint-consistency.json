@@ -1,0 +1,42 @@
+{
+  "checked_at": "2026-09-10T05:02:57.794273+00:00",
+  "checks": [
+    {
+      "repository": "IAM",
+      "source_run": "wr19-20260910T045819Z-886165e6",
+      "changed_since_test_snapshot": [],
+      "code_snapshot_matches": true
+    },
+    {
+      "repository": "Session",
+      "source_run": "wr19-20260910T045819Z-886165e6",
+      "changed_since_test_snapshot": [
+        "docs/execution/records/WR19.md"
+      ],
+      "code_snapshot_matches": true
+    },
+    {
+      "repository": "ANI",
+      "source_run": "wr19-20260910T044533Z-ec1ad5e6",
+      "changed_since_test_snapshot": [
+        "ANI-06-\u5f00\u53d1\u8ba1\u5212.md",
+        "repo/CURRENT-SPRINT.md",
+        "repo/development-records/README.md"
+      ],
+      "code_snapshot_matches": true
+    },
+    {
+      "repository": "ANI_original",
+      "fixed_head_matches": true,
+      "clean": true,
+      "status": ""
+    },
+    {
+      "repository": "Session_original",
+      "fixed_head_matches": true,
+      "clean": true,
+      "status": ""
+    }
+  ],
+  "status": "partial only; complete chain remains not_verified"
+}

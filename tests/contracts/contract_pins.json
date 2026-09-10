@@ -13,12 +13,21 @@
     "descriptor_sha256": "7be0a2fa062229717a311af952fc8b3bb7f58c1ef21cde2de741bcbbb4dfc195"
   },
   "toolchain": {
-    "buf": {"version": "1.72.0", "sha256": "8720830e26a733da55bb89bcd3cb44849c0965fc0c44fb5d691cccdc64dca5af"},
-    "protoc-gen-go": {"version": "v1.36.12", "sha256": "7475078ca943fa552b4755a0b5dd84f4387905a08cb09a47696fd3683cc1c010"},
-    "protoc-gen-go-grpc": {"version": "1.6.2", "sha256": "aa1fabbfc27b12d81182864a3f90b47aee907bced808e17e275c5b18c9602b08"}
+    "buf": {
+      "version": "1.72.0",
+      "sha256": "8720830e26a733da55bb89bcd3cb44849c0965fc0c44fb5d691cccdc64dca5af"
+    },
+    "protoc-gen-go": {
+      "version": "v1.36.12",
+      "sha256": "7475078ca943fa552b4755a0b5dd84f4387905a08cb09a47696fd3683cc1c010"
+    },
+    "protoc-gen-go-grpc": {
+      "version": "1.6.2",
+      "sha256": "aa1fabbfc27b12d81182864a3f90b47aee907bced808e17e275c5b18c9602b08"
+    }
   },
   "artifacts": {
-    "iam_descriptor": "66552fe0a53a1c4956f6ee7943498af1b5309602fec28eb47c1b51f4276f5d9a",
+    "iam_descriptor": "a68829bb767d864d17702c3e10f545651609273a408c4ab51af8348f428fec0f",
     "core_descriptor": "7dd40f9053b7c1c0c8905decab0f81b07173d0b25651113147bde9a5370d352a"
   },
   "fixtures": {
@@ -30,5 +39,22 @@
     "iam_check_permission.v1.json": "92c1d517ff3c49532ca08e0f6b24eace2569a8fdb702af8d1d134bc7e846c4c2",
     "iam_error_contract.v1.json": "c7a488d5ce5d409d1de25845dd3dc3af7a32c1ce853f81c490d541b8a4448e3c",
     "iam_password_login.v1.json": "cb4df637172faae8551d42abd55b9167195d9a21693080a06e713ae9c6483cc4"
+  },
+  "workload_refoundation": {
+    "iam_baseline_commit": "cd38cd90bca3e9d83af09a381051b895d82ae94f",
+    "source_registry_sha256": "27e3637976a824c4efcd4a77ad9491d58f97ceb7c0ba3885e133ad14eebab7f3",
+    "candidate_registry_sha256": "135196cdc34b858a9236ccb47ec94b918abc9dce8c6c1a1332ff9712da6fc570",
+    "candidate_policy_revision": "sha256:655690090ed17bf49e0eab57baad643f90ec69ef3a412aa092fd3a24671a0e62",
+    "status": "IAM isolated candidate; ANI publication and integration not performed; top-level starts preserve historical provenance"
+  },
+  "wr19_invocation": {
+    "api_module": "github.com/zhangzhe-ctrl/ani-iam/api",
+    "api_candidate_version": "v0.1.0-rc.1",
+    "sdk_module": "github.com/zhangzhe-ctrl/ani-iam/sdk",
+    "sdk_candidate_version": "v0.1.0-rc.1",
+    "published": false,
+    "target_method": "/ani.session.v1.SessionService/CreateSession",
+    "binding_version": "ani.grpc.invocation.v1",
+    "continuation_rpc": "/iam.v1.AuthorizationService/VerifySessionContinuation"
   }
 }

@@ -3,12 +3,15 @@ syntax = "proto3";
 package iam.v1;
 
 import "contract.proto";
+import "workload.proto";
 
 option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
 
 // AuthorizationService makes the single fail-closed decision for an authorized operation.
 service AuthorizationService {
+  rpc VerifySessionContinuation(VerifySessionContinuationRequest) returns (VerifySessionContinuationResponse);
   rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+  rpc VerifyWorkloadInvocation(VerifyWorkloadInvocationRequest) returns (VerifyWorkloadInvocationResponse);
 }
 
 // CheckPermissionRequest carries the raw credential and immutable operation-policy identity.

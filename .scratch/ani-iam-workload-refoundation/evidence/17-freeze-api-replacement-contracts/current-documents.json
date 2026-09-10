@@ -1,0 +1,341 @@
+{
+  "authoritative_issue_directory": "/home/chabking/workspace/ani-iam/.scratch/ani-iam-workload-refoundation/issues",
+  "product_worktree": "/home/chabking/workspace/ani-iam-wr17-18",
+  "files": [
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/capability-matrix.md",
+      "sha256": "d704c22a975e60901bf60a2f337dc5e064033927e2c0646cd6d782c70653aedb",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/decisions.md",
+      "sha256": "9bb787a5c2d305efd5da3c0b77df8774a70dd74cdace8d08edd22d79e1f2a8ff",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/01-freeze-human-workload-architecture.md",
+      "sha256": "d9d18de3bd618590f0ce00af88df2ae3d74ea09161ab37399272bfad5d0b5566",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/02-refound-contracts-and-registries.md",
+      "sha256": "c6a1bb1ccec8da9a5b2d5b1e0f6e3ce2477b41431c0b29eb5b26f7ad8bb327b5",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/03-rebuild-human-workload-persistence.md",
+      "sha256": "64951d561998a1a1fb1085ec1fbd9a686c68c8e01d23470564402714d2f28618",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/04-deliver-tenant-workload-api-key.md",
+      "sha256": "1e5d70521803dae2ed72722c39916ebb4841298594d57a3d082c6c668cece9a4",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/05-deliver-platform-workload-token.md",
+      "sha256": "28d09ed8889dce1766b6af0bd4bbccab4837667be61e43aa302eed9ae5da10c7",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/06-secure-service-to-service-grpc.md",
+      "sha256": "bcb20a7993e66326e80423865b0759f5a8fef60c71a03aa8eb414780f8b69048",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/07-deliver-core-lifecycle-workload-auth.md",
+      "sha256": "b2c75b16ab3cef8c49934187536efd0d264b5e71babd52c5fc66827fad339597",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/08-complete-cutover-critical-callers.md",
+      "sha256": "4507e4e3100a3c0798c35407d45e86eca475cf3be22b0ee5268750e95c031199",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/09-rehearse-isolated-cutover.md",
+      "sha256": "fe506659bc4912850ce369f96ee670d5951307af0698c96a480b249de4989860",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/10-complete-administration-recovery.md",
+      "sha256": "ced1e275ebd4b8d4c691f491811f0a0db478b91260f2b2b8cdae7db68cb08cf4",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/11-complete-audit-idempotency.md",
+      "sha256": "d85ce922a0e492d67a173b22a633af66793a033574ec1a70be32ed863d947af6",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/12-complete-callers-ui-s2s-e2e.md",
+      "sha256": "4c40325cfecfd35c45b3b928756c895aa7b76ac80d81bd449ee615c5de87f2c6",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/13-rebuild-test-data-and-cutover.md",
+      "sha256": "c9f3e1592f06f8275874634bf5a51d19cfb2a70ededc9c779d40c089da3f7473",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/14-delete-legacy-auth.md",
+      "sha256": "71fef32e4483fbe619523e8ac4fa95ff18f23ffe5b29e7c82b7af3f54d2b6ab0",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/15-complete-functional-acceptance.md",
+      "sha256": "28627feda0fab9fbd22ff410159bbeb3c54040dec2d3ccaa871db2b5561be80e",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/16-organize-docs-and-replan.md",
+      "sha256": "01b07663e3a4f8a5810a522eb5ff335b33340adf091b3095044169574b7ea160",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/17-freeze-api-replacement-contracts.md",
+      "sha256": "a0fbed71cbceeb2355b0cab804703ad0655f1262a33dc8ebf867afe9aec82383",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/18-refound-human-workload-runtime.md",
+      "sha256": "d93fae782c936038a8bd1df91e8d6a3b567623cc8f5504db20bf96efa96ad16b",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/19-prove-workload-session-reference.md",
+      "sha256": "27f7c126c19d2c9124a8a60811a373579356c6146c631c7545bdf84a5743b622",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/20-complete-human-authentication-notification.md",
+      "sha256": "93af073bdb8d2c6f21224030cd002f44cf934861e3509d70e69abaca5f2b4acd",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/21-complete-tenant-workload-api-key.md",
+      "sha256": "434db98fd291abfc8e88946087e4dddb71bebd2d75c5adea1e3aa8fbfb4c03b0",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/22-complete-identity-administration.md",
+      "sha256": "4485467441c76899eb5881f4e895bc94350328c09f0a3b24474dd3a16cfe8b39",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/23-integrate-core-lifecycle-bootstrap.md",
+      "sha256": "38bea1cc0ba9b6b4ee6db6d8a4c11007e5ba3feb83fb35a1d5ce42152d35b30a",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/24-verify-backend-callers.md",
+      "sha256": "feb85ef217be54d7476103ee0a89e6ca11f5700c9171819c88b35d0b8a584e3c",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/25-accept-isolated-api-replacement.md",
+      "sha256": "c952f4f63b0665760c3eebc2617395e4fbc545345fb0c004fa99f38cd42505e4",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/26-trim-legacy-identity-code.md",
+      "sha256": "53da9bc0541b0d6b8afff0dbc3c31953ac1ac06df6748e524c64b8249b9bd788",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/27-integrate-console-boss.md",
+      "sha256": "101d8db927674d6d477ac6a1aefe4520be1f00fb7422657e513ef0e2d14d4e26",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/28-complete-system-replacement.md",
+      "sha256": "0d05d8752bced279552811fdee01eb2d93742c9874ec629ef8921300cab1b3e0",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/issues/29-retire-legacy-assets.md",
+      "sha256": "85bd6ee9a9cff91b5a691e69891d67c6d0935aa92e853b02faaa5966aa888fd6",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/spec.md",
+      "sha256": "2a3a3136514b84abcf2a4305877741584287c57e3091dd1fcc3d5e074371d963",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": ".scratch/ani-iam-workload-refoundation/ticket-plan.md",
+      "sha256": "9484a7a79af7cb3bdcb5cfbb66c1c7a1a756a0298fc7c1789d2063fe37f8cbab",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "cf21afcaa618d7a8ae1db9704d1e69d9ae367832ccb182511a646fc80753ba69",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "a5d88d334235f277e3a6eefa356dfa27d4ed5de6e0bc9258b85ab3b7000d274f",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "CONTEXT.md",
+      "sha256": "02d20d2ad7accdaebf6a04e78babee92ab6f41ab9e09138c7bb907af675d798b",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "README.md",
+      "sha256": "ce1b12b49aabdec7c2ee29abe60bb792777e0d8a048d329db8fda6265049b925",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0001-allow-breaking-core-v1-for-prelaunch-iam-rebuild.md",
+      "sha256": "c65144a27f0a02a8a505e1d9af1c1228c250a5d3cc658d487dae465e346939df",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0002-separate-tenant-lifecycle-from-iam-access.md",
+      "sha256": "666f51948f5b7ea83595fc0646164177f9086acc4f58598ac63811f797ba392c",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0003-separate-core-control-and-iam-databases.md",
+      "sha256": "850d23fbb37d8ddcdc8abe530402b946e21c65982341e66a7b0f215edc62a8a8",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0004-coordinate-tenant-lifecycle-and-iam-asynchronously.md",
+      "sha256": "d492e2d3b49fa40b768b6c2e8a9b45ec6f645fabeefe36d51d4519a21e70bf0f",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0005-share-infrastructure-without-sharing-iam-project-code.md",
+      "sha256": "55484b0431e7e7966fc52a29456fd83e83b2fbb880fd4b5c80b433a055433c1f",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0006-treat-september-v1-as-test-environment-delivery.md",
+      "sha256": "05642341f19dcdea30d74831e85bdab280837ca784da70f99a259eb4213e9276",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0007-remove-postgresql-rls-from-target-iam.md",
+      "sha256": "1fa0206773c360bcf511bd97e265cd973c32dc1c6f0a72e2e878b09519f6a454",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0008-model-tenant-authorization-with-explicit-relations.md",
+      "sha256": "776053db326c4a666a224cdd8d78a57cb350a77135bb7eca8362777cc59658d1",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0009-generate-permissions-and-constrain-role-management.md",
+      "sha256": "75b7b35738e147d23ecb080359990025f43220d775bc291fb32cb561aadf4907",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0010-separate-invitations-from-memberships.md",
+      "sha256": "0e47cd400ce9d0b991baaadf5cf892620bac5ae03b4c3f17b9d89e74fb4ce609",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0011-use-global-human-principals-and-boundary-scoped-tokens.md",
+      "sha256": "d756271a8c33f85ef2de496accacff856ae1b75ebcf2f385620951bab9fa94c2",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0012-use-short-boundary-tokens-and-rotating-refresh-families.md",
+      "sha256": "ce6a09a871e61697f4144db0f7e1e98883c05b030a6d728af6dab5201982a363",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0013-use-durable-session-grants-instead-of-a-jwt-blocklist.md",
+      "sha256": "8aa86bdee58a35c80685d2974eb23786608a663da9aac5e68a8c72d007713548",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0014-keep-iam-audit-transactional-and-append-only.md",
+      "sha256": "ed5b40080b3c99c553780f542c6e89aed4212c409f85e17eadb7d00f64a93f20",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0015-keep-browser-refresh-tokens-in-http-only-cookies.md",
+      "sha256": "9d63317202aee0d8e922064329b582fde6f55a6f030ddd860e16715db0982f8b",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0016-use-one-generated-authorization-gate-at-the-gateway.md",
+      "sha256": "89cd5ea4045c82bc2813d2eca74468a08901ebe2141b0e10983fe8507bde4638",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0017-use-explicit-iam-lifecycle-states-instead-of-generic-soft-delete.md",
+      "sha256": "4cf6494e46463bfad4aca4811ac582e0053ed3397eae0a72f24ccc5e677e108b",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0018-separate-principal-types-and-persist-integration-state-explicitly.md",
+      "sha256": "1b47aba6f627070342292969ea556503cc01888c4faf6d77852cfc496e75ee09",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0019-use-kratos-conventions-with-framework-independent-business-rules.md",
+      "sha256": "d634d25d21d9e37f5137f6ded57b13c3bb46223815cedef47d45bab264b79c29",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0020-pin-maintained-libraries-for-framework-and-infrastructure.md",
+      "sha256": "7056e90b207f828da63c4cc13f131c534d598f1fac6d81f1ed11bea3a710d525",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0021-separate-functional-validation-from-production-readiness.md",
+      "sha256": "6d5c88ea79cfd6637b51308d1da950df091c7f55b17f572aee80a2a3ef999182",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/adr/0022-unify-software-actors-as-workload-principals.md",
+      "sha256": "09313e4c1ee31868be2247cdbf4a10e436df73915db0d8f605fe06c3225b1237",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/agents/domain.md",
+      "sha256": "10e5ea03e94404942091eef93c4ea6589d71daf936baf9896850a57b1a7749b3",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/agents/issue-tracker.md",
+      "sha256": "03908586af33afba41a962759913697e970d279e1d2942cd306d09ffd0d4f70e",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/agents/scaffolding-and-codegen.md",
+      "sha256": "880b39462bc380fbcc4bfd61a1a9519d7937f909617593402fc432c774b50d79",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/agents/triage-labels.md",
+      "sha256": "f87729cc3add720b17db1c22bae69bf41d30700910c90d31aa3bd8a2d2cda7fe",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/plans/plan-iam-decision-traceability.md",
+      "sha256": "f1d3e97f1835b9c8e7577fff0b3df9d4706ae953f1c7e2d7dcfb2048c221e649",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/plans/plan-iam-kratos-phased.md",
+      "sha256": "98e9cb5a6285d9ba6c46f8bc37cdd3153b4ddccbdbdc896d2402bc0a17c2d7c2",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/plans/plan-iam-service-refactor.md",
+      "sha256": "d9a16cdbde08f745251dbdd6997c224e97a56beea81f4edd51a3e85850ed70a8",
+      "role": "read-only provenance snapshot in product worktree"
+    },
+    {
+      "path": "docs/plans/plan-workload-principal-refoundation.md",
+      "sha256": "797f04520ad0feb867d606a0dff6ded5d35f9a5f445a222af55f44f5acb099a1",
+      "role": "read-only provenance snapshot in product worktree"
+    }
+  ]
+}

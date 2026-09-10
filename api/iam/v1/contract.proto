@@ -1,8 +1,8 @@
 syntax = "proto3";
 
 // Package iam.v1 is the immutable major-version contract for the target IAM.
-// Changes within v1 are additive and backward compatible. A breaking change
-// requires a new versioned package and an explicit dual-consume retirement gate.
+// ADR-0022 authorizes the pre-launch Human/Workload refoundation in place.
+// Removed enum names and numbers remain reserved, never accepted aliases.
 package iam.v1;
 
 import "google/protobuf/timestamp.proto";
@@ -18,11 +18,12 @@ enum Audience {
   AUDIENCE_INTERNAL = 3;
 }
 
-// PrincipalType distinguishes humans from single-Tenant service principals.
+// PrincipalType distinguishes a person from a stable software actor.
 enum PrincipalType {
   PRINCIPAL_TYPE_UNSPECIFIED = 0;
   PRINCIPAL_TYPE_HUMAN = 1;
-  PRINCIPAL_TYPE_SERVICE = 2;
+  reserved 2;
+  reserved "PRINCIPAL_TYPE_SERVICE";
   PRINCIPAL_TYPE_WORKLOAD = 3;
 }
 
@@ -39,7 +40,9 @@ enum AuthnMethod {
   AUTHN_METHOD_PASSWORD = 1;
   AUTHN_METHOD_OIDC = 2;
   AUTHN_METHOD_API_KEY = 3;
-  AUTHN_METHOD_SERVICE_TOKEN = 4;
+  reserved 4;
+  reserved "AUTHN_METHOD_SERVICE_TOKEN";
+  AUTHN_METHOD_WORKLOAD_TOKEN = 5;
 }
 
 // SessionStatus is the explicit state of a human session.

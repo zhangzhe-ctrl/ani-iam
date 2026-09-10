@@ -27,6 +27,7 @@ func validConfig() *Bootstrap {
 			ShutdownTimeout: durationpb.New(5 * time.Second),
 		},
 		Runtime: &Runtime{
+			Environment: "wr17-18-isolated", TrustDomain: "iam.wr17-18.test",
 			Postgresql: &PostgreSQL{Dsn: "postgresql://ani_iam_runtime@127.0.0.1:5432/ani_iam?sslmode=disable"},
 			Redis: &Redis{
 				Addr:         "127.0.0.1:6379",
@@ -76,6 +77,8 @@ func TestBootstrapValidate(t *testing.T) {
 		ok     bool
 	}{
 		{name: "isolated loopback", ok: true},
+		{name: "missing environment", mutate: func(c *Bootstrap) { c.Runtime.Environment = "" }},
+		{name: "missing trust domain", mutate: func(c *Bootstrap) { c.Runtime.TrustDomain = "" }},
 		{name: "wrong profile", mutate: func(c *Bootstrap) { c.Profile = "legacy-auth" }},
 		{name: "externally reachable grpc", mutate: func(c *Bootstrap) { c.Server.Grpc.Addr = "0.0.0.0:19090" }},
 		{name: "missing grpc mutual TLS", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls = nil }},

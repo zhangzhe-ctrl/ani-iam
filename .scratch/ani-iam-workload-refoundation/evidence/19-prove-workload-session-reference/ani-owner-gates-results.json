@@ -1,0 +1,24 @@
+{
+  "run_id": "wr19-20260910T050810Z-73666686",
+  "command_exit": 0,
+  "IAM_source_sha256": "1fcd5a89edda5cdf194591e8f94f28a7c40e5cb898ad20db5477c875621243df",
+  "ANI_source_sha256": "5750c58df260acab74520e1ae4004668306c7961a21a7c996fb0819c218e8914",
+  "make_test": "pass",
+  "make_test_components": [
+    "validate-architecture",
+    "validate-auth-contract",
+    "validate-gateway-authz",
+    "test-go (49 passing packages)",
+    "test-python"
+  ],
+  "make_validate_doc_entrypoints": "pass",
+  "services_boundary_checker": "pass with 4 existing accepted baseline warnings",
+  "WR19_registry_check": "pass",
+  "remote_input_drift": [
+    "repo/go.work: intentional temporary candidate module mapping"
+  ],
+  "other_source_dependency_lock_or_generation_drift": [],
+  "full_make_validate_services": "not_run; Services business/API source is unchanged",
+  "formal_three_process_resource_chain": "not_verified",
+  "cluster_operations": "none"
+}

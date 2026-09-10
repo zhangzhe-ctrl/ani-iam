@@ -1,0 +1,7 @@
+{
+  "closed_at": "2026-09-10T08:22:56.314105+00:00",
+  "socket": "/tmp/wr19-monitor.sock",
+  "close_exit": 0,
+  "socket_absent": true,
+  "scope": "only WR19 evidence-monitor SSH master; existing user SSH masters unchanged"
+}

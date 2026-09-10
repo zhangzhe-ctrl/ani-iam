@@ -4,7 +4,7 @@
 
 **Blocked by:** 15 / 完成 IAM 管理、Platform 与高风险恢复
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
 **Type:** enhancement
 
@@ -32,3 +32,7 @@
 **Stop conditions:** registry 无法穷举 mutation；查询需要跨边界 bypass；无法 append-only；接入要求改变领域状态机或泄露敏感 details。
 
 **Recovery:** 回退查询/UI/共享接入和未发布 migration；不得删除既有 Audit 或窗口内 Ledger。
+
+## Comments
+
+- 2026-09-09：旧 ticket version 被 WR-11 取代，capability 不取消。新票必须覆盖 Workload Principal、Identity Binding、Grant、WAT 与 caller/delegated-subject Audit 语义。
