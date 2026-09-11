@@ -96,8 +96,8 @@ func ValidateRuntimeFoundation(ctx context.Context, data *Data) error {
 	if err != nil {
 		return fmt.Errorf("validate runtime schema and role: %w", err)
 	}
-	if revision != "202609100003" || role != "ani_iam_runtime" || privileged || owns || unsafePrivileges || guardsMissing {
-		return errors.New("runtime schema revision, role or guards do not match WR-19 foundation")
+	if revision != "202609100005" || role != "ani_iam_runtime" || privileged || owns || unsafePrivileges || guardsMissing {
+		return errors.New("runtime schema revision, role or guards do not match WR20 foundation")
 	}
 	return nil
 }

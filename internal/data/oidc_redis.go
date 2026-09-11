@@ -158,6 +158,11 @@ func validateOIDCOperation(operation biz.OIDCOperation) error {
 	if operation.Kind == biz.OIDCFlowIdentityLink && (operation.PrincipalID == [16]byte{} || operation.SessionID == [16]byte{}) {
 		return errors.New("OIDC identity-link operation binding is invalid")
 	}
+	if operation.BrowserProofDigest != "" && (operation.Kind != biz.OIDCFlowIdentityLink ||
+		len(operation.BrowserProofDigest) != sha256.Size*2 || operation.LinkGrantID == [16]byte{} ||
+		operation.LinkGrantVersion <= 0 || operation.LinkCredentialExpiresAt.IsZero() || len(operation.LinkAuthnMethods) == 0) {
+		return errors.New("OIDC browser-proof binding is invalid")
+	}
 	return nil
 }
 

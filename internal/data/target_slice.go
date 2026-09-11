@@ -449,14 +449,19 @@ func (u *postgresLoginUnitOfWork) RequestPasswordAction(
 		if mutation.Purpose == biz.PasswordActionPurposeReset {
 			intent = "password_reset"
 		}
+		keyVersion, encrypted, err := u.data.outbox.seal(mutation.Notification.ID, mutation.OperationID, mutation.Target.PrincipalID, mutation.Notification.DestinationEmail)
+		if err != nil {
+			return biz.RequestPasswordActionResult{}, biz.ErrPersistenceUnavailable
+		}
 		if err := queries.CreatePasswordActionNotification(ctx, sqlcgen.CreatePasswordActionNotificationParams{
-			ID:               mutation.Notification.ID,
-			OperationID:      mutation.OperationID,
-			PrincipalID:      mutation.Target.PrincipalID,
-			Intent:           intent,
-			DestinationEmail: mutation.Notification.DestinationEmail,
-			AvailableAt:      requiredTimestamptz(mutation.CreatedAt),
-			CreatedAt:        requiredTimestamptz(mutation.CreatedAt),
+			ID:                    mutation.Notification.ID,
+			OperationID:           mutation.OperationID,
+			PrincipalID:           mutation.Target.PrincipalID,
+			Intent:                intent,
+			DestinationKeyVersion: pgtype.Text{String: keyVersion, Valid: true},
+			DestinationCiphertext: encrypted,
+			AvailableAt:           requiredTimestamptz(mutation.CreatedAt),
+			CreatedAt:             requiredTimestamptz(mutation.CreatedAt),
 		}); err != nil {
 			return biz.RequestPasswordActionResult{}, mapPostgresError("create password-action notification", err, nil)
 		}
@@ -495,7 +500,7 @@ func (u *postgresLoginUnitOfWork) CompletePasswordAction(
 		IdempotencyKey: completion.IdempotencyKey,
 	})
 	if err == nil {
-		if existing.OperationID != completion.Claims.OperationID || existing.PrincipalID != completion.Claims.PrincipalID {
+		if existing.OperationID != completion.Claims.OperationID || existing.PrincipalID != completion.Claims.PrincipalID || subtle.ConstantTimeCompare(existing.RequestFingerprint, completion.RequestFingerprint[:]) != 1 {
 			return biz.CompletePasswordActionResult{}, biz.ErrIdempotencyConflict
 		}
 		if err := tx.Commit(ctx); err != nil {
@@ -595,11 +600,12 @@ func (u *postgresLoginUnitOfWork) CompletePasswordAction(
 		return biz.CompletePasswordActionResult{}, err
 	}
 	if err := queries.CreatePasswordActionCompletion(ctx, sqlcgen.CreatePasswordActionCompletionParams{
-		IdempotencyKey:    completion.IdempotencyKey,
-		OperationID:       completion.Claims.OperationID,
-		PrincipalID:       completion.Claims.PrincipalID,
-		CredentialVersion: credentialVersion,
-		CompletedAt:       requiredTimestamptz(completion.CompletedAt),
+		RequestFingerprint: completion.RequestFingerprint[:],
+		IdempotencyKey:     completion.IdempotencyKey,
+		OperationID:        completion.Claims.OperationID,
+		PrincipalID:        completion.Claims.PrincipalID,
+		CredentialVersion:  credentialVersion,
+		CompletedAt:        requiredTimestamptz(completion.CompletedAt),
 	}); err != nil {
 		return biz.CompletePasswordActionResult{}, mapPostgresError("create password-action completion", err, biz.ErrIdempotencyConflict)
 	}

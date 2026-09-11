@@ -73,6 +73,8 @@ message AccessToken {
 }
 
 message Notification {
+  string outbox_key_file = 10;
+ string client_dns_name = 11;
   string address = 1;
   string certificate_file = 2;
   string private_key_file = 3;

@@ -79,7 +79,7 @@ func (a *WorkloadAuthorization) Authorize(ctx context.Context, identity Workload
 	if identity.PrincipalID == uuid.Nil || identity.BindingID == uuid.Nil || identity.BindingVersion <= 0 || identity.PrincipalVersion <= 0 {
 		return DirectCaller{}, ErrWorkloadIdentityInvalid
 	}
-	if (target.Audience != "ani-iam" && target != (WorkloadTarget{Audience: SessionInvocationAudience, Operation: SessionInvocationOperation})) || target.Operation == "" {
+	if (target.Audience != "ani-iam" && target != (WorkloadTarget{Audience: SessionInvocationAudience, Operation: SessionInvocationOperation}) && !notificationTarget(target)) || target.Operation == "" {
 		return DirectCaller{}, ErrWorkloadPermissionDenied
 	}
 	if a == nil || a.grants == nil {

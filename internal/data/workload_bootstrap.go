@@ -96,6 +96,9 @@ func (r *workloadBootstrapRepository) Provision(ctx context.Context, intent biz.
 		}
 		for _, g := range w.Grants {
 			scope := "iam_ingress"
+			if g.Audience == biz.NotificationAudience {
+				scope = "workload_notification"
+			}
 			if g.Audience == "ani-session-gateway" {
 				scope = "delegated_session"
 			}

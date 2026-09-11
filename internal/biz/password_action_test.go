@@ -11,7 +11,7 @@ import (
 )
 
 func TestRequestPasswordActionIsUniformAndPersistsOnlyKnownTargetIntent(t *testing.T) {
-	now := time.Date(2026, 9, 6, 12, 0, 0, 0, time.UTC)
+	now := time.Date(2026, 9, 6, 12, 0, 0, 987654321, time.UTC)
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")
 	tests := []struct {
 		name        string
@@ -52,13 +52,13 @@ func TestRequestPasswordActionIsUniformAndPersistsOnlyKnownTargetIntent(t *testi
 			if err != nil {
 				t.Fatalf("RequestPasswordAction() error = %v", err)
 			}
-			if result.OperationID != operationID || !result.ExpiresAt.Equal(now.Add(30*time.Minute)) {
+			if result.OperationID != operationID || !result.ExpiresAt.Equal(now.Truncate(time.Second).Add(30*time.Minute)) {
 				t.Fatalf("uniform result = %#v", result)
 			}
 			if reader.account != "user@example.com" || reader.audience != AudienceConsole {
 				t.Fatalf("target lookup = account:%q audience:%q", reader.account, reader.audience)
 			}
-			if uow.requested == nil {
+			if uow.requested == nil || uow.requested.CreatedAt.Nanosecond() != 0 {
 				t.Fatal("password action request was not persisted")
 			}
 			wantDigest := sha256.Sum256([]byte("user@example.com"))

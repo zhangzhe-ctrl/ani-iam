@@ -21,6 +21,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-iam/internal/data"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/server"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/service"
+	"github.com/zhangzhe-ctrl/ani-iam/sdk/grpcworkload"
 )
 
 const (
@@ -274,16 +275,23 @@ func newPasswordActionNotificationRuntime(
 	tokens biz.PasswordActionTokenCodec,
 	clock biz.Clock,
 	logger *slog.Logger,
+	sources ...grpcworkload.WorkloadTokenSource,
 ) (*passwordActionNotificationWorker, *data.NotificationGRPCClient, error) {
 	if config == nil {
 		return nil, nil, errors.New("Notification runtime configuration is required")
 	}
+	var source grpcworkload.WorkloadTokenSource
+	if len(sources) == 1 {
+		source = sources[0]
+	}
 	client, err := data.NewNotificationGRPCClient(data.NotificationGRPCClientConfig{
-		Address:         config.Address,
-		CertificateFile: config.CertificateFile,
-		PrivateKeyFile:  config.PrivateKeyFile,
-		ServerCAFile:    config.ServerCaFile,
-		ServerDNSName:   config.ServerDnsName,
+		CredentialSource: source,
+		ClientDNSName:    config.ClientDnsName,
+		Address:          config.Address,
+		CertificateFile:  config.CertificateFile,
+		PrivateKeyFile:   config.PrivateKeyFile,
+		ServerCAFile:     config.ServerCaFile,
+		ServerDNSName:    config.ServerDnsName,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("configure Notification gRPC client: %w", err)
@@ -429,7 +437,12 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		_ = closeRuntime(context.Background())
 		return nil, fmt.Errorf("configure Redis login throttle: %w", err)
 	}
-	postgresData := data.NewData(postgresPool)
+	outboxProtector, err := data.LoadOutboxProtector(runtime.Notification.OutboxKeyFile)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, fmt.Errorf("configure outbox protection: %w", err)
+	}
+	postgresData := data.NewData(postgresPool, outboxProtector)
 	if err := data.ValidateRuntimeFoundation(startupContext, postgresData); err != nil {
 		_ = closeRuntime(context.Background())
 		return nil, err
@@ -515,12 +528,18 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		_ = closeRuntime(context.Background())
 		return nil, err
 	}
+	workloadInvocation := biz.NewWorkloadInvocation(
+		biz.NewWorkloadAuthentication(data.NewWorkloadIdentityReader(postgresData)),
+		biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(postgresData)),
+		authorization, tokenCodec, data.NewWorkloadCredentialAudit(postgresData), ids, clock,
+	)
 	notificationWorker, notificationClient, err := newPasswordActionNotificationRuntime(
 		runtime.Notification,
 		data.NewPostgresPasswordActionNotificationOutbox(postgresData),
 		tokenCodec,
 		clock,
 		logger,
+		data.NotificationWorkloadSource(workloadInvocation, runtime.Environment, runtime.TrustDomain),
 	)
 	if err != nil {
 		_ = closeRuntime(context.Background())
@@ -529,11 +548,6 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	closeNotification := func(context.Context) error {
 		return notificationClient.Close()
 	}
-	workloadInvocation := biz.NewWorkloadInvocation(
-		biz.NewWorkloadAuthentication(data.NewWorkloadIdentityReader(postgresData)),
-		biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(postgresData)),
-		authorization, tokenCodec, data.NewWorkloadCredentialAudit(postgresData), ids, clock,
-	)
 	authenticationService := service.NewAuthenticationServiceWithWorkload(authentication, oidcUsecase, workloadInvocation)
 	authorizationService := service.NewAuthorizationServiceWithWorkload(authorization, workloadInvocation)
 

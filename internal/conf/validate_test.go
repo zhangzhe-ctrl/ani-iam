@@ -45,6 +45,7 @@ func validConfig() *Bootstrap {
 				PrivateKeyFile: "/run/secrets/ani-iam-access-token-ed25519.pem",
 			},
 			Notification: &Notification{
+				OutboxKeyFile:        "/run/secrets/outbox-key.json",
 				Address:              "127.0.0.1:29090",
 				CertificateFile:      "/run/secrets/ani-iam-notification-client.crt",
 				PrivateKeyFile:       "/run/secrets/ani-iam-notification-client.key",
@@ -108,7 +109,7 @@ func TestBootstrapValidate(t *testing.T) {
 		{name: "notification certificate path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.CertificateFile = "client.crt" }},
 		{name: "notification private-key path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.PrivateKeyFile = "client.key" }},
 		{name: "notification server CA path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.ServerCaFile = "server-ca.crt" }},
-		{name: "notification server identity differs", mutate: func(c *Bootstrap) { c.Runtime.Notification.ServerDnsName = "notification.internal" }},
+		{name: "notification server identity wildcard", mutate: func(c *Bootstrap) { c.Runtime.Notification.ServerDnsName = "*.notification.internal" }},
 		{name: "notification action URL is HTTP", mutate: func(c *Bootstrap) {
 			c.Runtime.Notification.ConsoleActionUrlBase = "http://console.example.test/password-action"
 		}},

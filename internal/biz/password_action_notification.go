@@ -141,7 +141,11 @@ func (d *PasswordActionNotificationDispatcher) DispatchNext(ctx context.Context)
 	if strings.TrimSpace(notificationID) == "" {
 		return true, d.finishFailure(ctx, claim, now, fmt.Errorf("%w: notification ID is empty", ErrPasswordActionNotificationPermanent))
 	}
-	if err := d.outbox.MarkPasswordActionNotificationDelivered(ctx, claim.ID, claim.Version, notificationID, now); err != nil {
+	// Submission may have consumed its deadline. Persist the receipt under an
+	// independent bounded deadline so cancellation cannot strand a claimed row.
+	finish, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
+	defer cancel()
+	if err := d.outbox.MarkPasswordActionNotificationDelivered(finish, claim.ID, claim.Version, notificationID, d.clock.Now().UTC()); err != nil {
 		return true, fmt.Errorf("mark password-action notification delivered: %w", err)
 	}
 	return true, nil
@@ -153,6 +157,9 @@ func (d *PasswordActionNotificationDispatcher) finishFailure(
 	now time.Time,
 	cause error,
 ) error {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
+	defer cancel()
+	now = d.clock.Now().UTC()
 	terminal := errors.Is(cause, ErrPasswordActionNotificationPermanent) ||
 		claim.AttemptCount >= passwordActionNotificationMaxAttempts
 	availableAt := now.Add(passwordActionNotificationBackoff(claim.AttemptCount))

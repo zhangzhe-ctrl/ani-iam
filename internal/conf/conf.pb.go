@@ -464,6 +464,8 @@ func (x *AccessToken) GetPrivateKeyFile() string {
 
 type Notification struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
+	OutboxKeyFile        string                 `protobuf:"bytes,10,opt,name=outbox_key_file,json=outboxKeyFile,proto3" json:"outbox_key_file,omitempty"`
+	ClientDnsName        string                 `protobuf:"bytes,11,opt,name=client_dns_name,json=clientDnsName,proto3" json:"client_dns_name,omitempty"`
 	Address              string                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 	CertificateFile      string                 `protobuf:"bytes,2,opt,name=certificate_file,json=certificateFile,proto3" json:"certificate_file,omitempty"`
 	PrivateKeyFile       string                 `protobuf:"bytes,3,opt,name=private_key_file,json=privateKeyFile,proto3" json:"private_key_file,omitempty"`
@@ -505,6 +507,20 @@ func (x *Notification) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Notification.ProtoReflect.Descriptor instead.
 func (*Notification) Descriptor() ([]byte, []int) {
 	return file_conf_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Notification) GetOutboxKeyFile() string {
+	if x != nil {
+		return x.OutboxKeyFile
+	}
+	return ""
+}
+
+func (x *Notification) GetClientDnsName() string {
+	if x != nil {
+		return x.ClientDnsName
+	}
+	return ""
 }
 
 func (x *Notification) GetAddress() string {
@@ -924,8 +940,11 @@ const file_conf_proto_rawDesc = "" +
 	"\vAccessToken\x12\x16\n" +
 	"\x06issuer\x18\x01 \x01(\tR\x06issuer\x12\"\n" +
 	"\ractive_key_id\x18\x02 \x01(\tR\vactiveKeyId\x12(\n" +
-	"\x10private_key_file\x18\x03 \x01(\tR\x0eprivateKeyFile\"\xac\x03\n" +
-	"\fNotification\x12\x18\n" +
+	"\x10private_key_file\x18\x03 \x01(\tR\x0eprivateKeyFile\"\xfc\x03\n" +
+	"\fNotification\x12&\n" +
+	"\x0foutbox_key_file\x18\n" +
+	" \x01(\tR\routboxKeyFile\x12&\n" +
+	"\x0fclient_dns_name\x18\v \x01(\tR\rclientDnsName\x12\x18\n" +
 	"\aaddress\x18\x01 \x01(\tR\aaddress\x12)\n" +
 	"\x10certificate_file\x18\x02 \x01(\tR\x0fcertificateFile\x12(\n" +
 	"\x10private_key_file\x18\x03 \x01(\tR\x0eprivateKeyFile\x12$\n" +

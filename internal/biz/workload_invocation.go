@@ -139,7 +139,7 @@ func (u *WorkloadInvocation) IssueWorkloadToken(ctx context.Context, target Work
 	if !ok || ingress.Target != (WorkloadTarget{Audience: "ani-iam", Operation: "/iam.v1.AuthenticationService/IssueWorkloadToken"}) {
 		return IssuedWorkloadCredential{}, ErrWorkloadPermissionDenied
 	}
-	if target != (WorkloadTarget{Audience: SessionInvocationAudience, Operation: SessionInvocationOperation}) {
+	if target != (WorkloadTarget{Audience: SessionInvocationAudience, Operation: SessionInvocationOperation}) && !notificationTarget(target) {
 		return IssuedWorkloadCredential{}, ErrWorkloadPermissionDenied
 	}
 	caller, err := u.grants.Authorize(ctx, ingress.Identity, target)

@@ -20,6 +20,8 @@ import (
 var ErrInvalidGatewayWorkloadIdentity = errors.New("invalid Gateway workload identity")
 
 var workloadRuntimeRPCs = map[string]struct{}{
+	"/iam.v1.AuthenticationService/ListSessions":             {},
+	biz.VerifyWorkloadCallerRPC:                              {},
 	biz.VerifySessionContinuationRPC:                         {},
 	"/iam.v1.AuthenticationService/IssueWorkloadToken":       {},
 	"/iam.v1.AuthenticationService/IssueDelegation":          {},

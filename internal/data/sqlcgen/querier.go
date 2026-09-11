@@ -74,6 +74,8 @@ type Querier interface {
 	InsertWorkloadBootstrapReceipt(ctx context.Context, arg InsertWorkloadBootstrapReceiptParams) error
 	IsActiveHumanTenantAdministrator(ctx context.Context, arg IsActiveHumanTenantAdministratorParams) (bool, error)
 	ListAPIKeys(ctx context.Context, arg ListAPIKeysParams) ([]ListAPIKeysRow, error)
+	ListOwnedHumanSessions(ctx context.Context, arg ListOwnedHumanSessionsParams) ([]Session, error)
+	ListOwnedSessionGrants(ctx context.Context, arg ListOwnedSessionGrantsParams) ([]SessionGrant, error)
 	ListTenantAuthorizationMembershipRoleIDs(ctx context.Context, arg ListTenantAuthorizationMembershipRoleIDsParams) ([]uuid.UUID, error)
 	ListTenantAuthorizationMemberships(ctx context.Context, arg ListTenantAuthorizationMembershipsParams) ([]ListTenantAuthorizationMembershipsRow, error)
 	ListTenantAuthorizationRolePermissions(ctx context.Context, arg ListTenantAuthorizationRolePermissionsParams) ([]ListTenantAuthorizationRolePermissionsRow, error)

@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"strings"
 	"sync"
 	"testing"
@@ -24,7 +25,7 @@ func TestPostgresPasswordActionRequestIsNonEnumeratingAndReplacesPriorIntent(t *
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")
 	seedPasswordActionPrincipal(t, ctx, environment, principalID, uuid.MustParse("0198f062-b76d-7201-9000-000000000071"), "user@example.com", true)
 
-	reader := data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool))
+	reader := data.NewPostgresPasswordLoginReader(passwordActionTestData(t, environment.runtimePool))
 	target, found, err := reader.LookupPasswordActionTarget(ctx, "user@example.com", biz.AudienceConsole)
 	if err != nil || !found || target.PrincipalID != principalID || !target.HasPassword || target.VerifiedEmail != "user@example.com" {
 		t.Fatalf("LookupPasswordActionTarget() = %#v, %t, %v", target, found, err)
@@ -34,7 +35,7 @@ func TestPostgresPasswordActionRequestIsNonEnumeratingAndReplacesPriorIntent(t *
 		t.Fatalf("LookupPasswordActionTarget(unknown) = %#v, %t, %v", unknown, found, err)
 	}
 
-	uow := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool))
+	uow := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool))
 	now := time.Date(2026, 9, 6, 13, 0, 0, 0, time.UTC)
 	first := passwordActionRequestMutation(
 		uuid.MustParse("0198f062-b76d-7001-9000-000000000071"),
@@ -92,7 +93,7 @@ func TestPostgresPasswordActionRequestIsNonEnumeratingAndReplacesPriorIntent(t *
 	if err := environment.runtimePool.QueryRow(ctx, `SELECT status FROM notification_outbox WHERE operation_id = $1`, first.OperationID).Scan(&firstOutboxStatus); err != nil {
 		t.Fatalf("query first outbox status: %v", err)
 	}
-	if err := environment.runtimePool.QueryRow(ctx, `SELECT destination_email FROM notification_outbox WHERE operation_id = $1`, first.OperationID).Scan(&firstDestination); err != nil {
+	if err := environment.runtimePool.QueryRow(ctx, `SELECT CASE WHEN destination_ciphertext IS NULL AND destination_key_version IS NULL THEN 'scrubbed' ELSE 'retained' END FROM notification_outbox WHERE operation_id = $1`, first.OperationID).Scan(&firstDestination); err != nil {
 		t.Fatalf("query first outbox destination: %v", err)
 	}
 	if err := environment.runtimePool.QueryRow(ctx, `SELECT status FROM password_actions WHERE operation_id = $1`, replacement.OperationID).Scan(&replacementStatus); err != nil {
@@ -101,7 +102,7 @@ func TestPostgresPasswordActionRequestIsNonEnumeratingAndReplacesPriorIntent(t *
 	if err := environment.runtimePool.QueryRow(ctx, `SELECT status FROM notification_outbox WHERE operation_id = $1`, replacement.OperationID).Scan(&replacementOutboxStatus); err != nil {
 		t.Fatalf("query replacement outbox status: %v", err)
 	}
-	if firstStatus != "replaced" || firstOutboxStatus != "cancelled" || firstDestination != "user@example.com" ||
+	if firstStatus != "replaced" || firstOutboxStatus != "cancelled" || firstDestination != "scrubbed" ||
 		replacementStatus != "active" || replacementOutboxStatus != "pending" {
 		t.Fatalf("replacement states = first:%s/%s/%s replacement:%s/%s", firstStatus, firstOutboxStatus, firstDestination, replacementStatus, replacementOutboxStatus)
 	}
@@ -183,7 +184,7 @@ func TestPostgresPasswordActionRequestConcurrentIdempotentReplayConverges(t *tes
 				now,
 				&target,
 			)
-			result, err := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)).RequestPasswordAction(ctx, mutation)
+			result, err := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool)).RequestPasswordAction(ctx, mutation)
 			results <- requestResult{result: result, err: err}
 		}()
 	}
@@ -237,7 +238,7 @@ func TestPostgresPasswordActionRequestRejectsMismatchedDestinationAtomically(t *
 		&target,
 	)
 	mutation.Notification.DestinationEmail = "different@example.com"
-	if _, err := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)).RequestPasswordAction(ctx, mutation); !errors.Is(err, biz.ErrInvalidPersistenceState) {
+	if _, err := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool)).RequestPasswordAction(ctx, mutation); !errors.Is(err, biz.ErrInvalidPersistenceState) {
 		t.Fatalf("RequestPasswordAction(mismatched destination) error = %v, want %v", err, biz.ErrInvalidPersistenceState)
 	}
 	for _, table := range []string{"password_action_requests", "password_actions", "notification_outbox"} {
@@ -268,7 +269,7 @@ func TestPostgresPasswordResetConsumesOnceAndRevokesOnlyTargetPrincipal(t *testi
 	seedPasswordActionPrincipal(t, ctx, environment, otherPrincipalID, uuid.MustParse("0198f062-b76d-7201-9000-000000000082"), "other@example.com", true)
 	seedPasswordActionSessions(t, ctx, environment, principalID, otherPrincipalID, now)
 
-	uow := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool))
+	uow := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool))
 	target := biz.PasswordActionTarget{PrincipalID: principalID, HasPassword: true, VerifiedEmail: "user@example.com"}
 	request := passwordActionRequestMutation(
 		uuid.MustParse("0198f062-b76d-7001-9000-000000000081"),
@@ -382,13 +383,13 @@ func TestPostgresPasswordSetupCreatesIdentityAndCredentialOnce(t *testing.T) {
 	ctx := context.Background()
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e19")
 	seedPasswordActionPrincipal(t, ctx, environment, principalID, uuid.Nil, "setup@example.com", false)
-	reader := data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool))
+	reader := data.NewPostgresPasswordLoginReader(passwordActionTestData(t, environment.runtimePool))
 	target, found, err := reader.LookupPasswordActionTarget(ctx, "setup@example.com", biz.AudienceConsole)
 	if err != nil || !found || target.PrincipalID != principalID || target.HasPassword {
 		t.Fatalf("LookupPasswordActionTarget(setup) = %#v, %t, %v", target, found, err)
 	}
 
-	uow := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool))
+	uow := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool))
 	now := time.Date(2026, 9, 6, 15, 0, 0, 0, time.UTC)
 	request := passwordActionRequestMutation(
 		uuid.MustParse("0198f062-b76d-7001-9000-000000000091"),
@@ -507,7 +508,7 @@ func TestPostgresPasswordActionCompletionHasOneConcurrentWinner(t *testing.T) {
 	ctx := context.Background()
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e1a")
 	seedPasswordActionPrincipal(t, ctx, environment, principalID, uuid.MustParse("0198f062-b76d-7201-9000-0000000000a1"), "race@example.com", true)
-	uow := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool))
+	uow := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool))
 	now := time.Date(2026, 9, 6, 16, 0, 0, 0, time.UTC)
 	target := biz.PasswordActionTarget{PrincipalID: principalID, HasPassword: true, VerifiedEmail: "race@example.com"}
 	request := passwordActionRequestMutation(
@@ -609,7 +610,7 @@ func TestPostgresPasswordActionCompletionConcurrentIdempotentReplayConverges(t *
 	ctx := context.Background()
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e1c")
 	seedPasswordActionPrincipal(t, ctx, environment, principalID, uuid.MustParse("0198f062-b76d-7201-9000-0000000000c1"), "complete-replay@example.com", true)
-	uow := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool))
+	uow := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool))
 	now := time.Date(2026, 9, 6, 17, 0, 0, 0, time.UTC)
 	target := biz.PasswordActionTarget{PrincipalID: principalID, HasPassword: true, VerifiedEmail: "complete-replay@example.com"}
 	request := passwordActionRequestMutation(
@@ -639,7 +640,7 @@ func TestPostgresPasswordActionCompletionConcurrentIdempotentReplayConverges(t *
 			ready.Done()
 			<-start
 			auditID := uuid.MustParse(fmt.Sprintf("0198f062-b76d-7001-9000-%012x", 0xc10+index))
-			result, err := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)).CompletePasswordAction(ctx, biz.PasswordActionCompletion{
+			result, err := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool)).CompletePasswordAction(ctx, biz.PasswordActionCompletion{
 				Claims: biz.PasswordActionTokenClaims{
 					Issuer:      "ani-iam",
 					PrincipalID: principalID,
@@ -831,4 +832,13 @@ func assertPasswordActionSessionStates(t *testing.T, ctx context.Context, enviro
 			}
 		}
 	}
+}
+
+func passwordActionTestData(t *testing.T, pool *pgxpool.Pool) *data.Data {
+	t.Helper()
+	p, err := data.NewOutboxProtector("test", map[string][]byte{"test": []byte("0123456789abcdef0123456789abcdef")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data.NewData(pool, p)
 }

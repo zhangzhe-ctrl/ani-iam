@@ -61,7 +61,11 @@ func (c *JWXAccessTokenCodec) signInvocation(ctx context.Context, kind string, i
 	if err != nil {
 		return "", biz.ErrInvocationCredentialInvalid
 	}
-	token, err := jwt.NewBuilder().Issuer(c.issuer).Subject(subject.String()).Audience([]string{biz.SessionInvocationAudience}).JwtID(id.String()).IssuedAt(issued).Expiration(expires).Claim(invocationContextClaim, string(encoded)).Build()
+	audience := biz.SessionInvocationAudience
+	if wat, ok := payload.(biz.WorkloadTokenClaims); ok {
+		audience = wat.Caller.Target.Audience
+	}
+	token, err := jwt.NewBuilder().Issuer(c.issuer).Subject(subject.String()).Audience([]string{audience}).JwtID(id.String()).IssuedAt(issued).Expiration(expires).Claim(invocationContextClaim, string(encoded)).Build()
 	if err != nil {
 		return "", biz.ErrInvocationCredentialInvalid
 	}
@@ -104,13 +108,13 @@ func (c *JWXAccessTokenCodec) parseInvocation(ctx context.Context, raw, kind str
 	if !ok {
 		return deny()
 	}
-	token, err := jwt.Parse([]byte(raw), jwt.WithKey(jwa.EdDSA(), key), jwt.WithClock(jwt.ClockFunc(c.clock.Now)), jwt.WithIssuer(c.issuer), jwt.WithAudience(biz.SessionInvocationAudience),
+	token, err := jwt.Parse([]byte(raw), jwt.WithKey(jwa.EdDSA(), key), jwt.WithClock(jwt.ClockFunc(c.clock.Now)), jwt.WithIssuer(c.issuer),
 		jwt.WithRequiredClaim(jwt.SubjectKey), jwt.WithRequiredClaim(jwt.AudienceKey), jwt.WithRequiredClaim(jwt.JwtIDKey), jwt.WithRequiredClaim(jwt.IssuedAtKey), jwt.WithRequiredClaim(jwt.ExpirationKey), jwt.WithRequiredClaim(invocationContextClaim))
 	if err != nil {
 		return deny()
 	}
 	audiences, _ := token.Audience()
-	if len(audiences) != 1 || audiences[0] != biz.SessionInvocationAudience {
+	if len(audiences) != 1 || (audiences[0] != biz.SessionInvocationAudience && (kind != workloadJWTType || audiences[0] != biz.NotificationAudience)) {
 		return deny()
 	}
 	idText, _ := token.JwtID()
@@ -142,6 +146,9 @@ func (c *JWXAccessTokenCodec) parseInvocation(ctx context.Context, raw, kind str
 	if decoder.Decode(&trailing) != io.EOF {
 		return deny()
 	}
+	if wat, ok := payload.(*biz.WorkloadTokenClaims); ok && wat.Caller.Target.Audience != audiences[0] {
+		return deny()
+	}
 	return id, subject, issued, expires, nil
 }
 
@@ -157,7 +164,11 @@ func validProofTime(id uuid.UUID, issued, expires time.Time, ttl time.Duration) 
 }
 
 func validWorkloadClaims(c biz.WorkloadTokenClaims) bool {
-	return validProofCaller(c.Caller) && validProofTime(c.ID, c.IssuedAt, c.ExpiresAt, biz.WorkloadTokenMaxTTL)
+	shape := c.Caller
+	if shape.Target.Audience == biz.NotificationAudience && (shape.Target.Operation == biz.NotificationSubmitOperation || shape.Target.Operation == biz.NotificationGetOwnOperation) {
+		shape.Target = biz.WorkloadTarget{Audience: biz.SessionInvocationAudience, Operation: biz.SessionInvocationOperation}
+	}
+	return validProofCaller(shape) && validProofTime(c.ID, c.IssuedAt, c.ExpiresAt, biz.WorkloadTokenMaxTTL)
 }
 
 func validDelegationClaims(c biz.DelegationClaims) bool {

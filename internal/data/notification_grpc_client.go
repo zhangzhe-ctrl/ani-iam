@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/zhangzhe-ctrl/ani-iam/sdk/grpcworkload"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -24,11 +25,13 @@ const notificationClientDNSName = "ani-iam"
 var oidNotificationSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 
 type NotificationGRPCClientConfig struct {
-	Address         string
-	CertificateFile string
-	PrivateKeyFile  string
-	ServerCAFile    string
-	ServerDNSName   string
+	Address          string
+	CertificateFile  string
+	PrivateKeyFile   string
+	ServerCAFile     string
+	ServerDNSName    string
+	CredentialSource grpcworkload.WorkloadTokenSource
+	ClientDNSName    string
 }
 
 // NotificationGRPCClient owns one authenticated connection to the frozen
@@ -57,8 +60,12 @@ func NewNotificationGRPCClient(config NotificationGRPCClientConfig) (*Notificati
 	if !hasExtendedKeyUsage(leaf, x509.ExtKeyUsageClientAuth) {
 		return nil, fmt.Errorf("%w: Notification certificate lacks client-auth usage", ErrInvalidNotificationGRPCClientConfig)
 	}
-	if !notificationCertificateHasSoleDNSIdentity(leaf, notificationClientDNSName) {
-		return nil, fmt.Errorf("%w: Notification client certificate must have the sole DNS identity %q", ErrInvalidNotificationGRPCClientConfig, notificationClientDNSName)
+	expectedClient := config.ClientDNSName
+	if expectedClient == "" {
+		expectedClient = notificationClientDNSName
+	}
+	if !notificationCertificateHasSoleDNSIdentity(leaf, expectedClient) {
+		return nil, fmt.Errorf("%w: Notification client certificate must have the sole DNS identity %q", ErrInvalidNotificationGRPCClientConfig, expectedClient)
 	}
 	serverCAPEM, err := os.ReadFile(config.ServerCAFile)
 	if err != nil {
@@ -74,9 +81,16 @@ func NewNotificationGRPCClient(config NotificationGRPCClientConfig) (*Notificati
 		RootCAs:      serverCAs,
 		ServerName:   config.ServerDNSName,
 	}
+	options := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), grpc.WithDisableRetry()}
+	if config.CredentialSource != nil {
+		interceptor, err := grpcworkload.WorkloadOnlyCallerInterceptor(config.CredentialSource)
+		if err != nil {
+			return nil, err
+		}
+		options = append(options, grpc.WithUnaryInterceptor(interceptor))
+	}
 	connection, err := grpc.NewClient(
-		config.Address,
-		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+		config.Address, options...,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("create Notification gRPC client: %w", err)

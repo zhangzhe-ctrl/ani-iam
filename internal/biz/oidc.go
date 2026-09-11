@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -42,20 +43,25 @@ type OIDCUsecaseConfig struct {
 }
 
 type OIDCOperation struct {
-	Kind               OIDCFlowKind
-	Provider           string
-	Audience           Audience
-	TenantID           uuid.UUID
-	PrincipalID        uuid.UUID
-	SessionID          uuid.UUID
-	State              string
-	Nonce              string
-	CodeVerifier       string
-	RedirectURI        string
-	IdempotencyKey     string
-	RequestFingerprint string
-	CreatedAt          time.Time
-	ExpiresAt          time.Time
+	Kind                    OIDCFlowKind
+	Provider                string
+	Audience                Audience
+	TenantID                uuid.UUID
+	PrincipalID             uuid.UUID
+	SessionID               uuid.UUID
+	State                   string
+	Nonce                   string
+	CodeVerifier            string
+	RedirectURI             string
+	IdempotencyKey          string
+	RequestFingerprint      string
+	CreatedAt               time.Time
+	ExpiresAt               time.Time
+	LinkGrantID             uuid.UUID
+	LinkGrantVersion        int64
+	LinkCredentialExpiresAt time.Time
+	LinkAuthnMethods        []AuditAuthenticationMethod
+	BrowserProofDigest      string
 }
 
 type OIDCAuthorizationRequest struct {
@@ -243,16 +249,18 @@ func NewOIDCUsecase(
 }
 
 type BeginOIDCIdentityLinkCommand struct {
-	RawCredential  string
-	Provider       string
-	RedirectURI    string
-	IdempotencyKey string
+	RawCredential   string
+	Provider        string
+	RedirectURI     string
+	IdempotencyKey  string
+	BrowserCallback bool
 }
 
 type BeginOIDCIdentityLinkResult struct {
 	AuthorizationURL string
 	State            string
 	ExpiresAt        time.Time
+	BrowserProof     string
 }
 
 func (u *OIDCUsecase) BeginIdentityLink(ctx context.Context, command BeginOIDCIdentityLinkCommand) (BeginOIDCIdentityLinkResult, error) {
@@ -276,7 +284,11 @@ func (u *OIDCUsecase) BeginIdentityLink(ctx context.Context, command BeginOIDCId
 	if err != nil {
 		return BeginOIDCIdentityLinkResult{}, err
 	}
-	secrets, err := u.newSecrets(3)
+	secretCount := 3
+	if command.BrowserCallback {
+		secretCount = 4
+	}
+	secrets, err := u.newSecrets(secretCount)
 	if err != nil {
 		return BeginOIDCIdentityLinkResult{}, err
 	}
@@ -289,6 +301,17 @@ func (u *OIDCUsecase) BeginIdentityLink(ctx context.Context, command BeginOIDCId
 			OIDCFlowIdentityLink, u.config.Provider, claims.Audience, claims.TenantID, claims.Subject, redirectURI,
 		),
 		CreatedAt: now, ExpiresAt: now.Add(oidcOperationLifetime),
+		LinkGrantID: claims.GrantID, LinkGrantVersion: claims.GrantVersion,
+		LinkCredentialExpiresAt: claims.ExpiresAt,
+		LinkAuthnMethods:        append([]AuditAuthenticationMethod(nil), claims.AuthnMethods...),
+	}
+	// A repeated Begin belongs to the same authenticated Session and Grant,
+	// never merely the same Human account or caller-supplied idempotency key.
+	fingerprint := sha256.Sum256([]byte(fmt.Sprintf("%s\x00%s\x00%s\x00%d\x00%t", operation.RequestFingerprint, claims.SessionID, claims.GrantID, claims.GrantVersion, command.BrowserCallback)))
+	operation.RequestFingerprint = hex.EncodeToString(fingerprint[:])
+	if command.BrowserCallback {
+		digest := sha256.Sum256([]byte(secrets[3]))
+		operation.BrowserProofDigest = hex.EncodeToString(digest[:])
 	}
 	stored, err := u.store.CreateOrGet(ctx, operation)
 	if err != nil {
@@ -303,13 +326,18 @@ func (u *OIDCUsecase) BeginIdentityLink(ctx context.Context, command BeginOIDCId
 	if err != nil || strings.TrimSpace(authorizationURL) == "" {
 		return BeginOIDCIdentityLinkResult{}, fmt.Errorf("build OIDC identity-link authorization URL: %w", errors.Join(ErrOIDCDependency, err))
 	}
-	return BeginOIDCIdentityLinkResult{
+	result := BeginOIDCIdentityLinkResult{
 		AuthorizationURL: authorizationURL, State: stored.State, ExpiresAt: stored.ExpiresAt,
-	}, nil
+	}
+	if command.BrowserCallback && stored.State == operation.State && stored.BrowserProofDigest == operation.BrowserProofDigest {
+		result.BrowserProof = secrets[3]
+	}
+	return result, nil
 }
 
 type CompleteOIDCIdentityLinkCommand struct {
 	RawCredential string
+	BrowserProof  string
 	Code          string
 	State         string
 	RedirectURI   string
@@ -320,8 +348,11 @@ func (u *OIDCUsecase) CompleteIdentityLink(ctx context.Context, command Complete
 	code := command.Code
 	state := command.State
 	redirectURI := command.RedirectURI
-	if strings.TrimSpace(credential) == "" {
+	if strings.TrimSpace(credential) == "" && command.BrowserProof == "" {
 		return OIDCIdentityLinkResult{}, ErrAuthorizationCredentialRequired
+	}
+	if credential != "" && command.BrowserProof != "" {
+		return OIDCIdentityLinkResult{}, ErrAuthorizationCredentialInvalid
 	}
 	if strings.TrimSpace(code) == "" {
 		return OIDCIdentityLinkResult{}, ErrInvalidCredential
@@ -333,9 +364,14 @@ func (u *OIDCUsecase) CompleteIdentityLink(ctx context.Context, command Complete
 		return OIDCIdentityLinkResult{}, ErrOIDCRedirectInvalid
 	}
 	now := u.clock.Now().UTC()
-	claims, scope, err := u.validateIdentityLinkAuthentication(ctx, credential, now)
-	if err != nil {
-		return OIDCIdentityLinkResult{}, err
+	var claims AccessTokenClaims
+	var scope TenantScope
+	var err error
+	if credential != "" {
+		claims, scope, err = u.validateIdentityLinkAuthentication(ctx, credential, now)
+		if err != nil {
+			return OIDCIdentityLinkResult{}, err
+		}
 	}
 	operation, err := u.store.Consume(ctx, state)
 	if err != nil {
@@ -345,10 +381,29 @@ func (u *OIDCUsecase) CompleteIdentityLink(ctx context.Context, command Complete
 		return OIDCIdentityLinkResult{}, fmt.Errorf("consume OIDC identity-link operation: %w", errors.Join(ErrOIDCDependency, err))
 	}
 	if operation.Kind != OIDCFlowIdentityLink || operation.Provider != u.config.Provider ||
-		operation.Audience != claims.Audience || operation.TenantID != claims.TenantID ||
-		operation.PrincipalID != claims.Subject || operation.SessionID != claims.SessionID ||
 		operation.State != state || operation.RedirectURI != redirectURI || operation.Nonce == "" || operation.CodeVerifier == "" ||
 		operation.ExpiresAt.IsZero() || !now.Before(operation.ExpiresAt.UTC()) {
+		return OIDCIdentityLinkResult{}, ErrOIDCStateInvalid
+	}
+	if command.BrowserProof != "" {
+		digest := sha256.Sum256([]byte(command.BrowserProof))
+		if len(command.BrowserProof) < 32 || len(command.BrowserProof) > 512 ||
+			len(operation.BrowserProofDigest) != sha256.Size*2 ||
+			subtle.ConstantTimeCompare([]byte(hex.EncodeToString(digest[:])), []byte(operation.BrowserProofDigest)) != 1 {
+			return OIDCIdentityLinkResult{}, ErrOIDCStateInvalid
+		}
+		claims = AccessTokenClaims{Subject: operation.PrincipalID, SessionID: operation.SessionID,
+			GrantID: operation.LinkGrantID, GrantVersion: operation.LinkGrantVersion,
+			TenantID: operation.TenantID, Audience: operation.Audience, ExpiresAt: operation.LinkCredentialExpiresAt,
+			AuthnMethods: operation.LinkAuthnMethods}
+		claims, scope, err = u.validateIdentityLinkClaims(ctx, claims, now)
+		if err != nil {
+			return OIDCIdentityLinkResult{}, err
+		}
+	}
+	if operation.Audience != claims.Audience || operation.TenantID != claims.TenantID ||
+		operation.PrincipalID != claims.Subject || operation.SessionID != claims.SessionID ||
+		(operation.LinkGrantID != uuid.Nil && (operation.LinkGrantID != claims.GrantID || operation.LinkGrantVersion != claims.GrantVersion)) {
 		return OIDCIdentityLinkResult{}, ErrOIDCStateInvalid
 	}
 	identity, err := u.provider.ExchangeAndVerify(ctx, OIDCExchangeRequest{
@@ -428,9 +483,17 @@ func (u *OIDCUsecase) validateIdentityLinkAuthentication(
 	}
 	claims, err := u.tokens.Verify(ctx, credential)
 	if err != nil {
+		if errors.Is(err, ErrAuthorizationDependency) || errors.Is(err, ErrAuthenticationDependency) {
+			return AccessTokenClaims{}, TenantScope{}, err
+		}
 		return AccessTokenClaims{}, TenantScope{}, errors.Join(ErrAuthorizationCredentialInvalid, err)
 	}
+	return u.validateIdentityLinkClaims(ctx, claims, now)
+}
+
+func (u *OIDCUsecase) validateIdentityLinkClaims(ctx context.Context, claims AccessTokenClaims, now time.Time) (AccessTokenClaims, TenantScope, error) {
 	if claims.Subject == uuid.Nil || claims.SessionID == uuid.Nil || claims.GrantID == uuid.Nil || claims.GrantVersion <= 0 ||
+		(claims.Audience != AudienceConsole && claims.Audience != AudienceBoss) ||
 		claims.TenantID == uuid.Nil || claims.ExpiresAt.IsZero() || !now.Before(claims.ExpiresAt.UTC()) ||
 		!containsHumanAuthenticationMethod(claims.AuthnMethods) {
 		return AccessTokenClaims{}, TenantScope{}, ErrAuthorizationCredentialInvalid

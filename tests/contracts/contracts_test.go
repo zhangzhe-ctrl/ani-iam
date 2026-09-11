@@ -38,7 +38,7 @@ var iamServices = map[string][]string{
 		"RequestPasswordAction", "RevokeAllSessions", "RevokeSession",
 		"SwitchTenant", "ValidatePrincipal",
 	},
-	"iam.v1.AuthorizationService": {"CheckPermission", "VerifyWorkloadInvocation", "VerifySessionContinuation"},
+	"iam.v1.AuthorizationService": {"CheckPermission", "VerifyWorkloadInvocation", "VerifySessionContinuation", "VerifyWorkloadCaller"},
 	"iam.v1.IAMAdminService": {
 		"AcceptPlatformInvitation", "AcceptTenantInvitation", "ApproveRecoveryBootstrap",
 		"ApproveRestoreTenantAdmin", "BindPlatformRole", "BindTenantRole",
@@ -97,6 +97,7 @@ type workloadRefoundationPin struct {
 }
 
 type contractPins struct {
+	Delivery             deliveryPin             `json:"wr20_delivery"`
 	Invocation           invocationPin           `json:"wr19_invocation"`
 	WorkloadRefoundation workloadRefoundationPin `json:"workload_refoundation"`
 	SchemaVersion        string                  `json:"schema_version"`
@@ -107,6 +108,11 @@ type contractPins struct {
 	Toolchain            map[string]toolPin      `json:"toolchain"`
 	Artifacts            map[string]string       `json:"artifacts"`
 	Fixtures             map[string]string       `json:"fixtures"`
+}
+
+type deliveryPin struct {
+	APIVersion string `json:"api_version"`
+	SDKVersion string `json:"sdk_version"`
 }
 
 type invocationPin struct {
@@ -370,8 +376,14 @@ func TestImmutableContractPins(t *testing.T) {
 	if i != (invocationPin{ContinuationRPC: "/iam.v1.AuthorizationService/VerifySessionContinuation", APIModule: "github.com/zhangzhe-ctrl/ani-iam/api", APIVersion: "v0.1.0-rc.1", SDKModule: "github.com/zhangzhe-ctrl/ani-iam/sdk", SDKVersion: "v0.1.0-rc.1", TargetMethod: "/ani.session.v1.SessionService/CreateSession", BindingVersion: "ani.grpc.invocation.v1"}) {
 		t.Fatal("WR19 invocation module or binding contract drift")
 	}
-	if !strings.Contains(goMod, i.APIModule+" "+i.APIVersion) || !strings.Contains(string(readFile(t, "sdk/go.mod")), "module "+i.SDKModule) || !strings.Contains(string(readFile(t, "api/go.mod")), "module "+i.APIModule) {
-		t.Fatal("WR19 public module dependencies differ from contract")
+	// Keep WR19 candidate provenance, but consume the reviewed WR20 commits.
+	delivery := pins.Delivery
+	if delivery != (deliveryPin{APIVersion: "v0.0.0-20260911071802-b9fde01ae781", SDKVersion: "v0.0.0-20260911071951-e9f657f20b69"}) {
+		t.Fatal("WR20 delivery module pins differ from reviewed commits")
+	}
+	sdkMod := string(readFile(t, "sdk/go.mod"))
+	if !strings.Contains(goMod, i.APIModule+" "+delivery.APIVersion) || !strings.Contains(goMod, i.SDKModule+" "+delivery.SDKVersion) || !strings.Contains(sdkMod, i.APIModule+" "+delivery.APIVersion) || !strings.Contains(sdkMod, "module "+i.SDKModule) || !strings.Contains(string(readFile(t, "api/go.mod")), "module "+i.APIModule) {
+		t.Fatal("WR20 public module dependencies differ from contract")
 	}
 	if !strings.Contains(goMod, "github.com/zhangzhe-ctrl/ani-notification-service "+wantNotification.ModuleVersion) {
 		t.Fatalf("go.mod does not require frozen Notification module %s", wantNotification.ModuleVersion)

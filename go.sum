@@ -203,6 +203,10 @@ github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
 github.com/zeebo/xxh3 v1.1.0 h1:s7DLGDK45Dyfg7++yxI0khrfwq9661w9EN78eP/UZVs=
 github.com/zeebo/xxh3 v1.1.0/go.mod h1:IisAie1LELR4xhVinxWS5+zf1lA4p0MW4T+w+W07F5s=
+github.com/zhangzhe-ctrl/ani-iam/api v0.0.0-20260911071802-b9fde01ae781 h1:o9ogqFEWNiVapGW7d/XzYDGei+mRkhs/v9EhjU0EvWc=
+github.com/zhangzhe-ctrl/ani-iam/api v0.0.0-20260911071802-b9fde01ae781/go.mod h1:Obr0JaRbzrxIurf3tWSvvFxXoktASe0pKp3FGJPmwtw=
+github.com/zhangzhe-ctrl/ani-iam/sdk v0.0.0-20260911071951-e9f657f20b69 h1:qlDlWy9LDOgP3yJHyRjTgNq/mDwDO+Mhf8niwFmzxf8=
+github.com/zhangzhe-ctrl/ani-iam/sdk v0.0.0-20260911071951-e9f657f20b69/go.mod h1:Orm/wMcS9rFOCYXKqltXz9eIgAmJokaZS9BbbYitEvA=
 github.com/zhangzhe-ctrl/ani-notification-service v0.0.0-20260907002920-0e3f0a2b47fc h1:i0sqGu+qg4M18cdGJ00sQgp8Pd+jx8JmVn9s+OmoNJ8=
 github.com/zhangzhe-ctrl/ani-notification-service v0.0.0-20260907002920-0e3f0a2b47fc/go.mod h1:FeyV4il6PFMekDJoU7Fu7uWp+K0oQij09wwbw0GLVJQ=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=

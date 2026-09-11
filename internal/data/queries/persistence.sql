@@ -536,6 +536,7 @@ RETURNING operation_id;
 -- name: CancelReplacedPasswordActionNotifications :exec
 UPDATE notification_outbox AS outbox
 SET status = 'cancelled',
+ destination_key_version = NULL, destination_ciphertext = NULL,
     claimed_at = NULL,
     version = outbox.version + 1,
     updated_at = sqlc.arg(updated_at)
@@ -557,11 +558,11 @@ INSERT INTO password_actions (
 
 -- name: CreatePasswordActionNotification :exec
 INSERT INTO notification_outbox (
-    id, operation_id, principal_id, intent, destination_email, status, available_at,
+    id, operation_id, principal_id, intent, destination_key_version, destination_ciphertext, status, available_at,
     version, created_at, updated_at
 ) VALUES (
     sqlc.arg(id), sqlc.arg(operation_id), sqlc.arg(principal_id),
-    sqlc.arg(intent), sqlc.arg(destination_email), 'pending', sqlc.arg(available_at), 1,
+    sqlc.arg(intent), sqlc.arg(destination_key_version), sqlc.arg(destination_ciphertext), 'pending', sqlc.arg(available_at), 1,
     sqlc.arg(created_at), sqlc.arg(created_at)
 );
 
@@ -594,7 +595,7 @@ FROM candidate, password_actions AS action
 WHERE outbox.id = candidate.id
   AND action.operation_id = outbox.operation_id
 RETURNING outbox.id, outbox.operation_id, outbox.principal_id,
-          outbox.intent, outbox.destination_email, outbox.attempt_count,
+          outbox.intent, outbox.destination_key_version, outbox.destination_ciphertext, outbox.attempt_count,
           outbox.version, action.created_at AS issued_at,
           action.expires_at;
 
@@ -624,6 +625,7 @@ RETURNING version;
 -- name: MarkPasswordActionNotificationDelivered :one
 UPDATE notification_outbox
 SET status = 'delivered',
+ destination_key_version = NULL, destination_ciphertext = NULL,
     delivered_at = sqlc.arg(delivered_at),
     notification_id = sqlc.arg(notification_id),
     version = version + 1,
@@ -648,7 +650,7 @@ INSERT INTO iam_audit_events (
 );
 
 -- name: GetPasswordActionCompletionByIdempotencyKey :one
-SELECT operation_id, principal_id, credential_version
+SELECT operation_id, principal_id, credential_version, request_fingerprint
 FROM password_action_completions
 WHERE idempotency_key = sqlc.arg(idempotency_key)
 FOR UPDATE;
@@ -765,6 +767,7 @@ WHERE principal_id = sqlc.arg(principal_id)
 -- name: CancelPasswordActionNotification :exec
 UPDATE notification_outbox
 SET status = 'cancelled',
+ destination_key_version = NULL, destination_ciphertext = NULL,
     claimed_at = NULL,
     version = version + 1,
     updated_at = sqlc.arg(updated_at)
@@ -787,10 +790,10 @@ INSERT INTO iam_audit_events (
 
 -- name: CreatePasswordActionCompletion :exec
 INSERT INTO password_action_completions (
-    idempotency_key, operation_id, principal_id,
+    idempotency_key, operation_id, principal_id, request_fingerprint,
     credential_version, completed_at
 ) VALUES (
-    sqlc.arg(idempotency_key), sqlc.arg(operation_id), sqlc.arg(principal_id),
+    sqlc.arg(idempotency_key), sqlc.arg(operation_id), sqlc.arg(principal_id), sqlc.arg(request_fingerprint),
     sqlc.arg(credential_version), sqlc.arg(completed_at)
 );
 
@@ -885,7 +888,15 @@ JOIN tenant_memberships AS membership
   ON membership.tenant_id = session_grant.tenant_id
  AND membership.id = session_grant.membership_id
  AND membership.principal_id = principal.id
-WHERE principal.id = sqlc.arg(principal_id);
+JOIN tenant_access AS access ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle ON lifecycle.tenant_id = membership.tenant_id
+WHERE principal.id = sqlc.arg(principal_id)
+  AND session.idle_expires_at > statement_timestamp()
+  AND session.absolute_expires_at > statement_timestamp()
+  AND membership.status = 'active'
+  AND access.status = 'active'
+  AND lifecycle.status = 'active'
+  AND lifecycle.fresh_until > statement_timestamp();
 
 -- name: LookupVerifiedEmailOwner :one
 SELECT principal_id
@@ -913,6 +924,8 @@ JOIN tenant_lifecycle_projections AS lifecycle
 WHERE principal.id = sqlc.arg(principal_id)
   AND principal.status = 'active'
   AND session.status = 'active'
+  AND session.idle_expires_at > statement_timestamp()
+  AND session.absolute_expires_at > statement_timestamp()
   AND session_grant.status = 'active'
   AND session_grant.version = sqlc.arg(expected_grant_version)
   AND membership.status = 'active'
@@ -1552,7 +1565,8 @@ WHERE authority.principal_id = sqlc.arg(principal_id)
   AND authority.environment = sqlc.arg(environment) AND authority.trust_domain = sqlc.arg(trust_domain)
   AND authority.audience = sqlc.arg(audience) AND authority.operation = sqlc.arg(operation)
   AND ((authority.audience = 'ani-iam' AND authority.scope = 'iam_ingress')
-       OR (authority.audience = 'ani-session-gateway' AND authority.operation = 'session.create' AND authority.scope = 'delegated_session'))
+       OR (authority.audience = 'ani-session-gateway' AND authority.operation = 'session.create' AND authority.scope = 'delegated_session')
+       OR (authority.audience = 'ani-notification-service' AND authority.operation IN ('notification.submit','notification.get_own') AND authority.scope = 'workload_notification'))
   AND authority.status = 'active'
   AND principal.principal_type = 'workload' AND principal.status = 'active'
   AND principal.version = sqlc.arg(principal_version) AND profile.owner_type = 'platform'

@@ -27,7 +27,7 @@
     }
   },
   "artifacts": {
-    "iam_descriptor": "a68829bb767d864d17702c3e10f545651609273a408c4ab51af8348f428fec0f",
+    "iam_descriptor": "851ca8f0c43b150235db7a75c065756ac03644c5836d1d7fd0e04cf0f7322e0e",
     "core_descriptor": "7dd40f9053b7c1c0c8905decab0f81b07173d0b25651113147bde9a5370d352a"
   },
   "fixtures": {
@@ -56,5 +56,9 @@
     "target_method": "/ani.session.v1.SessionService/CreateSession",
     "binding_version": "ani.grpc.invocation.v1",
     "continuation_rpc": "/iam.v1.AuthorizationService/VerifySessionContinuation"
+  },
+  "wr20_delivery": {
+    "api_version": "v0.0.0-20260911071802-b9fde01ae781",
+    "sdk_version": "v0.0.0-20260911071951-e9f657f20b69"
   }
 }

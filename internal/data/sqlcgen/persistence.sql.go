@@ -406,6 +406,7 @@ func (q *Queries) BumpTenantMembershipVersion(ctx context.Context, arg BumpTenan
 const cancelPasswordActionNotification = `-- name: CancelPasswordActionNotification :exec
 UPDATE notification_outbox
 SET status = 'cancelled',
+ destination_key_version = NULL, destination_ciphertext = NULL,
     claimed_at = NULL,
     version = version + 1,
     updated_at = $1
@@ -426,6 +427,7 @@ func (q *Queries) CancelPasswordActionNotification(ctx context.Context, arg Canc
 const cancelReplacedPasswordActionNotifications = `-- name: CancelReplacedPasswordActionNotifications :exec
 UPDATE notification_outbox AS outbox
 SET status = 'cancelled',
+ destination_key_version = NULL, destination_ciphertext = NULL,
     claimed_at = NULL,
     version = outbox.version + 1,
     updated_at = $1
@@ -458,7 +460,8 @@ WHERE authority.principal_id = $1
   AND authority.environment = $2 AND authority.trust_domain = $3
   AND authority.audience = $4 AND authority.operation = $5
   AND ((authority.audience = 'ani-iam' AND authority.scope = 'iam_ingress')
-       OR (authority.audience = 'ani-session-gateway' AND authority.operation = 'session.create' AND authority.scope = 'delegated_session'))
+       OR (authority.audience = 'ani-session-gateway' AND authority.operation = 'session.create' AND authority.scope = 'delegated_session')
+       OR (authority.audience = 'ani-notification-service' AND authority.operation IN ('notification.submit','notification.get_own') AND authority.scope = 'workload_notification'))
   AND authority.status = 'active'
   AND principal.principal_type = 'workload' AND principal.status = 'active'
   AND principal.version = $6 AND profile.owner_type = 'platform'
@@ -522,7 +525,7 @@ FROM candidate, password_actions AS action
 WHERE outbox.id = candidate.id
   AND action.operation_id = outbox.operation_id
 RETURNING outbox.id, outbox.operation_id, outbox.principal_id,
-          outbox.intent, outbox.destination_email, outbox.attempt_count,
+          outbox.intent, outbox.destination_key_version, outbox.destination_ciphertext, outbox.attempt_count,
           outbox.version, action.created_at AS issued_at,
           action.expires_at
 `
@@ -533,15 +536,16 @@ type ClaimPasswordActionNotificationParams struct {
 }
 
 type ClaimPasswordActionNotificationRow struct {
-	ID               uuid.UUID
-	OperationID      uuid.UUID
-	PrincipalID      uuid.UUID
-	Intent           string
-	DestinationEmail string
-	AttemptCount     int32
-	Version          int64
-	IssuedAt         pgtype.Timestamptz
-	ExpiresAt        pgtype.Timestamptz
+	ID                    uuid.UUID
+	OperationID           uuid.UUID
+	PrincipalID           uuid.UUID
+	Intent                string
+	DestinationKeyVersion pgtype.Text
+	DestinationCiphertext []byte
+	AttemptCount          int32
+	Version               int64
+	IssuedAt              pgtype.Timestamptz
+	ExpiresAt             pgtype.Timestamptz
 }
 
 func (q *Queries) ClaimPasswordActionNotification(ctx context.Context, arg ClaimPasswordActionNotificationParams) (ClaimPasswordActionNotificationRow, error) {
@@ -552,7 +556,8 @@ func (q *Queries) ClaimPasswordActionNotification(ctx context.Context, arg Claim
 		&i.OperationID,
 		&i.PrincipalID,
 		&i.Intent,
-		&i.DestinationEmail,
+		&i.DestinationKeyVersion,
+		&i.DestinationCiphertext,
 		&i.AttemptCount,
 		&i.Version,
 		&i.IssuedAt,
@@ -810,20 +815,21 @@ func (q *Queries) CreatePasswordAction(ctx context.Context, arg CreatePasswordAc
 
 const createPasswordActionCompletion = `-- name: CreatePasswordActionCompletion :exec
 INSERT INTO password_action_completions (
-    idempotency_key, operation_id, principal_id,
+    idempotency_key, operation_id, principal_id, request_fingerprint,
     credential_version, completed_at
 ) VALUES (
-    $1, $2, $3,
-    $4, $5
+    $1, $2, $3, $4,
+    $5, $6
 )
 `
 
 type CreatePasswordActionCompletionParams struct {
-	IdempotencyKey    string
-	OperationID       uuid.UUID
-	PrincipalID       uuid.UUID
-	CredentialVersion int64
-	CompletedAt       pgtype.Timestamptz
+	IdempotencyKey     string
+	OperationID        uuid.UUID
+	PrincipalID        uuid.UUID
+	RequestFingerprint []byte
+	CredentialVersion  int64
+	CompletedAt        pgtype.Timestamptz
 }
 
 func (q *Queries) CreatePasswordActionCompletion(ctx context.Context, arg CreatePasswordActionCompletionParams) error {
@@ -831,6 +837,7 @@ func (q *Queries) CreatePasswordActionCompletion(ctx context.Context, arg Create
 		arg.IdempotencyKey,
 		arg.OperationID,
 		arg.PrincipalID,
+		arg.RequestFingerprint,
 		arg.CredentialVersion,
 		arg.CompletedAt,
 	)
@@ -839,23 +846,24 @@ func (q *Queries) CreatePasswordActionCompletion(ctx context.Context, arg Create
 
 const createPasswordActionNotification = `-- name: CreatePasswordActionNotification :exec
 INSERT INTO notification_outbox (
-    id, operation_id, principal_id, intent, destination_email, status, available_at,
+    id, operation_id, principal_id, intent, destination_key_version, destination_ciphertext, status, available_at,
     version, created_at, updated_at
 ) VALUES (
     $1, $2, $3,
-    $4, $5, 'pending', $6, 1,
-    $7, $7
+    $4, $5, $6, 'pending', $7, 1,
+    $8, $8
 )
 `
 
 type CreatePasswordActionNotificationParams struct {
-	ID               uuid.UUID
-	OperationID      uuid.UUID
-	PrincipalID      uuid.UUID
-	Intent           string
-	DestinationEmail string
-	AvailableAt      pgtype.Timestamptz
-	CreatedAt        pgtype.Timestamptz
+	ID                    uuid.UUID
+	OperationID           uuid.UUID
+	PrincipalID           uuid.UUID
+	Intent                string
+	DestinationKeyVersion pgtype.Text
+	DestinationCiphertext []byte
+	AvailableAt           pgtype.Timestamptz
+	CreatedAt             pgtype.Timestamptz
 }
 
 func (q *Queries) CreatePasswordActionNotification(ctx context.Context, arg CreatePasswordActionNotificationParams) error {
@@ -864,7 +872,8 @@ func (q *Queries) CreatePasswordActionNotification(ctx context.Context, arg Crea
 		arg.OperationID,
 		arg.PrincipalID,
 		arg.Intent,
-		arg.DestinationEmail,
+		arg.DestinationKeyVersion,
+		arg.DestinationCiphertext,
 		arg.AvailableAt,
 		arg.CreatedAt,
 	)
@@ -1459,7 +1468,7 @@ func (q *Queries) GetAPIKeyOperationalSnapshot(ctx context.Context, arg GetAPIKe
 }
 
 const getPasswordActionCompletionByIdempotencyKey = `-- name: GetPasswordActionCompletionByIdempotencyKey :one
-SELECT operation_id, principal_id, credential_version
+SELECT operation_id, principal_id, credential_version, request_fingerprint
 FROM password_action_completions
 WHERE idempotency_key = $1
 FOR UPDATE
@@ -1470,15 +1479,21 @@ type GetPasswordActionCompletionByIdempotencyKeyParams struct {
 }
 
 type GetPasswordActionCompletionByIdempotencyKeyRow struct {
-	OperationID       uuid.UUID
-	PrincipalID       uuid.UUID
-	CredentialVersion int64
+	OperationID        uuid.UUID
+	PrincipalID        uuid.UUID
+	CredentialVersion  int64
+	RequestFingerprint []byte
 }
 
 func (q *Queries) GetPasswordActionCompletionByIdempotencyKey(ctx context.Context, arg GetPasswordActionCompletionByIdempotencyKeyParams) (GetPasswordActionCompletionByIdempotencyKeyRow, error) {
 	row := q.db.QueryRow(ctx, getPasswordActionCompletionByIdempotencyKey, arg.IdempotencyKey)
 	var i GetPasswordActionCompletionByIdempotencyKeyRow
-	err := row.Scan(&i.OperationID, &i.PrincipalID, &i.CredentialVersion)
+	err := row.Scan(
+		&i.OperationID,
+		&i.PrincipalID,
+		&i.CredentialVersion,
+		&i.RequestFingerprint,
+	)
 	return i, err
 }
 
@@ -2481,6 +2496,8 @@ JOIN tenant_lifecycle_projections AS lifecycle
 WHERE principal.id = $4
   AND principal.status = 'active'
   AND session.status = 'active'
+  AND session.idle_expires_at > statement_timestamp()
+  AND session.absolute_expires_at > statement_timestamp()
   AND session_grant.status = 'active'
   AND session_grant.version = $5
   AND membership.status = 'active'
@@ -3436,7 +3453,15 @@ JOIN tenant_memberships AS membership
   ON membership.tenant_id = session_grant.tenant_id
  AND membership.id = session_grant.membership_id
  AND membership.principal_id = principal.id
+JOIN tenant_access AS access ON access.tenant_id = membership.tenant_id
+JOIN tenant_lifecycle_projections AS lifecycle ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = $4
+  AND session.idle_expires_at > statement_timestamp()
+  AND session.absolute_expires_at > statement_timestamp()
+  AND membership.status = 'active'
+  AND access.status = 'active'
+  AND lifecycle.status = 'active'
+  AND lifecycle.fresh_until > statement_timestamp()
 `
 
 type LookupOIDCReauthenticationParams struct {
@@ -3941,6 +3966,7 @@ func (q *Queries) MarkPasswordActionNotificationAttentionRequired(ctx context.Co
 const markPasswordActionNotificationDelivered = `-- name: MarkPasswordActionNotificationDelivered :one
 UPDATE notification_outbox
 SET status = 'delivered',
+ destination_key_version = NULL, destination_ciphertext = NULL,
     delivered_at = $1,
     notification_id = $2,
     version = version + 1,

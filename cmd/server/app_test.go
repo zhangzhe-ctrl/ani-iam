@@ -136,6 +136,7 @@ func buildAppTestBootstrap() *conf.Bootstrap {
 				PrivateKeyFile: "/nonexistent/ani-iam-dp2-05-ed25519.pem",
 			},
 			Notification: &conf.Notification{
+				OutboxKeyFile:        "/run/secrets/outbox-key.json",
 				Address:              "127.0.0.1:1",
 				CertificateFile:      "/nonexistent/ani-iam-notification-client.crt",
 				PrivateKeyFile:       "/nonexistent/ani-iam-notification-client.key",

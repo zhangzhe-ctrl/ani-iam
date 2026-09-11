@@ -37,7 +37,9 @@ runtime:
     certificate_file: /run/secrets/ani-iam-notification-client.crt
     private_key_file: /run/secrets/ani-iam-notification-client.key
     server_ca_file: /run/secrets/ani-notification-server-ca.crt
-    server_dns_name: ani-notification
+    server_dns_name: notification.iam.wr17-18.test
+    client_dns_name: ani-iam.iam.wr17-18.test
+    outbox_key_file: /run/secrets/ani-iam-notification-outbox-keys.json
     console_action_url_base: https://console.example.test/password-action
     locale: en-US
     dispatch_interval: 0.25s

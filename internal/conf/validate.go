@@ -201,6 +201,7 @@ func validateNotification(notification *Notification) error {
 	}
 	for name, path := range map[string]string{
 		"certificate": notification.CertificateFile,
+		"outbox key":  notification.OutboxKeyFile,
 		"private key": notification.PrivateKeyFile,
 		"server CA":   notification.ServerCaFile,
 	} {
@@ -208,8 +209,8 @@ func validateNotification(notification *Notification) error {
 			return fmt.Errorf("Notification %s file must be an absolute path", name)
 		}
 	}
-	if notification.ServerDnsName != "ani-notification" {
-		return fmt.Errorf("Notification server DNS name must be ani-notification")
+	if notification.ServerDnsName == "" || notification.ServerDnsName != strings.ToLower(strings.TrimSpace(notification.ServerDnsName)) || strings.ContainsAny(notification.ServerDnsName, " */\t\r\n") {
+		return fmt.Errorf("Notification server DNS name must be canonical")
 	}
 	actionURL, err := url.Parse(notification.ConsoleActionUrlBase)
 	if err != nil || actionURL.Scheme != "https" || actionURL.Host == "" || !actionURL.IsAbs() ||

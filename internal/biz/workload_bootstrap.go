@@ -157,6 +157,9 @@ func ValidateWorkloadBootstrap(owner WorkloadBootstrapOwner, m WorkloadBootstrap
 }
 
 func bootstrapGrantAllowed(g BootstrapWorkloadGrant) bool {
+	if notificationTarget(WorkloadTarget{Audience: g.Audience, Operation: g.Operation}) {
+		return true
+	}
 	if g.Audience == "ani-session-gateway" {
 		return g.Operation == "session.create"
 	}
@@ -164,9 +167,12 @@ func bootstrapGrantAllowed(g BootstrapWorkloadGrant) bool {
 		return false
 	}
 	switch g.Operation {
-	case "/iam.v1.AuthenticationService/ValidatePrincipal", "/iam.v1.AuthenticationService/PasswordLogin", "/iam.v1.AuthenticationService/IssueWorkloadToken",
+	case "/iam.v1.AuthenticationService/ListSessions", "/iam.v1.AuthenticationService/RefreshSession", "/iam.v1.AuthenticationService/LogoutSession", "/iam.v1.AuthenticationService/SwitchTenant",
+		"/iam.v1.AuthenticationService/BeginOIDCLogin", "/iam.v1.AuthenticationService/CompleteOIDCLogin", "/iam.v1.AuthenticationService/BeginOIDCIdentityLink", "/iam.v1.AuthenticationService/CompleteOIDCIdentityLink",
+		"/iam.v1.AuthenticationService/RequestPasswordAction", "/iam.v1.AuthenticationService/CompletePasswordAction",
+		"/iam.v1.AuthenticationService/ValidatePrincipal", "/iam.v1.AuthenticationService/PasswordLogin", "/iam.v1.AuthenticationService/IssueWorkloadToken",
 		"/iam.v1.AuthenticationService/IssueDelegation", "/iam.v1.AuthorizationService/CheckPermission",
-		"/iam.v1.AuthorizationService/VerifyWorkloadInvocation", VerifySessionContinuationRPC,
+		"/iam.v1.AuthorizationService/VerifyWorkloadInvocation", VerifySessionContinuationRPC, VerifyWorkloadCallerRPC,
 		"/grpc.health.v1.Health/Check":
 		return true
 	}

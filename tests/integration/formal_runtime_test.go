@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
@@ -100,7 +101,7 @@ func startFormalIAM(t *testing.T, environment *postgresEnvironment, redisClient 
 	ca, caKey, caFile := writeProcessE2ECertificateAuthority(t, directory)
 	serverCert, serverKey := writeProcessE2ELeafCertificate(t, directory, "iam-server", "iam.wr17-18.test", x509.ExtKeyUsageServerAuth, ca, caKey)
 	clientCert, clientKey := writeProcessE2ELeafCertificate(t, directory, "gateway-client", setup.GatewayDNS, x509.ExtKeyUsageClientAuth, ca, caKey)
-	notifyCert, notifyKey := writeProcessE2ELeafCertificate(t, directory, "notify-client", "ani-iam", x509.ExtKeyUsageClientAuth, ca, caKey)
+	notifyCert, notifyKey := writeProcessE2ELeafCertificate(t, directory, "notify-client", "ani-iam."+setup.TrustDomain, x509.ExtKeyUsageClientAuth, ca, caKey)
 	oidcSecret := filepath.Join(directory, "oidc-secret")
 	if err := os.WriteFile(oidcSecret, []byte(randomPassword(t)), 0o600); err != nil {
 		t.Fatal(err)
@@ -134,8 +135,19 @@ func startFormalIAM(t *testing.T, environment *postgresEnvironment, redisClient 
 	if output, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build formal cmd/server: %v\n%s", err, output)
 	}
+	cfg.Runtime.Notification.ClientDnsName = "ani-iam." + setup.TrustDomain
+	cfg.Runtime.Notification.OutboxKeyFile = filepath.Join(directory, "outbox-key.json")
+	writeReferencePrivate(t, cfg.Runtime.Notification.OutboxKeyFile, []byte(`{"active":"wr20","keys":{"wr20":"`+base64.StdEncoding.EncodeToString([]byte(randomPassword(t))[:32])+`"}}`))
 	if setup.BeforeStart != nil {
 		setup.BeforeStart(binary, directory, ca, caKey, cfg)
+	}
+	// The configured formal process must receive the final task-specific inputs.
+	content, err = (protojson.MarshalOptions{UseProtoNames: true}).Marshal(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(configFile, content, 0o600); err != nil {
+		t.Fatal(err)
 	}
 	logPath := filepath.Join(directory, "process.log")
 	log, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY, 0o600)

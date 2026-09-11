@@ -54,7 +54,11 @@ func (o *postgresPasswordActionNotificationOutbox) ClaimPasswordActionNotificati
 		row.PrincipalID == uuid.Nil || row.PrincipalID.Version() != 7 {
 		return biz.PasswordActionNotificationClaim{}, false, fmt.Errorf("%w: password-action notification identifiers", biz.ErrInvalidPersistenceState)
 	}
-	if strings.TrimSpace(row.DestinationEmail) == "" || strings.ToLower(strings.TrimSpace(row.DestinationEmail)) != row.DestinationEmail {
+	email, err := o.data.outbox.open(row.DestinationKeyVersion.String, row.DestinationCiphertext, row.ID, row.OperationID, row.PrincipalID)
+	if err != nil {
+		return biz.PasswordActionNotificationClaim{}, false, biz.ErrPersistenceUnavailable
+	}
+	if strings.TrimSpace(email) == "" || strings.ToLower(strings.TrimSpace(email)) != email {
 		return biz.PasswordActionNotificationClaim{}, false, fmt.Errorf("%w: password-action notification destination", biz.ErrInvalidPersistenceState)
 	}
 	if !row.IssuedAt.Valid || !row.ExpiresAt.Valid || !row.ExpiresAt.Time.After(row.IssuedAt.Time) {
@@ -68,7 +72,7 @@ func (o *postgresPasswordActionNotificationOutbox) ClaimPasswordActionNotificati
 		OperationID:      row.OperationID,
 		PrincipalID:      row.PrincipalID,
 		Purpose:          purpose,
-		DestinationEmail: row.DestinationEmail,
+		DestinationEmail: email,
 		IssuedAt:         row.IssuedAt.Time.UTC(),
 		ExpiresAt:        row.ExpiresAt.Time.UTC(),
 		AttemptCount:     int(row.AttemptCount),

@@ -49,6 +49,7 @@ func (s *AuthenticationService) CompleteOIDCIdentityLink(ctx context.Context, re
 	}
 	result, err := s.oidc.CompleteIdentityLink(ctx, biz.CompleteOIDCIdentityLinkCommand{
 		RawCredential: credential, Code: request.GetCode(), State: request.GetState(), RedirectURI: request.GetRedirectUri(),
+		BrowserProof: request.GetBrowserProof(),
 	})
 	if err != nil {
 		return nil, mapIAMError(err, errorContext{
@@ -73,6 +74,7 @@ func (s *AuthenticationService) BeginOIDCIdentityLink(ctx context.Context, reque
 	}
 	result, err := s.oidc.BeginIdentityLink(ctx, biz.BeginOIDCIdentityLinkCommand{
 		RawCredential: credential, Provider: request.GetProvider(), RedirectURI: request.GetRedirectUri(), IdempotencyKey: request.GetIdempotencyKey(),
+		BrowserCallback: request.GetBrowserCallback(),
 	})
 	if err != nil {
 		return nil, mapIAMError(err, errorContext{
@@ -82,6 +84,7 @@ func (s *AuthenticationService) BeginOIDCIdentityLink(ctx context.Context, reque
 	}
 	return &iamv1.BeginOIDCIdentityLinkResponse{
 		AuthorizationUrl: result.AuthorizationURL, State: result.State, ExpiresAt: timestamppb.New(result.ExpiresAt),
+		BrowserProof: result.BrowserProof,
 	}, nil
 }
 

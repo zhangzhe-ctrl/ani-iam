@@ -23,7 +23,7 @@ import (
 
 // All resources belong to this exact remote run; no shared DSN, port, namespace,
 // container, volume or cleanup selector is accepted.
-func isolatedContainer(t *testing.T, kind, port string) testcontainers.CustomizeRequestOption {
+func isolatedContainer(t *testing.T, kind, port string, extraPorts ...string) testcontainers.CustomizeRequestOption {
 	t.Helper()
 	runDir, goal := isolatedRun(t)
 	name := "ani-iam-" + filepath.Base(runDir) + "-" + kind + "-" + uuid.NewString()
@@ -58,7 +58,10 @@ func isolatedContainer(t *testing.T, kind, port string) testcontainers.Customize
 		req.Labels["ani.run_id"] = filepath.Base(runDir)
 		req.HostConfigModifier = func(config *dockercontainer.HostConfig) {
 			config.PublishAllPorts = false
-			config.PortBindings = network.PortMap{network.MustParsePort(port): {{HostIP: netip.MustParseAddr("127.0.0.1"), HostPort: ""}}}
+			config.PortBindings = network.PortMap{}
+			for _, exposed := range append([]string{port}, extraPorts...) {
+				config.PortBindings[network.MustParsePort(exposed)] = []network.PortBinding{{HostIP: netip.MustParseAddr("127.0.0.1"), HostPort: ""}}
+			}
 		}
 		req.LifecycleHooks = append(req.LifecycleHooks, testcontainers.ContainerLifecycleHooks{
 			PostCreates: []testcontainers.ContainerHook{func(_ context.Context, c testcontainers.Container) error {
@@ -73,7 +76,13 @@ func isolatedContainer(t *testing.T, kind, port string) testcontainers.Customize
 					return fmt.Errorf("missing isolated network state")
 				}
 				bindings := inspected.NetworkSettings.Ports
-				if len(bindings) != 1 {
+				published := 0
+				for _, rows := range bindings {
+					if len(rows) > 0 {
+						published++
+					}
+				}
+				if published != 1+len(extraPorts) {
 					return fmt.Errorf("unexpected exposed port count")
 				}
 				endpoint := ""
@@ -164,6 +173,7 @@ func recordFixtureSecrets(t *testing.T, values map[string]string) {
 func isolatedRun(t *testing.T) (string, string) {
 	t.Helper()
 	for _, entry := range []struct{ variable, prefix, goal string }{
+		{"WR20_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr20-", "wr20"},
 		{"WR19_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr19-", "wr19"},
 		{"WR18_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr17-18-", "wr17-18"},
 	} {

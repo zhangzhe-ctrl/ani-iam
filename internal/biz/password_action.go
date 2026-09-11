@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -80,12 +81,13 @@ type PasswordActionRequestMutation struct {
 }
 
 type PasswordActionCompletion struct {
-	Claims         PasswordActionTokenClaims
-	IdentityID     uuid.UUID
-	PasswordHash   string
-	IdempotencyKey string
-	CompletedAt    time.Time
-	Audit          SecurityAuditEvent
+	RequestFingerprint [32]byte
+	Claims             PasswordActionTokenClaims
+	IdentityID         uuid.UUID
+	PasswordHash       string
+	IdempotencyKey     string
+	CompletedAt        time.Time
+	Audit              SecurityAuditEvent
 }
 
 type CompletePasswordActionResult struct {
@@ -158,7 +160,9 @@ func (u *AuthenticationUsecase) RequestPasswordAction(ctx context.Context, comma
 	if err != nil {
 		return RequestPasswordActionResult{}, err
 	}
-	now := u.clock.Now().UTC()
+	// Persist the same whole-second timestamps encoded by JWT NumericDate.
+	// Completion deliberately requires exact equality with the durable expiry.
+	now := u.clock.Now().UTC().Truncate(time.Second)
 	mutation := PasswordActionRequestMutation{
 		OperationID:    ids[0],
 		AccountDigest:  sha256.Sum256([]byte(normalizedAccount)),
@@ -250,12 +254,17 @@ func (u *AuthenticationUsecase) CompletePasswordAction(ctx context.Context, comm
 	if claims.Purpose == PasswordActionPurposeReset {
 		reason = AuditReasonPasswordReset
 	}
+	fingerprinter := hmac.New(sha256.New, []byte(command.ActionToken))
+	_, _ = fingerprinter.Write([]byte("ani-iam:password-completion:v1\x00" + command.NewPassword))
+	var fingerprint [32]byte
+	copy(fingerprint[:], fingerprinter.Sum(nil))
 	completion := PasswordActionCompletion{
-		Claims:         claims,
-		IdentityID:     ids[0],
-		PasswordHash:   passwordHash,
-		IdempotencyKey: idempotencyKey,
-		CompletedAt:    now,
+		RequestFingerprint: fingerprint,
+		Claims:             claims,
+		IdentityID:         ids[0],
+		PasswordHash:       passwordHash,
+		IdempotencyKey:     idempotencyKey,
+		CompletedAt:        now,
 		Audit: SecurityAuditEvent{
 			ID:                   ids[1],
 			ActorID:              claims.PrincipalID,

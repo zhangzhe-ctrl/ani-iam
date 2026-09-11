@@ -168,6 +168,7 @@ func passwordActionNotificationTestClaim(now time.Time, attempts int, version in
 
 type passwordActionNotificationTestOutbox struct {
 	claims             []PasswordActionNotificationClaim
+	finalizeCheck      func(context.Context) error
 	deliveredID        uuid.UUID
 	deliveredVersion   int64
 	notificationID     string
@@ -189,17 +190,32 @@ func (o *passwordActionNotificationTestOutbox) ClaimPasswordActionNotification(c
 	return claim, true, nil
 }
 
-func (o *passwordActionNotificationTestOutbox) ReschedulePasswordActionNotification(_ context.Context, id uuid.UUID, version int64, availableAt, _ time.Time) error {
+func (o *passwordActionNotificationTestOutbox) ReschedulePasswordActionNotification(ctx context.Context, id uuid.UUID, version int64, availableAt, _ time.Time) error {
+	if o.finalizeCheck != nil {
+		if err := o.finalizeCheck(ctx); err != nil {
+			return err
+		}
+	}
 	o.rescheduledID, o.rescheduledVersion, o.availableAt = id, version, availableAt
 	return nil
 }
 
-func (o *passwordActionNotificationTestOutbox) MarkPasswordActionNotificationDelivered(_ context.Context, id uuid.UUID, version int64, notificationID string, deliveredAt time.Time) error {
+func (o *passwordActionNotificationTestOutbox) MarkPasswordActionNotificationDelivered(ctx context.Context, id uuid.UUID, version int64, notificationID string, deliveredAt time.Time) error {
+	if o.finalizeCheck != nil {
+		if err := o.finalizeCheck(ctx); err != nil {
+			return err
+		}
+	}
 	o.deliveredID, o.deliveredVersion, o.notificationID, o.deliveredAt = id, version, notificationID, deliveredAt
 	return nil
 }
 
-func (o *passwordActionNotificationTestOutbox) MarkPasswordActionNotificationAttentionRequired(_ context.Context, id uuid.UUID, version int64, attentionAt time.Time) error {
+func (o *passwordActionNotificationTestOutbox) MarkPasswordActionNotificationAttentionRequired(ctx context.Context, id uuid.UUID, version int64, attentionAt time.Time) error {
+	if o.finalizeCheck != nil {
+		if err := o.finalizeCheck(ctx); err != nil {
+			return err
+		}
+	}
 	o.attentionID, o.attentionVersion, o.attentionAt = id, version, attentionAt
 	return nil
 }
@@ -244,3 +260,55 @@ func (c fixedNotificationClock) Now() time.Time { return c.now }
 type mutableNotificationClock struct{ now time.Time }
 
 func (c *mutableNotificationClock) Now() time.Time { return c.now }
+
+// Cancellation after an RPC starts must not erase retry or receipt persistence.
+func TestPasswordActionNotificationDispatcherFinalizesAfterSubmissionCancellation(t *testing.T) {
+	for _, mode := range []string{"retry", "receipt", "attention"} {
+		t.Run(mode, func(t *testing.T) {
+			now := time.Now()
+			claim := passwordActionNotificationTestClaim(now, 1, 2)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			finalized := false
+			outbox := &passwordActionNotificationTestOutbox{claims: []PasswordActionNotificationClaim{claim}, finalizeCheck: func(ctx context.Context) error {
+				finalized = true
+				if err := ctx.Err(); err != nil {
+					return err
+				}
+				until, ok := ctx.Deadline()
+				if !ok || time.Until(until) > time.Second {
+					t.Fatal("persistence deadline not bounded")
+				}
+				return nil
+			}}
+			var expected error
+			if mode == "retry" {
+				expected = ErrPasswordActionNotificationRetryable
+			}
+			if mode == "attention" {
+				expected = ErrPasswordActionNotificationPermanent
+			}
+			dispatcher, err := NewPasswordActionNotificationDispatcher(outbox, &passwordActionNotificationTestTokens{token: "test-only-capability"}, passwordActionCancelSubmitter{cancel: cancel, err: expected}, fixedNotificationClock{now: now})
+			if err != nil {
+				t.Fatal(err)
+			}
+			processed, err := dispatcher.DispatchNext(ctx)
+			if !processed || !finalized || !errors.Is(err, expected) {
+				t.Fatalf("finalization processed=%t finalized=%t error=%v", processed, finalized, err)
+			}
+			if mode == "retry" && outbox.rescheduledID != claim.ID || mode == "receipt" && outbox.deliveredID != claim.ID || mode == "attention" && outbox.attentionID != claim.ID {
+				t.Fatal("durable outcome missing")
+			}
+		})
+	}
+}
+
+type passwordActionCancelSubmitter struct {
+	cancel context.CancelFunc
+	err    error
+}
+
+func (s passwordActionCancelSubmitter) SubmitPasswordActionNotification(context.Context, PasswordActionNotificationSubmission) (string, error) {
+	s.cancel()
+	return "test-receipt", s.err
+}

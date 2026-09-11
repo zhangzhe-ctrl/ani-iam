@@ -179,6 +179,8 @@ func startIAMProcessForGatewayE2E(t *testing.T, environment *postgresEnvironment
 	grpcAddress := reserveIAMProcessLoopbackAddress(t)
 	adminAddress := reserveIAMProcessLoopbackAddress(t)
 	configFile := filepath.Join(directory, "runtime.yaml")
+	outboxKeyFile := filepath.Join(directory, "outbox-key.json")
+	writeReferencePrivate(t, outboxKeyFile, []byte(`{"active":"test","keys":{"test":"MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="}}`))
 	configDocument := fmt.Sprintf(`profile: workload-isolated
 server:
   grpc:
@@ -212,6 +214,7 @@ runtime:
     active_key_id: dp2-05-process-e2e
     private_key_file: %q
   notification:
+    outbox_key_file: %q
     address: 127.0.0.1:1
     certificate_file: %q
     private_key_file: %q
@@ -233,7 +236,7 @@ runtime:
   policy_revision: %s
 `, grpcAddress, serverCertFile, serverKeyFile, caFile, adminAddress,
 		postgresDSN(runtimeRole, environment.runtimePass, normalizeProcessE2ELoopbackAddress(t, environment.host), primaryDB, "ani-iam-dp2-05-process-e2e"), redisAddress,
-		accessTokenKeyFile, notificationClientCertFile, notificationClientKeyFile, caFile,
+		accessTokenKeyFile, outboxKeyFile, notificationClientCertFile, notificationClientKeyFile, caFile,
 		oidcIssuer, oidcClientSecretFile, data.TargetPolicyRevision)
 	if err := os.WriteFile(configFile, []byte(configDocument), 0o600); err != nil {
 		t.Fatalf("write IAM process config: %v", err)

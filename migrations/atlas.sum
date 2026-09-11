@@ -1,4 +1,4 @@
-h1:/nVEXtW4y4fPc5ydJvIqFC1hYZ/w/2gAw56DDvr0s74=
+h1:ZNZJQsyWKEof3d2K1AP0qqekJAbxJpvaM4D0slOca7s=
 202609040001_persistence_foundation.sql h1:nWotuh7W3jp0BmIejLko4VCTFb7URYyZJHUlM4aQV2g=
 202609040002_target_vertical_slice.sql h1:g3s6e6SF34BE9qZyUT2PZetffeWciPdtOQAv4i5jkAY=
 202609060001_password_authentication.sql h1:yYxDQXncgKxsXKb79J+oW6NjM+BSD6bWYbhLW1kKJ0o=
@@ -10,3 +10,5 @@ h1:/nVEXtW4y4fPc5ydJvIqFC1hYZ/w/2gAw56DDvr0s74=
 202609100001_workload_runtime_foundation.sql h1:uojKmzR87GWxorr5osfVMhcj9DQim0ozCSSTpfQntU0=
 202609100002_idempotency.sql h1:/ij8t5SCiCVLMn2lpEqpnufiA6KHMD6wync0Nl0zO00=
 202609100003_workload_bootstrap.sql h1:+bKhwtq9WIS3U693RtAXVKo0BKjk916T7LTxezOwCpk=
+202609100004_notification_workload.sql h1:nwKfxKq7Tj8yjZriKPXi+4hWYUJRqEmsHp68ZQL2xoU=
+202609100005_encrypted_notification_outbox.sql h1:2X80PS9VCAvm5Rqv+iAsI2y482a/rlZBhYLkiXcE8SQ=

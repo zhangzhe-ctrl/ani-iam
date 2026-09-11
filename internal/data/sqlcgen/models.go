@@ -68,20 +68,21 @@ type Identity struct {
 }
 
 type NotificationOutbox struct {
-	ID               uuid.UUID
-	OperationID      uuid.UUID
-	PrincipalID      uuid.UUID
-	Intent           string
-	DestinationEmail string
-	Status           string
-	AttemptCount     int32
-	AvailableAt      pgtype.Timestamptz
-	ClaimedAt        pgtype.Timestamptz
-	DeliveredAt      pgtype.Timestamptz
-	NotificationID   pgtype.Text
-	Version          int64
-	CreatedAt        pgtype.Timestamptz
-	UpdatedAt        pgtype.Timestamptz
+	ID                    uuid.UUID
+	OperationID           uuid.UUID
+	PrincipalID           uuid.UUID
+	Intent                string
+	Status                string
+	AttemptCount          int32
+	AvailableAt           pgtype.Timestamptz
+	ClaimedAt             pgtype.Timestamptz
+	DeliveredAt           pgtype.Timestamptz
+	NotificationID        pgtype.Text
+	Version               int64
+	CreatedAt             pgtype.Timestamptz
+	UpdatedAt             pgtype.Timestamptz
+	DestinationKeyVersion pgtype.Text
+	DestinationCiphertext []byte
 }
 
 type PasswordAction struct {
@@ -98,11 +99,12 @@ type PasswordAction struct {
 }
 
 type PasswordActionCompletion struct {
-	IdempotencyKey    string
-	OperationID       uuid.UUID
-	PrincipalID       uuid.UUID
-	CredentialVersion int64
-	CompletedAt       pgtype.Timestamptz
+	IdempotencyKey     string
+	OperationID        uuid.UUID
+	PrincipalID        uuid.UUID
+	CredentialVersion  int64
+	CompletedAt        pgtype.Timestamptz
+	RequestFingerprint []byte
 }
 
 type PasswordActionRequest struct {

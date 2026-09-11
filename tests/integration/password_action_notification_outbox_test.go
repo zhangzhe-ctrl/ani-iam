@@ -31,10 +31,10 @@ func TestPostgresPasswordActionNotificationOutboxLeaseRetryAndDeliveryCAS(t *tes
 		now,
 		&target,
 	)
-	if _, err := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)).RequestPasswordAction(ctx, mutation); err != nil {
+	if _, err := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool)).RequestPasswordAction(ctx, mutation); err != nil {
 		t.Fatalf("RequestPasswordAction() error = %v", err)
 	}
-	outbox := data.NewPostgresPasswordActionNotificationOutbox(data.NewData(environment.runtimePool))
+	outbox := data.NewPostgresPasswordActionNotificationOutbox(passwordActionTestData(t, environment.runtimePool))
 
 	claimed, found, err := outbox.ClaimPasswordActionNotification(ctx, now, 5*time.Minute)
 	if err != nil || !found {
@@ -100,10 +100,10 @@ func TestPostgresPasswordActionNotificationOutboxAttentionRequiredIsTerminal(t *
 		now,
 		&target,
 	)
-	if _, err := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)).RequestPasswordAction(ctx, mutation); err != nil {
+	if _, err := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool)).RequestPasswordAction(ctx, mutation); err != nil {
 		t.Fatalf("RequestPasswordAction() error = %v", err)
 	}
-	outbox := data.NewPostgresPasswordActionNotificationOutbox(data.NewData(environment.runtimePool))
+	outbox := data.NewPostgresPasswordActionNotificationOutbox(passwordActionTestData(t, environment.runtimePool))
 	claimed, found, err := outbox.ClaimPasswordActionNotification(ctx, now, 5*time.Minute)
 	if err != nil || !found {
 		t.Fatalf("ClaimPasswordActionNotification() = %#v, %t, %v", claimed, found, err)
@@ -142,7 +142,7 @@ func TestPostgresPasswordActionNotificationOutboxConcurrentClaimHasOneWinner(t *
 		now,
 		&target,
 	)
-	if _, err := data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)).RequestPasswordAction(ctx, mutation); err != nil {
+	if _, err := data.NewPostgresLoginUnitOfWork(passwordActionTestData(t, environment.runtimePool)).RequestPasswordAction(ctx, mutation); err != nil {
 		t.Fatalf("RequestPasswordAction() error = %v", err)
 	}
 
@@ -158,7 +158,7 @@ func TestPostgresPasswordActionNotificationOutboxConcurrentClaimHasOneWinner(t *
 		go func() {
 			ready.Done()
 			<-start
-			_, found, err := data.NewPostgresPasswordActionNotificationOutbox(data.NewData(environment.runtimePool)).ClaimPasswordActionNotification(ctx, now, 5*time.Minute)
+			_, found, err := data.NewPostgresPasswordActionNotificationOutbox(passwordActionTestData(t, environment.runtimePool)).ClaimPasswordActionNotification(ctx, now, 5*time.Minute)
 			results <- claimResult{found: found, err: err}
 		}()
 	}
