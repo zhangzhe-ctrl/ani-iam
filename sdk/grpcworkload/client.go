@@ -78,7 +78,10 @@ type Client struct {
 }
 
 func NewClient(cfg ClientConfig) (*Client, error) {
-	if cfg.Address == "" || cfg.Environment == "" || cfg.TrustDomain == "" || cfg.PolicyRevision == "" {
+	return newClient(cfg, true)
+}
+func newClient(cfg ClientConfig, requirePolicy bool) (*Client, error) {
+	if cfg.Address == "" || cfg.Environment == "" || cfg.TrustDomain == "" || (requirePolicy && cfg.PolicyRevision == "") {
 		return nil, ErrConfiguration
 	}
 	if cfg.Timeout == 0 {
