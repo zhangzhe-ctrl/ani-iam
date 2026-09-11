@@ -462,8 +462,10 @@ type BeginOIDCIdentityLinkRequest struct {
 	Provider       string                 `protobuf:"bytes,2,opt,name=provider,proto3" json:"provider,omitempty"`
 	RedirectUri    string                 `protobuf:"bytes,3,opt,name=redirect_uri,json=redirectUri,proto3" json:"redirect_uri,omitempty"`
 	IdempotencyKey string                 `protobuf:"bytes,4,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Issue a callback-only browser proof; the caller relays it in an HttpOnly cookie.
+	BrowserCallback bool `protobuf:"varint,5,opt,name=browser_callback,json=browserCallback,proto3" json:"browser_callback,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *BeginOIDCIdentityLinkRequest) Reset() {
@@ -524,14 +526,24 @@ func (x *BeginOIDCIdentityLinkRequest) GetIdempotencyKey() string {
 	return ""
 }
 
+func (x *BeginOIDCIdentityLinkRequest) GetBrowserCallback() bool {
+	if x != nil {
+		return x.BrowserCallback
+	}
+	return false
+}
+
 // BeginOIDCIdentityLinkResponse returns a single-use authorization operation.
 type BeginOIDCIdentityLinkResponse struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	AuthorizationUrl string                 `protobuf:"bytes,1,opt,name=authorization_url,json=authorizationUrl,proto3" json:"authorization_url,omitempty"`
 	State            string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
 	ExpiresAt        *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// First issuance only. Idempotent Begin replays preserve the existing cookie.
+	// IAM retains only a digest; a lost cookie requires a new Begin key.
+	BrowserProof  string `protobuf:"bytes,4,opt,name=browser_proof,json=browserProof,proto3" json:"browser_proof,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *BeginOIDCIdentityLinkResponse) Reset() {
@@ -585,13 +597,22 @@ func (x *BeginOIDCIdentityLinkResponse) GetExpiresAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *BeginOIDCIdentityLinkResponse) GetBrowserProof() string {
+	if x != nil {
+		return x.BrowserProof
+	}
+	return ""
+}
+
 // CompleteOIDCIdentityLinkRequest completes a recently reauthenticated link operation.
 type CompleteOIDCIdentityLinkRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Credential    *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
-	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
-	State         string                 `protobuf:"bytes,3,opt,name=state,proto3" json:"state,omitempty"`
-	RedirectUri   string                 `protobuf:"bytes,4,opt,name=redirect_uri,json=redirectUri,proto3" json:"redirect_uri,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Credential  *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	Code        string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	State       string                 `protobuf:"bytes,3,opt,name=state,proto3" json:"state,omitempty"`
+	RedirectUri string                 `protobuf:"bytes,4,opt,name=redirect_uri,json=redirectUri,proto3" json:"redirect_uri,omitempty"`
+	// Exclusive alternative to credential, bound to the verified Begin session.
+	BrowserProof  string `protobuf:"bytes,5,opt,name=browser_proof,json=browserProof,proto3" json:"browser_proof,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -650,6 +671,13 @@ func (x *CompleteOIDCIdentityLinkRequest) GetState() string {
 func (x *CompleteOIDCIdentityLinkRequest) GetRedirectUri() string {
 	if x != nil {
 		return x.RedirectUri
+	}
+	return ""
+}
+
+func (x *CompleteOIDCIdentityLinkRequest) GetBrowserProof() string {
+	if x != nil {
+		return x.BrowserProof
 	}
 	return ""
 }
@@ -1846,26 +1874,29 @@ const file_authentication_service_proto_rawDesc = "" +
 	"\vdevice_name\x18\x04 \x01(\tR\n" +
 	"deviceName\"P\n" +
 	"\x19CompleteOIDCLoginResponse\x123\n" +
-	"\x05login\x18\x01 \x01(\v2\x1d.iam.v1.PasswordLoginResponseR\x05login\"\xc0\x01\n" +
+	"\x05login\x18\x01 \x01(\v2\x1d.iam.v1.PasswordLoginResponseR\x05login\"\xeb\x01\n" +
 	"\x1cBeginOIDCIdentityLinkRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12\x1a\n" +
 	"\bprovider\x18\x02 \x01(\tR\bprovider\x12!\n" +
 	"\fredirect_uri\x18\x03 \x01(\tR\vredirectUri\x12'\n" +
-	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\"\x9d\x01\n" +
+	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\x12)\n" +
+	"\x10browser_callback\x18\x05 \x01(\bR\x0fbrowserCallback\"\xc2\x01\n" +
 	"\x1dBeginOIDCIdentityLinkResponse\x12+\n" +
 	"\x11authorization_url\x18\x01 \x01(\tR\x10authorizationUrl\x12\x14\n" +
 	"\x05state\x18\x02 \x01(\tR\x05state\x129\n" +
 	"\n" +
-	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xa8\x01\n" +
+	"expires_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12#\n" +
+	"\rbrowser_proof\x18\x04 \x01(\tR\fbrowserProof\"\xcd\x01\n" +
 	"\x1fCompleteOIDCIdentityLinkRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12\x14\n" +
 	"\x05state\x18\x03 \x01(\tR\x05state\x12!\n" +
-	"\fredirect_uri\x18\x04 \x01(\tR\vredirectUri\"f\n" +
+	"\fredirect_uri\x18\x04 \x01(\tR\vredirectUri\x12#\n" +
+	"\rbrowser_proof\x18\x05 \x01(\tR\fbrowserProof\"f\n" +
 	" CompleteOIDCIdentityLinkResponse\x12\x1f\n" +
 	"\videntity_id\x18\x01 \x01(\tR\n" +
 	"identityId\x12!\n" +

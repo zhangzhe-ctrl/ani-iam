@@ -689,6 +689,160 @@ func (x *VerifySessionContinuationResponse) GetExpiresAt() *timestamppb.Timestam
 	return nil
 }
 
+// Receiver-authenticated, online, Workload-only verification for Notification.
+// This request carries no Human, Tenant, Session or delegation.
+type VerifyWorkloadCallerRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkloadToken string                 `protobuf:"bytes,1,opt,name=workload_token,json=workloadToken,proto3" json:"workload_token,omitempty"`
+	Audience      string                 `protobuf:"bytes,2,opt,name=audience,proto3" json:"audience,omitempty"`
+	OperationId   string                 `protobuf:"bytes,3,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	RpcMethod     string                 `protobuf:"bytes,4,opt,name=rpc_method,json=rpcMethod,proto3" json:"rpc_method,omitempty"`
+	ObservedPeer  *WorkloadPeer          `protobuf:"bytes,5,opt,name=observed_peer,json=observedPeer,proto3" json:"observed_peer,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyWorkloadCallerRequest) Reset() {
+	*x = VerifyWorkloadCallerRequest{}
+	mi := &file_workload_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyWorkloadCallerRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyWorkloadCallerRequest) ProtoMessage() {}
+
+func (x *VerifyWorkloadCallerRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_workload_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyWorkloadCallerRequest.ProtoReflect.Descriptor instead.
+func (*VerifyWorkloadCallerRequest) Descriptor() ([]byte, []int) {
+	return file_workload_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *VerifyWorkloadCallerRequest) GetWorkloadToken() string {
+	if x != nil {
+		return x.WorkloadToken
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerRequest) GetAudience() string {
+	if x != nil {
+		return x.Audience
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerRequest) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerRequest) GetRpcMethod() string {
+	if x != nil {
+		return x.RpcMethod
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerRequest) GetObservedPeer() *WorkloadPeer {
+	if x != nil {
+		return x.ObservedPeer
+	}
+	return nil
+}
+
+type VerifyWorkloadCallerResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Caller        *DirectWorkloadCaller  `protobuf:"bytes,1,opt,name=caller,proto3" json:"caller,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Audience      string                 `protobuf:"bytes,3,opt,name=audience,proto3" json:"audience,omitempty"`
+	OperationId   string                 `protobuf:"bytes,4,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	RpcMethod     string                 `protobuf:"bytes,5,opt,name=rpc_method,json=rpcMethod,proto3" json:"rpc_method,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyWorkloadCallerResponse) Reset() {
+	*x = VerifyWorkloadCallerResponse{}
+	mi := &file_workload_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyWorkloadCallerResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyWorkloadCallerResponse) ProtoMessage() {}
+
+func (x *VerifyWorkloadCallerResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_workload_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyWorkloadCallerResponse.ProtoReflect.Descriptor instead.
+func (*VerifyWorkloadCallerResponse) Descriptor() ([]byte, []int) {
+	return file_workload_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *VerifyWorkloadCallerResponse) GetCaller() *DirectWorkloadCaller {
+	if x != nil {
+		return x.Caller
+	}
+	return nil
+}
+
+func (x *VerifyWorkloadCallerResponse) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *VerifyWorkloadCallerResponse) GetAudience() string {
+	if x != nil {
+		return x.Audience
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerResponse) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerResponse) GetRpcMethod() string {
+	if x != nil {
+		return x.RpcMethod
+	}
+	return ""
+}
+
 var File_workload_proto protoreflect.FileDescriptor
 
 const file_workload_proto_rawDesc = "" +
@@ -755,7 +909,22 @@ const file_workload_proto_rawDesc = "" +
 	"\asubject\x18\x02 \x01(\v2\x18.iam.v1.PrincipalContextR\asubject\x123\n" +
 	"\abinding\x18\x03 \x01(\v2\x19.iam.v1.InvocationBindingR\abinding\x129\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAtB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xdd\x01\n" +
+	"\x1bVerifyWorkloadCallerRequest\x12%\n" +
+	"\x0eworkload_token\x18\x01 \x01(\tR\rworkloadToken\x12\x1a\n" +
+	"\baudience\x18\x02 \x01(\tR\baudience\x12!\n" +
+	"\foperation_id\x18\x03 \x01(\tR\voperationId\x12\x1d\n" +
+	"\n" +
+	"rpc_method\x18\x04 \x01(\tR\trpcMethod\x129\n" +
+	"\robserved_peer\x18\x05 \x01(\v2\x14.iam.v1.WorkloadPeerR\fobservedPeer\"\xed\x01\n" +
+	"\x1cVerifyWorkloadCallerResponse\x124\n" +
+	"\x06caller\x18\x01 \x01(\v2\x1c.iam.v1.DirectWorkloadCallerR\x06caller\x129\n" +
+	"\n" +
+	"expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x1a\n" +
+	"\baudience\x18\x03 \x01(\tR\baudience\x12!\n" +
+	"\foperation_id\x18\x04 \x01(\tR\voperationId\x12\x1d\n" +
+	"\n" +
+	"rpc_method\x18\x05 \x01(\tR\trpcMethodB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
 
 var (
 	file_workload_proto_rawDescOnce sync.Once
@@ -769,7 +938,7 @@ func file_workload_proto_rawDescGZIP() []byte {
 	return file_workload_proto_rawDescData
 }
 
-var file_workload_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_workload_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_workload_proto_goTypes = []any{
 	(*InvocationBinding)(nil),                 // 0: iam.v1.InvocationBinding
 	(*WorkloadPeer)(nil),                      // 1: iam.v1.WorkloadPeer
@@ -780,32 +949,37 @@ var file_workload_proto_goTypes = []any{
 	(*VerifyWorkloadInvocationResponse)(nil),  // 6: iam.v1.VerifyWorkloadInvocationResponse
 	(*VerifySessionContinuationRequest)(nil),  // 7: iam.v1.VerifySessionContinuationRequest
 	(*VerifySessionContinuationResponse)(nil), // 8: iam.v1.VerifySessionContinuationResponse
-	(*BearerCredential)(nil),                  // 9: iam.v1.BearerCredential
-	(*timestamppb.Timestamp)(nil),             // 10: google.protobuf.Timestamp
-	(*PrincipalContext)(nil),                  // 11: iam.v1.PrincipalContext
+	(*VerifyWorkloadCallerRequest)(nil),       // 9: iam.v1.VerifyWorkloadCallerRequest
+	(*VerifyWorkloadCallerResponse)(nil),      // 10: iam.v1.VerifyWorkloadCallerResponse
+	(*BearerCredential)(nil),                  // 11: iam.v1.BearerCredential
+	(*timestamppb.Timestamp)(nil),             // 12: google.protobuf.Timestamp
+	(*PrincipalContext)(nil),                  // 13: iam.v1.PrincipalContext
 }
 var file_workload_proto_depIdxs = []int32{
 	1,  // 0: iam.v1.DirectWorkloadCaller.peer:type_name -> iam.v1.WorkloadPeer
-	9,  // 1: iam.v1.IssueDelegationRequest.subject_credential:type_name -> iam.v1.BearerCredential
+	11, // 1: iam.v1.IssueDelegationRequest.subject_credential:type_name -> iam.v1.BearerCredential
 	0,  // 2: iam.v1.IssueDelegationRequest.binding:type_name -> iam.v1.InvocationBinding
-	10, // 3: iam.v1.IssueDelegationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	12, // 3: iam.v1.IssueDelegationResponse.expires_at:type_name -> google.protobuf.Timestamp
 	0,  // 4: iam.v1.VerifyWorkloadInvocationRequest.binding:type_name -> iam.v1.InvocationBinding
 	1,  // 5: iam.v1.VerifyWorkloadInvocationRequest.observed_peer:type_name -> iam.v1.WorkloadPeer
-	10, // 6: iam.v1.VerifyWorkloadInvocationResponse.continuation_expires_at:type_name -> google.protobuf.Timestamp
+	12, // 6: iam.v1.VerifyWorkloadInvocationResponse.continuation_expires_at:type_name -> google.protobuf.Timestamp
 	2,  // 7: iam.v1.VerifyWorkloadInvocationResponse.caller:type_name -> iam.v1.DirectWorkloadCaller
-	11, // 8: iam.v1.VerifyWorkloadInvocationResponse.subject:type_name -> iam.v1.PrincipalContext
+	13, // 8: iam.v1.VerifyWorkloadInvocationResponse.subject:type_name -> iam.v1.PrincipalContext
 	0,  // 9: iam.v1.VerifyWorkloadInvocationResponse.binding:type_name -> iam.v1.InvocationBinding
-	10, // 10: iam.v1.VerifyWorkloadInvocationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	12, // 10: iam.v1.VerifyWorkloadInvocationResponse.expires_at:type_name -> google.protobuf.Timestamp
 	0,  // 11: iam.v1.VerifySessionContinuationRequest.binding:type_name -> iam.v1.InvocationBinding
 	2,  // 12: iam.v1.VerifySessionContinuationResponse.caller:type_name -> iam.v1.DirectWorkloadCaller
-	11, // 13: iam.v1.VerifySessionContinuationResponse.subject:type_name -> iam.v1.PrincipalContext
+	13, // 13: iam.v1.VerifySessionContinuationResponse.subject:type_name -> iam.v1.PrincipalContext
 	0,  // 14: iam.v1.VerifySessionContinuationResponse.binding:type_name -> iam.v1.InvocationBinding
-	10, // 15: iam.v1.VerifySessionContinuationResponse.expires_at:type_name -> google.protobuf.Timestamp
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	12, // 15: iam.v1.VerifySessionContinuationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	1,  // 16: iam.v1.VerifyWorkloadCallerRequest.observed_peer:type_name -> iam.v1.WorkloadPeer
+	2,  // 17: iam.v1.VerifyWorkloadCallerResponse.caller:type_name -> iam.v1.DirectWorkloadCaller
+	12, // 18: iam.v1.VerifyWorkloadCallerResponse.expires_at:type_name -> google.protobuf.Timestamp
+	19, // [19:19] is the sub-list for method output_type
+	19, // [19:19] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_workload_proto_init() }
@@ -820,7 +994,7 @@ func file_workload_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_workload_proto_rawDesc), len(file_workload_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -241,8 +241,9 @@ const file_authorization_service_proto_rawDesc = "" +
 	"\vobligations\x18\x05 \x03(\v2\x1f.iam.v1.AuthorizationObligationR\vobligations\x12'\n" +
 	"\x0fpolicy_revision\x18\x06 \x01(\tR\x0epolicyRevision\"T\n" +
 	"\x17CheckPermissionResponse\x129\n" +
-	"\bdecision\x18\x01 \x01(\v2\x1d.iam.v1.AuthorizationDecisionR\bdecision2\xcb\x02\n" +
-	"\x14AuthorizationService\x12p\n" +
+	"\bdecision\x18\x01 \x01(\v2\x1d.iam.v1.AuthorizationDecisionR\bdecision2\xae\x03\n" +
+	"\x14AuthorizationService\x12a\n" +
+	"\x14VerifyWorkloadCaller\x12#.iam.v1.VerifyWorkloadCallerRequest\x1a$.iam.v1.VerifyWorkloadCallerResponse\x12p\n" +
 	"\x19VerifySessionContinuation\x12(.iam.v1.VerifySessionContinuationRequest\x1a).iam.v1.VerifySessionContinuationResponse\x12R\n" +
 	"\x0fCheckPermission\x12\x1e.iam.v1.CheckPermissionRequest\x1a\x1f.iam.v1.CheckPermissionResponse\x12m\n" +
 	"\x18VerifyWorkloadInvocation\x12'.iam.v1.VerifyWorkloadInvocationRequest\x1a(.iam.v1.VerifyWorkloadInvocationResponseB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
@@ -268,10 +269,12 @@ var file_authorization_service_proto_goTypes = []any{
 	(*AuthorizationTarget)(nil),               // 4: iam.v1.AuthorizationTarget
 	(*PrincipalContext)(nil),                  // 5: iam.v1.PrincipalContext
 	(*AuthorizationObligation)(nil),           // 6: iam.v1.AuthorizationObligation
-	(*VerifySessionContinuationRequest)(nil),  // 7: iam.v1.VerifySessionContinuationRequest
-	(*VerifyWorkloadInvocationRequest)(nil),   // 8: iam.v1.VerifyWorkloadInvocationRequest
-	(*VerifySessionContinuationResponse)(nil), // 9: iam.v1.VerifySessionContinuationResponse
-	(*VerifyWorkloadInvocationResponse)(nil),  // 10: iam.v1.VerifyWorkloadInvocationResponse
+	(*VerifyWorkloadCallerRequest)(nil),       // 7: iam.v1.VerifyWorkloadCallerRequest
+	(*VerifySessionContinuationRequest)(nil),  // 8: iam.v1.VerifySessionContinuationRequest
+	(*VerifyWorkloadInvocationRequest)(nil),   // 9: iam.v1.VerifyWorkloadInvocationRequest
+	(*VerifyWorkloadCallerResponse)(nil),      // 10: iam.v1.VerifyWorkloadCallerResponse
+	(*VerifySessionContinuationResponse)(nil), // 11: iam.v1.VerifySessionContinuationResponse
+	(*VerifyWorkloadInvocationResponse)(nil),  // 12: iam.v1.VerifyWorkloadInvocationResponse
 }
 var file_authorization_service_proto_depIdxs = []int32{
 	3,  // 0: iam.v1.CheckPermissionRequest.credential:type_name -> iam.v1.BearerCredential
@@ -279,14 +282,16 @@ var file_authorization_service_proto_depIdxs = []int32{
 	5,  // 2: iam.v1.AuthorizationDecision.principal:type_name -> iam.v1.PrincipalContext
 	6,  // 3: iam.v1.AuthorizationDecision.obligations:type_name -> iam.v1.AuthorizationObligation
 	1,  // 4: iam.v1.CheckPermissionResponse.decision:type_name -> iam.v1.AuthorizationDecision
-	7,  // 5: iam.v1.AuthorizationService.VerifySessionContinuation:input_type -> iam.v1.VerifySessionContinuationRequest
-	0,  // 6: iam.v1.AuthorizationService.CheckPermission:input_type -> iam.v1.CheckPermissionRequest
-	8,  // 7: iam.v1.AuthorizationService.VerifyWorkloadInvocation:input_type -> iam.v1.VerifyWorkloadInvocationRequest
-	9,  // 8: iam.v1.AuthorizationService.VerifySessionContinuation:output_type -> iam.v1.VerifySessionContinuationResponse
-	2,  // 9: iam.v1.AuthorizationService.CheckPermission:output_type -> iam.v1.CheckPermissionResponse
-	10, // 10: iam.v1.AuthorizationService.VerifyWorkloadInvocation:output_type -> iam.v1.VerifyWorkloadInvocationResponse
-	8,  // [8:11] is the sub-list for method output_type
-	5,  // [5:8] is the sub-list for method input_type
+	7,  // 5: iam.v1.AuthorizationService.VerifyWorkloadCaller:input_type -> iam.v1.VerifyWorkloadCallerRequest
+	8,  // 6: iam.v1.AuthorizationService.VerifySessionContinuation:input_type -> iam.v1.VerifySessionContinuationRequest
+	0,  // 7: iam.v1.AuthorizationService.CheckPermission:input_type -> iam.v1.CheckPermissionRequest
+	9,  // 8: iam.v1.AuthorizationService.VerifyWorkloadInvocation:input_type -> iam.v1.VerifyWorkloadInvocationRequest
+	10, // 9: iam.v1.AuthorizationService.VerifyWorkloadCaller:output_type -> iam.v1.VerifyWorkloadCallerResponse
+	11, // 10: iam.v1.AuthorizationService.VerifySessionContinuation:output_type -> iam.v1.VerifySessionContinuationResponse
+	2,  // 11: iam.v1.AuthorizationService.CheckPermission:output_type -> iam.v1.CheckPermissionResponse
+	12, // 12: iam.v1.AuthorizationService.VerifyWorkloadInvocation:output_type -> iam.v1.VerifyWorkloadInvocationResponse
+	9,  // [9:13] is the sub-list for method output_type
+	5,  // [5:9] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
 	5,  // [5:5] is the sub-list for extension extendee
 	0,  // [0:5] is the sub-list for field type_name

@@ -88,3 +88,20 @@ message VerifySessionContinuationResponse {
   InvocationBinding binding = 3;
   google.protobuf.Timestamp expires_at = 4;
 }
+
+// Receiver-authenticated, online, Workload-only verification for Notification.
+// This request carries no Human, Tenant, Session or delegation.
+message VerifyWorkloadCallerRequest {
+ string workload_token = 1;
+ string audience = 2;
+ string operation_id = 3;
+ string rpc_method = 4;
+ WorkloadPeer observed_peer = 5;
+}
+message VerifyWorkloadCallerResponse {
+ DirectWorkloadCaller caller = 1;
+ google.protobuf.Timestamp expires_at = 2;
+ string audience = 3;
+ string operation_id = 4;
+ string rpc_method = 5;
+}

@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	AuthorizationService_VerifyWorkloadCaller_FullMethodName      = "/iam.v1.AuthorizationService/VerifyWorkloadCaller"
 	AuthorizationService_VerifySessionContinuation_FullMethodName = "/iam.v1.AuthorizationService/VerifySessionContinuation"
 	AuthorizationService_CheckPermission_FullMethodName           = "/iam.v1.AuthorizationService/CheckPermission"
 	AuthorizationService_VerifyWorkloadInvocation_FullMethodName  = "/iam.v1.AuthorizationService/VerifyWorkloadInvocation"
@@ -30,6 +31,7 @@ const (
 //
 // AuthorizationService makes the single fail-closed decision for an authorized operation.
 type AuthorizationServiceClient interface {
+	VerifyWorkloadCaller(ctx context.Context, in *VerifyWorkloadCallerRequest, opts ...grpc.CallOption) (*VerifyWorkloadCallerResponse, error)
 	VerifySessionContinuation(ctx context.Context, in *VerifySessionContinuationRequest, opts ...grpc.CallOption) (*VerifySessionContinuationResponse, error)
 	CheckPermission(ctx context.Context, in *CheckPermissionRequest, opts ...grpc.CallOption) (*CheckPermissionResponse, error)
 	VerifyWorkloadInvocation(ctx context.Context, in *VerifyWorkloadInvocationRequest, opts ...grpc.CallOption) (*VerifyWorkloadInvocationResponse, error)
@@ -41,6 +43,16 @@ type authorizationServiceClient struct {
 
 func NewAuthorizationServiceClient(cc grpc.ClientConnInterface) AuthorizationServiceClient {
 	return &authorizationServiceClient{cc}
+}
+
+func (c *authorizationServiceClient) VerifyWorkloadCaller(ctx context.Context, in *VerifyWorkloadCallerRequest, opts ...grpc.CallOption) (*VerifyWorkloadCallerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VerifyWorkloadCallerResponse)
+	err := c.cc.Invoke(ctx, AuthorizationService_VerifyWorkloadCaller_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *authorizationServiceClient) VerifySessionContinuation(ctx context.Context, in *VerifySessionContinuationRequest, opts ...grpc.CallOption) (*VerifySessionContinuationResponse, error) {
@@ -79,6 +91,7 @@ func (c *authorizationServiceClient) VerifyWorkloadInvocation(ctx context.Contex
 //
 // AuthorizationService makes the single fail-closed decision for an authorized operation.
 type AuthorizationServiceServer interface {
+	VerifyWorkloadCaller(context.Context, *VerifyWorkloadCallerRequest) (*VerifyWorkloadCallerResponse, error)
 	VerifySessionContinuation(context.Context, *VerifySessionContinuationRequest) (*VerifySessionContinuationResponse, error)
 	CheckPermission(context.Context, *CheckPermissionRequest) (*CheckPermissionResponse, error)
 	VerifyWorkloadInvocation(context.Context, *VerifyWorkloadInvocationRequest) (*VerifyWorkloadInvocationResponse, error)
@@ -92,6 +105,9 @@ type AuthorizationServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuthorizationServiceServer struct{}
 
+func (UnimplementedAuthorizationServiceServer) VerifyWorkloadCaller(context.Context, *VerifyWorkloadCallerRequest) (*VerifyWorkloadCallerResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method VerifyWorkloadCaller not implemented")
+}
 func (UnimplementedAuthorizationServiceServer) VerifySessionContinuation(context.Context, *VerifySessionContinuationRequest) (*VerifySessionContinuationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method VerifySessionContinuation not implemented")
 }
@@ -120,6 +136,24 @@ func RegisterAuthorizationServiceServer(s grpc.ServiceRegistrar, srv Authorizati
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AuthorizationService_ServiceDesc, srv)
+}
+
+func _AuthorizationService_VerifyWorkloadCaller_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyWorkloadCallerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorizationServiceServer).VerifyWorkloadCaller(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthorizationService_VerifyWorkloadCaller_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorizationServiceServer).VerifyWorkloadCaller(ctx, req.(*VerifyWorkloadCallerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AuthorizationService_VerifySessionContinuation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -183,6 +217,10 @@ var AuthorizationService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "iam.v1.AuthorizationService",
 	HandlerType: (*AuthorizationServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "VerifyWorkloadCaller",
+			Handler:    _AuthorizationService_VerifyWorkloadCaller_Handler,
+		},
 		{
 			MethodName: "VerifySessionContinuation",
 			Handler:    _AuthorizationService_VerifySessionContinuation_Handler,

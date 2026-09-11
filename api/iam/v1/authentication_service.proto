@@ -88,6 +88,8 @@ message BeginOIDCIdentityLinkRequest {
   string provider = 2;
   string redirect_uri = 3;
   string idempotency_key = 4;
+  // Issue a callback-only browser proof; the caller relays it in an HttpOnly cookie.
+  bool browser_callback = 5;
 }
 
 // BeginOIDCIdentityLinkResponse returns a single-use authorization operation.
@@ -95,6 +97,9 @@ message BeginOIDCIdentityLinkResponse {
   string authorization_url = 1;
   string state = 2;
   google.protobuf.Timestamp expires_at = 3;
+  // First issuance only. Idempotent Begin replays preserve the existing cookie.
+  // IAM retains only a digest; a lost cookie requires a new Begin key.
+  string browser_proof = 4;
 }
 
 // CompleteOIDCIdentityLinkRequest completes a recently reauthenticated link operation.
@@ -103,6 +108,8 @@ message CompleteOIDCIdentityLinkRequest {
   string code = 2;
   string state = 3;
   string redirect_uri = 4;
+  // Exclusive alternative to credential, bound to the verified Begin session.
+  string browser_proof = 5;
 }
 
 // CompleteOIDCIdentityLinkResponse identifies the linked identity without account merging.
