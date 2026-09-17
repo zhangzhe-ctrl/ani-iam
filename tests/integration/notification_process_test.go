@@ -140,6 +140,7 @@ func newWR20Notification(t *testing.T) *wr20Notification {
 		for _, op := range []string{biz.VerifyWorkloadCallerRPC, "/grpc.health.v1.Health/Check"} {
 			n.receiver.Grants = append(n.receiver.Grants, biz.BootstrapWorkloadGrant{ID: mustV7(t), Audience: "ani-iam", Operation: op})
 		}
+		n.receiver.Grants = append(n.receiver.Grants, biz.BootstrapWorkloadGrant{ID: mustV7(t), Audience: biz.NotificationAudience, Operation: "notification.receive"})
 		manifest.Workloads = append(manifest.Workloads, n.producer, n.receiver, n.foreign)
 		n.certFile, n.keyFile = writeProcessE2ELeafCertificate(t, directory, "notification", "notification.wr20.test", x509.ExtKeyUsageServerAuth, ca, key)
 		// The same Notification identity is receiver on its port and caller to IAM.
@@ -176,7 +177,7 @@ func newWR20Notification(t *testing.T) *wr20Notification {
 			}
 			return base64.StdEncoding.EncodeToString(b)
 		}
-		data := map[string]any{"server": map[string]any{"grpc": map[string]any{"network": "tcp", "addr": n.address, "timeout": "2s"}, "admin": map[string]any{"network": "tcp", "addr": admin, "timeout": "1s"}, "shutdown_timeout": "5s"}, "notification": map[string]any{"enabled": true, "postgres_dsn": n.runtimeDSN(t, directory), "active_encryption_key_version": "wr20-1", "encryption_keys": []any{map[string]any{"version": "wr20-1", "material_base64": randomKey()}}, "active_fingerprint_key_version": "wr20-1", "fingerprint_keys": []any{map[string]any{"version": "wr20-1", "material_base64": randomKey()}}, "allowed_action_origins": []string{e.origin}, "smtp": map[string]any{"address": n.smtpAddress, "from": "iam@wr20.test"}, "worker_id": "wr20-notification", "delivery_poll_interval": "0.2s", "maintenance_interval": "0.5s"}, "workload": map[string]any{"iam_address": cfg.Server.Grpc.Addr, "iam_server_name": "iam.wr17-18.test", "environment": manifest.Environment, "trust_domain": manifest.TrustDomain, "certificate_file": n.certFile, "private_key_file": n.keyFile, "ca_file": cfg.Server.Grpc.Tls.ClientCaFile, "iam_producer_principal_id": n.producer.PrincipalID.String(), "producer_id": "ani-iam"}}
+		data := map[string]any{"server": map[string]any{"grpc": map[string]any{"network": "tcp", "addr": n.address, "timeout": "2s"}, "admin": map[string]any{"network": "tcp", "addr": admin, "timeout": "1s"}, "shutdown_timeout": "5s"}, "notification": map[string]any{"enabled": true, "postgres_dsn": n.runtimeDSN(t, directory), "active_encryption_key_version": "wr20-1", "encryption_keys": []any{map[string]any{"version": "wr20-1", "material_base64": randomKey()}}, "active_fingerprint_key_version": "wr20-1", "fingerprint_keys": []any{map[string]any{"version": "wr20-1", "material_base64": randomKey()}}, "allowed_action_origins": []string{e.origin}, "smtp": map[string]any{"address": n.smtpAddress, "from": "iam@wr20.test"}, "worker_id": "wr20-notification", "delivery_poll_interval": "0.2s", "maintenance_interval": "0.5s"}, "workload": map[string]any{"registry_file": wr32RegistryPath(t), "registry_sha256": wr32Registry(t).Digest(), "iam_address": cfg.Server.Grpc.Addr, "iam_server_name": "iam.wr17-18.test", "environment": manifest.Environment, "trust_domain": manifest.TrustDomain, "certificate_file": n.certFile, "private_key_file": n.keyFile, "ca_file": cfg.Server.Grpc.Tls.ClientCaFile, "iam_producer_principal_id": n.producer.PrincipalID.String(), "producer_id": "ani-iam"}}
 		bytes, _ := json.Marshal(data)
 		n.configFile = filepath.Join(directory, "notification.json")
 		writeReferencePrivate(t, n.configFile, bytes)
@@ -265,6 +266,9 @@ func (n *wr20Notification) start(t *testing.T) {
 	}
 	cmd := exec.Command(binary, "-conf", n.configFile)
 	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), "HOME=" + os.Getenv("HOME"), "GOMAXPROCS=2"}
+	if os.Getenv("WR23_FORMAL_COMBINATION") == "1" {
+		cmd.Env = append(cmd.Env, "GOMEMLIMIT=128MiB")
+	}
 	cmd.Stdout = log
 	cmd.Stderr = log
 	if err = cmd.Start(); err != nil {
@@ -343,7 +347,7 @@ func (n *wr20Notification) wat(t *testing.T, operation string, foreign bool) str
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	r, err := client.IssueWorkloadToken(ctx, &iamv1.IssueWorkloadTokenRequest{Audience: biz.NotificationAudience, OperationId: operation})
+	r, err := client.IssueWorkloadToken(ctx, &iamv1.IssueWorkloadTokenRequest{TargetRevision: wr32Registry(t).Revision(biz.NotificationAudience, operation), Audience: biz.NotificationAudience, OperationId: operation})
 	if err != nil {
 		t.Fatalf("formal WAT issuance failed: %v", err)
 	}

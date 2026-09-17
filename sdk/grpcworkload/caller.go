@@ -29,6 +29,11 @@ func (c *Client) DialCaller(cfg CallerConfig) (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
+	for _, t := range targets {
+		if _, err := c.registeredTarget(t); err != nil {
+			return nil, err
+		}
+	}
 	if cfg.TLS == (TLSFiles{}) {
 		cfg.TLS = c.cfg.TLS
 	}
@@ -49,19 +54,31 @@ func (c *Client) callerInterceptor(targets map[string]Target) grpc.UnaryClientIn
 		if !ok {
 			return status.Error(codes.Unauthenticated, "IAM-authorized subject is required")
 		}
+		if subject.receiverTarget != (WorkloadTarget{}) && subject.receiverTarget != (WorkloadTarget{Audience: target.Audience, Operation: target.Operation, RPCMethod: target.Method}) {
+			return status.Error(codes.PermissionDenied, "deferred owner check target does not match")
+		}
 		message, ok := req.(proto.Message)
 		if !ok {
 			return status.Error(codes.InvalidArgument, "protobuf request is required")
 		}
-		binding, err := target.bind(message, c.cfg.PolicyRevision)
+		binding, _, source, err := c.bindTarget(target, message)
 		if err != nil {
 			return status.Error(codes.InvalidArgument, "request binding is invalid")
+		}
+		if subject.receiverTarget != (WorkloadTarget{}) && (source.OwnerCheck != "receiver" || subject.receiverTarget != (WorkloadTarget{Audience: target.Audience, Operation: target.Operation, RPCMethod: target.Method})) {
+			return status.Error(codes.PermissionDenied, "deferred owner check target does not match")
+		}
+		if source.OwnerCheck == "receiver" && subject.receiverTarget == (WorkloadTarget{}) {
+			return status.Error(codes.PermissionDenied, "receiver owner obligation is required")
+		}
+		if !registeredPrincipalAllowed(source, subject.principal) {
+			return status.Error(codes.PermissionDenied, "subject credential is not allowed for the target")
 		}
 		if subject.policyRevision != binding.GetPolicyRevision() || subject.sourceOperation != binding.GetSourceOperationId() || subject.resourceID != binding.GetResourceId() || subject.principal.GetPrincipalId() != binding.GetSubjectId() || subject.principal.GetBoundary().GetTenant().GetTenantId() != binding.GetTenantId() {
 			return status.Error(codes.PermissionDenied, "request does not match the authorized subject and target")
 		}
 		call, cancel := c.deadline(ctx)
-		wat, err := c.authentication.IssueWorkloadToken(call, &iamv1.IssueWorkloadTokenRequest{Audience: target.Audience, OperationId: target.Operation})
+		wat, err := c.authentication.IssueWorkloadToken(call, &iamv1.IssueWorkloadTokenRequest{Audience: target.Audience, OperationId: target.Operation, TargetRevision: c.cfg.Registry.Revision(target.Audience, target.Operation)})
 		cancel()
 		if err != nil {
 			return err

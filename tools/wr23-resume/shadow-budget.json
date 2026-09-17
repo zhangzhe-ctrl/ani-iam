@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "combination": "formal seven-container base plus existing observer process",
+  "containers": 7,
+  "container_memory_mib": 768,
+  "native_runtime_gomemlimit_mib": 192,
+  "gomaxprocs": 2,
+  "working_memory_budget_mib": 1728,
+  "minimum_available_memory_kib": 1800000,
+  "minimum_swap_free_kib": 1048576,
+  "minimum_disk_free_kib": 20971520,
+  "activity_interval_seconds": 15,
+  "duration_seconds": 86400,
+  "minimum_lifecycle_samples": 5760,
+  "maximum_activity_gap_seconds": 45,
+  "lock": "/home/ubuntu/.local/share/ani-iam/heavy.lock",
+  "lock_policy": "nonblocking exclusive lock retained for all setup, 24h observation and cleanup; no parallel heavy run",
+  "certificate_lifetime_hours": 72,
+  "secrets": "run/private only; no public collection",
+  "client_disconnect": "remote nohup process continues; status and fsynced samples support inspection",
+  "observer_process_loss": "retain evidence, fail this window and start a fresh full window; no mixed fragments"
+}

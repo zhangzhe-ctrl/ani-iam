@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/zhangzhe-ctrl/ani-iam/sdk/grpcworkload"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 	sessionv1 "github.com/zhangzhe-ctrl/ani-session-gateway/api/gen/session/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,6 +27,8 @@ import (
 )
 
 type config struct {
+	RegistryFile     string                    `json:"registry_file"`
+	RegistrySHA256   string                    `json:"registry_sha256"`
 	IAM              grpcworkload.ClientConfig `json:"iam"`
 	TargetAddress    string                    `json:"target_address"`
 	TargetServerName string                    `json:"target_server_name"`
@@ -118,6 +121,14 @@ func run(mode, path string) error {
 	var cfg config
 	if err := readJSON(path, &cfg); err != nil {
 		return errors.New("invalid example configuration")
+	}
+	registry, err := workloadregistry.Load(cfg.RegistryFile, cfg.RegistrySHA256)
+	if err != nil {
+		return err
+	}
+	cfg.IAM.Registry = registry
+	if strings.HasPrefix(mode, "reference-") {
+		return runReference(mode, cfg)
 	}
 	var resources inventory
 	if err := readJSON(cfg.InventoryFile, &resources); err != nil {

@@ -87,6 +87,11 @@ func (c *JWXAccessTokenCodec) Issue(ctx context.Context, claims biz.AccessTokenC
 	if claims.Audience != biz.AudienceConsole && claims.Audience != biz.AudienceBoss {
 		return "", errors.New("access-token audience is not supported")
 	}
+	// Existing Console callers already carry a concrete Tenant. A missing
+	// Tenant or BOSS audience can never be promoted into Platform authority.
+	if claims.Boundary == "" && claims.Audience == biz.AudienceConsole && claims.TenantID != uuid.Nil {
+		claims.Boundary = biz.AccessBoundaryTenant
+	}
 	if err := c.validateClaims(claims); err != nil {
 		return "", err
 	}
@@ -94,7 +99,7 @@ func (c *JWXAccessTokenCodec) Issue(ctx context.Context, claims biz.AccessTokenC
 	for index, method := range claims.AuthnMethods {
 		authnMethods[index] = string(method)
 	}
-	token, err := jwt.NewBuilder().
+	builder := jwt.NewBuilder().
 		Issuer(claims.Issuer).
 		Subject(claims.Subject.String()).
 		Audience([]string{string(claims.Audience)}).
@@ -102,13 +107,15 @@ func (c *JWXAccessTokenCodec) Issue(ctx context.Context, claims biz.AccessTokenC
 		IssuedAt(claims.IssuedAt.UTC()).
 		Expiration(claims.ExpiresAt.UTC()).
 		Claim(accessTokenPrincipalTypeClaim, accessTokenPrincipalTypeHuman).
-		Claim(accessTokenBoundaryTypeClaim, accessTokenBoundaryTypeTenant).
-		Claim(accessTokenTenantIDClaim, claims.TenantID.String()).
+		Claim(accessTokenBoundaryTypeClaim, string(claims.Boundary)).
 		Claim(accessTokenSessionIDClaim, claims.SessionID.String()).
 		Claim(accessTokenGrantIDClaim, claims.GrantID.String()).
 		Claim(accessTokenGrantVersionClaim, claims.GrantVersion).
-		Claim(accessTokenAuthnMethodsClaim, authnMethods).
-		Build()
+		Claim(accessTokenAuthnMethodsClaim, authnMethods)
+	if claims.Boundary == biz.AccessBoundaryTenant {
+		builder = builder.Claim(accessTokenTenantIDClaim, claims.TenantID.String())
+	}
+	token, err := builder.Build()
 	if err != nil {
 		return "", fmt.Errorf("build access token: %w", err)
 	}
@@ -199,7 +206,6 @@ func (c *JWXAccessTokenCodec) Verify(ctx context.Context, rawCredential string) 
 		jwt.WithRequiredClaim(jwt.ExpirationKey),
 		jwt.WithRequiredClaim(accessTokenPrincipalTypeClaim),
 		jwt.WithRequiredClaim(accessTokenBoundaryTypeClaim),
-		jwt.WithRequiredClaim(accessTokenTenantIDClaim),
 		jwt.WithRequiredClaim(accessTokenSessionIDClaim),
 		jwt.WithRequiredClaim(accessTokenGrantIDClaim),
 		jwt.WithRequiredClaim(accessTokenGrantVersionClaim),
@@ -340,8 +346,9 @@ func (c *JWXAccessTokenCodec) validateClaims(claims biz.AccessTokenClaims) error
 			return fmt.Errorf("%w: %s", ErrInvalidAccessTokenClaims, name)
 		}
 	}
-	if claims.TenantID == uuid.Nil {
-		return fmt.Errorf("%w: tenant_id", ErrInvalidAccessTokenClaims)
+	if !((claims.Boundary == biz.AccessBoundaryTenant && claims.Audience == biz.AudienceConsole && claims.TenantID != uuid.Nil) ||
+		(claims.Boundary == biz.AccessBoundaryPlatform && claims.Audience == biz.AudienceBoss && claims.TenantID == uuid.Nil)) {
+		return fmt.Errorf("%w: boundary and audience", ErrInvalidAccessTokenClaims)
 	}
 	if claims.GrantVersion < 1 {
 		return fmt.Errorf("%w: grant_version", ErrInvalidAccessTokenClaims)
@@ -390,7 +397,6 @@ func accessTokenClaims(token jwt.Token) (biz.AccessTokenClaims, error) {
 	for name, destination := range map[string]any{
 		accessTokenPrincipalTypeClaim: &principalType,
 		accessTokenBoundaryTypeClaim:  &boundaryType,
-		accessTokenTenantIDClaim:      &tenantID,
 		accessTokenSessionIDClaim:     &sessionID,
 		accessTokenGrantIDClaim:       &grantID,
 		accessTokenGrantVersionClaim:  &rawGrantVersion,
@@ -400,7 +406,7 @@ func accessTokenClaims(token jwt.Token) (biz.AccessTokenClaims, error) {
 			return biz.AccessTokenClaims{}, fmt.Errorf("read access-token claim %s: %w", name, err)
 		}
 	}
-	if principalType != accessTokenPrincipalTypeHuman || boundaryType != accessTokenBoundaryTypeTenant {
+	if principalType != accessTokenPrincipalTypeHuman || (boundaryType != string(biz.AccessBoundaryTenant) && boundaryType != string(biz.AccessBoundaryPlatform)) {
 		return biz.AccessTokenClaims{}, errors.New("access token principal or boundary type is invalid")
 	}
 	if rawGrantVersion < 1 || rawGrantVersion > math.MaxInt64 || math.Trunc(rawGrantVersion) != rawGrantVersion {
@@ -415,9 +421,19 @@ func accessTokenClaims(token jwt.Token) (biz.AccessTokenClaims, error) {
 	if err != nil {
 		return biz.AccessTokenClaims{}, fmt.Errorf("parse access-token ID: %w", err)
 	}
-	parsedTenantID, err := uuid.Parse(tenantID)
-	if err != nil {
-		return biz.AccessTokenClaims{}, fmt.Errorf("parse access-token tenant ID: %w", err)
+	var parsedTenantID uuid.UUID
+	if boundaryType == string(biz.AccessBoundaryTenant) {
+		if err := token.Get(accessTokenTenantIDClaim, &tenantID); err != nil {
+			return biz.AccessTokenClaims{}, errors.New("Tenant access token requires tenant_id")
+		}
+		parsedTenantID, err = uuid.Parse(tenantID)
+		if err != nil {
+			return biz.AccessTokenClaims{}, fmt.Errorf("parse access-token tenant ID: %w", err)
+		}
+	} else {
+		if token.Has(accessTokenTenantIDClaim) {
+			return biz.AccessTokenClaims{}, errors.New("Platform access token cannot contain tenant_id")
+		}
 	}
 	parsedSessionID, err := uuid.Parse(sessionID)
 	if err != nil {
@@ -436,6 +452,7 @@ func accessTokenClaims(token jwt.Token) (biz.AccessTokenClaims, error) {
 		authnMethods[index] = biz.AuditAuthenticationMethod(method)
 	}
 	return biz.AccessTokenClaims{
+		Boundary:     biz.AccessBoundary(boundaryType),
 		Issuer:       issuer,
 		Subject:      parsedSubject,
 		Audience:     biz.Audience(audiences[0]),

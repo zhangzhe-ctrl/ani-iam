@@ -47,6 +47,14 @@ message Runtime {
   OIDC oidc = 6;
   string environment = 7;
   string trust_domain = 8;
+  OIDC boss_oidc = 9;
+  // Reviewed immutable synchronous registration input; runtime never installs it.
+  string workload_registry_file = 10;
+  string workload_registry_sha256 = 11;
+  // Optional only for isolated component profiles. Full Tenant owner integration pins
+  // the non-secret runtime configuration and validates its live dependencies.
+  string tenant_lifecycle_file = 12;
+  string tenant_lifecycle_sha256 = 13;
 }
 
 message PostgreSQL {
@@ -73,6 +81,12 @@ message AccessToken {
 }
 
 message Notification {
+  string tenant_invitation_url_base = 13;
+  string platform_invitation_url_base = 14;
+  // Explicitly pause only identity delivery for isolated component checks or controlled recovery.
+  // Default false runs Tenant/Platform invitations and invited-account email verification.
+  bool pause_identity_delivery = 15;
+  string boss_action_url_base = 12;
   string outbox_key_file = 10;
  string client_dns_name = 11;
   string address = 1;

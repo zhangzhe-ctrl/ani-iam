@@ -1,0 +1,802 @@
+{
+  "schema": "ani.workload-targets/v1",
+  "targets": [
+    {
+      "audience": "ani-iam",
+      "operation": "/grpc.health.v1.Health/Check",
+      "rpc": "/grpc.health.v1.Health/Check",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/AcceptInvitationWithPassword",
+      "rpc": "/iam.v1.AuthenticationService/AcceptInvitationWithPassword",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/BeginOIDCIdentityLink",
+      "rpc": "/iam.v1.AuthenticationService/BeginOIDCIdentityLink",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/BeginOIDCLogin",
+      "rpc": "/iam.v1.AuthenticationService/BeginOIDCLogin",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/CompleteInvitedAccount",
+      "rpc": "/iam.v1.AuthenticationService/CompleteInvitedAccount",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/CompleteOIDCIdentityLink",
+      "rpc": "/iam.v1.AuthenticationService/CompleteOIDCIdentityLink",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/CompleteOIDCLogin",
+      "rpc": "/iam.v1.AuthenticationService/CompleteOIDCLogin",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/CompletePasswordAction",
+      "rpc": "/iam.v1.AuthenticationService/CompletePasswordAction",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/IssueDelegation",
+      "rpc": "/iam.v1.AuthenticationService/IssueDelegation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/IssueWorkloadToken",
+      "rpc": "/iam.v1.AuthenticationService/IssueWorkloadToken",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/ListSessions",
+      "rpc": "/iam.v1.AuthenticationService/ListSessions",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/LogoutSession",
+      "rpc": "/iam.v1.AuthenticationService/LogoutSession",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/PasswordLogin",
+      "rpc": "/iam.v1.AuthenticationService/PasswordLogin",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/RefreshSession",
+      "rpc": "/iam.v1.AuthenticationService/RefreshSession",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/RequestInvitedAccountVerification",
+      "rpc": "/iam.v1.AuthenticationService/RequestInvitedAccountVerification",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/RequestPasswordAction",
+      "rpc": "/iam.v1.AuthenticationService/RequestPasswordAction",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/SwitchTenant",
+      "rpc": "/iam.v1.AuthenticationService/SwitchTenant",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthenticationService/ValidatePrincipal",
+      "rpc": "/iam.v1.AuthenticationService/ValidatePrincipal",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthorizationService/CheckPermission",
+      "rpc": "/iam.v1.AuthorizationService/CheckPermission",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthorizationService/VerifySessionContinuation",
+      "rpc": "/iam.v1.AuthorizationService/VerifySessionContinuation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthorizationService/VerifyWorkloadCaller",
+      "rpc": "/iam.v1.AuthorizationService/VerifyWorkloadCaller",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.AuthorizationService/VerifyWorkloadInvocation",
+      "rpc": "/iam.v1.AuthorizationService/VerifyWorkloadInvocation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/AcceptPlatformInvitation",
+      "rpc": "/iam.v1.IAMAdminService/AcceptPlatformInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/AcceptTenantInvitation",
+      "rpc": "/iam.v1.IAMAdminService/AcceptTenantInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ApproveRecoveryBootstrap",
+      "rpc": "/iam.v1.IAMAdminService/ApproveRecoveryBootstrap",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ApproveRestoreTenantAdmin",
+      "rpc": "/iam.v1.IAMAdminService/ApproveRestoreTenantAdmin",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/BindPlatformRole",
+      "rpc": "/iam.v1.IAMAdminService/BindPlatformRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/BindTenantRole",
+      "rpc": "/iam.v1.IAMAdminService/BindTenantRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/CancelPlatformInvitation",
+      "rpc": "/iam.v1.IAMAdminService/CancelPlatformInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/CancelTenantInvitation",
+      "rpc": "/iam.v1.IAMAdminService/CancelTenantInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/CreateAPIKey",
+      "rpc": "/iam.v1.IAMAdminService/CreateAPIKey",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/CreatePlatformInvitation",
+      "rpc": "/iam.v1.IAMAdminService/CreatePlatformInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/CreatePlatformRole",
+      "rpc": "/iam.v1.IAMAdminService/CreatePlatformRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/CreateTenantInvitation",
+      "rpc": "/iam.v1.IAMAdminService/CreateTenantInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/CreateTenantRole",
+      "rpc": "/iam.v1.IAMAdminService/CreateTenantRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/CreateTenantWorkload",
+      "rpc": "/iam.v1.IAMAdminService/CreateTenantWorkload",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/DeletePlatformRole",
+      "rpc": "/iam.v1.IAMAdminService/DeletePlatformRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/DeleteTenantRole",
+      "rpc": "/iam.v1.IAMAdminService/DeleteTenantRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ExecuteRecoveryBootstrap",
+      "rpc": "/iam.v1.IAMAdminService/ExecuteRecoveryBootstrap",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ExecuteRestoreTenantAdmin",
+      "rpc": "/iam.v1.IAMAdminService/ExecuteRestoreTenantAdmin",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetAuditEvent",
+      "rpc": "/iam.v1.IAMAdminService/GetAuditEvent",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetPlatformAuditEvent",
+      "rpc": "/iam.v1.IAMAdminService/GetPlatformAuditEvent",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetPlatformInvitation",
+      "rpc": "/iam.v1.IAMAdminService/GetPlatformInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetPlatformMembership",
+      "rpc": "/iam.v1.IAMAdminService/GetPlatformMembership",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetPlatformRole",
+      "rpc": "/iam.v1.IAMAdminService/GetPlatformRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetTenantAccess",
+      "rpc": "/iam.v1.IAMAdminService/GetTenantAccess",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetTenantBootstrap",
+      "rpc": "/iam.v1.IAMAdminService/GetTenantBootstrap",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": false
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetTenantInvitation",
+      "rpc": "/iam.v1.IAMAdminService/GetTenantInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetTenantMembership",
+      "rpc": "/iam.v1.IAMAdminService/GetTenantMembership",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetTenantRole",
+      "rpc": "/iam.v1.IAMAdminService/GetTenantRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/GetTenantWorkload",
+      "rpc": "/iam.v1.IAMAdminService/GetTenantWorkload",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListAPIKeys",
+      "rpc": "/iam.v1.IAMAdminService/ListAPIKeys",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListAuditEvents",
+      "rpc": "/iam.v1.IAMAdminService/ListAuditEvents",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListPlatformAuditEvents",
+      "rpc": "/iam.v1.IAMAdminService/ListPlatformAuditEvents",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListPlatformInvitations",
+      "rpc": "/iam.v1.IAMAdminService/ListPlatformInvitations",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListPlatformMemberships",
+      "rpc": "/iam.v1.IAMAdminService/ListPlatformMemberships",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListPlatformPermissions",
+      "rpc": "/iam.v1.IAMAdminService/ListPlatformPermissions",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListPlatformRoles",
+      "rpc": "/iam.v1.IAMAdminService/ListPlatformRoles",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListTenantInvitations",
+      "rpc": "/iam.v1.IAMAdminService/ListTenantInvitations",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListTenantMemberships",
+      "rpc": "/iam.v1.IAMAdminService/ListTenantMemberships",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListTenantPermissions",
+      "rpc": "/iam.v1.IAMAdminService/ListTenantPermissions",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListTenantRoles",
+      "rpc": "/iam.v1.IAMAdminService/ListTenantRoles",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ListTenantWorkloads",
+      "rpc": "/iam.v1.IAMAdminService/ListTenantWorkloads",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ReissueTenantBootstrapInvitation",
+      "rpc": "/iam.v1.IAMAdminService/ReissueTenantBootstrapInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": false
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/RemovePlatformMembership",
+      "rpc": "/iam.v1.IAMAdminService/RemovePlatformMembership",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/RemoveTenantMembership",
+      "rpc": "/iam.v1.IAMAdminService/RemoveTenantMembership",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/RequestRecoveryBootstrap",
+      "rpc": "/iam.v1.IAMAdminService/RequestRecoveryBootstrap",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/RequestRestoreTenantAdmin",
+      "rpc": "/iam.v1.IAMAdminService/RequestRestoreTenantAdmin",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ResendPlatformInvitation",
+      "rpc": "/iam.v1.IAMAdminService/ResendPlatformInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/ResendTenantInvitation",
+      "rpc": "/iam.v1.IAMAdminService/ResendTenantInvitation",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/RetryTenantBootstrapJob",
+      "rpc": "/iam.v1.IAMAdminService/RetryTenantBootstrapJob",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": false
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/RevokeAPIKey",
+      "rpc": "/iam.v1.IAMAdminService/RevokeAPIKey",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/UnbindPlatformRole",
+      "rpc": "/iam.v1.IAMAdminService/UnbindPlatformRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/UnbindTenantRole",
+      "rpc": "/iam.v1.IAMAdminService/UnbindTenantRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/UpdatePlatformMembership",
+      "rpc": "/iam.v1.IAMAdminService/UpdatePlatformMembership",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/UpdatePlatformRole",
+      "rpc": "/iam.v1.IAMAdminService/UpdatePlatformRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/UpdateTenantAccess",
+      "rpc": "/iam.v1.IAMAdminService/UpdateTenantAccess",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/UpdateTenantMembership",
+      "rpc": "/iam.v1.IAMAdminService/UpdateTenantMembership",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/UpdateTenantRole",
+      "rpc": "/iam.v1.IAMAdminService/UpdateTenantRole",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-iam",
+      "operation": "/iam.v1.IAMAdminService/UpdateTenantWorkload",
+      "rpc": "/iam.v1.IAMAdminService/UpdateTenantWorkload",
+      "mechanism": "direct",
+      "grant_scope": "iam_ingress",
+      "enabled": true
+    },
+    {
+      "audience": "ani-session-gateway",
+      "operation": "session.receive",
+      "rpc": "",
+      "mechanism": "receiver",
+      "grant_scope": "receiver",
+      "enabled": true
+    },
+    {
+      "audience": "ani-notification-service",
+      "operation": "notification.receive",
+      "rpc": "",
+      "mechanism": "receiver",
+      "grant_scope": "receiver",
+      "enabled": true
+    },
+    {
+      "audience": "ani-inference-service",
+      "operation": "inference.receive_access",
+      "rpc": "",
+      "mechanism": "receiver",
+      "grant_scope": "workload_inference",
+      "enabled": true
+    },
+    {
+      "audience": "ani-session-gateway",
+      "operation": "session.create",
+      "rpc": "/ani.session.v1.SessionService/CreateSession",
+      "mechanism": "delegated",
+      "grant_scope": "delegated_session",
+      "enabled": true,
+      "receiver_operation": "session.receive",
+      "sources": [
+        {
+          "operation": "createInstanceExecSession",
+          "mode": "exec",
+          "resource": "instances",
+          "action": "create",
+          "principal_kinds": [
+            "human",
+            "workload"
+          ],
+          "credential_kinds": [
+            "access_token",
+            "api_key",
+            "workload_token"
+          ],
+          "owner_handler": "core.resource_tenant",
+          "owner_check": "caller"
+        },
+        {
+          "operation": "createInstanceConsoleSession",
+          "mode": "vm_console",
+          "resource": "instances",
+          "action": "create",
+          "principal_kinds": [
+            "human",
+            "workload"
+          ],
+          "credential_kinds": [
+            "access_token",
+            "api_key",
+            "workload_token"
+          ],
+          "owner_handler": "core.resource_tenant",
+          "owner_check": "caller"
+        }
+      ],
+      "continuation": true
+    },
+    {
+      "audience": "ani-notification-service",
+      "operation": "notification.submit",
+      "rpc": "/notification.v1.NotificationService/SubmitNotification",
+      "mechanism": "workload_only",
+      "grant_scope": "workload_notification",
+      "enabled": true,
+      "receiver_operation": "notification.receive"
+    },
+    {
+      "audience": "ani-notification-service",
+      "operation": "notification.get_own",
+      "rpc": "/notification.v1.NotificationService/GetSubmissionStatus",
+      "mechanism": "workload_only",
+      "grant_scope": "workload_notification",
+      "enabled": true,
+      "receiver_operation": "notification.receive"
+    },
+    {
+      "audience": "ani-inference-service",
+      "operation": "inference.check_access",
+      "rpc": "/inference.control.v1.InferenceControl/CheckInferenceAccess",
+      "mechanism": "delegated",
+      "grant_scope": "workload_inference",
+      "enabled": true,
+      "receiver_operation": "inference.receive_access",
+      "sources": [
+        {
+          "operation": "invokeInferenceChatCompletions",
+          "mode": "chat_completions",
+          "resource": "inference-services",
+          "action": "invoke",
+          "principal_kinds": [
+            "workload"
+          ],
+          "credential_kinds": [
+            "api_key"
+          ],
+          "owner_handler": "inference.resource_tenant",
+          "owner_check": "receiver"
+        }
+      ]
+    },
+    {
+      "audience": "wr32-inventory-owner",
+      "operation": "reference.receive",
+      "rpc": "",
+      "mechanism": "receiver",
+      "grant_scope": "receiver",
+      "enabled": true
+    },
+    {
+      "audience": "wr32-inventory-owner",
+      "operation": "reference.status",
+      "rpc": "/reference.v1.InventoryService/ReadStatus",
+      "mechanism": "workload_only",
+      "grant_scope": "workload_reference",
+      "enabled": true,
+      "receiver_operation": "reference.receive"
+    },
+    {
+      "audience": "wr32-inventory-owner",
+      "operation": "reference.read",
+      "rpc": "/reference.v1.InventoryService/ReadResource",
+      "mechanism": "delegated",
+      "grant_scope": "delegated_reference",
+      "enabled": true,
+      "receiver_operation": "reference.receive",
+      "sources": [
+        {
+          "operation": "readWR32InventoryResource",
+          "mode": "read",
+          "resource": "reference-resources",
+          "action": "read",
+          "principal_kinds": [
+            "human",
+            "workload"
+          ],
+          "credential_kinds": [
+            "access_token",
+            "api_key"
+          ],
+          "owner_handler": "reference.resource_tenant",
+          "owner_check": "receiver"
+        }
+      ]
+    }
+  ]
+}

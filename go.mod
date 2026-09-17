@@ -17,9 +17,10 @@ require (
 	github.com/redis/go-redis/v9 v9.22.0
 	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.43.0
-	github.com/zhangzhe-ctrl/ani-iam/api v0.0.0-20260911071802-b9fde01ae781
-	github.com/zhangzhe-ctrl/ani-iam/sdk v0.0.0-20260911071951-e9f657f20b69
-	github.com/zhangzhe-ctrl/ani-notification-service v0.0.0-20260907002920-0e3f0a2b47fc
+	github.com/zhangzhe-ctrl/ani-governance/api v0.0.0-gov0103.4
+	github.com/zhangzhe-ctrl/ani-iam/api v0.0.1-wr33.4
+	github.com/zhangzhe-ctrl/ani-iam/sdk v0.0.1-wr33.4
+	github.com/zhangzhe-ctrl/ani-notification-service v0.0.1-wr33.1
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.66.0
 	go.opentelemetry.io/otel/metric v1.44.0
@@ -32,6 +33,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260511170946-3700d4141b60
 	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.11
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -82,6 +84,7 @@ require (
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -105,5 +108,11 @@ require (
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260511170946-3700d4141b60 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+require (
+	github.com/nats-io/nats.go v1.52.0
+	github.com/nats-io/nkeys v0.4.16
+	// Unpublished immutable candidate; supplied by the checked file module proxy.
+	github.com/zhangzhe-ctrl/ani-iam/workloadregistry v0.0.1-wr33.4
 )

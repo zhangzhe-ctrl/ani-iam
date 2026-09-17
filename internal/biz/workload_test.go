@@ -9,11 +9,14 @@ import (
 )
 
 type changingWorkloadTrust struct {
-	identity       WorkloadIdentity
-	grant          int64
-	bindingRevoked bool
-	failure        error
-	target         WorkloadTarget
+	identity         WorkloadIdentity
+	grant            int64
+	bindingRevoked   bool
+	failure          error
+	target           WorkloadTarget
+	receiverTarget   WorkloadTarget
+	receiverIdentity WorkloadIdentity
+	receiverGrant    int64
 }
 
 func (r *changingWorkloadTrust) ResolveWorkloadIdentity(_ context.Context, p VerifiedWorkloadPeer) (WorkloadIdentity, error) {
@@ -29,6 +32,9 @@ func (r *changingWorkloadTrust) CheckWorkloadGrant(_ context.Context, i Workload
 	if r.failure != nil {
 		return 0, r.failure
 	}
+	if i == r.receiverIdentity && target == r.receiverTarget && r.receiverGrant > 0 {
+		return r.receiverGrant, nil
+	}
 	if r.bindingRevoked || i != r.identity || target != r.target || r.grant == 0 {
 		return 0, ErrWorkloadPermissionDenied
 	}
@@ -40,7 +46,7 @@ func TestDirectWorkloadCallerRequiresCurrentIdentityAndSeparateGrant(t *testing.
 	identity := WorkloadIdentity{PrincipalID: uuid.MustParse("01993000-0000-7000-8000-000000000001"), BindingID: uuid.MustParse("01993000-0000-7000-8000-000000000002"), PrincipalVersion: 1, BindingVersion: 1, Peer: VerifiedWorkloadPeer{Environment: "wr17-18-isolated", TrustDomain: "iam.wr17-18.test", IdentityKind: "x509_dns", IdentityValue: "ani-gateway"}}
 	target := WorkloadTarget{Audience: "ani-iam", Operation: "/iam.v1.AuthenticationService/PasswordLogin"}
 	trust := &changingWorkloadTrust{identity: identity, target: target, grant: 1}
-	authentication, authorization := NewWorkloadAuthentication(trust), NewWorkloadAuthorization(trust)
+	authentication, authorization := NewWorkloadAuthentication(trust), NewWorkloadAuthorization(trust, workloadRegistryFixture(t))
 	current, err := authentication.Authenticate(ctx, identity.Peer)
 	if err != nil {
 		t.Fatal(err)
@@ -77,5 +83,27 @@ func TestDirectWorkloadCallerRequiresCurrentIdentityAndSeparateGrant(t *testing.
 	}
 	if _, err := authorization.Authorize(ctx, current, target); !errors.Is(err, ErrPersistenceUnavailable) {
 		t.Fatalf("grant dependency failure fell back=%v", err)
+	}
+}
+
+func TestInferenceWorkloadAuthorizationRequiresExactCurrentGrant(t *testing.T) {
+	identity := WorkloadIdentity{PrincipalID: uuid.New(), BindingID: uuid.New(), PrincipalVersion: 1, BindingVersion: 1}
+	for _, operation := range []string{InferenceInvocationOperation, InferenceReceiverOperation} {
+		target := WorkloadTarget{Audience: InferenceInvocationAudience, Operation: operation}
+		trust := &changingWorkloadTrust{identity: identity, target: target, grant: 1}
+		auth := NewWorkloadAuthorization(trust, workloadRegistryFixture(t))
+		if _, err := auth.Authorize(context.Background(), identity, target); err != nil {
+			t.Fatalf("accepted exact target rejected: %v", err)
+		}
+		trust.grant = 0
+		if _, err := auth.Authorize(context.Background(), identity, target); !errors.Is(err, ErrWorkloadPermissionDenied) {
+			t.Fatal("revoked target accepted")
+		}
+	}
+	for _, target := range []WorkloadTarget{{Audience: InferenceInvocationAudience, Operation: "inference.*"}, {Audience: InferenceInvocationAudience, Operation: "inference.responses"}, {Audience: "other-owner", Operation: InferenceInvocationOperation}} {
+		trust := &changingWorkloadTrust{identity: identity, target: target, grant: 1}
+		if _, err := NewWorkloadAuthorization(trust, workloadRegistryFixture(t)).Authorize(context.Background(), identity, target); !errors.Is(err, ErrWorkloadPermissionDenied) {
+			t.Fatal("unregistered target accepted")
+		}
 	}
 }

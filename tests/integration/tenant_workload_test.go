@@ -358,7 +358,7 @@ func TestAPIKeyRealPostgresValidationAndAuthorizationFailureMatrix(t *testing.T)
 			t.Fatal(idErr)
 		}
 		authentication := biz.NewAuthenticationUsecase(
-			data.NewPostgresPasswordLoginReader(dataSet), nil, nil, data.NewPostgresLoginUnitOfWork(dataSet), nil, nil,
+			defaultPolicyAuthenticationReader(dataSet), nil, nil, data.NewPostgresLoginUnitOfWork(dataSet), nil, nil,
 			&fixedIDGenerator{ids: []uuid.UUID{decisionID, auditID}}, fixedClock{now: observedAt}, usageAggregator,
 		)
 		return service.NewAuthenticationService(authentication).ValidatePrincipal(ctx, &iamv1.ValidatePrincipalRequest{

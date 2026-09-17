@@ -43,6 +43,7 @@ type OIDCUsecaseConfig struct {
 }
 
 type OIDCOperation struct {
+	Boundary                AccessBoundary
 	Kind                    OIDCFlowKind
 	Provider                string
 	Audience                Audience
@@ -97,6 +98,7 @@ type OIDCOperationStore interface {
 }
 
 type BeginOIDCLoginCommand struct {
+	Boundary       AccessBoundary
 	Audience       Audience
 	TenantID       uuid.UUID
 	RedirectURI    string

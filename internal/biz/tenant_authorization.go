@@ -11,15 +11,16 @@ import (
 )
 
 var (
-	ErrTenantAccessNotFound      = errors.New("tenant access not found")
-	ErrRoleNotFound              = errors.New("tenant role not found")
-	ErrRoleBindingNotFound       = errors.New("tenant role binding not found")
-	ErrRoleBindingConflict       = errors.New("tenant role binding conflicts with existing state")
-	ErrPermissionUncatalogued    = errors.New("permission is not present in the accepted catalog")
-	ErrLastTenantAdministrator   = errors.New("last active human tenant administrator cannot be removed")
-	ErrMembershipStatusInvalid   = errors.New("membership status is invalid")
-	ErrExpectedVersionRequired   = errors.New("expected version is required")
-	ErrTenantRoleBoundaryInvalid = errors.New("tenant role contains a non-tenant permission")
+	ErrTenantAccessNotFound        = errors.New("tenant access not found")
+	ErrRoleNotFound                = errors.New("tenant role not found")
+	ErrRoleBindingNotFound         = errors.New("tenant role binding not found")
+	ErrRoleBindingConflict         = errors.New("tenant role binding conflicts with existing state")
+	ErrPermissionUncatalogued      = errors.New("permission is not present in the accepted catalog")
+	ErrTenantAdministratorRequired = errors.New("built-in tenant administrator is required")
+	ErrLastTenantAdministrator     = errors.New("last active human tenant administrator cannot be removed")
+	ErrMembershipStatusInvalid     = errors.New("membership status is invalid")
+	ErrExpectedVersionRequired     = errors.New("expected version is required")
+	ErrTenantRoleBoundaryInvalid   = errors.New("tenant role contains a non-tenant permission")
 )
 
 const TenantAdminRoleCode = "tenant-admin"
@@ -106,7 +107,27 @@ type TenantAuthorizationActor struct {
 	DecisionID           string
 }
 
+type TenantRoleAdministrationTransaction interface {
+	LockAdministrationGuard(context.Context, TenantScope) error
+	IsActiveHumanAdministratorPrincipal(context.Context, TenantScope, uuid.UUID) (bool, error)
+}
+
+func requireTenantRoleAdministrator(ctx context.Context, tx TenantRoleAdministrationTransaction, scope TenantScope, actor TenantAuthorizationActor) error {
+	if err := tx.LockAdministrationGuard(ctx, scope); err != nil {
+		return err
+	}
+	allowed, err := tx.IsActiveHumanAdministratorPrincipal(ctx, scope, actor.PrincipalID)
+	if err != nil {
+		return err
+	}
+	if !allowed {
+		return ErrTenantAdministratorRequired
+	}
+	return nil
+}
+
 type TenantAuthorizationTransaction interface {
+	TenantRoleAdministrationTransaction
 	MutationResultTransaction
 	LockAdministrationGuard(context.Context, TenantScope) error
 	GetAccess(context.Context, TenantScope) (TenantAccess, error)
@@ -115,8 +136,8 @@ type TenantAuthorizationTransaction interface {
 	GetMembershipRecord(context.Context, TenantScope, uuid.UUID) (TenantMembershipRecord, error)
 	UpdateMembershipStatus(context.Context, TenantScope, uuid.UUID, MembershipStatus, int64, time.Time) (TenantMembership, error)
 	GetRole(context.Context, TenantScope, uuid.UUID) (TenantRole, error)
-	ActiveHumanAdministratorCount(context.Context, TenantScope) (int64, error)
-	IsActiveHumanAdministrator(context.Context, TenantScope, uuid.UUID) (bool, error)
+	ActiveHumanAdministratorCount(context.Context, TenantScope, TenantAdminLoginPolicy) (int64, error)
+	IsActiveHumanAdministrator(context.Context, TenantScope, uuid.UUID, TenantAdminLoginPolicy) (bool, error)
 	BindRole(context.Context, TenantScope, TenantRoleBinding, int64, time.Time) (TenantMembership, TenantRoleBinding, error)
 	UnbindRole(context.Context, TenantScope, uuid.UUID, uuid.UUID, int64, time.Time) (TenantMembership, TenantRoleBinding, error)
 	DisableTenantWorkloadForMembership(context.Context, TenantScope, uuid.UUID, time.Time) (TenantWorkload, int64, error)
@@ -165,7 +186,13 @@ type TenantMembershipMutationResult struct {
 	AuditEventID  uuid.UUID
 }
 
+type TenantAdminLoginPolicy struct {
+	OIDCProvider, OIDCIssuer string
+	PasswordEnabled          bool
+}
+
 type TenantAuthorizationUsecase struct {
+	loginPolicy     TenantAdminLoginPolicy
 	uow             TenantAuthorizationUnitOfWork
 	catalog         PermissionCatalog
 	ids             IDGenerator
@@ -181,9 +208,15 @@ func NewTenantAuthorizationUsecase(
 	limiter APIKeyCreationLimiter,
 ) *TenantAuthorizationUsecase {
 	return &TenantAuthorizationUsecase{
-		uow: uow, catalog: catalog, ids: ids, clock: clock,
+		loginPolicy: TenantAdminLoginPolicy{PasswordEnabled: true},
+		uow:         uow, catalog: catalog, ids: ids, clock: clock,
 		tenantWorkloads: NewTenantWorkloadUsecase(uow, ids, clock, limiter),
 	}
+}
+
+func (u *TenantAuthorizationUsecase) WithLoginPolicy(policy TenantAdminLoginPolicy) *TenantAuthorizationUsecase {
+	u.loginPolicy = policy
+	return u
 }
 
 func (u *TenantAuthorizationUsecase) CreateTenantWorkload(ctx context.Context, scope TenantScope, command CreateTenantWorkloadCommand) (CreateTenantWorkloadResult, error) {
@@ -287,6 +320,9 @@ func (u *TenantAuthorizationUsecase) UpdateMembership(ctx context.Context, scope
 	now := u.clock.Now().UTC()
 	var result TenantMembershipMutationResult
 	err = u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
+		if err := tx.LockAdministrationGuard(txContext, scope); err != nil {
+			return err
+		}
 		return executeMutation(txContext, tx, scope, identity, now, &result, func() error {
 			currentRecord, err := tx.GetMembershipRecord(txContext, scope, command.MembershipID)
 			if err != nil {
@@ -361,6 +397,9 @@ func (u *TenantAuthorizationUsecase) BindRole(ctx context.Context, scope TenantS
 	now := u.clock.Now().UTC()
 	var result TenantMembershipMutationResult
 	err = u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
+		if err := requireTenantRoleAdministrator(txContext, tx, scope, command.Actor); err != nil {
+			return err
+		}
 		return executeMutation(txContext, tx, scope, identity, now, &result, func() error {
 			role, err := tx.GetRole(txContext, scope, command.RoleID)
 			if err != nil {
@@ -416,6 +455,9 @@ func (u *TenantAuthorizationUsecase) UnbindRole(ctx context.Context, scope Tenan
 	now := u.clock.Now().UTC()
 	var result TenantMembershipMutationResult
 	err = u.uow.WithinTenantAuthorization(ctx, scope, func(txContext context.Context, tx TenantAuthorizationTransaction) error {
+		if err := requireTenantRoleAdministrator(txContext, tx, scope, command.Actor); err != nil {
+			return err
+		}
 		return executeMutation(txContext, tx, scope, identity, now, &result, func() error {
 			role, err := tx.GetRole(txContext, scope, command.RoleID)
 			if err != nil {
@@ -456,15 +498,13 @@ func newTenantMembershipMutationResult(record TenantMembershipRecord, auditID uu
 	}
 }
 
+// Caller holds the administration guard before acquiring the mutation ledger.
 func (u *TenantAuthorizationUsecase) protectLastAdministrator(ctx context.Context, tx TenantAuthorizationTransaction, scope TenantScope, membershipID uuid.UUID) error {
-	if err := tx.LockAdministrationGuard(ctx, scope); err != nil {
-		return err
-	}
-	isAdministrator, err := tx.IsActiveHumanAdministrator(ctx, scope, membershipID)
+	isAdministrator, err := tx.IsActiveHumanAdministrator(ctx, scope, membershipID, u.loginPolicy)
 	if err != nil || !isAdministrator {
 		return err
 	}
-	count, err := tx.ActiveHumanAdministratorCount(ctx, scope)
+	count, err := tx.ActiveHumanAdministratorCount(ctx, scope, u.loginPolicy)
 	if err != nil {
 		return err
 	}

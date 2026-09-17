@@ -253,7 +253,7 @@ WHERE tenant_id = sqlc.arg(tenant_id)
 RETURNING id, principal_id, status, version, created_at, updated_at;
 
 -- name: GetTenantAuthorizationRole :one
-SELECT id, code, system_role, system_definition_version,
+SELECT id, code, display_name, system_role, system_definition_version,
        version, created_at, updated_at
 FROM tenant_roles
 WHERE tenant_id = sqlc.arg(tenant_id)
@@ -322,6 +322,12 @@ SELECT EXISTS (
       AND principal.status = 'active'
       AND role.system_role
       AND role.code = 'tenant-admin'
+  AND EXISTS (SELECT 1 FROM verified_emails e WHERE e.principal_id=principal.id)
+  AND EXISTS (SELECT 1 FROM identities i WHERE i.principal_id=principal.id AND i.status='active'
+    AND ((sqlc.arg(oidc_provider)::text<>'' AND sqlc.arg(oidc_issuer)::text<>'' AND i.provider=sqlc.arg(oidc_provider) AND i.issuer=sqlc.arg(oidc_issuer))
+      OR (sqlc.arg(password_enabled)::boolean AND i.provider='password' AND EXISTS
+        (SELECT 1 FROM password_credentials c WHERE c.principal_id=principal.id AND c.identity_id=i.id
+          AND (c.locked_until IS NULL OR c.locked_until<=statement_timestamp())))))
 ) AS is_active_human_administrator;
 
 -- name: CountActiveHumanTenantAdministrators :one
@@ -340,7 +346,13 @@ WHERE membership.tenant_id = sqlc.arg(tenant_id)
   AND principal.principal_type = 'human'
   AND principal.status = 'active'
   AND role.system_role
-  AND role.code = 'tenant-admin';
+  AND role.code = 'tenant-admin'
+  AND EXISTS (SELECT 1 FROM verified_emails e WHERE e.principal_id=principal.id)
+  AND EXISTS (SELECT 1 FROM identities i WHERE i.principal_id=principal.id AND i.status='active'
+    AND ((sqlc.arg(oidc_provider)::text<>'' AND sqlc.arg(oidc_issuer)::text<>'' AND i.provider=sqlc.arg(oidc_provider) AND i.issuer=sqlc.arg(oidc_issuer))
+      OR (sqlc.arg(password_enabled)::boolean AND i.provider='password' AND EXISTS
+        (SELECT 1 FROM password_credentials c WHERE c.principal_id=principal.id AND c.identity_id=i.id
+          AND (c.locked_until IS NULL OR c.locked_until<=statement_timestamp())))));
 
 -- name: CreateTenantRoleBinding :exec
 INSERT INTO tenant_role_bindings (
@@ -424,7 +436,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE email.normalized_email = sqlc.arg(normalized_account);
 
@@ -591,13 +603,14 @@ SET status = 'claimed',
     claimed_at = sqlc.arg(now),
     version = outbox.version + 1,
     updated_at = sqlc.arg(now)
-FROM candidate, password_actions AS action
+FROM candidate, password_actions AS action, password_action_requests AS request
 WHERE outbox.id = candidate.id
   AND action.operation_id = outbox.operation_id
+  AND request.operation_id = action.operation_id
 RETURNING outbox.id, outbox.operation_id, outbox.principal_id,
           outbox.intent, outbox.destination_key_version, outbox.destination_ciphertext, outbox.attempt_count,
           outbox.version, action.created_at AS issued_at,
-          action.expires_at;
+          action.expires_at, request.audience;
 
 -- name: ReschedulePasswordActionNotification :one
 UPDATE notification_outbox
@@ -829,7 +842,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE identity.provider = sqlc.arg(provider)
   AND identity.issuer = sqlc.arg(issuer)
@@ -856,7 +869,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE identity.id = sqlc.arg(identity_id)
   AND identity.provider = sqlc.arg(provider)
@@ -889,7 +902,7 @@ JOIN tenant_memberships AS membership
  AND membership.id = session_grant.membership_id
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle ON lifecycle.tenant_id = membership.tenant_id
+JOIN current_tenant_lifecycle AS lifecycle ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = sqlc.arg(principal_id)
   AND session.idle_expires_at > statement_timestamp()
   AND session.absolute_expires_at > statement_timestamp()
@@ -919,7 +932,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = sqlc.arg(principal_id)
   AND principal.status = 'active'
@@ -979,8 +992,8 @@ SELECT
     principal.status AS principal_status,
     membership.status AS membership_status,
     access.status AS tenant_access_status,
-    lifecycle.status AS lifecycle_status,
-    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    COALESCE(lifecycle.status,'')::text AS lifecycle_status,
+    COALESCE(lifecycle.fresh_until > statement_timestamp(),false)::boolean AS lifecycle_fresh,
     session.status AS session_status,
     session_grant.status AS grant_status,
     session_grant.version AS grant_version,
@@ -1013,7 +1026,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+LEFT JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = sqlc.arg(principal_id);
 
@@ -1033,8 +1046,8 @@ SELECT
     principal.status AS principal_status,
     membership.status AS membership_status,
     access.status AS tenant_access_status,
-    lifecycle.status AS lifecycle_status,
-    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    COALESCE(lifecycle.status,'')::text AS lifecycle_status,
+    COALESCE(lifecycle.fresh_until > statement_timestamp(),false)::boolean AS lifecycle_fresh,
     NOT EXISTS (
         SELECT 1
         FROM unnest(sqlc.arg(actions)::text[]) AS required_action(action)
@@ -1062,7 +1075,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = profile.principal_id
 JOIN tenant_access AS access
   ON access.tenant_id = profile.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+LEFT JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = profile.tenant_id
 WHERE api_key.tenant_id = sqlc.arg(tenant_id)
   AND api_key.key_id = sqlc.arg(key_id);
@@ -1086,7 +1099,7 @@ WHERE tenant_id = sqlc.arg(tenant_id);
 
 -- name: GetTenantLifecycleFreshnessForAuthorization :one
 SELECT fresh_until > statement_timestamp() AS lifecycle_fresh
-FROM tenant_lifecycle_projections
+FROM current_tenant_lifecycle
 WHERE tenant_id = sqlc.arg(tenant_id);
 
 -- name: LookupRefreshSession :one
@@ -1144,7 +1157,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE token.digest = sqlc.arg(refresh_digest);
 
@@ -1203,7 +1216,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE token.digest = sqlc.arg(refresh_digest)
 -- The runtime role intentionally has SELECT-only access to lifecycle projections.
@@ -1443,7 +1456,7 @@ JOIN tenant_memberships AS target_membership
  AND target_membership.status <> 'removed'
 JOIN tenant_access AS target_access
   ON target_access.tenant_id = target_membership.tenant_id
-JOIN tenant_lifecycle_projections AS target_lifecycle
+JOIN current_tenant_lifecycle AS target_lifecycle
   ON target_lifecycle.tenant_id = target_membership.tenant_id
 LEFT JOIN session_grants AS target_grant
   ON target_grant.tenant_id = target_membership.tenant_id
@@ -1501,10 +1514,10 @@ JOIN tenant_memberships AS target_membership
  AND target_membership.status <> 'removed'
 JOIN tenant_access AS target_access
   ON target_access.tenant_id = target_membership.tenant_id
-JOIN tenant_lifecycle_projections AS target_lifecycle
+JOIN current_tenant_lifecycle AS target_lifecycle
   ON target_lifecycle.tenant_id = target_membership.tenant_id
 WHERE principal.id = sqlc.arg(principal_id)
--- tenant_lifecycle_projections is a read-only projection for the IAM runtime.
+-- current_tenant_lifecycle is a read-only projection for the IAM runtime.
 FOR UPDATE OF principal, session_row, source_grant, source_membership,
     target_membership, target_access;
 
@@ -1558,15 +1571,16 @@ WHERE binding.environment = sqlc.arg(environment) AND binding.trust_domain = sql
 -- name: CheckWorkloadGrant :one
 SELECT authority.version
 FROM workload_grants AS authority
+JOIN workload_target_registrations AS registration
+  ON registration.audience = authority.audience AND registration.operation = authority.operation
+ AND registration.scope = authority.scope
 JOIN principals AS principal ON principal.id = authority.principal_id
 JOIN workload_principals AS profile ON profile.principal_id = principal.id
 JOIN workload_identity_bindings AS binding ON binding.principal_id = principal.id
 WHERE authority.principal_id = sqlc.arg(principal_id)
   AND authority.environment = sqlc.arg(environment) AND authority.trust_domain = sqlc.arg(trust_domain)
   AND authority.audience = sqlc.arg(audience) AND authority.operation = sqlc.arg(operation)
-  AND ((authority.audience = 'ani-iam' AND authority.scope = 'iam_ingress')
-       OR (authority.audience = 'ani-session-gateway' AND authority.operation = 'session.create' AND authority.scope = 'delegated_session')
-       OR (authority.audience = 'ani-notification-service' AND authority.operation IN ('notification.submit','notification.get_own') AND authority.scope = 'workload_notification'))
+  AND registration.enabled AND registration.target_sha256 = sqlc.arg(target_sha256)
   AND authority.status = 'active'
   AND principal.principal_type = 'workload' AND principal.status = 'active'
   AND principal.version = sqlc.arg(principal_version) AND profile.owner_type = 'platform'
@@ -1596,3 +1610,24 @@ VALUES (sqlc.narg(tenant_id), sqlc.arg(event_id), sqlc.arg(actor_id), 'workload_
     sqlc.arg(target_type), sqlc.arg(target_id), sqlc.arg(target_version), 'succeeded', 'CURRENT_AUTHORITY_VERIFIED',
     sqlc.arg(request_id), sqlc.arg(request_id), sqlc.arg(request_id), 'iam-service', sqlc.arg(now), sqlc.arg(now),
     sqlc.arg(caller_principal_id), sqlc.arg(caller_binding_id), sqlc.arg(caller_binding_version), sqlc.arg(caller_grant_version));
+
+-- name: IsActiveHumanTenantAdministratorPrincipal :one
+SELECT EXISTS (
+    SELECT 1
+    FROM tenant_memberships AS membership
+    JOIN principals AS principal
+      ON principal.id = membership.principal_id
+    JOIN tenant_role_bindings AS binding
+      ON binding.tenant_id = membership.tenant_id
+     AND binding.membership_id = membership.id
+    JOIN tenant_roles AS role
+      ON role.tenant_id = binding.tenant_id
+     AND role.id = binding.role_id
+    WHERE membership.tenant_id = sqlc.arg(tenant_id)
+      AND membership.principal_id = sqlc.arg(principal_id)
+      AND membership.status = 'active'
+      AND principal.principal_type = 'human'
+      AND principal.status = 'active'
+      AND role.system_role
+      AND role.code = 'tenant-admin'
+) AS is_active_human_administrator;

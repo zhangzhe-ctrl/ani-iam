@@ -498,6 +498,33 @@ type recordingOIDCServiceUsecase struct {
 	err                  error
 }
 
+func TestWR22CompleteOIDCLoginAcceptsExplicitPlatformResult(t *testing.T) {
+	for _, test := range []struct {
+		name     string
+		boundary biz.AccessBoundary
+		audience biz.Audience
+		tenant   uuid.UUID
+		ok       bool
+	}{
+		{"platform", biz.AccessBoundaryPlatform, biz.AudienceBoss, uuid.Nil, true},
+		{"mixed", biz.AccessBoundaryPlatform, biz.AudienceBoss, uuid.Must(uuid.NewV7()), false},
+		{"implicit", "", biz.AudienceBoss, uuid.Nil, false},
+		{"wrong audience", biz.AccessBoundaryPlatform, biz.AudienceConsole, uuid.Nil, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			u := &recordingOIDCServiceUsecase{completeLoginResult: biz.LoginResult{Boundary: test.boundary, TenantID: test.tenant, Session: biz.Session{Audience: test.audience}}}
+			s := NewAuthenticationService(nil, u)
+			v, err := s.CompleteOIDCLogin(context.Background(), &iamv1.CompleteOIDCLoginRequest{Code: "unit-code", State: "unit-state", RedirectUri: "https://boss.example.test/callback"})
+			if (err == nil) != test.ok {
+				t.Fatalf("explicit BOSS response accepted=%t want=%t", err == nil, test.ok)
+			}
+			if test.ok && (v.GetLogin().GetPrincipal().GetBoundary().GetPlatform() == nil || v.GetLogin().GetGrant().GetBoundary().GetPlatform() == nil) {
+				t.Fatal("BOSS boundary lost in response")
+			}
+		})
+	}
+}
+
 func (u *recordingOIDCServiceUsecase) BeginLogin(_ context.Context, command biz.BeginOIDCLoginCommand) (biz.BeginOIDCLoginResult, error) {
 	u.beginLoginCommand = command
 	return u.beginLoginResult, u.err
@@ -745,7 +772,7 @@ func TestPasswordLoginRejectsBossAudienceWithTenantBoundaryBeforeUsecase(t *test
 }
 
 func TestPasswordLoginFailsClosedWhenBossPlatformSliceIsUnavailable(t *testing.T) {
-	usecase := &recordingAuthenticationUsecase{}
+	usecase := &recordingAuthenticationUsecase{err: biz.ErrAuthenticationDependency}
 	service := NewAuthenticationService(usecase)
 	_, err := service.PasswordLogin(context.Background(), &iamv1.PasswordLoginRequest{
 		Account:        "platform@example.com",
@@ -753,10 +780,11 @@ func TestPasswordLoginFailsClosedWhenBossPlatformSliceIsUnavailable(t *testing.T
 		Audience:       iamv1.Audience_AUDIENCE_BOSS,
 		Boundary:       &iamv1.Boundary{Boundary: &iamv1.Boundary_Platform{Platform: &iamv1.PlatformBoundary{}}},
 		IdempotencyKey: "login-boss-platform-boundary",
+		SourceIp:       "203.0.113.10",
 	})
-	assertFrozenErrorInfo(t, err, codes.Unavailable, "IAM_UNAVAILABLE", map[string]string{"dependency": "platform_authentication"})
-	if usecase.calls != 0 {
-		t.Fatalf("PasswordLogin usecase calls = %d, want 0", usecase.calls)
+	assertFrozenErrorInfo(t, err, codes.Unavailable, "IAM_UNAVAILABLE", map[string]string{"dependency": "authentication"})
+	if usecase.calls != 1 {
+		t.Fatalf("PasswordLogin usecase calls = %d, want 1", usecase.calls)
 	}
 }
 

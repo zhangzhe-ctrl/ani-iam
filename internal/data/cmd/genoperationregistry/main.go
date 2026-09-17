@@ -55,6 +55,8 @@ type catalogPermission struct {
 
 func main() {
 	input := flag.String("input", "", "ANI operation-registry.v1.json input")
+	ownerOpenAPI := flag.Bool("owner-openapi", false, "consume immutable owner OpenAPI and generate additive policies")
+	ownerAudience := flag.String("owner-audience", "", "reviewed Workload audience of the owner contract")
 	goOutput := flag.String("go-output", "", "generated Go policy output")
 	sqlOutput := flag.String("sql-output", "", "generated permission catalog migration output")
 	expectedSHA256 := flag.String("expected-sha256", "", "required input SHA-256")
@@ -71,6 +73,19 @@ func main() {
 	actualSHA256 := hex.EncodeToString(digest[:])
 	if actualSHA256 != *expectedSHA256 {
 		fatalf("registry SHA-256 = %s, want %s", actualSHA256, *expectedSHA256)
+	}
+	if *ownerOpenAPI {
+		goSource, sqlSource, err := generateOwnerPolicies(source, actualSHA256, *ownerAudience)
+		if err != nil {
+			fatalf("owner policy: %v", err)
+		}
+		if err := os.WriteFile(*goOutput, goSource, 0o644); err != nil {
+			fatalf("write owner policy: %v", err)
+		}
+		if err := os.WriteFile(*sqlOutput, sqlSource, 0o644); err != nil {
+			fatalf("write owner catalog: %v", err)
+		}
+		return
 	}
 
 	var document registryDocument
@@ -98,10 +113,14 @@ func validateAndCollect(document registryDocument) ([]registryOperation, []catal
 		document.IAMReplacement.SourceOpenAPISHA256["core-v1"] == "" || document.IAMReplacement.SourceOpenAPISHA256["services-v1"] == "" {
 		return nil, nil, fmt.Errorf("unsupported registry identity")
 	}
-	policies := make([]registryOperation, 0, len(document.Operations))
+	return collectOperations(document.Operations)
+}
+
+func collectOperations(operations []registryOperation) ([]registryOperation, []catalogPermission, error) {
+	policies := make([]registryOperation, 0, len(operations))
 	permissionSet := make(map[catalogPermission]struct{})
 	operationIDs := make(map[string]struct{})
-	for _, operation := range document.Operations {
+	for _, operation := range operations {
 		if operation.IAMDecision != "check_permission" {
 			continue
 		}
@@ -186,30 +205,36 @@ func renderGo(document registryDocument, sourceSHA256 string, policies []registr
 	fmt.Fprintln(&output)
 	fmt.Fprintln(&output, "var generatedTargetPolicies = map[string]biz.AuthorizationPolicy{")
 	for _, operation := range policies {
-		scope, _ := scopeExpression(operation.Permission.Scope)
-		credentialKinds := make([]string, len(operation.Authn.CredentialKinds))
-		for index, kind := range operation.Authn.CredentialKinds {
-			credentialKinds[index], _ = credentialKindExpression(kind)
-		}
-		principalKinds := make([]string, len(operation.Authn.PrincipalKinds))
-		for index, kind := range operation.Authn.PrincipalKinds {
-			principalKinds[index], _ = principalKindExpression(kind)
-		}
-		fmt.Fprintf(&output, "\t%s: {OperationID: %s, Resource: %s, Actions: []string{%s}, Scope: %s, CredentialKinds: []biz.CredentialKind{%s}, PrincipalKinds: []biz.PrincipalType{%s}", strconv.Quote(operation.OperationID), strconv.Quote(operation.OperationID), strconv.Quote(operation.Permission.Resource), quotedList(operation.Permission.Actions), scope, strings.Join(credentialKinds, ", "), strings.Join(principalKinds, ", "))
-		if len(operation.Obligations) > 0 {
-			fmt.Fprint(&output, ", Obligations: []biz.AuthorizationObligation{")
-			for index, obligation := range operation.Obligations {
-				if index > 0 {
-					fmt.Fprint(&output, ", ")
-				}
-				fmt.Fprintf(&output, "{Type: biz.AuthorizationObligationResourceTenantMatch, Handler: %s}", strconv.Quote(obligation.Handler))
-			}
-			fmt.Fprint(&output, "}")
-		}
-		fmt.Fprintln(&output, "},")
+		fmt.Fprintf(&output, "\t%s: ", strconv.Quote(operation.OperationID))
+		renderPolicy(&output, operation)
+		fmt.Fprintln(&output, ",")
 	}
 	fmt.Fprintln(&output, "}")
 	return format.Source(output.Bytes())
+}
+
+func renderPolicy(output *bytes.Buffer, operation registryOperation) {
+	scope, _ := scopeExpression(operation.Permission.Scope)
+	credentialKinds := make([]string, len(operation.Authn.CredentialKinds))
+	for index, kind := range operation.Authn.CredentialKinds {
+		credentialKinds[index], _ = credentialKindExpression(kind)
+	}
+	principalKinds := make([]string, len(operation.Authn.PrincipalKinds))
+	for index, kind := range operation.Authn.PrincipalKinds {
+		principalKinds[index], _ = principalKindExpression(kind)
+	}
+	fmt.Fprintf(output, "{OperationID: %s, Resource: %s, Actions: []string{%s}, Scope: %s, CredentialKinds: []biz.CredentialKind{%s}, PrincipalKinds: []biz.PrincipalType{%s}", strconv.Quote(operation.OperationID), strconv.Quote(operation.Permission.Resource), quotedList(operation.Permission.Actions), scope, strings.Join(credentialKinds, ", "), strings.Join(principalKinds, ", "))
+	if len(operation.Obligations) > 0 {
+		fmt.Fprint(output, ", Obligations: []biz.AuthorizationObligation{")
+		for index, obligation := range operation.Obligations {
+			if index > 0 {
+				fmt.Fprint(output, ", ")
+			}
+			fmt.Fprintf(output, "{Type: biz.AuthorizationObligationResourceTenantMatch, Handler: %s}", strconv.Quote(obligation.Handler))
+		}
+		fmt.Fprint(output, "}")
+	}
+	fmt.Fprint(output, "}")
 }
 
 func credentialKindExpression(kind string) (string, error) {

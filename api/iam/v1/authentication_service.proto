@@ -10,6 +10,10 @@ option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
 
 // AuthenticationService authenticates credentials and owns Session/Grant token continuity.
 service AuthenticationService {
+  // Purpose-only proof returns Membership metadata, never Session or tokens.
+  rpc AcceptInvitationWithPassword(AcceptInvitationWithPasswordRequest) returns (AcceptInvitationWithPasswordResponse);
+  rpc RequestInvitedAccountVerification(RequestInvitedAccountVerificationRequest) returns (RequestInvitedAccountVerificationResponse);
+  rpc CompleteInvitedAccount(CompleteInvitedAccountRequest) returns (CompleteInvitedAccountResponse);
   rpc PasswordLogin(PasswordLoginRequest) returns (PasswordLoginResponse);
   rpc BeginOIDCLogin(BeginOIDCLoginRequest) returns (BeginOIDCLoginResponse);
   rpc CompleteOIDCLogin(CompleteOIDCLoginRequest) returns (CompleteOIDCLoginResponse);
@@ -236,6 +240,7 @@ message IssueWorkloadTokenRequest {
   string operation_id = 2;
   reserved 3, 4;
   reserved "tenant_id", "idempotency_key";
+  string target_revision = 5;
 }
 
 // IssueWorkloadTokenResponse returns a non-refreshable token of at most five minutes.
@@ -243,4 +248,42 @@ message IssueWorkloadTokenResponse {
   string workload_token = 1;
   google.protobuf.Timestamp expires_at = 2;
   string principal_id = 3;
+}
+
+// Independent mailbox verification does not authenticate a Session or accept an Invitation.
+message RequestInvitedAccountVerificationRequest {
+  string account = 1;
+  string idempotency_key = 2;
+  string source_ip = 3; // Trusted Gateway-derived address, never public input.
+}
+message RequestInvitedAccountVerificationResponse {
+  string challenge_id = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+message CompleteInvitedAccountRequest {
+  string challenge_id = 1;
+  string account = 2;
+  string verification_code = 3;
+  string new_password = 4;
+  string idempotency_key = 5;
+  string source_ip = 6;
+}
+message CompleteInvitedAccountResponse {}
+
+message AcceptInvitationWithPasswordRequest {
+ string account = 1;
+ string password = 2;
+ string invitation_token = 3;
+ string idempotency_key = 4;
+ // Canonical source address derived only by the authenticated Gateway.
+ string source_ip = 5;
+}
+message AcceptInvitationWithPasswordResponse {
+ string boundary = 1;
+ // Absent for the independent Platform boundary.
+ string tenant_id = 2;
+ string invitation_id = 3;
+ string membership_id = 4;
+ uint64 version = 5;
+ string audit_event_id = 6;
 }

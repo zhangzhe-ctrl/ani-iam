@@ -1723,11 +1723,12 @@ func (x *ValidatePrincipalResponse) GetPolicyRevision() string {
 
 // IssueWorkloadTokenRequest requests a short audience-bound subset for the mTLS workload.
 type IssueWorkloadTokenRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Audience      string                 `protobuf:"bytes,1,opt,name=audience,proto3" json:"audience,omitempty"`
-	OperationId   string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Audience       string                 `protobuf:"bytes,1,opt,name=audience,proto3" json:"audience,omitempty"`
+	OperationId    string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	TargetRevision string                 `protobuf:"bytes,5,opt,name=target_revision,json=targetRevision,proto3" json:"target_revision,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *IssueWorkloadTokenRequest) Reset() {
@@ -1770,6 +1771,13 @@ func (x *IssueWorkloadTokenRequest) GetAudience() string {
 func (x *IssueWorkloadTokenRequest) GetOperationId() string {
 	if x != nil {
 		return x.OperationId
+	}
+	return ""
+}
+
+func (x *IssueWorkloadTokenRequest) GetTargetRevision() string {
+	if x != nil {
+		return x.TargetRevision
 	}
 	return ""
 }
@@ -1831,6 +1839,401 @@ func (x *IssueWorkloadTokenResponse) GetExpiresAt() *timestamppb.Timestamp {
 func (x *IssueWorkloadTokenResponse) GetPrincipalId() string {
 	if x != nil {
 		return x.PrincipalId
+	}
+	return ""
+}
+
+// Independent mailbox verification does not authenticate a Session or accept an Invitation.
+type RequestInvitedAccountVerificationRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Account        string                 `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	IdempotencyKey string                 `protobuf:"bytes,2,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	SourceIp       string                 `protobuf:"bytes,3,opt,name=source_ip,json=sourceIp,proto3" json:"source_ip,omitempty"` // Trusted Gateway-derived address, never public input.
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *RequestInvitedAccountVerificationRequest) Reset() {
+	*x = RequestInvitedAccountVerificationRequest{}
+	mi := &file_authentication_service_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RequestInvitedAccountVerificationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RequestInvitedAccountVerificationRequest) ProtoMessage() {}
+
+func (x *RequestInvitedAccountVerificationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authentication_service_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RequestInvitedAccountVerificationRequest.ProtoReflect.Descriptor instead.
+func (*RequestInvitedAccountVerificationRequest) Descriptor() ([]byte, []int) {
+	return file_authentication_service_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *RequestInvitedAccountVerificationRequest) GetAccount() string {
+	if x != nil {
+		return x.Account
+	}
+	return ""
+}
+
+func (x *RequestInvitedAccountVerificationRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+func (x *RequestInvitedAccountVerificationRequest) GetSourceIp() string {
+	if x != nil {
+		return x.SourceIp
+	}
+	return ""
+}
+
+type RequestInvitedAccountVerificationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChallengeId   string                 `protobuf:"bytes,1,opt,name=challenge_id,json=challengeId,proto3" json:"challenge_id,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RequestInvitedAccountVerificationResponse) Reset() {
+	*x = RequestInvitedAccountVerificationResponse{}
+	mi := &file_authentication_service_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RequestInvitedAccountVerificationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RequestInvitedAccountVerificationResponse) ProtoMessage() {}
+
+func (x *RequestInvitedAccountVerificationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authentication_service_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RequestInvitedAccountVerificationResponse.ProtoReflect.Descriptor instead.
+func (*RequestInvitedAccountVerificationResponse) Descriptor() ([]byte, []int) {
+	return file_authentication_service_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *RequestInvitedAccountVerificationResponse) GetChallengeId() string {
+	if x != nil {
+		return x.ChallengeId
+	}
+	return ""
+}
+
+func (x *RequestInvitedAccountVerificationResponse) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+type CompleteInvitedAccountRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ChallengeId      string                 `protobuf:"bytes,1,opt,name=challenge_id,json=challengeId,proto3" json:"challenge_id,omitempty"`
+	Account          string                 `protobuf:"bytes,2,opt,name=account,proto3" json:"account,omitempty"`
+	VerificationCode string                 `protobuf:"bytes,3,opt,name=verification_code,json=verificationCode,proto3" json:"verification_code,omitempty"`
+	NewPassword      string                 `protobuf:"bytes,4,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	IdempotencyKey   string                 `protobuf:"bytes,5,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	SourceIp         string                 `protobuf:"bytes,6,opt,name=source_ip,json=sourceIp,proto3" json:"source_ip,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *CompleteInvitedAccountRequest) Reset() {
+	*x = CompleteInvitedAccountRequest{}
+	mi := &file_authentication_service_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompleteInvitedAccountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompleteInvitedAccountRequest) ProtoMessage() {}
+
+func (x *CompleteInvitedAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authentication_service_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompleteInvitedAccountRequest.ProtoReflect.Descriptor instead.
+func (*CompleteInvitedAccountRequest) Descriptor() ([]byte, []int) {
+	return file_authentication_service_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *CompleteInvitedAccountRequest) GetChallengeId() string {
+	if x != nil {
+		return x.ChallengeId
+	}
+	return ""
+}
+
+func (x *CompleteInvitedAccountRequest) GetAccount() string {
+	if x != nil {
+		return x.Account
+	}
+	return ""
+}
+
+func (x *CompleteInvitedAccountRequest) GetVerificationCode() string {
+	if x != nil {
+		return x.VerificationCode
+	}
+	return ""
+}
+
+func (x *CompleteInvitedAccountRequest) GetNewPassword() string {
+	if x != nil {
+		return x.NewPassword
+	}
+	return ""
+}
+
+func (x *CompleteInvitedAccountRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+func (x *CompleteInvitedAccountRequest) GetSourceIp() string {
+	if x != nil {
+		return x.SourceIp
+	}
+	return ""
+}
+
+type CompleteInvitedAccountResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CompleteInvitedAccountResponse) Reset() {
+	*x = CompleteInvitedAccountResponse{}
+	mi := &file_authentication_service_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CompleteInvitedAccountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CompleteInvitedAccountResponse) ProtoMessage() {}
+
+func (x *CompleteInvitedAccountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authentication_service_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CompleteInvitedAccountResponse.ProtoReflect.Descriptor instead.
+func (*CompleteInvitedAccountResponse) Descriptor() ([]byte, []int) {
+	return file_authentication_service_proto_rawDescGZIP(), []int{33}
+}
+
+type AcceptInvitationWithPasswordRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Account         string                 `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	Password        string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	InvitationToken string                 `protobuf:"bytes,3,opt,name=invitation_token,json=invitationToken,proto3" json:"invitation_token,omitempty"`
+	IdempotencyKey  string                 `protobuf:"bytes,4,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	// Canonical source address derived only by the authenticated Gateway.
+	SourceIp      string `protobuf:"bytes,5,opt,name=source_ip,json=sourceIp,proto3" json:"source_ip,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AcceptInvitationWithPasswordRequest) Reset() {
+	*x = AcceptInvitationWithPasswordRequest{}
+	mi := &file_authentication_service_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AcceptInvitationWithPasswordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AcceptInvitationWithPasswordRequest) ProtoMessage() {}
+
+func (x *AcceptInvitationWithPasswordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_authentication_service_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AcceptInvitationWithPasswordRequest.ProtoReflect.Descriptor instead.
+func (*AcceptInvitationWithPasswordRequest) Descriptor() ([]byte, []int) {
+	return file_authentication_service_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *AcceptInvitationWithPasswordRequest) GetAccount() string {
+	if x != nil {
+		return x.Account
+	}
+	return ""
+}
+
+func (x *AcceptInvitationWithPasswordRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *AcceptInvitationWithPasswordRequest) GetInvitationToken() string {
+	if x != nil {
+		return x.InvitationToken
+	}
+	return ""
+}
+
+func (x *AcceptInvitationWithPasswordRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+func (x *AcceptInvitationWithPasswordRequest) GetSourceIp() string {
+	if x != nil {
+		return x.SourceIp
+	}
+	return ""
+}
+
+type AcceptInvitationWithPasswordResponse struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Boundary string                 `protobuf:"bytes,1,opt,name=boundary,proto3" json:"boundary,omitempty"`
+	// Absent for the independent Platform boundary.
+	TenantId      string `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	InvitationId  string `protobuf:"bytes,3,opt,name=invitation_id,json=invitationId,proto3" json:"invitation_id,omitempty"`
+	MembershipId  string `protobuf:"bytes,4,opt,name=membership_id,json=membershipId,proto3" json:"membership_id,omitempty"`
+	Version       uint64 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
+	AuditEventId  string `protobuf:"bytes,6,opt,name=audit_event_id,json=auditEventId,proto3" json:"audit_event_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AcceptInvitationWithPasswordResponse) Reset() {
+	*x = AcceptInvitationWithPasswordResponse{}
+	mi := &file_authentication_service_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AcceptInvitationWithPasswordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AcceptInvitationWithPasswordResponse) ProtoMessage() {}
+
+func (x *AcceptInvitationWithPasswordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_authentication_service_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AcceptInvitationWithPasswordResponse.ProtoReflect.Descriptor instead.
+func (*AcceptInvitationWithPasswordResponse) Descriptor() ([]byte, []int) {
+	return file_authentication_service_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *AcceptInvitationWithPasswordResponse) GetBoundary() string {
+	if x != nil {
+		return x.Boundary
+	}
+	return ""
+}
+
+func (x *AcceptInvitationWithPasswordResponse) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *AcceptInvitationWithPasswordResponse) GetInvitationId() string {
+	if x != nil {
+		return x.InvitationId
+	}
+	return ""
+}
+
+func (x *AcceptInvitationWithPasswordResponse) GetMembershipId() string {
+	if x != nil {
+		return x.MembershipId
+	}
+	return ""
+}
+
+func (x *AcceptInvitationWithPasswordResponse) GetVersion() uint64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *AcceptInvitationWithPasswordResponse) GetAuditEventId() string {
+	if x != nil {
+		return x.AuditEventId
 	}
 	return ""
 }
@@ -1974,16 +2377,49 @@ const file_authentication_service_proto_rawDesc = "" +
 	"\tprincipal\x18\x01 \x01(\v2\x18.iam.v1.PrincipalContextR\tprincipal\x12\x1f\n" +
 	"\vdecision_id\x18\x02 \x01(\tR\n" +
 	"decisionId\x12'\n" +
-	"\x0fpolicy_revision\x18\x03 \x01(\tR\x0epolicyRevision\"\x82\x01\n" +
+	"\x0fpolicy_revision\x18\x03 \x01(\tR\x0epolicyRevision\"\xab\x01\n" +
 	"\x19IssueWorkloadTokenRequest\x12\x1a\n" +
 	"\baudience\x18\x01 \x01(\tR\baudience\x12!\n" +
-	"\foperation_id\x18\x02 \x01(\tR\voperationIdJ\x04\b\x03\x10\x04J\x04\b\x04\x10\x05R\ttenant_idR\x0fidempotency_key\"\xa1\x01\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12'\n" +
+	"\x0ftarget_revision\x18\x05 \x01(\tR\x0etargetRevisionJ\x04\b\x03\x10\x04J\x04\b\x04\x10\x05R\ttenant_idR\x0fidempotency_key\"\xa1\x01\n" +
 	"\x1aIssueWorkloadTokenResponse\x12%\n" +
 	"\x0eworkload_token\x18\x01 \x01(\tR\rworkloadToken\x129\n" +
 	"\n" +
 	"expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12!\n" +
-	"\fprincipal_id\x18\x03 \x01(\tR\vprincipalId2\x9c\v\n" +
-	"\x15AuthenticationService\x12L\n" +
+	"\fprincipal_id\x18\x03 \x01(\tR\vprincipalId\"\x8a\x01\n" +
+	"(RequestInvitedAccountVerificationRequest\x12\x18\n" +
+	"\aaccount\x18\x01 \x01(\tR\aaccount\x12'\n" +
+	"\x0fidempotency_key\x18\x02 \x01(\tR\x0eidempotencyKey\x12\x1b\n" +
+	"\tsource_ip\x18\x03 \x01(\tR\bsourceIp\"\x89\x01\n" +
+	")RequestInvitedAccountVerificationResponse\x12!\n" +
+	"\fchallenge_id\x18\x01 \x01(\tR\vchallengeId\x129\n" +
+	"\n" +
+	"expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xf2\x01\n" +
+	"\x1dCompleteInvitedAccountRequest\x12!\n" +
+	"\fchallenge_id\x18\x01 \x01(\tR\vchallengeId\x12\x18\n" +
+	"\aaccount\x18\x02 \x01(\tR\aaccount\x12+\n" +
+	"\x11verification_code\x18\x03 \x01(\tR\x10verificationCode\x12!\n" +
+	"\fnew_password\x18\x04 \x01(\tR\vnewPassword\x12'\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\x12\x1b\n" +
+	"\tsource_ip\x18\x06 \x01(\tR\bsourceIp\" \n" +
+	"\x1eCompleteInvitedAccountResponse\"\xcc\x01\n" +
+	"#AcceptInvitationWithPasswordRequest\x12\x18\n" +
+	"\aaccount\x18\x01 \x01(\tR\aaccount\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\x12)\n" +
+	"\x10invitation_token\x18\x03 \x01(\tR\x0finvitationToken\x12'\n" +
+	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\x12\x1b\n" +
+	"\tsource_ip\x18\x05 \x01(\tR\bsourceIp\"\xe9\x01\n" +
+	"$AcceptInvitationWithPasswordResponse\x12\x1a\n" +
+	"\bboundary\x18\x01 \x01(\tR\bboundary\x12\x1b\n" +
+	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12#\n" +
+	"\rinvitation_id\x18\x03 \x01(\tR\finvitationId\x12#\n" +
+	"\rmembership_id\x18\x04 \x01(\tR\fmembershipId\x12\x18\n" +
+	"\aversion\x18\x05 \x01(\x04R\aversion\x12$\n" +
+	"\x0eaudit_event_id\x18\x06 \x01(\tR\fauditEventId2\x8b\x0e\n" +
+	"\x15AuthenticationService\x12y\n" +
+	"\x1cAcceptInvitationWithPassword\x12+.iam.v1.AcceptInvitationWithPasswordRequest\x1a,.iam.v1.AcceptInvitationWithPasswordResponse\x12\x88\x01\n" +
+	"!RequestInvitedAccountVerification\x120.iam.v1.RequestInvitedAccountVerificationRequest\x1a1.iam.v1.RequestInvitedAccountVerificationResponse\x12g\n" +
+	"\x16CompleteInvitedAccount\x12%.iam.v1.CompleteInvitedAccountRequest\x1a&.iam.v1.CompleteInvitedAccountResponse\x12L\n" +
 	"\rPasswordLogin\x12\x1c.iam.v1.PasswordLoginRequest\x1a\x1d.iam.v1.PasswordLoginResponse\x12O\n" +
 	"\x0eBeginOIDCLogin\x12\x1d.iam.v1.BeginOIDCLoginRequest\x1a\x1e.iam.v1.BeginOIDCLoginResponse\x12X\n" +
 	"\x11CompleteOIDCLogin\x12 .iam.v1.CompleteOIDCLoginRequest\x1a!.iam.v1.CompleteOIDCLoginResponse\x12d\n" +
@@ -2013,118 +2449,131 @@ func file_authentication_service_proto_rawDescGZIP() []byte {
 	return file_authentication_service_proto_rawDescData
 }
 
-var file_authentication_service_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
+var file_authentication_service_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
 var file_authentication_service_proto_goTypes = []any{
-	(*PasswordLoginRequest)(nil),             // 0: iam.v1.PasswordLoginRequest
-	(*PasswordLoginResponse)(nil),            // 1: iam.v1.PasswordLoginResponse
-	(*BeginOIDCLoginRequest)(nil),            // 2: iam.v1.BeginOIDCLoginRequest
-	(*BeginOIDCLoginResponse)(nil),           // 3: iam.v1.BeginOIDCLoginResponse
-	(*CompleteOIDCLoginRequest)(nil),         // 4: iam.v1.CompleteOIDCLoginRequest
-	(*CompleteOIDCLoginResponse)(nil),        // 5: iam.v1.CompleteOIDCLoginResponse
-	(*BeginOIDCIdentityLinkRequest)(nil),     // 6: iam.v1.BeginOIDCIdentityLinkRequest
-	(*BeginOIDCIdentityLinkResponse)(nil),    // 7: iam.v1.BeginOIDCIdentityLinkResponse
-	(*CompleteOIDCIdentityLinkRequest)(nil),  // 8: iam.v1.CompleteOIDCIdentityLinkRequest
-	(*CompleteOIDCIdentityLinkResponse)(nil), // 9: iam.v1.CompleteOIDCIdentityLinkResponse
-	(*RequestPasswordActionRequest)(nil),     // 10: iam.v1.RequestPasswordActionRequest
-	(*RequestPasswordActionResponse)(nil),    // 11: iam.v1.RequestPasswordActionResponse
-	(*CompletePasswordActionRequest)(nil),    // 12: iam.v1.CompletePasswordActionRequest
-	(*CompletePasswordActionResponse)(nil),   // 13: iam.v1.CompletePasswordActionResponse
-	(*RefreshSessionRequest)(nil),            // 14: iam.v1.RefreshSessionRequest
-	(*RefreshSessionResponse)(nil),           // 15: iam.v1.RefreshSessionResponse
-	(*LogoutSessionRequest)(nil),             // 16: iam.v1.LogoutSessionRequest
-	(*LogoutSessionResponse)(nil),            // 17: iam.v1.LogoutSessionResponse
-	(*SwitchTenantRequest)(nil),              // 18: iam.v1.SwitchTenantRequest
-	(*SwitchTenantResponse)(nil),             // 19: iam.v1.SwitchTenantResponse
-	(*ListSessionsRequest)(nil),              // 20: iam.v1.ListSessionsRequest
-	(*ListSessionsResponse)(nil),             // 21: iam.v1.ListSessionsResponse
-	(*RevokeSessionRequest)(nil),             // 22: iam.v1.RevokeSessionRequest
-	(*RevokeSessionResponse)(nil),            // 23: iam.v1.RevokeSessionResponse
-	(*RevokeAllSessionsRequest)(nil),         // 24: iam.v1.RevokeAllSessionsRequest
-	(*RevokeAllSessionsResponse)(nil),        // 25: iam.v1.RevokeAllSessionsResponse
-	(*ValidatePrincipalRequest)(nil),         // 26: iam.v1.ValidatePrincipalRequest
-	(*ValidatePrincipalResponse)(nil),        // 27: iam.v1.ValidatePrincipalResponse
-	(*IssueWorkloadTokenRequest)(nil),        // 28: iam.v1.IssueWorkloadTokenRequest
-	(*IssueWorkloadTokenResponse)(nil),       // 29: iam.v1.IssueWorkloadTokenResponse
-	(Audience)(0),                            // 30: iam.v1.Audience
-	(*Boundary)(nil),                         // 31: iam.v1.Boundary
-	(*PrincipalContext)(nil),                 // 32: iam.v1.PrincipalContext
-	(*SessionSummary)(nil),                   // 33: iam.v1.SessionSummary
-	(*SessionGrantSummary)(nil),              // 34: iam.v1.SessionGrantSummary
-	(*timestamppb.Timestamp)(nil),            // 35: google.protobuf.Timestamp
-	(*BearerCredential)(nil),                 // 36: iam.v1.BearerCredential
-	(*MutationResult)(nil),                   // 37: iam.v1.MutationResult
-	(*CursorPageRequest)(nil),                // 38: iam.v1.CursorPageRequest
-	(*IssueDelegationRequest)(nil),           // 39: iam.v1.IssueDelegationRequest
-	(*IssueDelegationResponse)(nil),          // 40: iam.v1.IssueDelegationResponse
+	(*PasswordLoginRequest)(nil),                      // 0: iam.v1.PasswordLoginRequest
+	(*PasswordLoginResponse)(nil),                     // 1: iam.v1.PasswordLoginResponse
+	(*BeginOIDCLoginRequest)(nil),                     // 2: iam.v1.BeginOIDCLoginRequest
+	(*BeginOIDCLoginResponse)(nil),                    // 3: iam.v1.BeginOIDCLoginResponse
+	(*CompleteOIDCLoginRequest)(nil),                  // 4: iam.v1.CompleteOIDCLoginRequest
+	(*CompleteOIDCLoginResponse)(nil),                 // 5: iam.v1.CompleteOIDCLoginResponse
+	(*BeginOIDCIdentityLinkRequest)(nil),              // 6: iam.v1.BeginOIDCIdentityLinkRequest
+	(*BeginOIDCIdentityLinkResponse)(nil),             // 7: iam.v1.BeginOIDCIdentityLinkResponse
+	(*CompleteOIDCIdentityLinkRequest)(nil),           // 8: iam.v1.CompleteOIDCIdentityLinkRequest
+	(*CompleteOIDCIdentityLinkResponse)(nil),          // 9: iam.v1.CompleteOIDCIdentityLinkResponse
+	(*RequestPasswordActionRequest)(nil),              // 10: iam.v1.RequestPasswordActionRequest
+	(*RequestPasswordActionResponse)(nil),             // 11: iam.v1.RequestPasswordActionResponse
+	(*CompletePasswordActionRequest)(nil),             // 12: iam.v1.CompletePasswordActionRequest
+	(*CompletePasswordActionResponse)(nil),            // 13: iam.v1.CompletePasswordActionResponse
+	(*RefreshSessionRequest)(nil),                     // 14: iam.v1.RefreshSessionRequest
+	(*RefreshSessionResponse)(nil),                    // 15: iam.v1.RefreshSessionResponse
+	(*LogoutSessionRequest)(nil),                      // 16: iam.v1.LogoutSessionRequest
+	(*LogoutSessionResponse)(nil),                     // 17: iam.v1.LogoutSessionResponse
+	(*SwitchTenantRequest)(nil),                       // 18: iam.v1.SwitchTenantRequest
+	(*SwitchTenantResponse)(nil),                      // 19: iam.v1.SwitchTenantResponse
+	(*ListSessionsRequest)(nil),                       // 20: iam.v1.ListSessionsRequest
+	(*ListSessionsResponse)(nil),                      // 21: iam.v1.ListSessionsResponse
+	(*RevokeSessionRequest)(nil),                      // 22: iam.v1.RevokeSessionRequest
+	(*RevokeSessionResponse)(nil),                     // 23: iam.v1.RevokeSessionResponse
+	(*RevokeAllSessionsRequest)(nil),                  // 24: iam.v1.RevokeAllSessionsRequest
+	(*RevokeAllSessionsResponse)(nil),                 // 25: iam.v1.RevokeAllSessionsResponse
+	(*ValidatePrincipalRequest)(nil),                  // 26: iam.v1.ValidatePrincipalRequest
+	(*ValidatePrincipalResponse)(nil),                 // 27: iam.v1.ValidatePrincipalResponse
+	(*IssueWorkloadTokenRequest)(nil),                 // 28: iam.v1.IssueWorkloadTokenRequest
+	(*IssueWorkloadTokenResponse)(nil),                // 29: iam.v1.IssueWorkloadTokenResponse
+	(*RequestInvitedAccountVerificationRequest)(nil),  // 30: iam.v1.RequestInvitedAccountVerificationRequest
+	(*RequestInvitedAccountVerificationResponse)(nil), // 31: iam.v1.RequestInvitedAccountVerificationResponse
+	(*CompleteInvitedAccountRequest)(nil),             // 32: iam.v1.CompleteInvitedAccountRequest
+	(*CompleteInvitedAccountResponse)(nil),            // 33: iam.v1.CompleteInvitedAccountResponse
+	(*AcceptInvitationWithPasswordRequest)(nil),       // 34: iam.v1.AcceptInvitationWithPasswordRequest
+	(*AcceptInvitationWithPasswordResponse)(nil),      // 35: iam.v1.AcceptInvitationWithPasswordResponse
+	(Audience)(0),                   // 36: iam.v1.Audience
+	(*Boundary)(nil),                // 37: iam.v1.Boundary
+	(*PrincipalContext)(nil),        // 38: iam.v1.PrincipalContext
+	(*SessionSummary)(nil),          // 39: iam.v1.SessionSummary
+	(*SessionGrantSummary)(nil),     // 40: iam.v1.SessionGrantSummary
+	(*timestamppb.Timestamp)(nil),   // 41: google.protobuf.Timestamp
+	(*BearerCredential)(nil),        // 42: iam.v1.BearerCredential
+	(*MutationResult)(nil),          // 43: iam.v1.MutationResult
+	(*CursorPageRequest)(nil),       // 44: iam.v1.CursorPageRequest
+	(*IssueDelegationRequest)(nil),  // 45: iam.v1.IssueDelegationRequest
+	(*IssueDelegationResponse)(nil), // 46: iam.v1.IssueDelegationResponse
 }
 var file_authentication_service_proto_depIdxs = []int32{
-	30, // 0: iam.v1.PasswordLoginRequest.audience:type_name -> iam.v1.Audience
-	31, // 1: iam.v1.PasswordLoginRequest.boundary:type_name -> iam.v1.Boundary
-	32, // 2: iam.v1.PasswordLoginResponse.principal:type_name -> iam.v1.PrincipalContext
-	33, // 3: iam.v1.PasswordLoginResponse.session:type_name -> iam.v1.SessionSummary
-	34, // 4: iam.v1.PasswordLoginResponse.grant:type_name -> iam.v1.SessionGrantSummary
-	35, // 5: iam.v1.PasswordLoginResponse.refresh_expires_at:type_name -> google.protobuf.Timestamp
-	30, // 6: iam.v1.BeginOIDCLoginRequest.audience:type_name -> iam.v1.Audience
-	31, // 7: iam.v1.BeginOIDCLoginRequest.boundary:type_name -> iam.v1.Boundary
-	35, // 8: iam.v1.BeginOIDCLoginResponse.expires_at:type_name -> google.protobuf.Timestamp
+	36, // 0: iam.v1.PasswordLoginRequest.audience:type_name -> iam.v1.Audience
+	37, // 1: iam.v1.PasswordLoginRequest.boundary:type_name -> iam.v1.Boundary
+	38, // 2: iam.v1.PasswordLoginResponse.principal:type_name -> iam.v1.PrincipalContext
+	39, // 3: iam.v1.PasswordLoginResponse.session:type_name -> iam.v1.SessionSummary
+	40, // 4: iam.v1.PasswordLoginResponse.grant:type_name -> iam.v1.SessionGrantSummary
+	41, // 5: iam.v1.PasswordLoginResponse.refresh_expires_at:type_name -> google.protobuf.Timestamp
+	36, // 6: iam.v1.BeginOIDCLoginRequest.audience:type_name -> iam.v1.Audience
+	37, // 7: iam.v1.BeginOIDCLoginRequest.boundary:type_name -> iam.v1.Boundary
+	41, // 8: iam.v1.BeginOIDCLoginResponse.expires_at:type_name -> google.protobuf.Timestamp
 	1,  // 9: iam.v1.CompleteOIDCLoginResponse.login:type_name -> iam.v1.PasswordLoginResponse
-	36, // 10: iam.v1.BeginOIDCIdentityLinkRequest.credential:type_name -> iam.v1.BearerCredential
-	35, // 11: iam.v1.BeginOIDCIdentityLinkResponse.expires_at:type_name -> google.protobuf.Timestamp
-	36, // 12: iam.v1.CompleteOIDCIdentityLinkRequest.credential:type_name -> iam.v1.BearerCredential
-	30, // 13: iam.v1.RequestPasswordActionRequest.audience:type_name -> iam.v1.Audience
-	35, // 14: iam.v1.RequestPasswordActionResponse.expires_at:type_name -> google.protobuf.Timestamp
-	37, // 15: iam.v1.CompletePasswordActionResponse.result:type_name -> iam.v1.MutationResult
+	42, // 10: iam.v1.BeginOIDCIdentityLinkRequest.credential:type_name -> iam.v1.BearerCredential
+	41, // 11: iam.v1.BeginOIDCIdentityLinkResponse.expires_at:type_name -> google.protobuf.Timestamp
+	42, // 12: iam.v1.CompleteOIDCIdentityLinkRequest.credential:type_name -> iam.v1.BearerCredential
+	36, // 13: iam.v1.RequestPasswordActionRequest.audience:type_name -> iam.v1.Audience
+	41, // 14: iam.v1.RequestPasswordActionResponse.expires_at:type_name -> google.protobuf.Timestamp
+	43, // 15: iam.v1.CompletePasswordActionResponse.result:type_name -> iam.v1.MutationResult
 	1,  // 16: iam.v1.RefreshSessionResponse.login:type_name -> iam.v1.PasswordLoginResponse
-	37, // 17: iam.v1.LogoutSessionResponse.result:type_name -> iam.v1.MutationResult
-	36, // 18: iam.v1.SwitchTenantRequest.credential:type_name -> iam.v1.BearerCredential
+	43, // 17: iam.v1.LogoutSessionResponse.result:type_name -> iam.v1.MutationResult
+	42, // 18: iam.v1.SwitchTenantRequest.credential:type_name -> iam.v1.BearerCredential
 	1,  // 19: iam.v1.SwitchTenantResponse.login:type_name -> iam.v1.PasswordLoginResponse
-	36, // 20: iam.v1.ListSessionsRequest.credential:type_name -> iam.v1.BearerCredential
-	38, // 21: iam.v1.ListSessionsRequest.page:type_name -> iam.v1.CursorPageRequest
-	33, // 22: iam.v1.ListSessionsResponse.sessions:type_name -> iam.v1.SessionSummary
-	36, // 23: iam.v1.RevokeSessionRequest.credential:type_name -> iam.v1.BearerCredential
-	37, // 24: iam.v1.RevokeSessionResponse.result:type_name -> iam.v1.MutationResult
-	36, // 25: iam.v1.RevokeAllSessionsRequest.credential:type_name -> iam.v1.BearerCredential
-	37, // 26: iam.v1.RevokeAllSessionsResponse.result:type_name -> iam.v1.MutationResult
-	36, // 27: iam.v1.ValidatePrincipalRequest.credential:type_name -> iam.v1.BearerCredential
-	32, // 28: iam.v1.ValidatePrincipalResponse.principal:type_name -> iam.v1.PrincipalContext
-	35, // 29: iam.v1.IssueWorkloadTokenResponse.expires_at:type_name -> google.protobuf.Timestamp
-	0,  // 30: iam.v1.AuthenticationService.PasswordLogin:input_type -> iam.v1.PasswordLoginRequest
-	2,  // 31: iam.v1.AuthenticationService.BeginOIDCLogin:input_type -> iam.v1.BeginOIDCLoginRequest
-	4,  // 32: iam.v1.AuthenticationService.CompleteOIDCLogin:input_type -> iam.v1.CompleteOIDCLoginRequest
-	6,  // 33: iam.v1.AuthenticationService.BeginOIDCIdentityLink:input_type -> iam.v1.BeginOIDCIdentityLinkRequest
-	8,  // 34: iam.v1.AuthenticationService.CompleteOIDCIdentityLink:input_type -> iam.v1.CompleteOIDCIdentityLinkRequest
-	10, // 35: iam.v1.AuthenticationService.RequestPasswordAction:input_type -> iam.v1.RequestPasswordActionRequest
-	12, // 36: iam.v1.AuthenticationService.CompletePasswordAction:input_type -> iam.v1.CompletePasswordActionRequest
-	14, // 37: iam.v1.AuthenticationService.RefreshSession:input_type -> iam.v1.RefreshSessionRequest
-	16, // 38: iam.v1.AuthenticationService.LogoutSession:input_type -> iam.v1.LogoutSessionRequest
-	18, // 39: iam.v1.AuthenticationService.SwitchTenant:input_type -> iam.v1.SwitchTenantRequest
-	20, // 40: iam.v1.AuthenticationService.ListSessions:input_type -> iam.v1.ListSessionsRequest
-	22, // 41: iam.v1.AuthenticationService.RevokeSession:input_type -> iam.v1.RevokeSessionRequest
-	24, // 42: iam.v1.AuthenticationService.RevokeAllSessions:input_type -> iam.v1.RevokeAllSessionsRequest
-	26, // 43: iam.v1.AuthenticationService.ValidatePrincipal:input_type -> iam.v1.ValidatePrincipalRequest
-	28, // 44: iam.v1.AuthenticationService.IssueWorkloadToken:input_type -> iam.v1.IssueWorkloadTokenRequest
-	39, // 45: iam.v1.AuthenticationService.IssueDelegation:input_type -> iam.v1.IssueDelegationRequest
-	1,  // 46: iam.v1.AuthenticationService.PasswordLogin:output_type -> iam.v1.PasswordLoginResponse
-	3,  // 47: iam.v1.AuthenticationService.BeginOIDCLogin:output_type -> iam.v1.BeginOIDCLoginResponse
-	5,  // 48: iam.v1.AuthenticationService.CompleteOIDCLogin:output_type -> iam.v1.CompleteOIDCLoginResponse
-	7,  // 49: iam.v1.AuthenticationService.BeginOIDCIdentityLink:output_type -> iam.v1.BeginOIDCIdentityLinkResponse
-	9,  // 50: iam.v1.AuthenticationService.CompleteOIDCIdentityLink:output_type -> iam.v1.CompleteOIDCIdentityLinkResponse
-	11, // 51: iam.v1.AuthenticationService.RequestPasswordAction:output_type -> iam.v1.RequestPasswordActionResponse
-	13, // 52: iam.v1.AuthenticationService.CompletePasswordAction:output_type -> iam.v1.CompletePasswordActionResponse
-	15, // 53: iam.v1.AuthenticationService.RefreshSession:output_type -> iam.v1.RefreshSessionResponse
-	17, // 54: iam.v1.AuthenticationService.LogoutSession:output_type -> iam.v1.LogoutSessionResponse
-	19, // 55: iam.v1.AuthenticationService.SwitchTenant:output_type -> iam.v1.SwitchTenantResponse
-	21, // 56: iam.v1.AuthenticationService.ListSessions:output_type -> iam.v1.ListSessionsResponse
-	23, // 57: iam.v1.AuthenticationService.RevokeSession:output_type -> iam.v1.RevokeSessionResponse
-	25, // 58: iam.v1.AuthenticationService.RevokeAllSessions:output_type -> iam.v1.RevokeAllSessionsResponse
-	27, // 59: iam.v1.AuthenticationService.ValidatePrincipal:output_type -> iam.v1.ValidatePrincipalResponse
-	29, // 60: iam.v1.AuthenticationService.IssueWorkloadToken:output_type -> iam.v1.IssueWorkloadTokenResponse
-	40, // 61: iam.v1.AuthenticationService.IssueDelegation:output_type -> iam.v1.IssueDelegationResponse
-	46, // [46:62] is the sub-list for method output_type
-	30, // [30:46] is the sub-list for method input_type
-	30, // [30:30] is the sub-list for extension type_name
-	30, // [30:30] is the sub-list for extension extendee
-	0,  // [0:30] is the sub-list for field type_name
+	42, // 20: iam.v1.ListSessionsRequest.credential:type_name -> iam.v1.BearerCredential
+	44, // 21: iam.v1.ListSessionsRequest.page:type_name -> iam.v1.CursorPageRequest
+	39, // 22: iam.v1.ListSessionsResponse.sessions:type_name -> iam.v1.SessionSummary
+	42, // 23: iam.v1.RevokeSessionRequest.credential:type_name -> iam.v1.BearerCredential
+	43, // 24: iam.v1.RevokeSessionResponse.result:type_name -> iam.v1.MutationResult
+	42, // 25: iam.v1.RevokeAllSessionsRequest.credential:type_name -> iam.v1.BearerCredential
+	43, // 26: iam.v1.RevokeAllSessionsResponse.result:type_name -> iam.v1.MutationResult
+	42, // 27: iam.v1.ValidatePrincipalRequest.credential:type_name -> iam.v1.BearerCredential
+	38, // 28: iam.v1.ValidatePrincipalResponse.principal:type_name -> iam.v1.PrincipalContext
+	41, // 29: iam.v1.IssueWorkloadTokenResponse.expires_at:type_name -> google.protobuf.Timestamp
+	41, // 30: iam.v1.RequestInvitedAccountVerificationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	34, // 31: iam.v1.AuthenticationService.AcceptInvitationWithPassword:input_type -> iam.v1.AcceptInvitationWithPasswordRequest
+	30, // 32: iam.v1.AuthenticationService.RequestInvitedAccountVerification:input_type -> iam.v1.RequestInvitedAccountVerificationRequest
+	32, // 33: iam.v1.AuthenticationService.CompleteInvitedAccount:input_type -> iam.v1.CompleteInvitedAccountRequest
+	0,  // 34: iam.v1.AuthenticationService.PasswordLogin:input_type -> iam.v1.PasswordLoginRequest
+	2,  // 35: iam.v1.AuthenticationService.BeginOIDCLogin:input_type -> iam.v1.BeginOIDCLoginRequest
+	4,  // 36: iam.v1.AuthenticationService.CompleteOIDCLogin:input_type -> iam.v1.CompleteOIDCLoginRequest
+	6,  // 37: iam.v1.AuthenticationService.BeginOIDCIdentityLink:input_type -> iam.v1.BeginOIDCIdentityLinkRequest
+	8,  // 38: iam.v1.AuthenticationService.CompleteOIDCIdentityLink:input_type -> iam.v1.CompleteOIDCIdentityLinkRequest
+	10, // 39: iam.v1.AuthenticationService.RequestPasswordAction:input_type -> iam.v1.RequestPasswordActionRequest
+	12, // 40: iam.v1.AuthenticationService.CompletePasswordAction:input_type -> iam.v1.CompletePasswordActionRequest
+	14, // 41: iam.v1.AuthenticationService.RefreshSession:input_type -> iam.v1.RefreshSessionRequest
+	16, // 42: iam.v1.AuthenticationService.LogoutSession:input_type -> iam.v1.LogoutSessionRequest
+	18, // 43: iam.v1.AuthenticationService.SwitchTenant:input_type -> iam.v1.SwitchTenantRequest
+	20, // 44: iam.v1.AuthenticationService.ListSessions:input_type -> iam.v1.ListSessionsRequest
+	22, // 45: iam.v1.AuthenticationService.RevokeSession:input_type -> iam.v1.RevokeSessionRequest
+	24, // 46: iam.v1.AuthenticationService.RevokeAllSessions:input_type -> iam.v1.RevokeAllSessionsRequest
+	26, // 47: iam.v1.AuthenticationService.ValidatePrincipal:input_type -> iam.v1.ValidatePrincipalRequest
+	28, // 48: iam.v1.AuthenticationService.IssueWorkloadToken:input_type -> iam.v1.IssueWorkloadTokenRequest
+	45, // 49: iam.v1.AuthenticationService.IssueDelegation:input_type -> iam.v1.IssueDelegationRequest
+	35, // 50: iam.v1.AuthenticationService.AcceptInvitationWithPassword:output_type -> iam.v1.AcceptInvitationWithPasswordResponse
+	31, // 51: iam.v1.AuthenticationService.RequestInvitedAccountVerification:output_type -> iam.v1.RequestInvitedAccountVerificationResponse
+	33, // 52: iam.v1.AuthenticationService.CompleteInvitedAccount:output_type -> iam.v1.CompleteInvitedAccountResponse
+	1,  // 53: iam.v1.AuthenticationService.PasswordLogin:output_type -> iam.v1.PasswordLoginResponse
+	3,  // 54: iam.v1.AuthenticationService.BeginOIDCLogin:output_type -> iam.v1.BeginOIDCLoginResponse
+	5,  // 55: iam.v1.AuthenticationService.CompleteOIDCLogin:output_type -> iam.v1.CompleteOIDCLoginResponse
+	7,  // 56: iam.v1.AuthenticationService.BeginOIDCIdentityLink:output_type -> iam.v1.BeginOIDCIdentityLinkResponse
+	9,  // 57: iam.v1.AuthenticationService.CompleteOIDCIdentityLink:output_type -> iam.v1.CompleteOIDCIdentityLinkResponse
+	11, // 58: iam.v1.AuthenticationService.RequestPasswordAction:output_type -> iam.v1.RequestPasswordActionResponse
+	13, // 59: iam.v1.AuthenticationService.CompletePasswordAction:output_type -> iam.v1.CompletePasswordActionResponse
+	15, // 60: iam.v1.AuthenticationService.RefreshSession:output_type -> iam.v1.RefreshSessionResponse
+	17, // 61: iam.v1.AuthenticationService.LogoutSession:output_type -> iam.v1.LogoutSessionResponse
+	19, // 62: iam.v1.AuthenticationService.SwitchTenant:output_type -> iam.v1.SwitchTenantResponse
+	21, // 63: iam.v1.AuthenticationService.ListSessions:output_type -> iam.v1.ListSessionsResponse
+	23, // 64: iam.v1.AuthenticationService.RevokeSession:output_type -> iam.v1.RevokeSessionResponse
+	25, // 65: iam.v1.AuthenticationService.RevokeAllSessions:output_type -> iam.v1.RevokeAllSessionsResponse
+	27, // 66: iam.v1.AuthenticationService.ValidatePrincipal:output_type -> iam.v1.ValidatePrincipalResponse
+	29, // 67: iam.v1.AuthenticationService.IssueWorkloadToken:output_type -> iam.v1.IssueWorkloadTokenResponse
+	46, // 68: iam.v1.AuthenticationService.IssueDelegation:output_type -> iam.v1.IssueDelegationResponse
+	50, // [50:69] is the sub-list for method output_type
+	31, // [31:50] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_authentication_service_proto_init() }
@@ -2140,7 +2589,7 @@ func file_authentication_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_authentication_service_proto_rawDesc), len(file_authentication_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   30,
+			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

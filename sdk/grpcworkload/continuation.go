@@ -56,13 +56,17 @@ func (c *Client) Recheck(ctx context.Context, reference Continuation) (time.Time
 	if reference.request == nil {
 		return time.Time{}, status.Error(codes.Unauthenticated, "continuation is required")
 	}
+	b := reference.request.GetBinding()
+	t, ok := c.cfg.Registry.Lookup(b.GetAudience(), b.GetOperationId())
+	if !ok || !t.Enabled || !t.Continuation || t.RPC != b.GetRpcMethod() || b.GetTargetRevision() != c.cfg.Registry.Revision(t.Audience, t.Operation) {
+		return time.Time{}, status.Error(codes.PermissionDenied, "continuation target registration changed")
+	}
 	call, cancel := c.deadline(ctx)
 	defer cancel()
 	r, err := c.authorization.VerifySessionContinuation(call, proto.Clone(reference.request).(*iamv1.VerifySessionContinuationRequest))
 	if err != nil {
 		return time.Time{}, err
 	}
-	b := reference.request.GetBinding()
 	if !proto.Equal(r.GetBinding(), b) || r.GetCaller().GetPrincipalId() == "" || r.GetSubject().GetPrincipalId() != b.GetSubjectId() || r.GetSubject().GetBoundary().GetTenant().GetTenantId() != b.GetTenantId() || r.GetExpiresAt() == nil || r.GetExpiresAt().CheckValid() != nil || !time.Now().Before(r.GetExpiresAt().AsTime()) {
 		return time.Time{}, status.Error(codes.PermissionDenied, "continuation does not match its admission")
 	}

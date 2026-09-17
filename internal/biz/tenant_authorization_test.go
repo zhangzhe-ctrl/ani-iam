@@ -193,6 +193,7 @@ func (u *fakeTenantAuthorizationUnitOfWork) WithinTenantWorkload(ctx context.Con
 }
 
 type fakeTenantAuthorizationTransaction struct {
+	notAdministrator bool
 	memoryMutationResults
 	access                 TenantAccess
 	membership             TenantMembership
@@ -246,10 +247,10 @@ func (t *fakeTenantAuthorizationTransaction) UpdateMembershipStatus(_ context.Co
 func (t *fakeTenantAuthorizationTransaction) GetRole(context.Context, TenantScope, uuid.UUID) (TenantRole, error) {
 	return t.role, nil
 }
-func (t *fakeTenantAuthorizationTransaction) ActiveHumanAdministratorCount(context.Context, TenantScope) (int64, error) {
+func (t *fakeTenantAuthorizationTransaction) ActiveHumanAdministratorCount(context.Context, TenantScope, TenantAdminLoginPolicy) (int64, error) {
 	return int64(t.activeHumanAdminCount), nil
 }
-func (t *fakeTenantAuthorizationTransaction) IsActiveHumanAdministrator(context.Context, TenantScope, uuid.UUID) (bool, error) {
+func (t *fakeTenantAuthorizationTransaction) IsActiveHumanAdministrator(context.Context, TenantScope, uuid.UUID, TenantAdminLoginPolicy) (bool, error) {
 	return t.activeHumanAdmin, nil
 }
 func (t *fakeTenantAuthorizationTransaction) BindRole(_ context.Context, _ TenantScope, binding TenantRoleBinding, _ int64, _ time.Time) (TenantMembership, TenantRoleBinding, error) {
@@ -284,3 +285,7 @@ type denyAllPermissions struct{}
 
 func (denyAllPermissions) Contains(Permission) bool                 { return false }
 func (denyAllPermissions) Permissions(PermissionScope) []Permission { return nil }
+
+func (t *fakeTenantAuthorizationTransaction) IsActiveHumanAdministratorPrincipal(context.Context, TenantScope, uuid.UUID) (bool, error) {
+	return !t.notAdministrator, nil
+}

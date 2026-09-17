@@ -30,7 +30,7 @@ func TestNewTenantIAMAdminRuntimePinsPolicyRevision(t *testing.T) {
 	clock := data.NewSystemClock()
 	limiter := allowingAppAPIKeyCreationLimiter{}
 
-	adminService, err := newTenantIAMAdminRuntime(postgresData, "sha256:stale", ids, clock, limiter)
+	adminService, err := newTenantIAMAdminRuntime(postgresData, "sha256:stale", ids, clock, limiter, biz.TenantAdminLoginPolicy{PasswordEnabled: true}, nil)
 	if adminService != nil {
 		t.Fatal("newTenantIAMAdminRuntime() returned a service for a stale policy revision")
 	}
@@ -39,7 +39,7 @@ func TestNewTenantIAMAdminRuntimePinsPolicyRevision(t *testing.T) {
 		t.Fatalf("newTenantIAMAdminRuntime() error = %v, want AuthorizationPolicyMismatchError", err)
 	}
 
-	adminService, err = newTenantIAMAdminRuntime(postgresData, data.TargetPolicyRevision, ids, clock, limiter)
+	adminService, err = newTenantIAMAdminRuntime(postgresData, data.TargetPolicyRevision, ids, clock, limiter, biz.TenantAdminLoginPolicy{PasswordEnabled: true}, nil)
 	if err != nil {
 		t.Fatalf("newTenantIAMAdminRuntime() error = %v", err)
 	}
@@ -47,7 +47,7 @@ func TestNewTenantIAMAdminRuntimePinsPolicyRevision(t *testing.T) {
 		t.Fatal("newTenantIAMAdminRuntime() returned nil service for the pinned policy revision")
 	}
 
-	adminService, err = newTenantIAMAdminRuntime(postgresData, data.TargetPolicyRevision, ids, clock, nil)
+	adminService, err = newTenantIAMAdminRuntime(postgresData, data.TargetPolicyRevision, ids, clock, nil, biz.TenantAdminLoginPolicy{PasswordEnabled: true}, nil)
 	if adminService != nil || err == nil {
 		t.Fatalf("newTenantIAMAdminRuntime() without API key creation limiter = %#v, %v", adminService, err)
 	}
@@ -60,7 +60,7 @@ func (allowingAppAPIKeyCreationLimiter) Acquire(context.Context, biz.TenantScope
 }
 
 func TestBuildAppFailsClosedWhenSigningKeyIsUnavailable(t *testing.T) {
-	bootstrap := buildAppTestBootstrap()
+	bootstrap := buildAppTestBootstrap(t)
 
 	app, err := buildApp(bootstrap, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if app != nil {
@@ -72,7 +72,7 @@ func TestBuildAppFailsClosedWhenSigningKeyIsUnavailable(t *testing.T) {
 }
 
 func TestBuildAppFailsClosedWhenOIDCClientSecretIsUnavailable(t *testing.T) {
-	bootstrap := buildAppTestBootstrap()
+	bootstrap := buildAppTestBootstrap(t)
 	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatalf("generate signing key: %v", err)
@@ -96,7 +96,11 @@ func TestBuildAppFailsClosedWhenOIDCClientSecretIsUnavailable(t *testing.T) {
 	}
 }
 
-func buildAppTestBootstrap() *conf.Bootstrap {
+func buildAppTestBootstrap(t *testing.T) *conf.Bootstrap {
+	path, err := filepath.Abs("../../registrations/workload-targets.v1.json")
+	if err != nil {
+		t.Fatal(err)
+	}
 	return &conf.Bootstrap{
 		Profile: conf.IsolatedProfile,
 		Server: &conf.Server{
@@ -118,7 +122,7 @@ func buildAppTestBootstrap() *conf.Bootstrap {
 			},
 			ShutdownTimeout: durationpb.New(time.Second),
 		},
-		Runtime: &conf.Runtime{
+		Runtime: &conf.Runtime{WorkloadRegistryFile: path, WorkloadRegistrySha256: serverRegistryFixture(t).Digest(),
 			Environment: "wr17-18-isolated", TrustDomain: "iam.wr17-18.test",
 			Postgresql: &conf.PostgreSQL{Dsn: "postgresql://ani_iam_runtime@127.0.0.1:1/ani_iam?sslmode=disable"},
 			Redis: &conf.Redis{

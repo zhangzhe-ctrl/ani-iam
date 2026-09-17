@@ -453,19 +453,20 @@ func (q *Queries) CancelReplacedPasswordActionNotifications(ctx context.Context,
 const checkWorkloadGrant = `-- name: CheckWorkloadGrant :one
 SELECT authority.version
 FROM workload_grants AS authority
+JOIN workload_target_registrations AS registration
+  ON registration.audience = authority.audience AND registration.operation = authority.operation
+ AND registration.scope = authority.scope
 JOIN principals AS principal ON principal.id = authority.principal_id
 JOIN workload_principals AS profile ON profile.principal_id = principal.id
 JOIN workload_identity_bindings AS binding ON binding.principal_id = principal.id
 WHERE authority.principal_id = $1
   AND authority.environment = $2 AND authority.trust_domain = $3
   AND authority.audience = $4 AND authority.operation = $5
-  AND ((authority.audience = 'ani-iam' AND authority.scope = 'iam_ingress')
-       OR (authority.audience = 'ani-session-gateway' AND authority.operation = 'session.create' AND authority.scope = 'delegated_session')
-       OR (authority.audience = 'ani-notification-service' AND authority.operation IN ('notification.submit','notification.get_own') AND authority.scope = 'workload_notification'))
+  AND registration.enabled AND registration.target_sha256 = $6
   AND authority.status = 'active'
   AND principal.principal_type = 'workload' AND principal.status = 'active'
-  AND principal.version = $6 AND profile.owner_type = 'platform'
-  AND binding.id = $7 AND binding.version = $8
+  AND principal.version = $7 AND profile.owner_type = 'platform'
+  AND binding.id = $8 AND binding.version = $9
   AND binding.status = 'active'
 `
 
@@ -475,6 +476,7 @@ type CheckWorkloadGrantParams struct {
 	TrustDomain      string
 	Audience         string
 	Operation        string
+	TargetSha256     []byte
 	PrincipalVersion int64
 	BindingID        uuid.UUID
 	BindingVersion   int64
@@ -487,6 +489,7 @@ func (q *Queries) CheckWorkloadGrant(ctx context.Context, arg CheckWorkloadGrant
 		arg.TrustDomain,
 		arg.Audience,
 		arg.Operation,
+		arg.TargetSha256,
 		arg.PrincipalVersion,
 		arg.BindingID,
 		arg.BindingVersion,
@@ -521,13 +524,14 @@ SET status = 'claimed',
     claimed_at = $1,
     version = outbox.version + 1,
     updated_at = $1
-FROM candidate, password_actions AS action
+FROM candidate, password_actions AS action, password_action_requests AS request
 WHERE outbox.id = candidate.id
   AND action.operation_id = outbox.operation_id
+  AND request.operation_id = action.operation_id
 RETURNING outbox.id, outbox.operation_id, outbox.principal_id,
           outbox.intent, outbox.destination_key_version, outbox.destination_ciphertext, outbox.attempt_count,
           outbox.version, action.created_at AS issued_at,
-          action.expires_at
+          action.expires_at, request.audience
 `
 
 type ClaimPasswordActionNotificationParams struct {
@@ -546,6 +550,7 @@ type ClaimPasswordActionNotificationRow struct {
 	Version               int64
 	IssuedAt              pgtype.Timestamptz
 	ExpiresAt             pgtype.Timestamptz
+	Audience              string
 }
 
 func (q *Queries) ClaimPasswordActionNotification(ctx context.Context, arg ClaimPasswordActionNotificationParams) (ClaimPasswordActionNotificationRow, error) {
@@ -562,6 +567,7 @@ func (q *Queries) ClaimPasswordActionNotification(ctx context.Context, arg Claim
 		&i.Version,
 		&i.IssuedAt,
 		&i.ExpiresAt,
+		&i.Audience,
 	)
 	return i, err
 }
@@ -658,14 +664,28 @@ WHERE membership.tenant_id = $1
   AND principal.status = 'active'
   AND role.system_role
   AND role.code = 'tenant-admin'
+  AND EXISTS (SELECT 1 FROM verified_emails e WHERE e.principal_id=principal.id)
+  AND EXISTS (SELECT 1 FROM identities i WHERE i.principal_id=principal.id AND i.status='active'
+    AND (($2::text<>'' AND $3::text<>'' AND i.provider=$2 AND i.issuer=$3)
+      OR ($4::boolean AND i.provider='password' AND EXISTS
+        (SELECT 1 FROM password_credentials c WHERE c.principal_id=principal.id AND c.identity_id=i.id
+          AND (c.locked_until IS NULL OR c.locked_until<=statement_timestamp())))))
 `
 
 type CountActiveHumanTenantAdministratorsParams struct {
-	TenantID uuid.UUID
+	TenantID        uuid.UUID
+	OidcProvider    string
+	OidcIssuer      string
+	PasswordEnabled bool
 }
 
 func (q *Queries) CountActiveHumanTenantAdministrators(ctx context.Context, arg CountActiveHumanTenantAdministratorsParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countActiveHumanTenantAdministrators, arg.TenantID)
+	row := q.db.QueryRow(ctx, countActiveHumanTenantAdministrators,
+		arg.TenantID,
+		arg.OidcProvider,
+		arg.OidcIssuer,
+		arg.PasswordEnabled,
+	)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -1614,7 +1634,7 @@ func (q *Queries) GetTenantAuthorizationMembership(ctx context.Context, arg GetT
 }
 
 const getTenantAuthorizationRole = `-- name: GetTenantAuthorizationRole :one
-SELECT id, code, system_role, system_definition_version,
+SELECT id, code, display_name, system_role, system_definition_version,
        version, created_at, updated_at
 FROM tenant_roles
 WHERE tenant_id = $1
@@ -1629,6 +1649,7 @@ type GetTenantAuthorizationRoleParams struct {
 type GetTenantAuthorizationRoleRow struct {
 	ID                      uuid.UUID
 	Code                    string
+	DisplayName             string
 	SystemRole              bool
 	SystemDefinitionVersion int64
 	Version                 int64
@@ -1642,6 +1663,7 @@ func (q *Queries) GetTenantAuthorizationRole(ctx context.Context, arg GetTenantA
 	err := row.Scan(
 		&i.ID,
 		&i.Code,
+		&i.DisplayName,
 		&i.SystemRole,
 		&i.SystemDefinitionVersion,
 		&i.Version,
@@ -1653,7 +1675,7 @@ func (q *Queries) GetTenantAuthorizationRole(ctx context.Context, arg GetTenantA
 
 const getTenantLifecycleFreshnessForAuthorization = `-- name: GetTenantLifecycleFreshnessForAuthorization :one
 SELECT fresh_until > statement_timestamp() AS lifecycle_fresh
-FROM tenant_lifecycle_projections
+FROM current_tenant_lifecycle
 WHERE tenant_id = $1
 `
 
@@ -1950,16 +1972,65 @@ SELECT EXISTS (
       AND principal.status = 'active'
       AND role.system_role
       AND role.code = 'tenant-admin'
+  AND EXISTS (SELECT 1 FROM verified_emails e WHERE e.principal_id=principal.id)
+  AND EXISTS (SELECT 1 FROM identities i WHERE i.principal_id=principal.id AND i.status='active'
+    AND (($3::text<>'' AND $4::text<>'' AND i.provider=$3 AND i.issuer=$4)
+      OR ($5::boolean AND i.provider='password' AND EXISTS
+        (SELECT 1 FROM password_credentials c WHERE c.principal_id=principal.id AND c.identity_id=i.id
+          AND (c.locked_until IS NULL OR c.locked_until<=statement_timestamp())))))
 ) AS is_active_human_administrator
 `
 
 type IsActiveHumanTenantAdministratorParams struct {
-	TenantID     uuid.UUID
-	MembershipID uuid.UUID
+	TenantID        uuid.UUID
+	MembershipID    uuid.UUID
+	OidcProvider    string
+	OidcIssuer      string
+	PasswordEnabled bool
 }
 
 func (q *Queries) IsActiveHumanTenantAdministrator(ctx context.Context, arg IsActiveHumanTenantAdministratorParams) (bool, error) {
-	row := q.db.QueryRow(ctx, isActiveHumanTenantAdministrator, arg.TenantID, arg.MembershipID)
+	row := q.db.QueryRow(ctx, isActiveHumanTenantAdministrator,
+		arg.TenantID,
+		arg.MembershipID,
+		arg.OidcProvider,
+		arg.OidcIssuer,
+		arg.PasswordEnabled,
+	)
+	var is_active_human_administrator bool
+	err := row.Scan(&is_active_human_administrator)
+	return is_active_human_administrator, err
+}
+
+const isActiveHumanTenantAdministratorPrincipal = `-- name: IsActiveHumanTenantAdministratorPrincipal :one
+SELECT EXISTS (
+    SELECT 1
+    FROM tenant_memberships AS membership
+    JOIN principals AS principal
+      ON principal.id = membership.principal_id
+    JOIN tenant_role_bindings AS binding
+      ON binding.tenant_id = membership.tenant_id
+     AND binding.membership_id = membership.id
+    JOIN tenant_roles AS role
+      ON role.tenant_id = binding.tenant_id
+     AND role.id = binding.role_id
+    WHERE membership.tenant_id = $1
+      AND membership.principal_id = $2
+      AND membership.status = 'active'
+      AND principal.principal_type = 'human'
+      AND principal.status = 'active'
+      AND role.system_role
+      AND role.code = 'tenant-admin'
+) AS is_active_human_administrator
+`
+
+type IsActiveHumanTenantAdministratorPrincipalParams struct {
+	TenantID    uuid.UUID
+	PrincipalID uuid.UUID
+}
+
+func (q *Queries) IsActiveHumanTenantAdministratorPrincipal(ctx context.Context, arg IsActiveHumanTenantAdministratorPrincipalParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isActiveHumanTenantAdministratorPrincipal, arg.TenantID, arg.PrincipalID)
 	var is_active_human_administrator bool
 	err := row.Scan(&is_active_human_administrator)
 	return is_active_human_administrator, err
@@ -2491,7 +2562,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = $4
   AND principal.status = 'active'
@@ -2548,7 +2619,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE identity.id = $3
   AND identity.provider = $4
@@ -2720,7 +2791,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE token.digest = $1
 FOR UPDATE OF token, family, grant_row, session_row, principal, membership, access
@@ -2943,7 +3014,7 @@ JOIN tenant_memberships AS target_membership
  AND target_membership.status <> 'removed'
 JOIN tenant_access AS target_access
   ON target_access.tenant_id = target_membership.tenant_id
-JOIN tenant_lifecycle_projections AS target_lifecycle
+JOIN current_tenant_lifecycle AS target_lifecycle
   ON target_lifecycle.tenant_id = target_membership.tenant_id
 WHERE principal.id = $5
 FOR UPDATE OF principal, session_row, source_grant, source_membership,
@@ -2987,7 +3058,7 @@ type LockTenantSwitchBoundaryRow struct {
 	SourceGrantUpdatedAt   pgtype.Timestamptz
 }
 
-// tenant_lifecycle_projections is a read-only projection for the IAM runtime.
+// current_tenant_lifecycle is a read-only projection for the IAM runtime.
 func (q *Queries) LockTenantSwitchBoundary(ctx context.Context, arg LockTenantSwitchBoundaryParams) (LockTenantSwitchBoundaryRow, error) {
 	row := q.db.QueryRow(ctx, lockTenantSwitchBoundary,
 		arg.SessionID,
@@ -3044,8 +3115,8 @@ SELECT
     principal.status AS principal_status,
     membership.status AS membership_status,
     access.status AS tenant_access_status,
-    lifecycle.status AS lifecycle_status,
-    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    COALESCE(lifecycle.status,'')::text AS lifecycle_status,
+    COALESCE(lifecycle.fresh_until > statement_timestamp(),false)::boolean AS lifecycle_fresh,
     NOT EXISTS (
         SELECT 1
         FROM unnest($1::text[]) AS required_action(action)
@@ -3073,7 +3144,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = profile.principal_id
 JOIN tenant_access AS access
   ON access.tenant_id = profile.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+LEFT JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = profile.tenant_id
 WHERE api_key.tenant_id = $2
   AND api_key.key_id = $4
@@ -3187,8 +3258,8 @@ SELECT
     principal.status AS principal_status,
     membership.status AS membership_status,
     access.status AS tenant_access_status,
-    lifecycle.status AS lifecycle_status,
-    lifecycle.fresh_until > statement_timestamp() AS lifecycle_fresh,
+    COALESCE(lifecycle.status,'')::text AS lifecycle_status,
+    COALESCE(lifecycle.fresh_until > statement_timestamp(),false)::boolean AS lifecycle_fresh,
     session.status AS session_status,
     session_grant.status AS grant_status,
     session_grant.version AS grant_version,
@@ -3221,7 +3292,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+LEFT JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = $6
 `
@@ -3381,7 +3452,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE identity.provider = $2
   AND identity.issuer = $3
@@ -3454,7 +3525,7 @@ JOIN tenant_memberships AS membership
  AND membership.id = session_grant.membership_id
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle ON lifecycle.tenant_id = membership.tenant_id
+JOIN current_tenant_lifecycle AS lifecycle ON lifecycle.tenant_id = membership.tenant_id
 WHERE principal.id = $4
   AND session.idle_expires_at > statement_timestamp()
   AND session.absolute_expires_at > statement_timestamp()
@@ -3565,7 +3636,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE email.normalized_email = $2
 `
@@ -3663,7 +3734,7 @@ JOIN tenant_memberships AS membership
  AND membership.principal_id = principal.id
 JOIN tenant_access AS access
   ON access.tenant_id = membership.tenant_id
-JOIN tenant_lifecycle_projections AS lifecycle
+JOIN current_tenant_lifecycle AS lifecycle
   ON lifecycle.tenant_id = membership.tenant_id
 WHERE token.digest = $1
 `
@@ -3811,7 +3882,7 @@ JOIN tenant_memberships AS target_membership
  AND target_membership.status <> 'removed'
 JOIN tenant_access AS target_access
   ON target_access.tenant_id = target_membership.tenant_id
-JOIN tenant_lifecycle_projections AS target_lifecycle
+JOIN current_tenant_lifecycle AS target_lifecycle
   ON target_lifecycle.tenant_id = target_membership.tenant_id
 LEFT JOIN session_grants AS target_grant
   ON target_grant.tenant_id = target_membership.tenant_id

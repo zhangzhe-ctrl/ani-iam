@@ -112,7 +112,7 @@ func TestAPIKeyRuntimeControlsUseRealRedisAndAsynchronouslyFlushRestrictedPostgr
 	decisionID := uuid.MustParse("0199d080-5200-7001-9000-000000000005")
 	auditID := uuid.MustParse("0199d080-5200-7001-9000-000000000006")
 	authentication := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)), nil, nil,
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)), nil, nil,
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)), nil, nil,
 		&fixedIDGenerator{ids: []uuid.UUID{decisionID, auditID}}, fixedClock{now: observedEarlier}, aggregator,
 	)

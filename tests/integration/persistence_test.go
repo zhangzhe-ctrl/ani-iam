@@ -160,31 +160,25 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 			t.Fatalf("iterate runtime table grants: %v", err)
 		}
 		rows.Close()
-		expectedGrants := make(map[string]struct{})
-		for _, tableName := range []string{"principals", "tenant_access", "tenant_memberships", "tenant_roles", "tenant_role_bindings"} {
-			for _, privilege := range []string{"INSERT", "SELECT", "UPDATE"} {
-				expectedGrants[tableName+"/"+privilege] = struct{}{}
-			}
+		// Compare the reviewed pre-WR32 baseline with the exact WR32 and WR23
+		// delta. No unrelated Human authority or storage privilege may change.
+		expectedGrants := make(map[string]struct{}, len(environment.baselineRuntimeGrants)+1)
+		for grant := range environment.baselineRuntimeGrants {
+			expectedGrants[grant] = struct{}{}
 		}
-		for _, privilege := range []string{"INSERT", "SELECT"} {
-			expectedGrants["iam_audit_events/"+privilege] = struct{}{}
-		}
-		expectedGrants["tenant_mutation_results/SELECT"] = struct{}{}
-		expectedGrants["tenant_mutation_results/INSERT"] = struct{}{}
-		expectedGrants["tenant_role_bindings/DELETE"] = struct{}{}
-		for _, tableName := range []string{"verified_emails", "tenant_lifecycle_projections", "tenant_role_permissions", "workload_identity_bindings", "workload_grants", "iam_schema_revision"} {
-			expectedGrants[tableName+"/SELECT"] = struct{}{}
-		}
-		for _, tableName := range []string{
-			"identities", "password_credentials", "sessions", "session_grants",
-			"refresh_token_families", "refresh_tokens", "password_action_requests",
-			"password_actions", "notification_outbox", "password_action_completions",
-			"workload_principals", "api_keys",
+		expectedGrants["workload_target_registrations/SELECT"] = struct{}{}
+		delete(expectedGrants, "tenant_lifecycle_projections/SELECT")
+		for _, grant := range []string{
+			"core_broker_bindings/SELECT", "core_broker_routes/SELECT", "core_broker_grants/SELECT",
+			"core_broker_authority_receipts/SELECT", "core_broker_authority_receipts/INSERT",
+			"core_broker_dlq/SELECT", "core_broker_dlq/INSERT",
+			"core_broker_dlq_context/SELECT", "core_broker_dlq_context/INSERT", "core_broker_dlq_attempts/SELECT", "core_broker_dlq_attempts/INSERT", "core_broker_administration_receipts/SELECT",
+			"core_current_lifecycle_facts/SELECT", "current_tenant_lifecycle/SELECT",
+			"core_bootstrap_broker_approvals/SELECT", "core_bootstrap_broker_approvals/INSERT",
 		} {
-			for _, privilege := range []string{"INSERT", "SELECT", "UPDATE"} {
-				expectedGrants[tableName+"/"+privilege] = struct{}{}
-			}
+			expectedGrants[grant] = struct{}{}
 		}
+
 		if len(grants) != len(expectedGrants) {
 			t.Fatalf("runtime grant count = %d, want %d: %#v", len(grants), len(expectedGrants), grants)
 		}
@@ -566,14 +560,19 @@ func TestNoRLSPersistenceFoundation(t *testing.T) {
 }
 
 type postgresEnvironment struct {
-	runtimePool     *pgxpool.Pool
-	host            string
-	migrationPass   string
-	provisionerPass string
-	runtimePass     string
+	bootstrapDSN          string
+	baselineRuntimeGrants map[string]struct{}
+	runtimePool           *pgxpool.Pool
+	host                  string
+	migrationPass         string
+	provisionerPass       string
+	runtimePass           string
 }
 
-func newPostgresEnvironment(t *testing.T) *postgresEnvironment {
+func newPostgresEnvironment(t *testing.T, migrationFixtures ...func(*testing.T, *pgxpool.Pool, string)) *postgresEnvironment {
+	if len(migrationFixtures) > 1 {
+		t.Fatal("one bounded migration fixture allowed")
+	}
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
 	defer cancel()
@@ -646,8 +645,44 @@ func newPostgresEnvironment(t *testing.T) *postgresEnvironment {
 		provisionerPass: provisionerPassword,
 		runtimePass:     runtimePassword,
 	}
+	if os.Getenv("WR23_FORMAL_COMBINATION") == "1" {
+		if _, goal := isolatedRun(t); goal != "wr23" {
+			t.Fatal("formal database bootstrap scope conflict")
+		}
+		environment.bootstrapDSN = postgresDSN("postgres", superPassword, environment.host, "postgres", "wr23-finite-cluster-bootstrap")
+	}
+	historicalRoot := wr32HistoricalMigrations(t, repositoryRoot, atlasBinary)
 	for _, database := range []string{primaryDB, replayDB} {
+		applyAtlasMigrations(t, ctx, atlasBinary, historicalRoot, environment.migrationDSN(database))
+		if database == primaryDB {
+			previousRuntime := mustPool(t, environment.runtimeDSN(database, "wr32-baseline"))
+			environment.baselineRuntimeGrants = wr32RuntimePrivileges(t, previousRuntime)
+			previousRuntime.Close()
+		}
+		registryOwner := mustPool(t, environment.migrationDSN(database))
+		if len(migrationFixtures) == 1 {
+			migrationFixtures[0](t, registryOwner, "before")
+		}
+		var existingGrants int
+		if err := registryOwner.QueryRow(ctx, "SELECT count(*) FROM workload_grants").Scan(&existingGrants); err != nil {
+			t.Fatal(err)
+		}
 		applyAtlasMigrations(t, ctx, atlasBinary, repositoryRoot, environment.migrationDSN(database))
+		if len(migrationFixtures) == 1 {
+			migrationFixtures[0](t, registryOwner, "migrated")
+		}
+		predecessor := "empty"
+		if existingGrants > 0 {
+			predecessor = "0000000000000000000000000000000000000000000000000000000000000000"
+		}
+		installErr := data.InstallWorkloadRegistry(ctx, data.NewData(registryOwner), wr32Registry(t), predecessor)
+		if installErr == nil && len(migrationFixtures) == 1 {
+			migrationFixtures[0](t, registryOwner, "installed")
+		}
+		registryOwner.Close()
+		if installErr != nil {
+			t.Fatalf("install exact reviewed target registry: %v", installErr)
+		}
 	}
 
 	environment.runtimePool = mustPool(t, environment.runtimeDSN(primaryDB, "ani-iam-dp2-04-integration"))

@@ -95,6 +95,24 @@ func TestGRPCPasswordActionNotificationSubmitterMapsFrozenContract(t *testing.T)
 	}
 }
 
+func TestGRPCPasswordActionNotificationUsesExplicitBOSSOrigin(t *testing.T) {
+	value := validPasswordActionNotificationSubmission()
+	value.Audience = biz.AudienceBoss
+	client := &recordingNotificationServiceClient{response: &notificationv1.SubmitNotificationResponse{Receipt: &notificationv1.NotificationReceipt{NotificationId: uuid.NewString(), RequestId: value.RequestID.String(), StoredAt: timestamppb.New(time.Now())}}}
+	submitter, err := NewGRPCPasswordActionNotificationSubmitter(client, PasswordActionNotificationSubmitterConfig{ConsoleActionURLBase: "https://console.example.test/password-action", BossActionURLBase: "https://boss.example.test/password-action", Locale: "en-US"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = submitter.SubmitPasswordActionNotification(context.Background(), value); err != nil {
+		t.Fatal("BOSS submission failed")
+	}
+	payload := client.request.GetIamPasswordAction()
+	location, err := url.Parse(payload.ActionUrl)
+	if err != nil || location.Scheme != "https" || location.Host != "boss.example.test" || payload.Audience != notificationv1.IamPasswordActionAudience_IAM_PASSWORD_ACTION_AUDIENCE_BOSS || location.Query().Get("token") != value.ActionToken {
+		t.Fatal("BOSS action origin or audience changed")
+	}
+}
+
 func TestGRPCPasswordActionNotificationSubmitterClassifiesFrozenErrors(t *testing.T) {
 	tests := []struct {
 		name string
@@ -145,7 +163,7 @@ func TestGRPCPasswordActionNotificationSubmitterFailsClosedBeforeTransport(t *te
 		mutate func(*biz.PasswordActionNotificationSubmission)
 	}{
 		{name: "empty token", mutate: func(value *biz.PasswordActionNotificationSubmission) { value.ActionToken = "" }},
-		{name: "boss unsupported", mutate: func(value *biz.PasswordActionNotificationSubmission) { value.Audience = biz.AudienceBoss }},
+		{name: "boss URL unconfigured", mutate: func(value *biz.PasswordActionNotificationSubmission) { value.Audience = biz.AudienceBoss }},
 		{name: "destination not normalized", mutate: func(value *biz.PasswordActionNotificationSubmission) { value.DestinationEmail = "User@example.com" }},
 		{name: "non-v7 principal", mutate: func(value *biz.PasswordActionNotificationSubmission) {
 			value.PrincipalID = uuid.MustParse("cf8867ce-3314-4c84-98d0-6e9fd985d62a")

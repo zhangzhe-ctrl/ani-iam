@@ -1,10 +1,16 @@
 package data
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"reflect"
+	"slices"
 	"sort"
 
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 )
 
 type targetOperationRegistry struct {
@@ -12,25 +18,91 @@ type targetOperationRegistry struct {
 	policies map[string]biz.AuthorizationPolicy
 }
 
-func NewTargetOperationRegistry(expectedRevision string) (biz.AuthorizationPolicyRegistry, error) {
-	if expectedRevision != TargetPolicyRevision {
-		return nil, &biz.AuthorizationPolicyMismatchError{
-			Expected: TargetPolicyRevision,
-			Actual:   expectedRevision,
+type ownerTargetPolicy struct {
+	Audience, Operation, Method, Path string
+	Policy                            biz.AuthorizationPolicy
+}
+
+func NewTargetOperationRegistry(expectedRevision string, registries ...*workloadregistry.Registry) (biz.AuthorizationPolicyRegistry, error) {
+	var registry *workloadregistry.Registry
+	if len(registries) == 1 {
+		registry = registries[0]
+	}
+	policies, revision, err := workloadOperationPolicies(registry)
+	if err != nil {
+		return nil, err
+	}
+	if expectedRevision != revision {
+		return nil, &biz.AuthorizationPolicyMismatchError{Expected: revision, Actual: expectedRevision}
+	}
+	return &targetOperationRegistry{revision: revision, policies: policies}, nil
+}
+
+// Existing Human policy is immutable. A synchronous declaration may repeat an
+// identical source or introduce a new finite Tenant resource permission.
+func workloadOperationPolicies(registry *workloadregistry.Registry) (map[string]biz.AuthorizationPolicy, string, error) {
+	policies := make(map[string]biz.AuthorizationPolicy, len(generatedTargetPolicies))
+	for id, p := range generatedTargetPolicies {
+		policies[id] = p
+	}
+	additions := map[string]biz.AuthorizationPolicy{}
+	canonical := func(p biz.AuthorizationPolicy) biz.AuthorizationPolicy {
+		p.Actions = slices.Clone(p.Actions)
+		sort.Strings(p.Actions)
+		p.PrincipalKinds = slices.Clone(p.PrincipalKinds)
+		slices.Sort(p.PrincipalKinds)
+		p.CredentialKinds = slices.Clone(p.CredentialKinds)
+		slices.Sort(p.CredentialKinds)
+		return p
+	}
+	for _, owner := range generatedOwnerTargetPolicies {
+		target, exists := registry.Lookup(owner.Audience, owner.Operation)
+		if !exists || !target.Enabled {
+			continue
+		}
+		if target.Mechanism != workloadregistry.WorkloadOnly || target.HTTPMethod != owner.Method || target.HTTPPath != owner.Path || target.RPC != "" {
+			return nil, "", biz.ErrAuthorizationOperationUnregistered
+		}
+		p := canonical(owner.Policy)
+		if _, collision := policies[p.OperationID]; collision {
+			return nil, "", biz.ErrAuthorizationOperationUnregistered
+		}
+		policies[p.OperationID], additions[p.OperationID] = p, p
+	}
+	for _, target := range registry.Targets() {
+		for _, source := range target.Sources {
+			p := biz.AuthorizationPolicy{OperationID: source.Operation, Scope: biz.PermissionScopeTenant, Resource: source.Resource, Actions: []string{source.Action}, Obligations: []biz.AuthorizationObligation{{Type: biz.AuthorizationObligationResourceTenantMatch, Handler: source.OwnerHandler}}}
+			for _, kind := range source.PrincipalKinds {
+				p.PrincipalKinds = append(p.PrincipalKinds, biz.PrincipalType(kind))
+			}
+			for _, kind := range source.CredentialKinds {
+				p.CredentialKinds = append(p.CredentialKinds, biz.CredentialKind(kind))
+			}
+			if existing, ok := policies[p.OperationID]; ok {
+				if !reflect.DeepEqual(canonical(existing), canonical(p)) {
+					return nil, "", biz.ErrAuthorizationOperationUnregistered
+				}
+			} else {
+				policies[p.OperationID] = p
+				additions[p.OperationID] = canonical(p)
+			}
 		}
 	}
-	return &targetOperationRegistry{
-		revision: TargetPolicyRevision,
-		policies: generatedTargetPolicies,
-	}, nil
+	revision := TargetPolicyRevision
+	if len(additions) > 0 {
+		raw, _ := json.Marshal(additions)
+		sum := sha256.Sum256(append([]byte(TargetPolicyRevision+"\x00"), raw...))
+		revision = "sha256:" + hex.EncodeToString(sum[:])
+	}
+	return policies, revision, nil
 }
 
 type targetPermissionCatalog struct {
 	permissions map[biz.Permission]struct{}
 }
 
-func NewTargetPermissionCatalog(expectedRevision string) (biz.PermissionCatalog, error) {
-	registry, err := NewTargetOperationRegistry(expectedRevision)
+func NewTargetPermissionCatalog(expectedRevision string, registries ...*workloadregistry.Registry) (biz.PermissionCatalog, error) {
+	registry, err := NewTargetOperationRegistry(expectedRevision, registries...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,3 +160,9 @@ var (
 	_ biz.AuthorizationPolicyRegistry = (*targetOperationRegistry)(nil)
 	_ biz.PermissionCatalog           = (*targetPermissionCatalog)(nil)
 )
+
+// WorkloadPolicyRevision changes only when the set of source permissions changes.
+func WorkloadPolicyRevision(registry *workloadregistry.Registry) (string, error) {
+	_, revision, err := workloadOperationPolicies(registry)
+	return revision, err
+}

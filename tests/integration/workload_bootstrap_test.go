@@ -42,7 +42,7 @@ func TestWorkloadBootstrapTransactions(t *testing.T) {
 	ownerPool := mustPool(t, env.migrationDSN(primaryDB))
 	defer ownerPool.Close()
 	newUC := func(clock biz.Clock) *biz.WorkloadBootstrap {
-		return biz.NewWorkloadBootstrap(data.NewWorkloadBootstrapRepository(data.NewData(provisioner)), clock)
+		return biz.NewWorkloadBootstrap(data.NewWorkloadBootstrapRepository(data.NewData(provisioner), wr32Registry(t)), clock, wr32Registry(t))
 	}
 	u := newUC(data.NewSystemClock())
 	checkCounts := func(m biz.WorkloadBootstrapManifest, expected int) {
@@ -169,7 +169,7 @@ func TestWorkloadBootstrapTransactions(t *testing.T) {
 	})
 	t.Run("runtime cannot provision and provisioner cannot create Human or mutate", func(t *testing.T) {
 		o, m := newBootstrapManifest(t, strings.Repeat("a", 64))
-		runtime := biz.NewWorkloadBootstrap(data.NewWorkloadBootstrapRepository(data.NewData(env.runtimePool)), data.NewSystemClock())
+		runtime := biz.NewWorkloadBootstrap(data.NewWorkloadBootstrapRepository(data.NewData(env.runtimePool), wr32Registry(t)), data.NewSystemClock(), wr32Registry(t))
 		if _, err := runtime.Provision(ctx, o, m); !errors.Is(err, biz.ErrWorkloadBootstrapDenied) {
 			t.Fatalf("runtime: %v", err)
 		}
@@ -220,7 +220,7 @@ func TestFormalWorkloadBootstrapCommand(t *testing.T) {
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("build formal IAM: %v\n%s", err, out)
 	}
-	args := []string{"provision-workloads", "--manifest", manifestPath, "--approved-manifest-sha256", hex.EncodeToString(digest[:]), "--environment", m.Environment, "--trust-domain", m.TrustDomain, "--ca-file", caFile, "--dsn-file", dsnPath}
+	args := []string{"provision-workloads", "--registry-file", wr32RegistryPath(t), "--approved-registry-sha256", wr32Registry(t).Digest(), "--manifest", manifestPath, "--approved-manifest-sha256", hex.EncodeToString(digest[:]), "--environment", m.Environment, "--trust-domain", m.TrustDomain, "--ca-file", caFile, "--dsn-file", dsnPath}
 	var first []byte
 	for i := range 2 {
 		command := exec.Command(binary, args...)

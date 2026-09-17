@@ -1,16 +1,20 @@
 # ANI Domain Language
 
-ANI Core、IAM 与 Services 共享的领域词汇，用于区分资源生命周期、主体、所有者、身份、权限与执行边界。这里仅解释概念；已接受决定见 [ADR](docs/adr/)，候选词汇不因列入本表而成为已冻结契约。
+Governance、IAM 与资源 Services 共享的领域词汇，用于区分资源生命周期、主体、所有者、身份、权限与执行边界。这里仅解释概念；已接受决定见 [ADR](docs/adr/)，候选词汇不因列入本表而成为已冻结契约。
 
 ## Tenant 与授权边界
 
 **Tenant（租户）**:
-Core Control 拥有的平台资源，具有由 Core Control 生成且不可变的 Tenant ID；其他领域只能引用该 ID。
+Governance 拥有的平台资源，具有由 Governance 生成且不可变的 Tenant ID；其他领域只能引用该 ID。
 _Avoid_: IAM Tenant、副本租户
 
 **Tenant Lifecycle（租户生命周期）**:
-租户作为平台资源从开通到终止的业务状态，由 Core Control 拥有，独立于身份认证结果和 IAM 访问状态。
+租户作为平台资源从开通到终止的业务状态，由 Governance 拥有，独立于身份认证结果和 IAM 访问状态。
 _Avoid_: Tenant Access、租户权限
+
+**Tenant Lifecycle Projection（租户生命周期投影）**:
+IAM 保存的 Governance 生命周期事实与来源连续性状态，用于拒绝不满足生命周期条件的访问；它不是第二份租户业务权威。
+_Avoid_: IAM Tenant、租户副本 owner
 
 **Tenant Access（租户访问状态）**:
 IAM 拥有的租户安全访问状态，独立于 Tenant Lifecycle 和单个成员状态；其状态为 `bootstrap_pending`、`active` 或 `suspended`。

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -90,12 +91,15 @@ func TestWorkloadRuntimeFoundationUsesCurrentOwnerTrustAndEnforcesRelations(t *t
 	if err := data.ValidateRuntimeFoundation(ctx, data.NewData(owner)); err == nil {
 		t.Fatal("owner role accepted as runtime")
 	}
-	seedPrincipalsAndTenants(t, ctx, environment.runtimePool)
+	seedTenantAuthorizationBoundary(t, ctx, environment.runtimePool, tenantA, mustV7(t), time.Now().UTC(), []uuid.UUID{actorID}, []uuid.UUID{mustV7(t)})
+	if _, err := environment.runtimePool.Exec(ctx, `INSERT INTO tenant_access(tenant_id,status,version,created_at,updated_at) VALUES($1,'active',1,now(),now())`, tenantB); err != nil {
+		t.Fatal(err)
+	}
 	operation := iamv1.AuthenticationService_PasswordLogin_FullMethodName
 	seedGatewayWorkload(t, environment, operation)
 	peer := biz.VerifiedWorkloadPeer{Environment: "wr17-18-isolated", TrustDomain: "iam.wr17-18.test", IdentityKind: "x509_dns", IdentityValue: "ani-gateway"}
 	authn := biz.NewWorkloadAuthentication(data.NewWorkloadIdentityReader(dataset))
-	authz := biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(dataset))
+	authz := biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(dataset, wr32Registry(t)), wr32Registry(t))
 	identity, err := authn.Authenticate(ctx, peer)
 	if err != nil {
 		t.Fatal(err)

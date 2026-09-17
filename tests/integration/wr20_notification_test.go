@@ -175,7 +175,22 @@ func TestWR20StageCFormalNotificationPasswordAction(t *testing.T) {
 		if code != 409 {
 			t.Fatalf("request conflict status %d", code)
 		}
-		time.Sleep(2500 * time.Millisecond) // one genuine deadline failure, no test timeout bypass
+		// Observe a real failed attempt, including the persisted retry transition.
+		// Elapsed time alone does not prove the dispatcher had started its call.
+		var failedAttempts int
+		persistedRetry := false
+		for deadline := time.Now().Add(12 * time.Second); time.Now().Before(deadline); time.Sleep(50 * time.Millisecond) {
+			var retry bool
+			err := e.owner.QueryRow(ctx, "SELECT attempt_count,status='pending' AND claimed_at IS NULL FROM notification_outbox WHERE operation_id=$1", resetOperation).Scan(&failedAttempts, &retry)
+			if err == nil && failedAttempts >= 1 && retry {
+				persistedRetry = true
+				break
+			}
+		}
+		if !persistedRetry {
+			t.Fatal("stopped Notification did not cause a persisted retry")
+		}
+		recordReference(t, e.run, map[string]any{"stage": "C", "assertion": "real_submission_failure_persisted_before_recovery", "attempt_count": failedAttempts, "pass": true})
 		if err = n.process.Signal(syscall.SIGCONT); err != nil {
 			t.Fatal(err)
 		}
@@ -183,7 +198,7 @@ func TestWR20StageCFormalNotificationPasswordAction(t *testing.T) {
 		var attempts int
 		var scrubbed bool
 		if err = e.owner.QueryRow(ctx, "SELECT attempt_count,destination_ciphertext IS NULL AND destination_key_version IS NULL FROM notification_outbox WHERE operation_id=$1", resetOperation).Scan(&attempts, &scrubbed); err != nil || attempts < 2 || !scrubbed {
-			t.Fatal("timeout retry or receipt-time scrub failed")
+			t.Fatalf("timeout retry or receipt-time scrub failed: attempts=%d scrubbed=%t query_error=%v", attempts, scrubbed, err)
 		}
 	})
 	sub("SMTP_acceptance_and_get_own_are_independent_of_action_completion", func(t *testing.T) {
@@ -266,11 +281,16 @@ func TestWR20StageCFormalNotificationPasswordAction(t *testing.T) {
 			mutate func(*notificationv1.SubmitNotificationRequest)
 			want   codes.Code
 		}{
-			{"type", func(r *notificationv1.SubmitNotificationRequest) {
+			// The fixed WR22 Notification candidate already grants IAM this type.
+			{"registered_tenant_invitation_type", func(r *notificationv1.SubmitNotificationRequest) {
 				r.Notification = &notificationv1.SubmitNotificationRequest_IamTenantInvitation{IamTenantInvitation: &notificationv1.IamTenantInvitation{TenantDisplayName: "WR20 fixture", ActionUrl: e.origin + "/password-action?token=invalid-fixture", InvitationExpiresAt: timestamppb.New(time.Now().Add(15 * time.Minute))}}
 				r.Scope = &notificationv1.NotificationScope{Scope: &notificationv1.NotificationScope_Tenant{Tenant: &notificationv1.TenantScope{TenantId: referenceTenants[0].String()}}}
 				r.Recipient = &notificationv1.NotificationRecipient{Recipient: &notificationv1.NotificationRecipient_Direct{Direct: &notificationv1.DirectRecipient{}}}
-			}, codes.PermissionDenied},
+			}, codes.OK},
+			{"missing_type", func(r *notificationv1.SubmitNotificationRequest) { r.Notification = nil }, codes.InvalidArgument},
+			{"wrong_scope", func(r *notificationv1.SubmitNotificationRequest) {
+				r.Scope = &notificationv1.NotificationScope{Scope: &notificationv1.NotificationScope_Tenant{Tenant: &notificationv1.TenantScope{TenantId: referenceTenants[0].String()}}}
+			}, codes.InvalidArgument},
 			{"recipient", func(r *notificationv1.SubmitNotificationRequest) {
 				r.Recipient.GetHumanPrincipal().PrincipalId = e.humans[1].String()
 			}, codes.InvalidArgument},

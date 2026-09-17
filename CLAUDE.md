@@ -2,7 +2,7 @@
 
 ## 项目目标与入口
 
-这是独立 ANI IAM 项目：抽离 auth-service 和用户/权限能力，保留 Core 的 Tenant/Quota 治理与各资源服务的自治。当前执行方向由用户明确为 **隔离接口测试 → M1 接口替换就绪 → Core 旧身份代码裁剪与前端对接 → M2 实际替换**。旧代码和前端尚未迁移不单独构成 M1 失败。
+这是独立 ANI IAM 项目：抽离 auth-service 和用户/权限能力；Tenant 生命周期及后续套餐/Quota 治理由独立 Governance 拥有，各资源服务保持自治。当前执行方向为 **IAM/Governance 单一目标合同与并行实现 → 恢复 WR24 隔离接口测试 → M1 接口替换就绪 → Core 旧身份代码裁剪与前端对接 → M2 实际替换**。旧代码和前端尚未迁移不单独构成 M1 失败。
 
 只从以下入口读取当前范围与顺序：
 
@@ -11,6 +11,9 @@
 3. [capability-matrix.md](.scratch/ani-iam-workload-refoundation/capability-matrix.md)：替换必需能力与后续退出清单。
 4. [decisions.md](.scratch/ani-iam-workload-refoundation/decisions.md)：有限未决点、状态与影响范围。
 5. 按当前事项需要读取 [CONTEXT.md](CONTEXT.md)、[accepted ADR](docs/adr/)、[基础设计](docs/plans/plan-iam-service-refactor.md)和[Workload 设计](docs/plans/plan-workload-principal-refoundation.md)。
+6. 涉及接口权限声明、owner 职责或整体替换核对时，遵循 [API 授权声明规范](docs/api-authorization-contract.md)；实际接口策略仍由 owner 契约生成。
+
+2026-09-16 的 [IAM/Governance 并行计划](docs/plans/iam-governance-parallel-transition.md)定义新目标 owner、有限适配与 WR24 恢复条件；事项状态仍由 ticket-plan 维护。当前只完成规划，WR24 产品执行继续暂停。旧材料中“保留 Core Tenant owner”的指令已被用户新方向替代；历史候选、合同和证据不改写为 Governance 已通过。
 
 CP0/P1、Direct P2 与 WR-01–15 旧草案为历史路线和证据，不提供当前 frontier；历史来源 SHA 不自动成为新事项的 baseline。设计归档说明见 [历史索引](docs/plans/plan-iam-kratos-phased.md)。
 
@@ -25,10 +28,10 @@ CP0/P1、Direct P2 与 WR-01–15 旧草案为历史路线和证据，不提供�
 ## 稳定架构约束
 
 - IAM 不导入 ANI/Core 内部实现，可共享 PostgreSQL、Redis、Dex、NATS 等基础设施，但数据、Credential、事务与业务 owner 保持明确。
-- Core 拥有 Tenant Lifecycle/Quota；IAM 拥有 Human/Workload、Identity/Credential、Access、Membership、Role/Binding、Session、权限判定和安全 Audit。资源 owner 拥有真实 resourceTenant/Owner、operation、reconciler、provider 与业务幂等。
+- Governance 拥有 Tenant Lifecycle 及后续套餐/Quota；IAM 拥有 Human/Workload、Identity/Credential、Access、Membership、Role/Binding、Session、权限判定和安全 Audit。IAM 保存必要的 Tenant 生命周期投影，不成为 Tenant 业务 owner。资源 owner 拥有真实 resourceTenant/Owner、operation、reconciler、provider 与业务幂等。
 - Principal 只有 Human/Workload。Owner、Identity、Credential、Authority 与执行上下文独立。同步业务 hop 验证直接 Workload caller，并与所服务主体分开。异步消息必须有可信 producer 归因；具体 receiver/evidence/broker 机制以已接受决定为准，不能从 Header、payload、NetworkPolicy 或共享 Secret 推出身份。
 - ANI 公网 REST 由 owner OpenAPI 定义；Console/BOSS 经 Gateway，不直连 IAM。固定版本契约可共享，不复制身份库或重新实现一套权限模型。
-- 跨项目依赖固定不可变 commit/tree/摘要，不动态跟随 main/latest。Core/IAM 通过明确 Lifecycle/Bootstrap/Snapshot 协作，无共享写表、跨库事务和长期双写。
+- 跨项目依赖固定不可变 commit/tree/摘要，不动态跟随 main/latest。Governance/IAM 通过单一目标 Lifecycle/Bootstrap/Snapshot 合同协作，不维护旧 Core 双协议或自动回退，无共享写表、跨库事务和长期双写；通用鉴权复用 owner 契约、目标注册、独立身份与 Grant，不新增服务名特例。
 - cmd/server 是唯一 composition root，使用显式构造函数；service/biz/data 分层，biz 无框架/Proto/driver 依赖。Kratos 与成熟库负责已有框架和协议能力，禁止手搓替代。
 - 目标持久化 sqlc/pgx、显式事务；Tenant-owned 表无 RLS 时仍须 tenant_id、Tenant 谓词、复合约束、受限 role 与跨 Tenant 负向验证。状态变更与安全 Audit 同本地事务。
 - 新资源能力主要由 owner 契约/权限声明与注册扩展；不能使 IAM 接管资源状态机，也不能使各调用方复制凭据与授权实现。

@@ -20,6 +20,8 @@ message InvocationBinding {
   string mode = 8;
   bytes request_sha256 = 9;
   string policy_revision = 10;
+  // Exact reviewed target record digest; caller and receiver must agree.
+  string target_revision = 11;
 }
 
 // WorkloadPeer is reported only by an authenticated receiver after mTLS
@@ -67,6 +69,8 @@ message VerifyWorkloadInvocationRequest {
 // VerifyWorkloadInvocationResponse is typed, request-bound verification output.
 // It is not a reusable credential or an authorization for another operation.
 message VerifyWorkloadInvocationResponse {
+  // Non-secret Key reference verified online; empty for Human subjects.
+  string api_key_id = 7;
   // Opaque receiver-bound reference; only usable for online continuation checks.
   string continuation = 5;
   google.protobuf.Timestamp continuation_expires_at = 6;
@@ -89,7 +93,7 @@ message VerifySessionContinuationResponse {
   google.protobuf.Timestamp expires_at = 4;
 }
 
-// Receiver-authenticated, online, Workload-only verification for Notification.
+// Receiver-authenticated, online, Workload-only verification.
 // This request carries no Human, Tenant, Session or delegation.
 message VerifyWorkloadCallerRequest {
  string workload_token = 1;
@@ -97,6 +101,10 @@ message VerifyWorkloadCallerRequest {
  string operation_id = 3;
  string rpc_method = 4;
  WorkloadPeer observed_peer = 5;
+ string target_revision = 6;
+ // Exactly one transport: rpc_method, or http_method plus http_path.
+ string http_method = 7;
+ string http_path = 8;
 }
 message VerifyWorkloadCallerResponse {
  DirectWorkloadCaller caller = 1;
@@ -104,4 +112,9 @@ message VerifyWorkloadCallerResponse {
  string audience = 3;
  string operation_id = 4;
  string rpc_method = 5;
+ string http_method = 6;
+ string http_path = 7;
+ // Current authority for a finite group derived from the trusted target registry.
+ // Empty for ungrouped targets; never a reusable credential or caller-selected scope.
+ string authority_revision = 8;
 }

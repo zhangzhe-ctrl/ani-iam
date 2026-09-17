@@ -17,6 +17,15 @@ import (
 
 type allowingAuthorizationServiceAPIKeyUsageObserver struct{}
 
+func TestWR22PlatformAuthorizationTargetAndPrincipalMapping(t *testing.T) {
+	u := &recordingAuthorizationUsecase{decision: biz.AuthorizationDecision{Allowed: true, Principal: biz.TrustedPrincipalContext{Boundary: biz.AccessBoundaryPlatform, ID: uuid.Must(uuid.NewV7()), Type: biz.PrincipalTypeHuman, Status: biz.PrincipalStatusActive}}}
+	s := NewAuthorizationService(u)
+	v, err := s.CheckPermission(context.Background(), &iamv1.CheckPermissionRequest{Target: &iamv1.AuthorizationTarget{}, OperationId: "listPlatformIAMMembers", PolicyRevision: "unit-revision"})
+	if err != nil || u.command.TargetTenantID != uuid.Nil || v.GetDecision().GetPrincipal().GetBoundary().GetPlatform() == nil {
+		t.Fatal("Platform target or principal incorrectly converted to Tenant")
+	}
+}
+
 func (allowingAuthorizationServiceAPIKeyUsageObserver) ObserveAPIKeyUse(context.Context, biz.TenantScope, uuid.UUID, time.Time) error {
 	return nil
 }

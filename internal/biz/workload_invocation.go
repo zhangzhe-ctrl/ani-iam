@@ -7,14 +7,20 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 )
 
 const (
-	SessionInvocationAudience  = "ani-session-gateway"
-	SessionInvocationOperation = "session.create"
-	SessionInvocationRPC       = "/ani.session.v1.SessionService/CreateSession"
-	WorkloadTokenMaxTTL        = 5 * time.Minute
-	DelegationMaxTTL           = time.Minute
+	SessionInvocationAudience    = "ani-session-gateway"
+	SessionInvocationOperation   = "session.create"
+	SessionInvocationRPC         = "/ani.session.v1.SessionService/CreateSession"
+	InferenceInvocationAudience  = "ani-inference-service"
+	InferenceInvocationOperation = "inference.check_access"
+	InferenceReceiverOperation   = "inference.receive_access"
+	InferenceInvocationRPC       = "/inference.control.v1.InferenceControl/CheckInferenceAccess"
+	InferenceSourceOperation     = "invokeInferenceChatCompletions"
+	WorkloadTokenMaxTTL          = 5 * time.Minute
+	DelegationMaxTTL             = time.Minute
 )
 
 var (
@@ -38,6 +44,7 @@ type InvocationBinding struct {
 	Mode            string
 	RequestSHA256   [32]byte
 	PolicyRevision  string
+	TargetRevision  string
 }
 
 func (b InvocationBinding) Target() WorkloadTarget {
@@ -45,15 +52,14 @@ func (b InvocationBinding) Target() WorkloadTarget {
 }
 
 func (b InvocationBinding) Validate() error {
-	if b.Audience != SessionInvocationAudience || b.Operation != SessionInvocationOperation || b.RPCMethod != SessionInvocationRPC ||
-		b.TenantID == uuid.Nil || b.SubjectID == uuid.Nil || b.ResourceID == "" || b.ResourceID != strings.TrimSpace(b.ResourceID) ||
+	if b.TenantID == uuid.Nil || b.SubjectID == uuid.Nil || b.ResourceID == "" || b.ResourceID != strings.TrimSpace(b.ResourceID) ||
 		len(b.ResourceID) > 256 || b.RequestSHA256 == ([32]byte{}) || b.PolicyRevision == "" {
 		return ErrInvocationInvalid
 	}
-	if (b.SourceOperation == "createInstanceExecSession" && b.Mode == "exec") || (b.SourceOperation == "createInstanceConsoleSession" && b.Mode == "vm_console") {
-		return nil
+	if b.Audience == "" || b.Operation == "" || b.RPCMethod == "" || b.SourceOperation == "" || b.Mode == "" {
+		return ErrInvocationInvalid
 	}
-	return ErrInvocationInvalid
+	return nil
 }
 
 // WorkloadTokenClaims contain a directly authenticated caller and one grant.
@@ -87,6 +93,7 @@ type SessionContinuationClaims struct {
 	ID                  uuid.UUID
 	Caller              DirectCaller
 	Receiver            DirectCaller
+	ReceiverAuthority   DirectCaller
 	Subject             DelegatedSubject
 	Binding             InvocationBinding
 	IssuedAt, ExpiresAt time.Time
@@ -112,6 +119,7 @@ type IssuedWorkloadCredential struct {
 }
 
 type VerifiedInvocation struct {
+	APIKeyID              uuid.UUID
 	Continuation          string
 	ContinuationExpiresAt time.Time
 	Caller                DirectCaller
@@ -121,6 +129,7 @@ type VerifiedInvocation struct {
 }
 
 type WorkloadInvocation struct {
+	authority  WorkloadAuthorityReader
 	identities *WorkloadAuthentication
 	grants     *WorkloadAuthorization
 	subjects   *AuthorizationUsecase
@@ -134,12 +143,13 @@ func NewWorkloadInvocation(identities *WorkloadAuthentication, grants *WorkloadA
 	return &WorkloadInvocation{identities: identities, grants: grants, subjects: subjects, codec: codec, audit: audit, ids: ids, clock: clock}
 }
 
-func (u *WorkloadInvocation) IssueWorkloadToken(ctx context.Context, target WorkloadTarget) (IssuedWorkloadCredential, error) {
+func (u *WorkloadInvocation) IssueWorkloadToken(ctx context.Context, target WorkloadTarget, expectedRevision ...string) (IssuedWorkloadCredential, error) {
 	ingress, ok := DirectCallerFromContext(ctx)
 	if !ok || ingress.Target != (WorkloadTarget{Audience: "ani-iam", Operation: "/iam.v1.AuthenticationService/IssueWorkloadToken"}) {
 		return IssuedWorkloadCredential{}, ErrWorkloadPermissionDenied
 	}
-	if target != (WorkloadTarget{Audience: SessionInvocationAudience, Operation: SessionInvocationOperation}) && !notificationTarget(target) {
+	registration, ok := u.grants.registry.Lookup(target.Audience, target.Operation)
+	if !ok || !registration.Enabled || len(expectedRevision) != 1 || expectedRevision[0] != u.grants.registry.Revision(target.Audience, target.Operation) || (registration.Mechanism != workloadregistry.Delegated && registration.Mechanism != workloadregistry.WorkloadOnly) {
 		return IssuedWorkloadCredential{}, ErrWorkloadPermissionDenied
 	}
 	caller, err := u.grants.Authorize(ctx, ingress.Identity, target)
@@ -167,7 +177,8 @@ func (u *WorkloadInvocation) IssueDelegation(ctx context.Context, rawWAT, rawSub
 	if !ok || ingress.Target != (WorkloadTarget{Audience: "ani-iam", Operation: "/iam.v1.AuthenticationService/IssueDelegation"}) {
 		return IssuedWorkloadCredential{}, ErrWorkloadPermissionDenied
 	}
-	if err := binding.Validate(); err != nil {
+	_, source, err := ValidateRegisteredInvocation(u.grants.registry, binding)
+	if err != nil {
 		return IssuedWorkloadCredential{}, err
 	}
 	wat, err := u.codec.VerifyWorkload(ctx, rawWAT)
@@ -185,6 +196,9 @@ func (u *WorkloadInvocation) IssueDelegation(ctx context.Context, rawWAT, rawSub
 		return IssuedWorkloadCredential{}, err
 	}
 	if !decision.Allowed || decision.Principal.ID != binding.SubjectID || decision.Principal.TenantID != binding.TenantID {
+		return IssuedWorkloadCredential{}, ErrWorkloadPermissionDenied
+	}
+	if !registeredSubjectAllowed(source, decision.Principal) {
 		return IssuedWorkloadCredential{}, ErrWorkloadPermissionDenied
 	}
 	subject, subjectExpiry, err := u.subjectReference(ctx, rawSubject, decision.Principal)
@@ -226,7 +240,12 @@ func (u *WorkloadInvocation) Verify(ctx context.Context, rawWAT, rawDelegation s
 	if !ok || receiver.Target != (WorkloadTarget{Audience: "ani-iam", Operation: "/iam.v1.AuthorizationService/VerifyWorkloadInvocation"}) {
 		return VerifiedInvocation{}, ErrWorkloadPermissionDenied
 	}
-	if err := binding.Validate(); err != nil {
+	registration, _, err := ValidateRegisteredInvocation(u.grants.registry, binding)
+	if err != nil {
+		return VerifiedInvocation{}, err
+	}
+	receiverAuthority, err := u.grants.Authorize(ctx, receiver.Identity, WorkloadTarget{Audience: binding.Audience, Operation: registration.ReceiverOperation})
+	if err != nil {
 		return VerifiedInvocation{}, err
 	}
 	if observed.Environment != receiver.Identity.Peer.Environment || observed.TrustDomain != receiver.Identity.Peer.TrustDomain {
@@ -250,6 +269,9 @@ func (u *WorkloadInvocation) Verify(ctx context.Context, rawWAT, rawDelegation s
 	if err = u.currentSubject(ctx, delegation.Subject, binding); err != nil {
 		return VerifiedInvocation{}, err
 	}
+	if !registration.Continuation {
+		return VerifiedInvocation{Caller: caller, Subject: delegation.Subject.Principal, APIKeyID: delegation.Subject.APIKeyID, Binding: binding, ExpiresAt: delegation.ExpiresAt}, nil
+	}
 	now := u.clock.Now().UTC().Truncate(time.Second)
 	expires := now.Add(SessionContinuationMaxTTL)
 	if !delegation.Subject.CredentialExpiresAt.IsZero() && delegation.Subject.CredentialExpiresAt.Before(expires) {
@@ -262,11 +284,11 @@ func (u *WorkloadInvocation) Verify(ctx context.Context, rawWAT, rawDelegation s
 	if err != nil {
 		return VerifiedInvocation{}, ErrPersistenceUnavailable
 	}
-	continuation, err := u.codec.IssueContinuation(ctx, SessionContinuationClaims{ID: id, Caller: caller, Receiver: receiver, Subject: delegation.Subject, Binding: binding, IssuedAt: now, ExpiresAt: expires})
+	continuation, err := u.codec.IssueContinuation(ctx, SessionContinuationClaims{ID: id, Caller: caller, Receiver: receiver, ReceiverAuthority: receiverAuthority, Subject: delegation.Subject, Binding: binding, IssuedAt: now, ExpiresAt: expires})
 	if err != nil {
 		return VerifiedInvocation{}, err
 	}
-	return VerifiedInvocation{Caller: caller, Subject: delegation.Subject.Principal, Binding: binding, ExpiresAt: delegation.ExpiresAt, Continuation: continuation, ContinuationExpiresAt: expires}, nil
+	return VerifiedInvocation{Caller: caller, Subject: delegation.Subject.Principal, APIKeyID: delegation.Subject.APIKeyID, Binding: binding, ExpiresAt: delegation.ExpiresAt, Continuation: continuation, ContinuationExpiresAt: expires}, nil
 }
 
 func (u *WorkloadInvocation) currentCaller(ctx context.Context, wat WorkloadTokenClaims, peer VerifiedWorkloadPeer) (DirectCaller, error) {
@@ -330,9 +352,16 @@ func (u *WorkloadInvocation) currentSubject(ctx context.Context, s DelegatedSubj
 	if b.PolicyRevision != u.subjects.registry.Revision() {
 		return ErrAuthorizationPolicyMismatch
 	}
+	_, source, err := ValidateRegisteredInvocation(u.grants.registry, b)
+	if err != nil {
+		return err
+	}
 	policy, ok := u.subjects.registry.Lookup(b.SourceOperation)
-	if !ok || policy.Scope != PermissionScopeTenant || policy.Resource != "instances" || len(policy.Actions) != 1 || policy.Actions[0] != "create" {
+	if !ok || !workloadSourceMatchesPolicy(source, policy) {
 		return ErrAuthorizationOperationUnregistered
+	}
+	if !registeredSubjectAllowed(source, s.Principal) {
+		return ErrWorkloadPermissionDenied
 	}
 	scope, err := NewTenantScope(b.TenantID)
 	if err != nil {
@@ -386,14 +415,22 @@ func (u *WorkloadInvocation) VerifyContinuation(ctx context.Context, raw string,
 	if !ok || receiver.Target != (WorkloadTarget{Audience: "ani-iam", Operation: VerifySessionContinuationRPC}) {
 		return VerifiedInvocation{}, ErrWorkloadPermissionDenied
 	}
-	if err := binding.Validate(); err != nil {
+	registration, _, err := ValidateRegisteredInvocation(u.grants.registry, binding)
+	if err != nil {
+		return VerifiedInvocation{}, err
+	}
+	if !registration.Continuation {
+		return VerifiedInvocation{}, ErrWorkloadPermissionDenied
+	}
+	receiverAuthority, err := u.grants.Authorize(ctx, receiver.Identity, WorkloadTarget{Audience: binding.Audience, Operation: registration.ReceiverOperation})
+	if err != nil {
 		return VerifiedInvocation{}, err
 	}
 	proof, err := u.codec.VerifyContinuation(ctx, raw)
 	if err != nil {
 		return VerifiedInvocation{}, err
 	}
-	if proof.Binding != binding || proof.Receiver.Identity != receiver.Identity {
+	if proof.Binding != binding || proof.Receiver.Identity != receiver.Identity || proof.ReceiverAuthority != receiverAuthority {
 		return VerifiedInvocation{}, ErrWorkloadPermissionDenied
 	}
 	originalVerification, err := u.grants.Authorize(ctx, receiver.Identity, proof.Receiver.Target)

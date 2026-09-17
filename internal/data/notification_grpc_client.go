@@ -6,12 +6,12 @@ import (
 	"encoding/asn1"
 	"errors"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/zhangzhe-ctrl/ani-iam/sdk/grpcworkload"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -25,6 +25,7 @@ const notificationClientDNSName = "ani-iam"
 var oidNotificationSubjectAltName = asn1.ObjectIdentifier{2, 5, 29, 17}
 
 type NotificationGRPCClientConfig struct {
+	Registry         *workloadregistry.Registry
 	Address          string
 	CertificateFile  string
 	PrivateKeyFile   string
@@ -83,7 +84,7 @@ func NewNotificationGRPCClient(config NotificationGRPCClientConfig) (*Notificati
 	}
 	options := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), grpc.WithDisableRetry()}
 	if config.CredentialSource != nil {
-		interceptor, err := grpcworkload.WorkloadOnlyCallerInterceptor(config.CredentialSource)
+		interceptor, err := grpcworkload.WorkloadOnlyCallerInterceptor(config.CredentialSource, config.Registry)
 		if err != nil {
 			return nil, err
 		}
@@ -109,13 +110,8 @@ func (c *NotificationGRPCClient) Close() error {
 }
 
 func validateNotificationGRPCClientConfig(config NotificationGRPCClientConfig) error {
-	host, port, err := net.SplitHostPort(config.Address)
-	if err != nil || port == "" {
-		return fmt.Errorf("%w: Notification address must be host:port", ErrInvalidNotificationGRPCClientConfig)
-	}
-	ip := net.ParseIP(host)
-	if ip == nil || !ip.IsLoopback() {
-		return fmt.Errorf("%w: Notification address must use a literal loopback IP", ErrInvalidNotificationGRPCClientConfig)
+	if !ValidDeploymentAddress(config.Address) {
+		return fmt.Errorf("%w: Notification address must be an explicit TCP endpoint", ErrInvalidNotificationGRPCClientConfig)
 	}
 	for name, path := range map[string]string{
 		"certificate": config.CertificateFile,

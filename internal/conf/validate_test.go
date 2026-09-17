@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -27,6 +28,7 @@ func validConfig() *Bootstrap {
 			ShutdownTimeout: durationpb.New(5 * time.Second),
 		},
 		Runtime: &Runtime{
+			WorkloadRegistryFile: "/run/config/workload-targets.v1.json", WorkloadRegistrySha256: strings.Repeat("a", 64),
 			Environment: "wr17-18-isolated", TrustDomain: "iam.wr17-18.test",
 			Postgresql: &PostgreSQL{Dsn: "postgresql://ani_iam_runtime@127.0.0.1:5432/ani_iam?sslmode=disable"},
 			Redis: &Redis{
@@ -78,10 +80,32 @@ func TestBootstrapValidate(t *testing.T) {
 		ok     bool
 	}{
 		{name: "isolated loopback", ok: true},
+		{name: "independent deployment", ok: true, mutate: func(c *Bootstrap) {
+			c.Server.Grpc.Addr = "0.0.0.0:19090"
+			c.Server.Admin.Addr = "0.0.0.0:19091"
+			c.Runtime.Postgresql.Dsn = "postgresql://ani_iam_runtime@postgres.iam-gov.test:5432/wr33_iam?sslmode=verify-full&sslrootcert=/run/secrets/ca.crt"
+			c.Runtime.Notification.Address = "notification:29090"
+		}},
+		{name: "deployed grpc still requires mTLS", mutate: func(c *Bootstrap) { c.Server.Grpc.Addr = "0.0.0.0:19090"; c.Server.Grpc.Tls = nil }},
+		{name: "remote database cannot disable verification", mutate: func(c *Bootstrap) {
+			c.Runtime.Postgresql.Dsn = "postgresql://ani_iam_runtime@postgres:5432/wr33_iam?sslmode=disable"
+		}},
+		{name: "remote database needs explicit CA", mutate: func(c *Bootstrap) {
+			c.Runtime.Postgresql.Dsn = "postgresql://ani_iam_runtime@postgres:5432/wr33_iam?sslmode=verify-full"
+		}},
+		{name: "remote database duplicate sslmode denied", mutate: func(c *Bootstrap) {
+			c.Runtime.Postgresql.Dsn = "postgresql://ani_iam_runtime@postgres:5432/wr33_iam?sslmode=verify-full&sslmode=disable&sslrootcert=/run/ca.crt"
+		}},
+		{name: "listener resolver URI denied", mutate: func(c *Bootstrap) { c.Server.Grpc.Addr = "dns:///iam:19090" }},
+		{name: "listener wildcard ephemeral denied", mutate: func(c *Bootstrap) { c.Server.Grpc.Addr = "0.0.0.0:0" }},
+		{name: "Notification wildcard destination denied", mutate: func(c *Bootstrap) { c.Runtime.Notification.Address = "0.0.0.0:29090" }},
+		{name: "Notification resolver URI denied", mutate: func(c *Bootstrap) { c.Runtime.Notification.Address = "dns:///notification:29090" }},
+		{name: "missing registry", mutate: func(c *Bootstrap) { c.Runtime.WorkloadRegistryFile = "" }},
+		{name: "wrong registry digest", mutate: func(c *Bootstrap) { c.Runtime.WorkloadRegistrySha256 = "main" }},
 		{name: "missing environment", mutate: func(c *Bootstrap) { c.Runtime.Environment = "" }},
 		{name: "missing trust domain", mutate: func(c *Bootstrap) { c.Runtime.TrustDomain = "" }},
 		{name: "wrong profile", mutate: func(c *Bootstrap) { c.Profile = "legacy-auth" }},
-		{name: "externally reachable grpc", mutate: func(c *Bootstrap) { c.Server.Grpc.Addr = "0.0.0.0:19090" }},
+		{name: "explicit deployed grpc with mandatory mTLS", ok: true, mutate: func(c *Bootstrap) { c.Server.Grpc.Addr = "0.0.0.0:19090" }},
 		{name: "missing grpc mutual TLS", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls = nil }},
 		{name: "grpc certificate path is relative", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls.CertificateFile = "server.crt" }},
 		{name: "grpc private-key path is relative", mutate: func(c *Bootstrap) { c.Server.Grpc.Tls.PrivateKeyFile = "server.key" }},
@@ -105,7 +129,7 @@ func TestBootstrapValidate(t *testing.T) {
 		{name: "access-token active key missing", mutate: func(c *Bootstrap) { c.Runtime.AccessToken.ActiveKeyId = "" }},
 		{name: "access-token private-key path missing", mutate: func(c *Bootstrap) { c.Runtime.AccessToken.PrivateKeyFile = "" }},
 		{name: "notification config missing", mutate: func(c *Bootstrap) { c.Runtime.Notification = nil }},
-		{name: "notification address is not isolated", mutate: func(c *Bootstrap) { c.Runtime.Notification.Address = "notification.internal:443" }},
+		{name: "Notification independent DNS with pinned TLS", ok: true, mutate: func(c *Bootstrap) { c.Runtime.Notification.Address = "notification.internal:443" }},
 		{name: "notification certificate path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.CertificateFile = "client.crt" }},
 		{name: "notification private-key path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.PrivateKeyFile = "client.key" }},
 		{name: "notification server CA path is relative", mutate: func(c *Bootstrap) { c.Runtime.Notification.ServerCaFile = "server-ca.crt" }},
@@ -147,6 +171,45 @@ func TestBootstrapValidate(t *testing.T) {
 			}
 			if !tt.ok && err == nil {
 				t.Fatal("Validate() unexpectedly succeeded")
+			}
+		})
+	}
+}
+
+func TestBossOIDCRequiresSeparateExplicitClient(t *testing.T) {
+	valid := func() *Bootstrap {
+		c := validConfig()
+		c.Runtime.BossOidc = proto.Clone(c.Runtime.Oidc).(*OIDC)
+		c.Runtime.BossOidc.ClientId = "ani-boss"
+		c.Runtime.BossOidc.ClientSecretFile = "/run/secrets/boss-oidc-client"
+		c.Runtime.BossOidc.LoginRedirectUri = "https://boss.example.test/auth/oidc/callback"
+		c.Runtime.BossOidc.IdentityLinkRedirectUri = "https://boss.example.test/auth/oidc/link/callback"
+		c.Runtime.Notification.BossActionUrlBase = "https://boss.example.test/password-action"
+		return c
+	}
+	if err := valid().Validate(); err != nil {
+		t.Fatal(err)
+	}
+	for name, mutate := range map[string]func(*Bootstrap){
+		"missing BOSS action URL": func(c *Bootstrap) { c.Runtime.Notification.BossActionUrlBase = "" },
+		"foreign BOSS action URL": func(c *Bootstrap) {
+			c.Runtime.Notification.BossActionUrlBase = "https://foreign.example.test/password-action"
+		},
+		"console client": func(c *Bootstrap) { c.Runtime.BossOidc.ClientId = "ani-console" },
+		"shared secret":  func(c *Bootstrap) { c.Runtime.BossOidc.ClientSecretFile = c.Runtime.Oidc.ClientSecretFile },
+		"shared origin": func(c *Bootstrap) {
+			c.Runtime.BossOidc.LoginRedirectUri = c.Runtime.Oidc.LoginRedirectUri
+			c.Runtime.BossOidc.IdentityLinkRedirectUri = c.Runtime.Oidc.IdentityLinkRedirectUri
+		},
+		"mixed link origin": func(c *Bootstrap) {
+			c.Runtime.BossOidc.IdentityLinkRedirectUri = c.Runtime.Oidc.IdentityLinkRedirectUri
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			c := valid()
+			mutate(c)
+			if c.Validate() == nil {
+				t.Fatal("ambiguous BOSS boundary accepted")
 			}
 		})
 	}

@@ -12,6 +12,7 @@ import (
 // Subject can only be obtained from an IAM authorization response. Its original
 // credential stays private to the adapter and is never sent to a receiver.
 type Subject struct {
+	receiverTarget  WorkloadTarget
 	principal       *iamv1.PrincipalContext
 	credential      string
 	sourceOperation string
@@ -46,6 +47,7 @@ func SubjectFromContext(ctx context.Context) (Subject, bool) {
 // user credentials and has no public constructor. Its private continuation is
 // usable only for receiver-authenticated online checks of this request.
 type Verified struct {
+	apiKeyID            string
 	continuation        string
 	continuationExpires time.Time
 	caller              *iamv1.DirectWorkloadCaller
@@ -55,6 +57,8 @@ type Verified struct {
 
 func (v Verified) String() string   { return "IAM-verified invocation (reference redacted)" }
 func (v Verified) GoString() string { return v.String() }
+
+func (v Verified) APIKeyID() string { return v.apiKeyID }
 
 func (v Verified) Caller() *iamv1.DirectWorkloadCaller {
 	if v.caller == nil {

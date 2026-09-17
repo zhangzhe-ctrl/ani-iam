@@ -494,3 +494,47 @@ func (r *recordingAuthorizationReader) RecordUnboundAuthorization(_ context.Cont
 	r.unboundAudit = true
 	return r.deniedAuditErr
 }
+
+func TestLifecycleObservationRetainsFactsAndIdentityDenials(t *testing.T) {
+	state := AuthorizationState{PrincipalStatus: PrincipalStatusActive, MembershipStatus: MembershipStatusActive, TenantAccess: TenantAccessStatusActive, SessionStatus: SessionStatusActive, GrantStatus: GrantStatusActive, GrantVersion: 1, PermissionAllowed: true, Lifecycle: TenantLifecycleStatus("frozen"), LifecycleFresh: false}
+	if got := authorizationDenialReason(state, 1); got != AuthorizationReasonLifecycleStale {
+		t.Fatal(got)
+	}
+	state.LifecycleObservationOnly = true
+	if got := authorizationDenialReason(state, 1); got != "" || state.LifecycleFresh || state.Lifecycle != TenantLifecycleStatus("frozen") {
+		t.Fatal("shadow altered facts or enforced early rejection")
+	}
+	if err := validateAccessTokenPrincipalState(state, 1); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		change func(*AuthorizationState)
+		reason AuthorizationReason
+	}{
+		{func(s *AuthorizationState) { s.PrincipalStatus = "disabled" }, AuthorizationReasonPrincipalInactive},
+		{func(s *AuthorizationState) { s.MembershipStatus = "disabled" }, AuthorizationReasonMembershipInactive},
+		{func(s *AuthorizationState) { s.TenantAccess = "disabled" }, AuthorizationReasonTenantAccessInactive},
+		{func(s *AuthorizationState) { s.SessionStatus = "revoked" }, AuthorizationReasonSessionInactive},
+		{func(s *AuthorizationState) { s.GrantVersion = 2 }, AuthorizationReasonGrantVersionMismatch},
+		{func(s *AuthorizationState) { s.PermissionAllowed = false }, AuthorizationReasonPermissionDenied},
+	} {
+		changed := state
+		tc.change(&changed)
+		if got := authorizationDenialReason(changed, 1); got != tc.reason {
+			t.Fatalf("%s instead of %s", got, tc.reason)
+		}
+	}
+	state.LifecycleObservationOnly = false
+	state.LifecycleFresh = true
+	if got := authorizationDenialReason(state, 1); got != AuthorizationReasonLifecycleBlocked {
+		t.Fatal("enforcement did not reject frozen Tenant")
+	}
+	key := APIKeyAuthorizationState{PrincipalStatus: PrincipalStatusActive, MembershipStatus: MembershipStatusActive, TenantAccess: TenantAccessStatusActive, LifecycleObservationOnly: true, PermissionAllowed: true}
+	if got := apiKeyAuthorizationDenialReason(key); got != "" {
+		t.Fatal(got)
+	}
+	key.PermissionAllowed = false
+	if got := apiKeyAuthorizationDenialReason(key); got != AuthorizationReasonPermissionDenied {
+		t.Fatal("shadow skipped current permission")
+	}
+}

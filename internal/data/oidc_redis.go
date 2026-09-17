@@ -149,7 +149,9 @@ func validateOIDCOperation(operation biz.OIDCOperation) error {
 	if operation.Kind != biz.OIDCFlowLogin && operation.Kind != biz.OIDCFlowIdentityLink {
 		return errors.New("OIDC operation kind is invalid")
 	}
-	if strings.TrimSpace(operation.Provider) == "" || operation.Audience == "" || operation.TenantID == [16]byte{} ||
+	tenant := operation.Audience == biz.AudienceConsole && operation.TenantID != [16]byte{} && (operation.Boundary == "" || operation.Boundary == biz.AccessBoundaryTenant)
+	platform := operation.Audience == biz.AudienceBoss && operation.Boundary == biz.AccessBoundaryPlatform && operation.TenantID == [16]byte{}
+	if strings.TrimSpace(operation.Provider) == "" || (!tenant && !platform) ||
 		strings.TrimSpace(operation.State) == "" || strings.TrimSpace(operation.Nonce) == "" || strings.TrimSpace(operation.CodeVerifier) == "" ||
 		strings.TrimSpace(operation.RedirectURI) == "" || strings.TrimSpace(operation.IdempotencyKey) == "" ||
 		len(operation.RequestFingerprint) != sha256.Size*2 || operation.CreatedAt.IsZero() || operation.ExpiresAt.IsZero() {

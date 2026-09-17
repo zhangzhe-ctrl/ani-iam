@@ -152,6 +152,9 @@ type SessionContinuityUnitOfWork interface {
 }
 
 func (u *AuthenticationUsecase) RefreshSession(ctx context.Context, command RefreshSessionCommand) (RefreshSessionResult, error) {
+	if u.platformSessions != nil && command.Origin == u.platformSessions.origin {
+		return u.platformSessions.RefreshSession(ctx, command)
+	}
 	rawRefresh := strings.TrimSpace(command.RefreshToken)
 	if rawRefresh == "" {
 		return RefreshSessionResult{}, ErrRefreshTokenRequired
@@ -283,6 +286,9 @@ func (u *AuthenticationUsecase) RefreshSession(ctx context.Context, command Refr
 }
 
 func (u *AuthenticationUsecase) LogoutSession(ctx context.Context, command LogoutSessionCommand) (LogoutSessionResult, error) {
+	if u.platformSessions != nil && command.Origin == u.platformSessions.origin {
+		return u.platformSessions.LogoutSession(ctx, command)
+	}
 	rawRefresh := strings.TrimSpace(command.RefreshToken)
 	if rawRefresh == "" {
 		return LogoutSessionResult{}, ErrRefreshTokenRequired

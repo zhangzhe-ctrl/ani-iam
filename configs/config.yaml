@@ -15,6 +15,8 @@ server:
     timeout: 1s
   shutdown_timeout: 5s
 runtime:
+  workload_registry_file: /etc/ani-iam/workload-targets.v1.json
+  workload_registry_sha256: d3716c9d834f013d9b8ca554bd4f169e82ea6a041905acd508ad5d35c3fb920b
   environment: wr17-18-isolated
   trust_domain: iam.wr17-18.test
   postgresql:
@@ -41,6 +43,8 @@ runtime:
     client_dns_name: ani-iam.iam.wr17-18.test
     outbox_key_file: /run/secrets/ani-iam-notification-outbox-keys.json
     console_action_url_base: https://console.example.test/password-action
+    tenant_invitation_url_base: https://console.example.test/invitation
+    platform_invitation_url_base: https://boss.example.test/invitation
     locale: en-US
     dispatch_interval: 0.25s
     submission_timeout: 5s
@@ -53,4 +57,4 @@ runtime:
     identity_link_redirect_uri: https://console.example.test/auth/oidc/link/callback
     recent_reauthentication: 600s
     http_timeout: 5s
-  policy_revision: sha256:f222e2c6d3cd6442449cd722389d3d4fbfcdc7a0fee950c9d28385d3c264affa
+  policy_revision: "sha256:3aa23e4e6197ce62c6e9d28d567f2ee6ccdcf14703b43b40bf3692491877a2b7"

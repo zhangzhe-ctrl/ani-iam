@@ -36,8 +36,10 @@ type InvocationBinding struct {
 	Mode              string                 `protobuf:"bytes,8,opt,name=mode,proto3" json:"mode,omitempty"`
 	RequestSha256     []byte                 `protobuf:"bytes,9,opt,name=request_sha256,json=requestSha256,proto3" json:"request_sha256,omitempty"`
 	PolicyRevision    string                 `protobuf:"bytes,10,opt,name=policy_revision,json=policyRevision,proto3" json:"policy_revision,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// Exact reviewed target record digest; caller and receiver must agree.
+	TargetRevision string `protobuf:"bytes,11,opt,name=target_revision,json=targetRevision,proto3" json:"target_revision,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *InvocationBinding) Reset() {
@@ -136,6 +138,13 @@ func (x *InvocationBinding) GetRequestSha256() []byte {
 func (x *InvocationBinding) GetPolicyRevision() string {
 	if x != nil {
 		return x.PolicyRevision
+	}
+	return ""
+}
+
+func (x *InvocationBinding) GetTargetRevision() string {
+	if x != nil {
+		return x.TargetRevision
 	}
 	return ""
 }
@@ -484,6 +493,8 @@ func (x *VerifyWorkloadInvocationRequest) GetObservedPeer() *WorkloadPeer {
 // It is not a reusable credential or an authorization for another operation.
 type VerifyWorkloadInvocationResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
+	// Non-secret Key reference verified online; empty for Human subjects.
+	ApiKeyId string `protobuf:"bytes,7,opt,name=api_key_id,json=apiKeyId,proto3" json:"api_key_id,omitempty"`
 	// Opaque receiver-bound reference; only usable for online continuation checks.
 	Continuation          string                 `protobuf:"bytes,5,opt,name=continuation,proto3" json:"continuation,omitempty"`
 	ContinuationExpiresAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=continuation_expires_at,json=continuationExpiresAt,proto3" json:"continuation_expires_at,omitempty"`
@@ -523,6 +534,13 @@ func (x *VerifyWorkloadInvocationResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use VerifyWorkloadInvocationResponse.ProtoReflect.Descriptor instead.
 func (*VerifyWorkloadInvocationResponse) Descriptor() ([]byte, []int) {
 	return file_workload_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *VerifyWorkloadInvocationResponse) GetApiKeyId() string {
+	if x != nil {
+		return x.ApiKeyId
+	}
+	return ""
 }
 
 func (x *VerifyWorkloadInvocationResponse) GetContinuation() string {
@@ -689,15 +707,19 @@ func (x *VerifySessionContinuationResponse) GetExpiresAt() *timestamppb.Timestam
 	return nil
 }
 
-// Receiver-authenticated, online, Workload-only verification for Notification.
+// Receiver-authenticated, online, Workload-only verification.
 // This request carries no Human, Tenant, Session or delegation.
 type VerifyWorkloadCallerRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	WorkloadToken string                 `protobuf:"bytes,1,opt,name=workload_token,json=workloadToken,proto3" json:"workload_token,omitempty"`
-	Audience      string                 `protobuf:"bytes,2,opt,name=audience,proto3" json:"audience,omitempty"`
-	OperationId   string                 `protobuf:"bytes,3,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
-	RpcMethod     string                 `protobuf:"bytes,4,opt,name=rpc_method,json=rpcMethod,proto3" json:"rpc_method,omitempty"`
-	ObservedPeer  *WorkloadPeer          `protobuf:"bytes,5,opt,name=observed_peer,json=observedPeer,proto3" json:"observed_peer,omitempty"`
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	WorkloadToken  string                 `protobuf:"bytes,1,opt,name=workload_token,json=workloadToken,proto3" json:"workload_token,omitempty"`
+	Audience       string                 `protobuf:"bytes,2,opt,name=audience,proto3" json:"audience,omitempty"`
+	OperationId    string                 `protobuf:"bytes,3,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	RpcMethod      string                 `protobuf:"bytes,4,opt,name=rpc_method,json=rpcMethod,proto3" json:"rpc_method,omitempty"`
+	ObservedPeer   *WorkloadPeer          `protobuf:"bytes,5,opt,name=observed_peer,json=observedPeer,proto3" json:"observed_peer,omitempty"`
+	TargetRevision string                 `protobuf:"bytes,6,opt,name=target_revision,json=targetRevision,proto3" json:"target_revision,omitempty"`
+	// Exactly one transport: rpc_method, or http_method plus http_path.
+	HttpMethod    string `protobuf:"bytes,7,opt,name=http_method,json=httpMethod,proto3" json:"http_method,omitempty"`
+	HttpPath      string `protobuf:"bytes,8,opt,name=http_path,json=httpPath,proto3" json:"http_path,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -767,15 +789,41 @@ func (x *VerifyWorkloadCallerRequest) GetObservedPeer() *WorkloadPeer {
 	return nil
 }
 
+func (x *VerifyWorkloadCallerRequest) GetTargetRevision() string {
+	if x != nil {
+		return x.TargetRevision
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerRequest) GetHttpMethod() string {
+	if x != nil {
+		return x.HttpMethod
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerRequest) GetHttpPath() string {
+	if x != nil {
+		return x.HttpPath
+	}
+	return ""
+}
+
 type VerifyWorkloadCallerResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Caller        *DirectWorkloadCaller  `protobuf:"bytes,1,opt,name=caller,proto3" json:"caller,omitempty"`
-	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Audience      string                 `protobuf:"bytes,3,opt,name=audience,proto3" json:"audience,omitempty"`
-	OperationId   string                 `protobuf:"bytes,4,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
-	RpcMethod     string                 `protobuf:"bytes,5,opt,name=rpc_method,json=rpcMethod,proto3" json:"rpc_method,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Caller      *DirectWorkloadCaller  `protobuf:"bytes,1,opt,name=caller,proto3" json:"caller,omitempty"`
+	ExpiresAt   *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Audience    string                 `protobuf:"bytes,3,opt,name=audience,proto3" json:"audience,omitempty"`
+	OperationId string                 `protobuf:"bytes,4,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	RpcMethod   string                 `protobuf:"bytes,5,opt,name=rpc_method,json=rpcMethod,proto3" json:"rpc_method,omitempty"`
+	HttpMethod  string                 `protobuf:"bytes,6,opt,name=http_method,json=httpMethod,proto3" json:"http_method,omitempty"`
+	HttpPath    string                 `protobuf:"bytes,7,opt,name=http_path,json=httpPath,proto3" json:"http_path,omitempty"`
+	// Current authority for a finite group derived from the trusted target registry.
+	// Empty for ungrouped targets; never a reusable credential or caller-selected scope.
+	AuthorityRevision string `protobuf:"bytes,8,opt,name=authority_revision,json=authorityRevision,proto3" json:"authority_revision,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *VerifyWorkloadCallerResponse) Reset() {
@@ -843,11 +891,32 @@ func (x *VerifyWorkloadCallerResponse) GetRpcMethod() string {
 	return ""
 }
 
+func (x *VerifyWorkloadCallerResponse) GetHttpMethod() string {
+	if x != nil {
+		return x.HttpMethod
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerResponse) GetHttpPath() string {
+	if x != nil {
+		return x.HttpPath
+	}
+	return ""
+}
+
+func (x *VerifyWorkloadCallerResponse) GetAuthorityRevision() string {
+	if x != nil {
+		return x.AuthorityRevision
+	}
+	return ""
+}
+
 var File_workload_proto protoreflect.FileDescriptor
 
 const file_workload_proto_rawDesc = "" +
 	"\n" +
-	"\x0eworkload.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe2\x02\n" +
+	"\x0eworkload.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8b\x03\n" +
 	"\x11InvocationBinding\x12\x1a\n" +
 	"\baudience\x18\x01 \x01(\tR\baudience\x12!\n" +
 	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12\x1d\n" +
@@ -862,7 +931,8 @@ const file_workload_proto_rawDesc = "" +
 	"\x04mode\x18\b \x01(\tR\x04mode\x12%\n" +
 	"\x0erequest_sha256\x18\t \x01(\fR\rrequestSha256\x12'\n" +
 	"\x0fpolicy_revision\x18\n" +
-	" \x01(\tR\x0epolicyRevision\"\x9f\x01\n" +
+	" \x01(\tR\x0epolicyRevision\x12'\n" +
+	"\x0ftarget_revision\x18\v \x01(\tR\x0etargetRevision\"\x9f\x01\n" +
 	"\fWorkloadPeer\x12 \n" +
 	"\venvironment\x18\x01 \x01(\tR\venvironment\x12!\n" +
 	"\ftrust_domain\x18\x02 \x01(\tR\vtrustDomain\x12#\n" +
@@ -892,8 +962,10 @@ const file_workload_proto_rawDesc = "" +
 	"delegation\x18\x02 \x01(\tR\n" +
 	"delegation\x123\n" +
 	"\abinding\x18\x03 \x01(\v2\x19.iam.v1.InvocationBindingR\abinding\x129\n" +
-	"\robserved_peer\x18\x04 \x01(\v2\x14.iam.v1.WorkloadPeerR\fobservedPeer\"\xf4\x02\n" +
-	" VerifyWorkloadInvocationResponse\x12\"\n" +
+	"\robserved_peer\x18\x04 \x01(\v2\x14.iam.v1.WorkloadPeerR\fobservedPeer\"\x92\x03\n" +
+	" VerifyWorkloadInvocationResponse\x12\x1c\n" +
+	"\n" +
+	"api_key_id\x18\a \x01(\tR\bapiKeyId\x12\"\n" +
 	"\fcontinuation\x18\x05 \x01(\tR\fcontinuation\x12R\n" +
 	"\x17continuation_expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x15continuationExpiresAt\x124\n" +
 	"\x06caller\x18\x01 \x01(\v2\x1c.iam.v1.DirectWorkloadCallerR\x06caller\x122\n" +
@@ -909,14 +981,18 @@ const file_workload_proto_rawDesc = "" +
 	"\asubject\x18\x02 \x01(\v2\x18.iam.v1.PrincipalContextR\asubject\x123\n" +
 	"\abinding\x18\x03 \x01(\v2\x19.iam.v1.InvocationBindingR\abinding\x129\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xdd\x01\n" +
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\xc4\x02\n" +
 	"\x1bVerifyWorkloadCallerRequest\x12%\n" +
 	"\x0eworkload_token\x18\x01 \x01(\tR\rworkloadToken\x12\x1a\n" +
 	"\baudience\x18\x02 \x01(\tR\baudience\x12!\n" +
 	"\foperation_id\x18\x03 \x01(\tR\voperationId\x12\x1d\n" +
 	"\n" +
 	"rpc_method\x18\x04 \x01(\tR\trpcMethod\x129\n" +
-	"\robserved_peer\x18\x05 \x01(\v2\x14.iam.v1.WorkloadPeerR\fobservedPeer\"\xed\x01\n" +
+	"\robserved_peer\x18\x05 \x01(\v2\x14.iam.v1.WorkloadPeerR\fobservedPeer\x12'\n" +
+	"\x0ftarget_revision\x18\x06 \x01(\tR\x0etargetRevision\x12\x1f\n" +
+	"\vhttp_method\x18\a \x01(\tR\n" +
+	"httpMethod\x12\x1b\n" +
+	"\thttp_path\x18\b \x01(\tR\bhttpPath\"\xda\x02\n" +
 	"\x1cVerifyWorkloadCallerResponse\x124\n" +
 	"\x06caller\x18\x01 \x01(\v2\x1c.iam.v1.DirectWorkloadCallerR\x06caller\x129\n" +
 	"\n" +
@@ -924,7 +1000,11 @@ const file_workload_proto_rawDesc = "" +
 	"\baudience\x18\x03 \x01(\tR\baudience\x12!\n" +
 	"\foperation_id\x18\x04 \x01(\tR\voperationId\x12\x1d\n" +
 	"\n" +
-	"rpc_method\x18\x05 \x01(\tR\trpcMethodB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
+	"rpc_method\x18\x05 \x01(\tR\trpcMethod\x12\x1f\n" +
+	"\vhttp_method\x18\x06 \x01(\tR\n" +
+	"httpMethod\x12\x1b\n" +
+	"\thttp_path\x18\a \x01(\tR\bhttpPath\x12-\n" +
+	"\x12authority_revision\x18\b \x01(\tR\x11authorityRevisionB3Z1github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1b\x06proto3"
 
 var (
 	file_workload_proto_rawDescOnce sync.Once

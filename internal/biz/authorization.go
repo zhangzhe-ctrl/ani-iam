@@ -124,15 +124,17 @@ type AuthorizationLookup struct {
 }
 
 type AuthorizationState struct {
-	PrincipalStatus   PrincipalStatus
-	MembershipStatus  MembershipStatus
-	TenantAccess      TenantAccessStatus
-	Lifecycle         TenantLifecycleStatus
-	LifecycleFresh    bool
-	SessionStatus     SessionStatus
-	GrantStatus       GrantStatus
-	GrantVersion      int64
-	PermissionAllowed bool
+	// Repository-selected shadow mode applies only to resource early rejection.
+	LifecycleObservationOnly bool
+	PrincipalStatus          PrincipalStatus
+	MembershipStatus         MembershipStatus
+	TenantAccess             TenantAccessStatus
+	Lifecycle                TenantLifecycleStatus
+	LifecycleFresh           bool
+	SessionStatus            SessionStatus
+	GrantStatus              GrantStatus
+	GrantVersion             int64
+	PermissionAllowed        bool
 }
 
 type AuthorizationReader interface {
@@ -143,14 +145,15 @@ type AuthorizationReader interface {
 }
 
 type APIKeyAuthorizationState struct {
-	APIKey            APIKey
-	TenantID          uuid.UUID
-	PrincipalStatus   PrincipalStatus
-	MembershipStatus  MembershipStatus
-	TenantAccess      TenantAccessStatus
-	Lifecycle         TenantLifecycleStatus
-	LifecycleFresh    bool
-	PermissionAllowed bool
+	LifecycleObservationOnly bool
+	APIKey                   APIKey
+	TenantID                 uuid.UUID
+	PrincipalStatus          PrincipalStatus
+	MembershipStatus         MembershipStatus
+	TenantAccess             TenantAccessStatus
+	Lifecycle                TenantLifecycleStatus
+	LifecycleFresh           bool
+	PermissionAllowed        bool
 }
 
 type APIKeyAuthorizationReader interface {
@@ -164,6 +167,7 @@ type APIKeyUsageObserver interface {
 }
 
 type TrustedPrincipalContext struct {
+	Boundary     AccessBoundary
 	ID           uuid.UUID
 	Type         PrincipalType
 	Status       PrincipalStatus
@@ -193,12 +197,18 @@ type CheckPermissionCommand struct {
 }
 
 type AuthorizationUsecase struct {
+	platform *PlatformAuthorizationUsecase
 	registry AuthorizationPolicyRegistry
 	verifier AccessCredentialVerifier
 	reader   AuthorizationReader
 	usage    APIKeyUsageObserver
 	ids      IDGenerator
 	clock    Clock
+}
+
+func (u *AuthorizationUsecase) WithPlatformAuthorization(platform *PlatformAuthorizationUsecase) *AuthorizationUsecase {
+	u.platform = platform
+	return u
 }
 
 func NewAuthorizationUsecase(
@@ -230,9 +240,11 @@ func (u *AuthorizationUsecase) CheckPermission(ctx context.Context, command Chec
 	if !ok || policy.OperationID != operationID || strings.TrimSpace(policy.Resource) == "" || len(policy.Actions) == 0 {
 		return AuthorizationDecision{}, ErrAuthorizationOperationUnregistered
 	}
-	// This use case is intentionally the ordinary Tenant boundary evaluator.
-	// Platform and own-scope operations require their distinct DP2 slices and
-	// must never be interpreted through tenant role bindings.
+	if policy.Scope == PermissionScopePlatform && u.platform != nil {
+		return u.platform.CheckPermission(ctx, command)
+	}
+	// Every other scope remains outside the Tenant evaluator. A composition
+	// without the Platform implementation retains its fail-closed boundary.
 	if policy.Scope != PermissionScopeTenant {
 		return AuthorizationDecision{}, ErrAuthorizationOperationUnregistered
 	}
@@ -451,9 +463,9 @@ func apiKeyAuthorizationDenialReason(state APIKeyAuthorizationState) Authorizati
 		return AuthorizationReasonMembershipInactive
 	case state.TenantAccess != TenantAccessStatusActive:
 		return AuthorizationReasonTenantAccessInactive
-	case !state.LifecycleFresh:
+	case !state.LifecycleObservationOnly && !state.LifecycleFresh:
 		return AuthorizationReasonLifecycleStale
-	case state.Lifecycle != TenantLifecycleStatusActive:
+	case !state.LifecycleObservationOnly && state.Lifecycle != TenantLifecycleStatusActive:
 		return AuthorizationReasonLifecycleBlocked
 	case !state.PermissionAllowed:
 		return AuthorizationReasonPermissionDenied
@@ -484,9 +496,9 @@ func authorizationDenialReason(state AuthorizationState, expectedGrantVersion in
 		return AuthorizationReasonMembershipInactive
 	case state.TenantAccess != TenantAccessStatusActive:
 		return AuthorizationReasonTenantAccessInactive
-	case !state.LifecycleFresh:
+	case !state.LifecycleObservationOnly && !state.LifecycleFresh:
 		return AuthorizationReasonLifecycleStale
-	case state.Lifecycle != TenantLifecycleStatusActive:
+	case !state.LifecycleObservationOnly && state.Lifecycle != TenantLifecycleStatusActive:
 		return AuthorizationReasonLifecycleBlocked
 	case state.SessionStatus != SessionStatusActive:
 		return AuthorizationReasonSessionInactive

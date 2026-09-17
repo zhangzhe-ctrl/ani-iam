@@ -363,6 +363,14 @@ func seedTenantAuthorizationBoundary(t *testing.T, ctx context.Context, pool *pg
 	}
 	for index, principalID := range principals {
 		membershipID := memberships[index]
+		// Transaction-only fixture: last-admin now requires a usable Human
+		// credential as well as the active Membership and builtin binding.
+		identityID := mustV7(t)
+		account := principalID.String() + "@wr22-transaction.test"
+		passwordHash, hashErr := data.NewArgon2idPasswordHasher().Hash(randomPassword(t))
+		if hashErr != nil {
+			t.Fatal("own transaction fixture password hash")
+		}
 		bindingID, err := uuid.NewV7()
 		if err != nil {
 			t.Fatal(err)
@@ -372,6 +380,9 @@ func seedTenantAuthorizationBoundary(t *testing.T, ctx context.Context, pool *pg
 			args []any
 		}{
 			{`INSERT INTO principals (id,principal_type,status,version,created_at,updated_at) VALUES ($1,'human','active',1,$2,$2)`, []any{principalID, now}},
+			{`INSERT INTO verified_emails(principal_id,normalized_email,verified_at,created_at,updated_at) VALUES($1,$2,$3,$3,$3)`, []any{principalID, account, now}},
+			{`INSERT INTO identities(id,principal_id,provider,issuer,subject,status,version,created_at,updated_at) VALUES($1,$2,'password','ani-iam',$3,'active',1,$4,$4)`, []any{identityID, principalID, account, now}},
+			{`INSERT INTO password_credentials(principal_id,identity_id,password_hash,algorithm,version,created_at,updated_at) VALUES($1,$2,$3,'argon2id',1,$4,$4)`, []any{principalID, identityID, passwordHash, now}},
 			{`INSERT INTO tenant_memberships (tenant_id,id,principal_id,status,version,created_at,updated_at) VALUES ($1,$2,$3,'active',1,$4,$4)`, []any{tenantID, membershipID, principalID, now}},
 			{`INSERT INTO tenant_role_bindings (tenant_id,id,membership_id,role_id,version,created_at,updated_at) VALUES ($1,$2,$3,$4,1,$5,$5)`, []any{tenantID, bindingID, membershipID, roleID, now}},
 		} {

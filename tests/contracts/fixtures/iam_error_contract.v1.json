@@ -19,6 +19,8 @@
     {"reason": "SESSION_REVOKED", "grpc_code": "UNAUTHENTICATED", "required_metadata": ["session_id"]},
     {"reason": "GRANT_VERSION_MISMATCH", "grpc_code": "UNAUTHENTICATED", "required_metadata": ["grant_id", "expected_version", "actual_version"]},
     {"reason": "BOOTSTRAP_FINGERPRINT_CONFLICT", "grpc_code": "ALREADY_EXISTS", "required_metadata": ["operation_id", "expected_fingerprint", "actual_fingerprint"]},
+    {"reason": "INVITATION_CONFLICT", "grpc_code": "ALREADY_EXISTS", "required_metadata": ["operation_id"]},
+    {"reason": "RECOVERY_CONFLICT", "grpc_code": "ALREADY_EXISTS", "required_metadata": ["operation_id"]},
     {"reason": "SCHEMA_MAJOR_UNSUPPORTED", "grpc_code": "FAILED_PRECONDITION", "required_metadata": ["schema_major", "supported_schema_major"]}
   ]
 }

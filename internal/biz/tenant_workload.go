@@ -159,6 +159,7 @@ type TenantAdminReader interface {
 }
 
 type TenantWorkloadTransaction interface {
+	TenantRoleAdministrationTransaction
 	MutationResultTransaction
 	CreateCurrentWorkloadMembership(context.Context, TenantScope, TenantMembership) error
 	GetRole(context.Context, TenantScope, uuid.UUID) (TenantRole, error)
@@ -272,6 +273,10 @@ func (u *TenantWorkloadUsecase) CreateTenantWorkload(ctx context.Context, scope 
 	now := u.clock.Now().UTC()
 	var result CreateTenantWorkloadResult
 	err = u.uow.WithinTenantWorkload(ctx, scope, func(txContext context.Context, tx TenantWorkloadTransaction) error {
+		// Initial Role Bindings obey the same built-in administrator guard as later binding changes. Recheck before any ledger replay.
+		if err := requireTenantRoleAdministrator(txContext, tx, scope, command.Actor); err != nil {
+			return err
+		}
 		return executeMutation(txContext, tx, scope, identity, now, &result, func() error {
 			ids, err := u.newIDs(3 + len(command.RoleIDs))
 			if err != nil {

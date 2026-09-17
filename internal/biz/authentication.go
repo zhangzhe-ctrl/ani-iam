@@ -165,7 +165,15 @@ type RefreshToken struct {
 	ReplacedBy uuid.UUID
 }
 
+type AccessBoundary string
+
+const (
+	AccessBoundaryTenant   AccessBoundary = "tenant"
+	AccessBoundaryPlatform AccessBoundary = "platform"
+)
+
 type AccessTokenClaims struct {
+	Boundary     AccessBoundary
 	Issuer       string
 	Subject      uuid.UUID
 	Audience     Audience
@@ -210,6 +218,7 @@ type PasswordLoginCommand struct {
 // LoginResult is the shared Human login result produced by Password and OIDC
 // authentication. Transport-specific response mapping stays in service.
 type LoginResult struct {
+	Boundary             AccessBoundary
 	TenantID             uuid.UUID
 	Principal            Principal
 	Session              Session
@@ -275,15 +284,34 @@ type SecretGenerator interface {
 }
 
 type AuthenticationUsecase struct {
-	reader   AuthenticationReader
-	password AuthenticationPassword
-	throttle LoginThrottle
-	uow      AuthenticationUnitOfWork
-	tokens   AuthenticationTokenCodec
-	secrets  SecretGenerator
-	usage    APIKeyUsageObserver
-	ids      IDGenerator
-	clock    Clock
+	platformPassword      *PlatformPasswordUsecase
+	platformSessions      *PlatformSessionUsecase
+	platformAuthorization *PlatformAuthorizationUsecase
+	reader                AuthenticationReader
+	password              AuthenticationPassword
+	throttle              LoginThrottle
+	uow                   AuthenticationUnitOfWork
+	tokens                AuthenticationTokenCodec
+	secrets               SecretGenerator
+	usage                 APIKeyUsageObserver
+	ids                   IDGenerator
+	clock                 Clock
+}
+
+func (u *AuthenticationUsecase) WithPlatformPassword(platform *PlatformPasswordUsecase) *AuthenticationUsecase {
+	u.platformPassword = platform
+	return u
+}
+
+// WithPlatformSessions is configured only by the composition root before use.
+func (u *AuthenticationUsecase) WithPlatformSessions(platform *PlatformSessionUsecase) *AuthenticationUsecase {
+	u.platformSessions = platform
+	return u
+}
+
+func (u *AuthenticationUsecase) WithPlatformAuthorization(platform *PlatformAuthorizationUsecase) *AuthenticationUsecase {
+	u.platformAuthorization = platform
+	return u
 }
 
 func NewAuthenticationUsecase(
@@ -326,6 +354,15 @@ func (u *AuthenticationUsecase) PasswordLogin(ctx context.Context, command Passw
 	}
 	if command.IdempotencyKey == "" {
 		return PasswordLoginResult{}, ErrIdempotencyKeyRequired
+	}
+	if command.Audience == AudienceBoss {
+		if u.platformPassword == nil {
+			return PasswordLoginResult{}, ErrAuthenticationDependency
+		}
+		return u.platformPassword.PasswordLogin(ctx, command)
+	}
+	if command.Audience != AudienceConsole {
+		return PasswordLoginResult{}, ErrInvalidCredential
 	}
 	scope, err := NewTenantScope(command.TenantID)
 	if err != nil {

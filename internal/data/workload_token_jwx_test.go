@@ -16,19 +16,25 @@ import (
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 )
 
-func workloadCodecFixture(t *testing.T) (*JWXAccessTokenCodec, biz.WorkloadTokenClaims, biz.DelegationClaims) {
+func workloadCodecFixture(t *testing.T) (*JWXWorkloadCredentialCodec, biz.WorkloadTokenClaims, biz.DelegationClaims) {
 	t.Helper()
 	now := time.Date(2026, 9, 10, 1, 0, 0, 0, time.UTC)
 	key := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x69}, ed25519.SeedSize))
-	c, err := NewJWXAccessTokenCodec("wr19-key", key, map[string]ed25519.PublicKey{"wr19-key": key.Public().(ed25519.PublicKey)}, "ani-iam", fixedDataClock{now})
+	base, err := NewJWXAccessTokenCodec("wr19-key", key, map[string]ed25519.PublicKey{"wr19-key": key.Public().(ed25519.PublicKey)}, "ani-iam", fixedDataClock{now})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := NewJWXWorkloadCredentialCodec(base, dataWorkloadRegistryFixture(t))
 	if err != nil {
 		t.Fatal(err)
 	}
 	id := func() uuid.UUID { return uuid.Must(uuid.NewV7()) }
 	caller := biz.DirectCaller{Identity: biz.WorkloadIdentity{PrincipalID: id(), BindingID: id(), PrincipalVersion: 1, BindingVersion: 1, Peer: biz.VerifiedWorkloadPeer{Environment: "wr19", TrustDomain: "wr19.test", IdentityKind: "x509_dns", IdentityValue: "gateway.wr19.test"}}, Target: biz.WorkloadTarget{Audience: biz.SessionInvocationAudience, Operation: biz.SessionInvocationOperation}, GrantVersion: 1}
+	caller.TargetRevision = c.registry.Revision(caller.Target.Audience, caller.Target.Operation)
 	wat := biz.WorkloadTokenClaims{ID: id(), Caller: caller, IssuedAt: now, ExpiresAt: now.Add(5 * time.Minute)}
 	subject, tenant := id(), id()
 	d := biz.DelegationClaims{ID: id(), WorkloadTokenID: wat.ID, Caller: caller, IssuedAt: now, ExpiresAt: now.Add(time.Minute), Subject: biz.DelegatedSubject{Principal: biz.TrustedPrincipalContext{ID: subject, Type: biz.PrincipalTypeHuman, Status: biz.PrincipalStatusActive, TenantID: tenant, SessionID: id(), GrantID: id()}, GrantVersion: 1}, Binding: biz.InvocationBinding{Audience: biz.SessionInvocationAudience, Operation: biz.SessionInvocationOperation, RPCMethod: biz.SessionInvocationRPC, SourceOperation: "createInstanceExecSession", TenantID: tenant, SubjectID: subject, ResourceID: id().String(), Mode: "exec", PolicyRevision: "fixed-test-revision", RequestSHA256: [32]byte{1}}}
+	d.Binding.TargetRevision = caller.TargetRevision
 	return c, wat, d
 }
 
@@ -115,7 +121,11 @@ func TestWorkloadJWXSigningKeyRotation(t *testing.T) {
 		t.Fatal(err)
 	}
 	next := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x71}, ed25519.SeedSize))
-	rotated, err := NewJWXAccessTokenCodec("new", next, map[string]ed25519.PublicKey{"new": next.Public().(ed25519.PublicKey), c.activeKeyID: c.privateKey.Public().(ed25519.PublicKey)}, c.issuer, c.clock)
+	rotatedBase, err := NewJWXAccessTokenCodec("new", next, map[string]ed25519.PublicKey{"new": next.Public().(ed25519.PublicKey), c.activeKeyID: c.privateKey.Public().(ed25519.PublicKey)}, c.issuer, c.clock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rotated, err := NewJWXWorkloadCredentialCodec(rotatedBase, c.registry)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,8 +145,12 @@ func TestContinuationCannotCreateOrOutliveSubject(t *testing.T) {
 	receiver.Identity.BindingID = uuid.Must(uuid.NewV7())
 	receiver.Identity.Peer.IdentityValue = "session.wr19.test"
 	receiver.Target = biz.WorkloadTarget{Audience: "ani-iam", Operation: "/iam.v1.AuthorizationService/VerifyWorkloadInvocation"}
+	receiver.TargetRevision = codec.registry.Revision(receiver.Target.Audience, receiver.Target.Operation)
 	d.Subject.CredentialExpiresAt = d.IssuedAt.Add(10 * time.Minute)
 	proof := biz.SessionContinuationClaims{ID: uuid.Must(uuid.NewV7()), Caller: wat.Caller, Receiver: receiver, Subject: d.Subject, Binding: d.Binding, IssuedAt: d.IssuedAt, ExpiresAt: d.IssuedAt.Add(10 * time.Minute)}
+	proof.ReceiverAuthority = receiver
+	proof.ReceiverAuthority.Target = biz.WorkloadTarget{Audience: biz.SessionInvocationAudience, Operation: "session.receive"}
+	proof.ReceiverAuthority.TargetRevision = codec.registry.Revision(proof.ReceiverAuthority.Target.Audience, proof.ReceiverAuthority.Target.Operation)
 	ctx := context.Background()
 	raw, err := codec.IssueContinuation(ctx, proof)
 	if err != nil {
@@ -181,5 +195,49 @@ func TestContinuationCannotCreateOrOutliveSubject(t *testing.T) {
 	codec.clock = fixedDataClock{got.ExpiresAt}
 	if _, err = codec.VerifyContinuation(ctx, raw); err == nil {
 		t.Fatal("expired continuation accepted")
+	}
+}
+
+func TestInferenceJWTUsesExactAudienceAndNeverContinuation(t *testing.T) {
+	codec, w, d := workloadCodecFixture(t)
+	ctx := context.Background()
+	w.Caller.Target = biz.WorkloadTarget{Audience: biz.InferenceInvocationAudience, Operation: biz.InferenceInvocationOperation}
+	w.Caller.TargetRevision = codec.registry.Revision(w.Caller.Target.Audience, w.Caller.Target.Operation)
+	d.Caller = w.Caller
+	d.Binding.Audience = biz.InferenceInvocationAudience
+	d.Binding.Operation = biz.InferenceInvocationOperation
+	d.Binding.TargetRevision = w.Caller.TargetRevision
+	d.Binding.RPCMethod = biz.InferenceInvocationRPC
+	d.Binding.SourceOperation = biz.InferenceSourceOperation
+	d.Binding.Mode = "chat_completions"
+	d.Subject = biz.DelegatedSubject{Principal: biz.TrustedPrincipalContext{ID: d.Binding.SubjectID, Type: biz.PrincipalTypeWorkload, TenantID: d.Binding.TenantID, Status: biz.PrincipalStatusActive}, APIKeyID: uuid.New(), APIKeyVersion: 1}
+	raw, err := codec.IssueWorkload(ctx, w)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := codec.VerifyWorkload(ctx, raw)
+	if err != nil || got.Caller.Target != w.Caller.Target {
+		t.Fatal("Inference WAT audience mismatch")
+	}
+	raw, err = codec.IssueDelegation(ctx, d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	proof, err := codec.VerifyDelegation(ctx, raw)
+	if err != nil || proof.Binding != d.Binding || proof.Subject.APIKeyID != d.Subject.APIKeyID {
+		t.Fatal("Inference delegation mismatch")
+	}
+	if _, err = codec.VerifyContinuation(ctx, raw); err == nil {
+		t.Fatal("Inference delegation accepted as continuation")
+	}
+	changed := d
+	changed.Caller.Target = biz.WorkloadTarget{Audience: biz.SessionInvocationAudience, Operation: biz.SessionInvocationOperation}
+	if _, err = codec.IssueDelegation(ctx, changed); err == nil {
+		t.Fatal("caller and binding target mismatch accepted")
+	}
+	changed = d
+	changed.Subject.Principal.Type = biz.PrincipalTypeHuman
+	if _, err = codec.IssueDelegation(ctx, changed); err == nil {
+		t.Fatal("Human Inference invocation accepted")
 	}
 }

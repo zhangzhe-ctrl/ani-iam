@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package iam.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
+
+// IAM owns this reliable asynchronous request. Receipt is not administrator
+// readiness. The producer identity is established by broker authority, never by
+// the producer field. No password, membership, role or credential is supplied.
+message TenantBootstrapRequested {
+  string schema_revision = 1;
+  string event_id = 2;
+  string producer = 3;
+  string tenant_id = 4;
+  string operation_id = 5;
+  google.protobuf.Timestamp occurred_at = 6;
+  // References the authoritative lifecycle fact needed by the worker. This
+  // message does not advance the lifecycle sequence or repair its projection.
+  string source_epoch = 7;
+  int64 lifecycle_sequence = 8;
+  TenantBootstrapAdministrator intended_administrator = 9;
+  string payload_fingerprint = 10;
+}
+
+message TenantBootstrapAdministrator {
+  string normalized_email = 1;
+  string locale = 2;
+}

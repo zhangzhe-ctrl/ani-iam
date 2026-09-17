@@ -21,12 +21,14 @@ import (
 // The action token is added to a copy of ConsoleActionURLBase at dispatch time.
 type PasswordActionNotificationSubmitterConfig struct {
 	ConsoleActionURLBase string
+	BossActionURLBase    string
 	Locale               string
 }
 
 type grpcPasswordActionNotificationSubmitter struct {
 	client               notificationv1.NotificationServiceClient
 	consoleActionURLBase url.URL
+	bossActionURLBase    *url.URL
 	locale               string
 }
 
@@ -46,9 +48,17 @@ func NewGRPCPasswordActionNotificationSubmitter(
 	if config.Locale != "en-US" && config.Locale != "zh-CN" {
 		return nil, errors.New("password-action notification locale must be en-US or zh-CN")
 	}
+	var bossURL *url.URL
+	if config.BossActionURLBase != "" {
+		bossURL, err = url.Parse(config.BossActionURLBase)
+		if err != nil || bossURL.Scheme != "https" || bossURL.Host == "" || !bossURL.IsAbs() || bossURL.User != nil || bossURL.RawQuery != "" || bossURL.Fragment != "" || strings.ToLower(bossURL.Host) != bossURL.Host || bossURL.Host == actionURL.Host {
+			return nil, errors.New("BOSS password-action URL requires a distinct canonical HTTPS base")
+		}
+	}
 	return &grpcPasswordActionNotificationSubmitter{
 		client:               client,
 		consoleActionURLBase: *actionURL,
+		bossActionURLBase:    bossURL,
 		locale:               config.Locale,
 	}, nil
 }
@@ -69,6 +79,12 @@ func (s *grpcPasswordActionNotificationSubmitter) SubmitPasswordActionNotificati
 		return "", errors.Join(biz.ErrPasswordActionNotificationPermanent, errors.New("password-action audience is unsupported"))
 	}
 	actionURL := s.consoleActionURLBase
+	if submission.Audience == biz.AudienceBoss {
+		if s.bossActionURLBase == nil {
+			return "", errors.Join(biz.ErrPasswordActionNotificationPermanent, errors.New("BOSS action URL is not configured"))
+		}
+		actionURL = *s.bossActionURLBase
+	}
 	query := actionURL.Query()
 	query.Set("token", submission.ActionToken)
 	actionURL.RawQuery = query.Encode()
@@ -146,6 +162,9 @@ func passwordActionNotificationPurpose(value biz.PasswordActionPurpose) (notific
 func passwordActionNotificationAudience(value biz.Audience) (notificationv1.IamPasswordActionAudience, bool) {
 	if value == biz.AudienceConsole {
 		return notificationv1.IamPasswordActionAudience_IAM_PASSWORD_ACTION_AUDIENCE_CONSOLE, true
+	}
+	if value == biz.AudienceBoss {
+		return notificationv1.IamPasswordActionAudience_IAM_PASSWORD_ACTION_AUDIENCE_BOSS, true
 	}
 	return notificationv1.IamPasswordActionAudience_IAM_PASSWORD_ACTION_AUDIENCE_UNSPECIFIED, false
 }

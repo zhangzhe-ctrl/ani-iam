@@ -19,59 +19,67 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	IAMAdminService_AcceptPlatformInvitation_FullMethodName  = "/iam.v1.IAMAdminService/AcceptPlatformInvitation"
-	IAMAdminService_AcceptTenantInvitation_FullMethodName    = "/iam.v1.IAMAdminService/AcceptTenantInvitation"
-	IAMAdminService_ApproveRecoveryBootstrap_FullMethodName  = "/iam.v1.IAMAdminService/ApproveRecoveryBootstrap"
-	IAMAdminService_ApproveRestoreTenantAdmin_FullMethodName = "/iam.v1.IAMAdminService/ApproveRestoreTenantAdmin"
-	IAMAdminService_BindPlatformRole_FullMethodName          = "/iam.v1.IAMAdminService/BindPlatformRole"
-	IAMAdminService_BindTenantRole_FullMethodName            = "/iam.v1.IAMAdminService/BindTenantRole"
-	IAMAdminService_CancelPlatformInvitation_FullMethodName  = "/iam.v1.IAMAdminService/CancelPlatformInvitation"
-	IAMAdminService_CancelTenantInvitation_FullMethodName    = "/iam.v1.IAMAdminService/CancelTenantInvitation"
-	IAMAdminService_CreateAPIKey_FullMethodName              = "/iam.v1.IAMAdminService/CreateAPIKey"
-	IAMAdminService_CreatePlatformInvitation_FullMethodName  = "/iam.v1.IAMAdminService/CreatePlatformInvitation"
-	IAMAdminService_CreatePlatformRole_FullMethodName        = "/iam.v1.IAMAdminService/CreatePlatformRole"
-	IAMAdminService_CreateTenantWorkload_FullMethodName      = "/iam.v1.IAMAdminService/CreateTenantWorkload"
-	IAMAdminService_CreateTenantInvitation_FullMethodName    = "/iam.v1.IAMAdminService/CreateTenantInvitation"
-	IAMAdminService_CreateTenantRole_FullMethodName          = "/iam.v1.IAMAdminService/CreateTenantRole"
-	IAMAdminService_DeletePlatformRole_FullMethodName        = "/iam.v1.IAMAdminService/DeletePlatformRole"
-	IAMAdminService_DeleteTenantRole_FullMethodName          = "/iam.v1.IAMAdminService/DeleteTenantRole"
-	IAMAdminService_ExecuteRecoveryBootstrap_FullMethodName  = "/iam.v1.IAMAdminService/ExecuteRecoveryBootstrap"
-	IAMAdminService_ExecuteRestoreTenantAdmin_FullMethodName = "/iam.v1.IAMAdminService/ExecuteRestoreTenantAdmin"
-	IAMAdminService_GetAuditEvent_FullMethodName             = "/iam.v1.IAMAdminService/GetAuditEvent"
-	IAMAdminService_GetPlatformAuditEvent_FullMethodName     = "/iam.v1.IAMAdminService/GetPlatformAuditEvent"
-	IAMAdminService_GetPlatformInvitation_FullMethodName     = "/iam.v1.IAMAdminService/GetPlatformInvitation"
-	IAMAdminService_GetPlatformMembership_FullMethodName     = "/iam.v1.IAMAdminService/GetPlatformMembership"
-	IAMAdminService_GetPlatformRole_FullMethodName           = "/iam.v1.IAMAdminService/GetPlatformRole"
-	IAMAdminService_GetTenantWorkload_FullMethodName         = "/iam.v1.IAMAdminService/GetTenantWorkload"
-	IAMAdminService_GetTenantAccess_FullMethodName           = "/iam.v1.IAMAdminService/GetTenantAccess"
-	IAMAdminService_GetTenantInvitation_FullMethodName       = "/iam.v1.IAMAdminService/GetTenantInvitation"
-	IAMAdminService_GetTenantMembership_FullMethodName       = "/iam.v1.IAMAdminService/GetTenantMembership"
-	IAMAdminService_GetTenantRole_FullMethodName             = "/iam.v1.IAMAdminService/GetTenantRole"
-	IAMAdminService_ListAPIKeys_FullMethodName               = "/iam.v1.IAMAdminService/ListAPIKeys"
-	IAMAdminService_ListAuditEvents_FullMethodName           = "/iam.v1.IAMAdminService/ListAuditEvents"
-	IAMAdminService_ListPlatformAuditEvents_FullMethodName   = "/iam.v1.IAMAdminService/ListPlatformAuditEvents"
-	IAMAdminService_ListPlatformInvitations_FullMethodName   = "/iam.v1.IAMAdminService/ListPlatformInvitations"
-	IAMAdminService_ListPlatformMemberships_FullMethodName   = "/iam.v1.IAMAdminService/ListPlatformMemberships"
-	IAMAdminService_ListPlatformRoles_FullMethodName         = "/iam.v1.IAMAdminService/ListPlatformRoles"
-	IAMAdminService_ListTenantWorkloads_FullMethodName       = "/iam.v1.IAMAdminService/ListTenantWorkloads"
-	IAMAdminService_ListTenantInvitations_FullMethodName     = "/iam.v1.IAMAdminService/ListTenantInvitations"
-	IAMAdminService_ListTenantMemberships_FullMethodName     = "/iam.v1.IAMAdminService/ListTenantMemberships"
-	IAMAdminService_ListTenantRoles_FullMethodName           = "/iam.v1.IAMAdminService/ListTenantRoles"
-	IAMAdminService_RemovePlatformMembership_FullMethodName  = "/iam.v1.IAMAdminService/RemovePlatformMembership"
-	IAMAdminService_RemoveTenantMembership_FullMethodName    = "/iam.v1.IAMAdminService/RemoveTenantMembership"
-	IAMAdminService_RequestRecoveryBootstrap_FullMethodName  = "/iam.v1.IAMAdminService/RequestRecoveryBootstrap"
-	IAMAdminService_RequestRestoreTenantAdmin_FullMethodName = "/iam.v1.IAMAdminService/RequestRestoreTenantAdmin"
-	IAMAdminService_ResendPlatformInvitation_FullMethodName  = "/iam.v1.IAMAdminService/ResendPlatformInvitation"
-	IAMAdminService_ResendTenantInvitation_FullMethodName    = "/iam.v1.IAMAdminService/ResendTenantInvitation"
-	IAMAdminService_RevokeAPIKey_FullMethodName              = "/iam.v1.IAMAdminService/RevokeAPIKey"
-	IAMAdminService_UnbindPlatformRole_FullMethodName        = "/iam.v1.IAMAdminService/UnbindPlatformRole"
-	IAMAdminService_UnbindTenantRole_FullMethodName          = "/iam.v1.IAMAdminService/UnbindTenantRole"
-	IAMAdminService_UpdatePlatformMembership_FullMethodName  = "/iam.v1.IAMAdminService/UpdatePlatformMembership"
-	IAMAdminService_UpdatePlatformRole_FullMethodName        = "/iam.v1.IAMAdminService/UpdatePlatformRole"
-	IAMAdminService_UpdateTenantWorkload_FullMethodName      = "/iam.v1.IAMAdminService/UpdateTenantWorkload"
-	IAMAdminService_UpdateTenantAccess_FullMethodName        = "/iam.v1.IAMAdminService/UpdateTenantAccess"
-	IAMAdminService_UpdateTenantMembership_FullMethodName    = "/iam.v1.IAMAdminService/UpdateTenantMembership"
-	IAMAdminService_UpdateTenantRole_FullMethodName          = "/iam.v1.IAMAdminService/UpdateTenantRole"
+	IAMAdminService_ListCoreDLQEntries_FullMethodName               = "/iam.v1.IAMAdminService/ListCoreDLQEntries"
+	IAMAdminService_GetCoreDLQEntry_FullMethodName                  = "/iam.v1.IAMAdminService/GetCoreDLQEntry"
+	IAMAdminService_ReplayCoreDLQEntry_FullMethodName               = "/iam.v1.IAMAdminService/ReplayCoreDLQEntry"
+	IAMAdminService_GetTenantBootstrap_FullMethodName               = "/iam.v1.IAMAdminService/GetTenantBootstrap"
+	IAMAdminService_ReissueTenantBootstrapInvitation_FullMethodName = "/iam.v1.IAMAdminService/ReissueTenantBootstrapInvitation"
+	IAMAdminService_RetryTenantBootstrapJob_FullMethodName          = "/iam.v1.IAMAdminService/RetryTenantBootstrapJob"
+	IAMAdminService_AcceptPlatformInvitation_FullMethodName         = "/iam.v1.IAMAdminService/AcceptPlatformInvitation"
+	IAMAdminService_AcceptTenantInvitation_FullMethodName           = "/iam.v1.IAMAdminService/AcceptTenantInvitation"
+	IAMAdminService_ApproveRecoveryBootstrap_FullMethodName         = "/iam.v1.IAMAdminService/ApproveRecoveryBootstrap"
+	IAMAdminService_ApproveRestoreTenantAdmin_FullMethodName        = "/iam.v1.IAMAdminService/ApproveRestoreTenantAdmin"
+	IAMAdminService_BindPlatformRole_FullMethodName                 = "/iam.v1.IAMAdminService/BindPlatformRole"
+	IAMAdminService_BindTenantRole_FullMethodName                   = "/iam.v1.IAMAdminService/BindTenantRole"
+	IAMAdminService_CancelPlatformInvitation_FullMethodName         = "/iam.v1.IAMAdminService/CancelPlatformInvitation"
+	IAMAdminService_CancelTenantInvitation_FullMethodName           = "/iam.v1.IAMAdminService/CancelTenantInvitation"
+	IAMAdminService_CreateAPIKey_FullMethodName                     = "/iam.v1.IAMAdminService/CreateAPIKey"
+	IAMAdminService_CreatePlatformInvitation_FullMethodName         = "/iam.v1.IAMAdminService/CreatePlatformInvitation"
+	IAMAdminService_CreatePlatformRole_FullMethodName               = "/iam.v1.IAMAdminService/CreatePlatformRole"
+	IAMAdminService_CreateTenantWorkload_FullMethodName             = "/iam.v1.IAMAdminService/CreateTenantWorkload"
+	IAMAdminService_CreateTenantInvitation_FullMethodName           = "/iam.v1.IAMAdminService/CreateTenantInvitation"
+	IAMAdminService_CreateTenantRole_FullMethodName                 = "/iam.v1.IAMAdminService/CreateTenantRole"
+	IAMAdminService_DeletePlatformRole_FullMethodName               = "/iam.v1.IAMAdminService/DeletePlatformRole"
+	IAMAdminService_DeleteTenantRole_FullMethodName                 = "/iam.v1.IAMAdminService/DeleteTenantRole"
+	IAMAdminService_ExecuteRecoveryBootstrap_FullMethodName         = "/iam.v1.IAMAdminService/ExecuteRecoveryBootstrap"
+	IAMAdminService_ExecuteRestoreTenantAdmin_FullMethodName        = "/iam.v1.IAMAdminService/ExecuteRestoreTenantAdmin"
+	IAMAdminService_GetAuditEvent_FullMethodName                    = "/iam.v1.IAMAdminService/GetAuditEvent"
+	IAMAdminService_GetPlatformAuditEvent_FullMethodName            = "/iam.v1.IAMAdminService/GetPlatformAuditEvent"
+	IAMAdminService_GetPlatformInvitation_FullMethodName            = "/iam.v1.IAMAdminService/GetPlatformInvitation"
+	IAMAdminService_GetPlatformMembership_FullMethodName            = "/iam.v1.IAMAdminService/GetPlatformMembership"
+	IAMAdminService_GetPlatformRole_FullMethodName                  = "/iam.v1.IAMAdminService/GetPlatformRole"
+	IAMAdminService_GetTenantWorkload_FullMethodName                = "/iam.v1.IAMAdminService/GetTenantWorkload"
+	IAMAdminService_GetTenantAccess_FullMethodName                  = "/iam.v1.IAMAdminService/GetTenantAccess"
+	IAMAdminService_GetTenantInvitation_FullMethodName              = "/iam.v1.IAMAdminService/GetTenantInvitation"
+	IAMAdminService_GetTenantMembership_FullMethodName              = "/iam.v1.IAMAdminService/GetTenantMembership"
+	IAMAdminService_GetTenantRole_FullMethodName                    = "/iam.v1.IAMAdminService/GetTenantRole"
+	IAMAdminService_ListAPIKeys_FullMethodName                      = "/iam.v1.IAMAdminService/ListAPIKeys"
+	IAMAdminService_ListAuditEvents_FullMethodName                  = "/iam.v1.IAMAdminService/ListAuditEvents"
+	IAMAdminService_ListPlatformAuditEvents_FullMethodName          = "/iam.v1.IAMAdminService/ListPlatformAuditEvents"
+	IAMAdminService_ListPlatformInvitations_FullMethodName          = "/iam.v1.IAMAdminService/ListPlatformInvitations"
+	IAMAdminService_ListPlatformMemberships_FullMethodName          = "/iam.v1.IAMAdminService/ListPlatformMemberships"
+	IAMAdminService_ListPlatformRoles_FullMethodName                = "/iam.v1.IAMAdminService/ListPlatformRoles"
+	IAMAdminService_ListPlatformPermissions_FullMethodName          = "/iam.v1.IAMAdminService/ListPlatformPermissions"
+	IAMAdminService_ListTenantWorkloads_FullMethodName              = "/iam.v1.IAMAdminService/ListTenantWorkloads"
+	IAMAdminService_ListTenantInvitations_FullMethodName            = "/iam.v1.IAMAdminService/ListTenantInvitations"
+	IAMAdminService_ListTenantMemberships_FullMethodName            = "/iam.v1.IAMAdminService/ListTenantMemberships"
+	IAMAdminService_ListTenantRoles_FullMethodName                  = "/iam.v1.IAMAdminService/ListTenantRoles"
+	IAMAdminService_ListTenantPermissions_FullMethodName            = "/iam.v1.IAMAdminService/ListTenantPermissions"
+	IAMAdminService_RemovePlatformMembership_FullMethodName         = "/iam.v1.IAMAdminService/RemovePlatformMembership"
+	IAMAdminService_RemoveTenantMembership_FullMethodName           = "/iam.v1.IAMAdminService/RemoveTenantMembership"
+	IAMAdminService_RequestRecoveryBootstrap_FullMethodName         = "/iam.v1.IAMAdminService/RequestRecoveryBootstrap"
+	IAMAdminService_RequestRestoreTenantAdmin_FullMethodName        = "/iam.v1.IAMAdminService/RequestRestoreTenantAdmin"
+	IAMAdminService_ResendPlatformInvitation_FullMethodName         = "/iam.v1.IAMAdminService/ResendPlatformInvitation"
+	IAMAdminService_ResendTenantInvitation_FullMethodName           = "/iam.v1.IAMAdminService/ResendTenantInvitation"
+	IAMAdminService_RevokeAPIKey_FullMethodName                     = "/iam.v1.IAMAdminService/RevokeAPIKey"
+	IAMAdminService_UnbindPlatformRole_FullMethodName               = "/iam.v1.IAMAdminService/UnbindPlatformRole"
+	IAMAdminService_UnbindTenantRole_FullMethodName                 = "/iam.v1.IAMAdminService/UnbindTenantRole"
+	IAMAdminService_UpdatePlatformMembership_FullMethodName         = "/iam.v1.IAMAdminService/UpdatePlatformMembership"
+	IAMAdminService_UpdatePlatformRole_FullMethodName               = "/iam.v1.IAMAdminService/UpdatePlatformRole"
+	IAMAdminService_UpdateTenantWorkload_FullMethodName             = "/iam.v1.IAMAdminService/UpdateTenantWorkload"
+	IAMAdminService_UpdateTenantAccess_FullMethodName               = "/iam.v1.IAMAdminService/UpdateTenantAccess"
+	IAMAdminService_UpdateTenantMembership_FullMethodName           = "/iam.v1.IAMAdminService/UpdateTenantMembership"
+	IAMAdminService_UpdateTenantRole_FullMethodName                 = "/iam.v1.IAMAdminService/UpdateTenantRole"
 )
 
 // IAMAdminServiceClient is the client API for IAMAdminService service.
@@ -80,6 +88,12 @@ const (
 //
 // IAMAdminService owns IAM administration. It never owns or mutates Core Tenant Lifecycle.
 type IAMAdminServiceClient interface {
+	ListCoreDLQEntries(ctx context.Context, in *ListCoreDLQEntriesRequest, opts ...grpc.CallOption) (*ListCoreDLQEntriesResponse, error)
+	GetCoreDLQEntry(ctx context.Context, in *GetCoreDLQEntryRequest, opts ...grpc.CallOption) (*GetCoreDLQEntryResponse, error)
+	ReplayCoreDLQEntry(ctx context.Context, in *ReplayCoreDLQEntryRequest, opts ...grpc.CallOption) (*ReplayCoreDLQEntryResponse, error)
+	GetTenantBootstrap(ctx context.Context, in *GetTenantBootstrapRequest, opts ...grpc.CallOption) (*GetTenantBootstrapResponse, error)
+	ReissueTenantBootstrapInvitation(ctx context.Context, in *ReissueTenantBootstrapInvitationRequest, opts ...grpc.CallOption) (*ReissueTenantBootstrapInvitationResponse, error)
+	RetryTenantBootstrapJob(ctx context.Context, in *RetryTenantBootstrapJobRequest, opts ...grpc.CallOption) (*RetryTenantBootstrapJobResponse, error)
 	AcceptPlatformInvitation(ctx context.Context, in *AcceptPlatformInvitationRequest, opts ...grpc.CallOption) (*AcceptPlatformInvitationResponse, error)
 	AcceptTenantInvitation(ctx context.Context, in *AcceptTenantInvitationRequest, opts ...grpc.CallOption) (*AcceptTenantInvitationResponse, error)
 	ApproveRecoveryBootstrap(ctx context.Context, in *ApproveRecoveryBootstrapRequest, opts ...grpc.CallOption) (*ApproveRecoveryBootstrapResponse, error)
@@ -114,10 +128,12 @@ type IAMAdminServiceClient interface {
 	ListPlatformInvitations(ctx context.Context, in *ListPlatformInvitationsRequest, opts ...grpc.CallOption) (*ListPlatformInvitationsResponse, error)
 	ListPlatformMemberships(ctx context.Context, in *ListPlatformMembershipsRequest, opts ...grpc.CallOption) (*ListPlatformMembershipsResponse, error)
 	ListPlatformRoles(ctx context.Context, in *ListPlatformRolesRequest, opts ...grpc.CallOption) (*ListPlatformRolesResponse, error)
+	ListPlatformPermissions(ctx context.Context, in *ListPlatformPermissionsRequest, opts ...grpc.CallOption) (*PermissionCatalogResponse, error)
 	ListTenantWorkloads(ctx context.Context, in *ListTenantWorkloadsRequest, opts ...grpc.CallOption) (*ListTenantWorkloadsResponse, error)
 	ListTenantInvitations(ctx context.Context, in *ListTenantInvitationsRequest, opts ...grpc.CallOption) (*ListTenantInvitationsResponse, error)
 	ListTenantMemberships(ctx context.Context, in *ListTenantMembershipsRequest, opts ...grpc.CallOption) (*ListTenantMembershipsResponse, error)
 	ListTenantRoles(ctx context.Context, in *ListTenantRolesRequest, opts ...grpc.CallOption) (*ListTenantRolesResponse, error)
+	ListTenantPermissions(ctx context.Context, in *ListTenantPermissionsRequest, opts ...grpc.CallOption) (*PermissionCatalogResponse, error)
 	RemovePlatformMembership(ctx context.Context, in *RemovePlatformMembershipRequest, opts ...grpc.CallOption) (*RemovePlatformMembershipResponse, error)
 	RemoveTenantMembership(ctx context.Context, in *RemoveTenantMembershipRequest, opts ...grpc.CallOption) (*RemoveTenantMembershipResponse, error)
 	RequestRecoveryBootstrap(ctx context.Context, in *RequestRecoveryBootstrapRequest, opts ...grpc.CallOption) (*RequestRecoveryBootstrapResponse, error)
@@ -141,6 +157,66 @@ type iAMAdminServiceClient struct {
 
 func NewIAMAdminServiceClient(cc grpc.ClientConnInterface) IAMAdminServiceClient {
 	return &iAMAdminServiceClient{cc}
+}
+
+func (c *iAMAdminServiceClient) ListCoreDLQEntries(ctx context.Context, in *ListCoreDLQEntriesRequest, opts ...grpc.CallOption) (*ListCoreDLQEntriesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListCoreDLQEntriesResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_ListCoreDLQEntries_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iAMAdminServiceClient) GetCoreDLQEntry(ctx context.Context, in *GetCoreDLQEntryRequest, opts ...grpc.CallOption) (*GetCoreDLQEntryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCoreDLQEntryResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_GetCoreDLQEntry_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iAMAdminServiceClient) ReplayCoreDLQEntry(ctx context.Context, in *ReplayCoreDLQEntryRequest, opts ...grpc.CallOption) (*ReplayCoreDLQEntryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReplayCoreDLQEntryResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_ReplayCoreDLQEntry_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iAMAdminServiceClient) GetTenantBootstrap(ctx context.Context, in *GetTenantBootstrapRequest, opts ...grpc.CallOption) (*GetTenantBootstrapResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTenantBootstrapResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_GetTenantBootstrap_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iAMAdminServiceClient) ReissueTenantBootstrapInvitation(ctx context.Context, in *ReissueTenantBootstrapInvitationRequest, opts ...grpc.CallOption) (*ReissueTenantBootstrapInvitationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ReissueTenantBootstrapInvitationResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_ReissueTenantBootstrapInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iAMAdminServiceClient) RetryTenantBootstrapJob(ctx context.Context, in *RetryTenantBootstrapJobRequest, opts ...grpc.CallOption) (*RetryTenantBootstrapJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RetryTenantBootstrapJobResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_RetryTenantBootstrapJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *iAMAdminServiceClient) AcceptPlatformInvitation(ctx context.Context, in *AcceptPlatformInvitationRequest, opts ...grpc.CallOption) (*AcceptPlatformInvitationResponse, error) {
@@ -483,6 +559,16 @@ func (c *iAMAdminServiceClient) ListPlatformRoles(ctx context.Context, in *ListP
 	return out, nil
 }
 
+func (c *iAMAdminServiceClient) ListPlatformPermissions(ctx context.Context, in *ListPlatformPermissionsRequest, opts ...grpc.CallOption) (*PermissionCatalogResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PermissionCatalogResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_ListPlatformPermissions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *iAMAdminServiceClient) ListTenantWorkloads(ctx context.Context, in *ListTenantWorkloadsRequest, opts ...grpc.CallOption) (*ListTenantWorkloadsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListTenantWorkloadsResponse)
@@ -517,6 +603,16 @@ func (c *iAMAdminServiceClient) ListTenantRoles(ctx context.Context, in *ListTen
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListTenantRolesResponse)
 	err := c.cc.Invoke(ctx, IAMAdminService_ListTenantRoles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iAMAdminServiceClient) ListTenantPermissions(ctx context.Context, in *ListTenantPermissionsRequest, opts ...grpc.CallOption) (*PermissionCatalogResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PermissionCatalogResponse)
+	err := c.cc.Invoke(ctx, IAMAdminService_ListTenantPermissions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -679,6 +775,12 @@ func (c *iAMAdminServiceClient) UpdateTenantRole(ctx context.Context, in *Update
 //
 // IAMAdminService owns IAM administration. It never owns or mutates Core Tenant Lifecycle.
 type IAMAdminServiceServer interface {
+	ListCoreDLQEntries(context.Context, *ListCoreDLQEntriesRequest) (*ListCoreDLQEntriesResponse, error)
+	GetCoreDLQEntry(context.Context, *GetCoreDLQEntryRequest) (*GetCoreDLQEntryResponse, error)
+	ReplayCoreDLQEntry(context.Context, *ReplayCoreDLQEntryRequest) (*ReplayCoreDLQEntryResponse, error)
+	GetTenantBootstrap(context.Context, *GetTenantBootstrapRequest) (*GetTenantBootstrapResponse, error)
+	ReissueTenantBootstrapInvitation(context.Context, *ReissueTenantBootstrapInvitationRequest) (*ReissueTenantBootstrapInvitationResponse, error)
+	RetryTenantBootstrapJob(context.Context, *RetryTenantBootstrapJobRequest) (*RetryTenantBootstrapJobResponse, error)
 	AcceptPlatformInvitation(context.Context, *AcceptPlatformInvitationRequest) (*AcceptPlatformInvitationResponse, error)
 	AcceptTenantInvitation(context.Context, *AcceptTenantInvitationRequest) (*AcceptTenantInvitationResponse, error)
 	ApproveRecoveryBootstrap(context.Context, *ApproveRecoveryBootstrapRequest) (*ApproveRecoveryBootstrapResponse, error)
@@ -713,10 +815,12 @@ type IAMAdminServiceServer interface {
 	ListPlatformInvitations(context.Context, *ListPlatformInvitationsRequest) (*ListPlatformInvitationsResponse, error)
 	ListPlatformMemberships(context.Context, *ListPlatformMembershipsRequest) (*ListPlatformMembershipsResponse, error)
 	ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error)
+	ListPlatformPermissions(context.Context, *ListPlatformPermissionsRequest) (*PermissionCatalogResponse, error)
 	ListTenantWorkloads(context.Context, *ListTenantWorkloadsRequest) (*ListTenantWorkloadsResponse, error)
 	ListTenantInvitations(context.Context, *ListTenantInvitationsRequest) (*ListTenantInvitationsResponse, error)
 	ListTenantMemberships(context.Context, *ListTenantMembershipsRequest) (*ListTenantMembershipsResponse, error)
 	ListTenantRoles(context.Context, *ListTenantRolesRequest) (*ListTenantRolesResponse, error)
+	ListTenantPermissions(context.Context, *ListTenantPermissionsRequest) (*PermissionCatalogResponse, error)
 	RemovePlatformMembership(context.Context, *RemovePlatformMembershipRequest) (*RemovePlatformMembershipResponse, error)
 	RemoveTenantMembership(context.Context, *RemoveTenantMembershipRequest) (*RemoveTenantMembershipResponse, error)
 	RequestRecoveryBootstrap(context.Context, *RequestRecoveryBootstrapRequest) (*RequestRecoveryBootstrapResponse, error)
@@ -742,6 +846,24 @@ type IAMAdminServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedIAMAdminServiceServer struct{}
 
+func (UnimplementedIAMAdminServiceServer) ListCoreDLQEntries(context.Context, *ListCoreDLQEntriesRequest) (*ListCoreDLQEntriesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListCoreDLQEntries not implemented")
+}
+func (UnimplementedIAMAdminServiceServer) GetCoreDLQEntry(context.Context, *GetCoreDLQEntryRequest) (*GetCoreDLQEntryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetCoreDLQEntry not implemented")
+}
+func (UnimplementedIAMAdminServiceServer) ReplayCoreDLQEntry(context.Context, *ReplayCoreDLQEntryRequest) (*ReplayCoreDLQEntryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReplayCoreDLQEntry not implemented")
+}
+func (UnimplementedIAMAdminServiceServer) GetTenantBootstrap(context.Context, *GetTenantBootstrapRequest) (*GetTenantBootstrapResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetTenantBootstrap not implemented")
+}
+func (UnimplementedIAMAdminServiceServer) ReissueTenantBootstrapInvitation(context.Context, *ReissueTenantBootstrapInvitationRequest) (*ReissueTenantBootstrapInvitationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ReissueTenantBootstrapInvitation not implemented")
+}
+func (UnimplementedIAMAdminServiceServer) RetryTenantBootstrapJob(context.Context, *RetryTenantBootstrapJobRequest) (*RetryTenantBootstrapJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RetryTenantBootstrapJob not implemented")
+}
 func (UnimplementedIAMAdminServiceServer) AcceptPlatformInvitation(context.Context, *AcceptPlatformInvitationRequest) (*AcceptPlatformInvitationResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AcceptPlatformInvitation not implemented")
 }
@@ -844,6 +966,9 @@ func (UnimplementedIAMAdminServiceServer) ListPlatformMemberships(context.Contex
 func (UnimplementedIAMAdminServiceServer) ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPlatformRoles not implemented")
 }
+func (UnimplementedIAMAdminServiceServer) ListPlatformPermissions(context.Context, *ListPlatformPermissionsRequest) (*PermissionCatalogResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPlatformPermissions not implemented")
+}
 func (UnimplementedIAMAdminServiceServer) ListTenantWorkloads(context.Context, *ListTenantWorkloadsRequest) (*ListTenantWorkloadsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListTenantWorkloads not implemented")
 }
@@ -855,6 +980,9 @@ func (UnimplementedIAMAdminServiceServer) ListTenantMemberships(context.Context,
 }
 func (UnimplementedIAMAdminServiceServer) ListTenantRoles(context.Context, *ListTenantRolesRequest) (*ListTenantRolesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListTenantRoles not implemented")
+}
+func (UnimplementedIAMAdminServiceServer) ListTenantPermissions(context.Context, *ListTenantPermissionsRequest) (*PermissionCatalogResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListTenantPermissions not implemented")
 }
 func (UnimplementedIAMAdminServiceServer) RemovePlatformMembership(context.Context, *RemovePlatformMembershipRequest) (*RemovePlatformMembershipResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RemovePlatformMembership not implemented")
@@ -920,6 +1048,114 @@ func RegisterIAMAdminServiceServer(s grpc.ServiceRegistrar, srv IAMAdminServiceS
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&IAMAdminService_ServiceDesc, srv)
+}
+
+func _IAMAdminService_ListCoreDLQEntries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCoreDLQEntriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMAdminServiceServer).ListCoreDLQEntries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IAMAdminService_ListCoreDLQEntries_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMAdminServiceServer).ListCoreDLQEntries(ctx, req.(*ListCoreDLQEntriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IAMAdminService_GetCoreDLQEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCoreDLQEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMAdminServiceServer).GetCoreDLQEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IAMAdminService_GetCoreDLQEntry_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMAdminServiceServer).GetCoreDLQEntry(ctx, req.(*GetCoreDLQEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IAMAdminService_ReplayCoreDLQEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplayCoreDLQEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMAdminServiceServer).ReplayCoreDLQEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IAMAdminService_ReplayCoreDLQEntry_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMAdminServiceServer).ReplayCoreDLQEntry(ctx, req.(*ReplayCoreDLQEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IAMAdminService_GetTenantBootstrap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTenantBootstrapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMAdminServiceServer).GetTenantBootstrap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IAMAdminService_GetTenantBootstrap_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMAdminServiceServer).GetTenantBootstrap(ctx, req.(*GetTenantBootstrapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IAMAdminService_ReissueTenantBootstrapInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReissueTenantBootstrapInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMAdminServiceServer).ReissueTenantBootstrapInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IAMAdminService_ReissueTenantBootstrapInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMAdminServiceServer).ReissueTenantBootstrapInvitation(ctx, req.(*ReissueTenantBootstrapInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IAMAdminService_RetryTenantBootstrapJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetryTenantBootstrapJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMAdminServiceServer).RetryTenantBootstrapJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IAMAdminService_RetryTenantBootstrapJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMAdminServiceServer).RetryTenantBootstrapJob(ctx, req.(*RetryTenantBootstrapJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _IAMAdminService_AcceptPlatformInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1534,6 +1770,24 @@ func _IAMAdminService_ListPlatformRoles_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IAMAdminService_ListPlatformPermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPlatformPermissionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMAdminServiceServer).ListPlatformPermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IAMAdminService_ListPlatformPermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMAdminServiceServer).ListPlatformPermissions(ctx, req.(*ListPlatformPermissionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _IAMAdminService_ListTenantWorkloads_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTenantWorkloadsRequest)
 	if err := dec(in); err != nil {
@@ -1602,6 +1856,24 @@ func _IAMAdminService_ListTenantRoles_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(IAMAdminServiceServer).ListTenantRoles(ctx, req.(*ListTenantRolesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IAMAdminService_ListTenantPermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTenantPermissionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMAdminServiceServer).ListTenantPermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IAMAdminService_ListTenantPermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMAdminServiceServer).ListTenantPermissions(ctx, req.(*ListTenantPermissionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1884,6 +2156,30 @@ var IAMAdminService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*IAMAdminServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "ListCoreDLQEntries",
+			Handler:    _IAMAdminService_ListCoreDLQEntries_Handler,
+		},
+		{
+			MethodName: "GetCoreDLQEntry",
+			Handler:    _IAMAdminService_GetCoreDLQEntry_Handler,
+		},
+		{
+			MethodName: "ReplayCoreDLQEntry",
+			Handler:    _IAMAdminService_ReplayCoreDLQEntry_Handler,
+		},
+		{
+			MethodName: "GetTenantBootstrap",
+			Handler:    _IAMAdminService_GetTenantBootstrap_Handler,
+		},
+		{
+			MethodName: "ReissueTenantBootstrapInvitation",
+			Handler:    _IAMAdminService_ReissueTenantBootstrapInvitation_Handler,
+		},
+		{
+			MethodName: "RetryTenantBootstrapJob",
+			Handler:    _IAMAdminService_RetryTenantBootstrapJob_Handler,
+		},
+		{
 			MethodName: "AcceptPlatformInvitation",
 			Handler:    _IAMAdminService_AcceptPlatformInvitation_Handler,
 		},
@@ -2020,6 +2316,10 @@ var IAMAdminService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _IAMAdminService_ListPlatformRoles_Handler,
 		},
 		{
+			MethodName: "ListPlatformPermissions",
+			Handler:    _IAMAdminService_ListPlatformPermissions_Handler,
+		},
+		{
 			MethodName: "ListTenantWorkloads",
 			Handler:    _IAMAdminService_ListTenantWorkloads_Handler,
 		},
@@ -2034,6 +2334,10 @@ var IAMAdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTenantRoles",
 			Handler:    _IAMAdminService_ListTenantRoles_Handler,
+		},
+		{
+			MethodName: "ListTenantPermissions",
+			Handler:    _IAMAdminService_ListTenantPermissions_Handler,
 		},
 		{
 			MethodName: "RemovePlatformMembership",

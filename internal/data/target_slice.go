@@ -19,20 +19,26 @@ import (
 )
 
 type postgresPasswordLoginReader struct {
-	data *Data
+	data     *Data
+	registry biz.AuthorizationPolicyRegistry
 }
 
-func NewPostgresPasswordLoginReader(data *Data) biz.AuthenticationReader {
-	return &postgresPasswordLoginReader{data: data}
+func NewPostgresPasswordLoginReader(data *Data, registry biz.AuthorizationPolicyRegistry) biz.AuthenticationReader {
+	return &postgresPasswordLoginReader{data: data, registry: registry}
 }
 
-func (*postgresPasswordLoginReader) Revision() string {
-	return TargetPolicyRevision
+func (r *postgresPasswordLoginReader) Revision() string {
+	if r.registry == nil {
+		return ""
+	}
+	return r.registry.Revision()
 }
 
-func (*postgresPasswordLoginReader) Lookup(operationID string) (biz.AuthorizationPolicy, bool) {
-	registry := targetOperationRegistry{revision: TargetPolicyRevision, policies: generatedTargetPolicies}
-	return registry.Lookup(operationID)
+func (r *postgresPasswordLoginReader) Lookup(operationID string) (biz.AuthorizationPolicy, bool) {
+	if r.registry == nil {
+		return biz.AuthorizationPolicy{}, false
+	}
+	return r.registry.Lookup(operationID)
 }
 
 func (r *postgresPasswordLoginReader) GetAPIKeyBoundary(ctx context.Context, keyID uuid.UUID) (uuid.UUID, error) {
@@ -124,7 +130,7 @@ func (r *postgresPasswordLoginReader) LookupPasswordActionTarget(
 	normalizedAccount string,
 	audience biz.Audience,
 ) (biz.PasswordActionTarget, bool, error) {
-	if audience != biz.AudienceConsole {
+	if audience != biz.AudienceConsole && audience != biz.AudienceBoss {
 		return biz.PasswordActionTarget{}, false, biz.ErrAuthenticationDependency
 	}
 	row, err := sqlcgen.New(r.data.pool).LookupPasswordActionTarget(ctx, sqlcgen.LookupPasswordActionTargetParams{
@@ -515,6 +521,11 @@ func (u *postgresLoginUnitOfWork) CompletePasswordAction(
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return biz.CompletePasswordActionResult{}, mapPostgresError("lookup password-action completion idempotency", err, nil)
 	}
+	// Serialize against BOSS authentication/refresh/link before acquiring any
+	// Credential or Session lock. Both audience families are revoked atomically.
+	if err := queries.LockPlatformAdministrator(ctx); err != nil {
+		return biz.CompletePasswordActionResult{}, mapPostgresError("lock password-action Platform boundary", err, nil)
+	}
 	action, err := queries.LockPasswordAction(ctx, sqlcgen.LockPasswordActionParams{OperationID: completion.Claims.OperationID})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return biz.CompletePasswordActionResult{}, biz.ErrPasswordActionInvalid
@@ -620,6 +631,15 @@ func (u *postgresLoginUnitOfWork) CompletePasswordAction(
 }
 
 func revokePrincipalSessions(ctx context.Context, queries *sqlcgen.Queries, principalID uuid.UUID, updatedAt time.Time) error {
+	if err := queries.RevokePlatformRefreshTokensForPrincipal(ctx, sqlcgen.RevokePlatformRefreshTokensForPrincipalParams{PrincipalID: principalID}); err != nil {
+		return mapPostgresError("revoke principal Platform refresh tokens", err, nil)
+	}
+	if err := queries.RevokePlatformRefreshFamiliesForPrincipal(ctx, sqlcgen.RevokePlatformRefreshFamiliesForPrincipalParams{PrincipalID: principalID, UpdatedAt: requiredTimestamptz(updatedAt)}); err != nil {
+		return mapPostgresError("revoke principal Platform refresh families", err, nil)
+	}
+	if err := queries.RevokePlatformGrantsForPrincipal(ctx, sqlcgen.RevokePlatformGrantsForPrincipalParams{PrincipalID: principalID, UpdatedAt: requiredTimestamptz(updatedAt)}); err != nil {
+		return mapPostgresError("revoke principal Platform grants", err, nil)
+	}
 	if err := queries.RevokeRefreshTokensForPrincipal(ctx, sqlcgen.RevokeRefreshTokensForPrincipalParams{PrincipalID: principalID}); err != nil {
 		return mapPostgresError("revoke principal refresh tokens", err, nil)
 	}
@@ -750,6 +770,7 @@ func (r *postgresAuthorizationReader) LookupAuthorization(
 	if len(lookup.Actions) == 0 {
 		return biz.AuthorizationState{}, fmt.Errorf("lookup authorization: %w", biz.ErrInvalidPersistenceState)
 	}
+	observationOnly := r.data.lifecycleObservation && !strings.HasPrefix(lookup.Resource, "iam.")
 	queries := sqlcgen.New(r.data.pool)
 	if _, err := queries.GetTenantAccessStatusForAuthorization(ctx, sqlcgen.GetTenantAccessStatusForAuthorizationParams{TenantID: tenantID}); errors.Is(err, pgx.ErrNoRows) {
 		return biz.AuthorizationState{}, biz.ErrTenantIAMNotReady
@@ -757,10 +778,10 @@ func (r *postgresAuthorizationReader) LookupAuthorization(
 		return biz.AuthorizationState{}, mapPostgresError("get tenant access for authorization", err, nil)
 	}
 	lifecycleFresh, err := queries.GetTenantLifecycleFreshnessForAuthorization(ctx, sqlcgen.GetTenantLifecycleFreshnessForAuthorizationParams{TenantID: tenantID})
-	if errors.Is(err, pgx.ErrNoRows) || (err == nil && !lifecycleFresh) {
+	if !observationOnly && (errors.Is(err, pgx.ErrNoRows) || (err == nil && !lifecycleFresh)) {
 		return biz.AuthorizationState{}, biz.ErrTenantLifecycleStale
 	}
-	if err != nil {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return biz.AuthorizationState{}, mapPostgresError("get tenant lifecycle for authorization", err, nil)
 	}
 	row, err := queries.LookupAuthorization(ctx, sqlcgen.LookupAuthorizationParams{
@@ -777,19 +798,20 @@ func (r *postgresAuthorizationReader) LookupAuthorization(
 	if err != nil {
 		return biz.AuthorizationState{}, mapPostgresError("lookup authorization", err, nil)
 	}
-	if !row.LifecycleFresh {
+	if !observationOnly && !row.LifecycleFresh {
 		return biz.AuthorizationState{}, biz.ErrTenantLifecycleStale
 	}
 	return biz.AuthorizationState{
-		PrincipalStatus:   biz.PrincipalStatus(row.PrincipalStatus),
-		MembershipStatus:  biz.MembershipStatus(row.MembershipStatus),
-		TenantAccess:      biz.TenantAccessStatus(row.TenantAccessStatus),
-		Lifecycle:         biz.TenantLifecycleStatus(row.LifecycleStatus),
-		LifecycleFresh:    row.LifecycleFresh,
-		SessionStatus:     biz.SessionStatus(row.SessionStatus),
-		GrantStatus:       biz.GrantStatus(row.GrantStatus),
-		GrantVersion:      row.GrantVersion,
-		PermissionAllowed: row.PermissionAllowed,
+		LifecycleObservationOnly: observationOnly,
+		PrincipalStatus:          biz.PrincipalStatus(row.PrincipalStatus),
+		MembershipStatus:         biz.MembershipStatus(row.MembershipStatus),
+		TenantAccess:             biz.TenantAccessStatus(row.TenantAccessStatus),
+		Lifecycle:                biz.TenantLifecycleStatus(row.LifecycleStatus),
+		LifecycleFresh:           row.LifecycleFresh,
+		SessionStatus:            biz.SessionStatus(row.SessionStatus),
+		GrantStatus:              biz.GrantStatus(row.GrantStatus),
+		GrantVersion:             row.GrantVersion,
+		PermissionAllowed:        row.PermissionAllowed,
 	}, nil
 }
 
@@ -868,6 +890,7 @@ func (r *postgresAuthorizationReader) LookupAPIKeyAuthorization(
 	if keyID == uuid.Nil || strings.TrimSpace(resource) == "" || len(actions) == 0 {
 		return biz.APIKeyAuthorizationState{}, biz.ErrInvalidPersistenceState
 	}
+	observationOnly := r.data.lifecycleObservation && !strings.HasPrefix(resource, "iam.")
 	queries := sqlcgen.New(r.data.pool)
 	if _, err := queries.GetTenantAccessStatusForAuthorization(ctx, sqlcgen.GetTenantAccessStatusForAuthorizationParams{TenantID: tenantID}); errors.Is(err, pgx.ErrNoRows) {
 		return biz.APIKeyAuthorizationState{}, biz.ErrTenantIAMNotReady
@@ -875,10 +898,10 @@ func (r *postgresAuthorizationReader) LookupAPIKeyAuthorization(
 		return biz.APIKeyAuthorizationState{}, mapPostgresError("get tenant access for API key authorization", err, nil)
 	}
 	lifecycleFresh, err := queries.GetTenantLifecycleFreshnessForAuthorization(ctx, sqlcgen.GetTenantLifecycleFreshnessForAuthorizationParams{TenantID: tenantID})
-	if errors.Is(err, pgx.ErrNoRows) || (err == nil && !lifecycleFresh) {
+	if !observationOnly && (errors.Is(err, pgx.ErrNoRows) || (err == nil && !lifecycleFresh)) {
 		return biz.APIKeyAuthorizationState{}, biz.ErrTenantLifecycleStale
 	}
-	if err != nil {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return biz.APIKeyAuthorizationState{}, mapPostgresError("get tenant lifecycle for API key authorization", err, nil)
 	}
 	row, err := queries.LookupAPIKeyAuthorization(ctx, sqlcgen.LookupAPIKeyAuthorizationParams{
@@ -891,7 +914,7 @@ func (r *postgresAuthorizationReader) LookupAPIKeyAuthorization(
 	if err != nil {
 		return biz.APIKeyAuthorizationState{}, mapPostgresError("lookup API key authorization", err, nil)
 	}
-	if !row.LifecycleFresh {
+	if !observationOnly && !row.LifecycleFresh {
 		return biz.APIKeyAuthorizationState{}, biz.ErrTenantLifecycleStale
 	}
 	apiKey, err := apiKeyFromValues(
@@ -903,7 +926,8 @@ func (r *postgresAuthorizationReader) LookupAPIKeyAuthorization(
 	}
 	apiKey.Digest = [sha256.Size]byte{}
 	return biz.APIKeyAuthorizationState{
-		APIKey: apiKey, TenantID: tenantID, PrincipalStatus: biz.PrincipalStatus(row.PrincipalStatus),
+		LifecycleObservationOnly: observationOnly,
+		APIKey:                   apiKey, TenantID: tenantID, PrincipalStatus: biz.PrincipalStatus(row.PrincipalStatus),
 		MembershipStatus: biz.MembershipStatus(row.MembershipStatus), TenantAccess: biz.TenantAccessStatus(row.TenantAccessStatus),
 		Lifecycle: biz.TenantLifecycleStatus(row.LifecycleStatus), LifecycleFresh: row.LifecycleFresh,
 		PermissionAllowed: row.PermissionAllowed,

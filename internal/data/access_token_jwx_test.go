@@ -82,6 +82,62 @@ func TestJWXAccessTokenCodecRoundTripsFrozenClaims(t *testing.T) {
 	}
 }
 
+func TestJWXPlatformTokenHasExplicitBoundaryAndNoTenantClaim(t *testing.T) {
+	key := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x73}, ed25519.SeedSize))
+	now := time.Date(2026, 9, 13, 0, 0, 0, 0, time.UTC)
+	codec, err := NewJWXAccessTokenCodec("wr22", key, map[string]ed25519.PublicKey{"wr22": key.Public().(ed25519.PublicKey)}, "ani-iam", fixedDataClock{now: now})
+	if err != nil {
+		t.Fatal(err)
+	}
+	claims := validJWXAccessTokenClaims(now)
+	claims.Audience, claims.Boundary, claims.TenantID, claims.ExpiresAt = biz.AudienceBoss, biz.AccessBoundaryPlatform, uuid.Nil, now.Add(10*time.Minute)
+	raw, err := codec.Issue(context.Background(), claims)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := codec.Verify(context.Background(), raw)
+	if err != nil || got.Boundary != biz.AccessBoundaryPlatform || got.Audience != biz.AudienceBoss || got.TenantID != uuid.Nil {
+		t.Fatal("explicit Platform token did not round-trip")
+	}
+	for name, change := range map[string]func(*biz.AccessTokenClaims){
+		"missing explicit boundary": func(c *biz.AccessTokenClaims) { c.Boundary = "" },
+		"boss tenant":               func(c *biz.AccessTokenClaims) { c.Boundary = biz.AccessBoundaryTenant; c.TenantID = claims.Subject },
+		"console platform":          func(c *biz.AccessTokenClaims) { c.Audience = biz.AudienceConsole },
+		"platform with tenant":      func(c *biz.AccessTokenClaims) { c.TenantID = claims.Subject },
+	} {
+		t.Run(name, func(t *testing.T) {
+			c := claims
+			change(&c)
+			if _, err := codec.Issue(context.Background(), c); err == nil {
+				t.Fatal("mixed boundary was signed")
+			}
+		})
+	}
+	// Verify rejects independently signed mixed claims, including null and a
+	// zero UUID. Signature validity alone does not identify a Platform boundary.
+	for name, value := range map[string]any{"tenant uuid": claims.Subject.String(), "zero tenant": uuid.Nil.String(), "null tenant": nil, "wrong tenant type": true} {
+		t.Run(name, func(t *testing.T) {
+			token, err := jwt.Parse([]byte(raw), jwt.WithVerify(false), jwt.WithValidate(false))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = token.Set(accessTokenTenantIDClaim, value); err != nil {
+				t.Fatal(err)
+			}
+			headers := jws.NewHeaders()
+			_ = headers.Set(jws.KeyIDKey, "wr22")
+			_ = headers.Set(jws.TypeKey, "JWT")
+			signed, err := jwt.Sign(token, jwt.WithKey(jwa.EdDSA(), key, jws.WithProtectedHeaders(headers)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err = codec.Verify(context.Background(), string(signed)); err == nil {
+				t.Fatal("signed mixed Platform/Tenant claims accepted")
+			}
+		})
+	}
+}
+
 func TestJWXAccessTokenCodecRoundTripsDomainSeparatedPasswordAction(t *testing.T) {
 	privateKey := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{0x51}, ed25519.SeedSize))
 	publicKey := privateKey.Public().(ed25519.PublicKey)

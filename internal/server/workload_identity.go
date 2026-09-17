@@ -19,43 +19,6 @@ import (
 
 var ErrInvalidGatewayWorkloadIdentity = errors.New("invalid Gateway workload identity")
 
-var workloadRuntimeRPCs = map[string]struct{}{
-	"/iam.v1.AuthenticationService/ListSessions":             {},
-	biz.VerifyWorkloadCallerRPC:                              {},
-	biz.VerifySessionContinuationRPC:                         {},
-	"/iam.v1.AuthenticationService/IssueWorkloadToken":       {},
-	"/iam.v1.AuthenticationService/IssueDelegation":          {},
-	"/iam.v1.AuthorizationService/VerifyWorkloadInvocation":  {},
-	"/grpc.health.v1.Health/Check":                           {},
-	"/iam.v1.AuthenticationService/PasswordLogin":            {},
-	"/iam.v1.AuthenticationService/RequestPasswordAction":    {},
-	"/iam.v1.AuthenticationService/CompletePasswordAction":   {},
-	"/iam.v1.AuthenticationService/BeginOIDCLogin":           {},
-	"/iam.v1.AuthenticationService/CompleteOIDCLogin":        {},
-	"/iam.v1.AuthenticationService/BeginOIDCIdentityLink":    {},
-	"/iam.v1.AuthenticationService/CompleteOIDCIdentityLink": {},
-	"/iam.v1.AuthorizationService/CheckPermission":           {},
-	"/iam.v1.AuthenticationService/RefreshSession":           {},
-	"/iam.v1.AuthenticationService/LogoutSession":            {},
-	"/iam.v1.AuthenticationService/SwitchTenant":             {},
-	"/iam.v1.AuthenticationService/ValidatePrincipal":        {},
-	"/iam.v1.IAMAdminService/CreateTenantWorkload":           {},
-	"/iam.v1.IAMAdminService/GetTenantWorkload":              {},
-	"/iam.v1.IAMAdminService/ListTenantWorkloads":            {},
-	"/iam.v1.IAMAdminService/UpdateTenantWorkload":           {},
-	"/iam.v1.IAMAdminService/CreateAPIKey":                   {},
-	"/iam.v1.IAMAdminService/ListAPIKeys":                    {},
-	"/iam.v1.IAMAdminService/RevokeAPIKey":                   {},
-	"/iam.v1.IAMAdminService/GetTenantMembership":            {},
-	"/iam.v1.IAMAdminService/ListTenantMemberships":          {},
-	"/iam.v1.IAMAdminService/UpdateTenantMembership":         {},
-	"/iam.v1.IAMAdminService/RemoveTenantMembership":         {},
-	"/iam.v1.IAMAdminService/GetTenantRole":                  {},
-	"/iam.v1.IAMAdminService/ListTenantRoles":                {},
-	"/iam.v1.IAMAdminService/BindTenantRole":                 {},
-	"/iam.v1.IAMAdminService/UnbindTenantRole":               {},
-}
-
 func NewWorkloadIdentityMiddleware(environment, trustDomain string, authentication *biz.WorkloadAuthentication, authorization *biz.WorkloadAuthorization) (middleware.Middleware, error) {
 	if environment == "" || trustDomain == "" || authentication == nil || authorization == nil ||
 		strings.ContainsAny(environment+trustDomain, " /\t\r\n") {
@@ -66,9 +29,6 @@ func NewWorkloadIdentityMiddleware(environment, trustDomain string, authenticati
 			operation, grpcTransport := workloadRPCOperation(ctx)
 			if !grpcTransport {
 				return next(ctx, request)
-			}
-			if _, allowed := workloadRuntimeRPCs[operation]; !allowed {
-				return nil, workloadPermissionDenied(operation)
 			}
 			identityValue, valid := verifiedWorkloadDNS(ctx)
 			if !valid {

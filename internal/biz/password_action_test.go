@@ -115,6 +115,25 @@ func TestRequestPasswordActionPreservesIdempotencyConflict(t *testing.T) {
 	}
 }
 
+func TestBOSSPasswordActionRequiresEnabledRuntimeAndKeepsAudience(t *testing.T) {
+	for _, enabled := range []bool{false, true} {
+		reader := &passwordActionTestReader{}
+		uow := &passwordActionTestUnitOfWork{}
+		u := NewAuthenticationUsecase(reader, &passwordActionTestPassword{}, allowingLoginThrottle{}, uow, &passwordActionTestTokenCodec{}, staticSecretGenerator{}, platformTestIDs{}, fixedAuthClock{now: time.Date(2026, 9, 13, 0, 0, 0, 0, time.UTC)}, allowingAPIKeyUsageObserver{})
+		if enabled {
+			u.WithPlatformPassword(&PlatformPasswordUsecase{})
+		}
+		_, err := u.RequestPasswordAction(context.Background(), RequestPasswordActionCommand{Account: "unknown@example.test", Audience: AudienceBoss, IdempotencyKey: "unit-boss"})
+		if enabled {
+			if err != nil || uow.requested == nil || uow.requested.Audience != AudienceBoss || reader.audience != AudienceBoss || uow.requested.Target != nil {
+				t.Fatal("BOSS request changed audience or created a Human")
+			}
+		} else if !errors.Is(err, ErrAuthenticationDependency) || uow.requested != nil {
+			t.Fatal("unconfigured BOSS persisted a request")
+		}
+	}
+}
+
 func TestCompletePasswordActionHashesBeforeAtomicCompletion(t *testing.T) {
 	now := time.Date(2026, 9, 6, 12, 10, 0, 0, time.UTC)
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")

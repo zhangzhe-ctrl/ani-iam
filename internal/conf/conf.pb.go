@@ -152,8 +152,16 @@ type Runtime struct {
 	Oidc           *OIDC                  `protobuf:"bytes,6,opt,name=oidc,proto3" json:"oidc,omitempty"`
 	Environment    string                 `protobuf:"bytes,7,opt,name=environment,proto3" json:"environment,omitempty"`
 	TrustDomain    string                 `protobuf:"bytes,8,opt,name=trust_domain,json=trustDomain,proto3" json:"trust_domain,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	BossOidc       *OIDC                  `protobuf:"bytes,9,opt,name=boss_oidc,json=bossOidc,proto3" json:"boss_oidc,omitempty"`
+	// Reviewed immutable synchronous registration input; runtime never installs it.
+	WorkloadRegistryFile   string `protobuf:"bytes,10,opt,name=workload_registry_file,json=workloadRegistryFile,proto3" json:"workload_registry_file,omitempty"`
+	WorkloadRegistrySha256 string `protobuf:"bytes,11,opt,name=workload_registry_sha256,json=workloadRegistrySha256,proto3" json:"workload_registry_sha256,omitempty"`
+	// Optional only for isolated component profiles. Full Tenant owner integration pins
+	// the non-secret runtime configuration and validates its live dependencies.
+	TenantLifecycleFile   string `protobuf:"bytes,12,opt,name=tenant_lifecycle_file,json=tenantLifecycleFile,proto3" json:"tenant_lifecycle_file,omitempty"`
+	TenantLifecycleSha256 string `protobuf:"bytes,13,opt,name=tenant_lifecycle_sha256,json=tenantLifecycleSha256,proto3" json:"tenant_lifecycle_sha256,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *Runtime) Reset() {
@@ -238,6 +246,41 @@ func (x *Runtime) GetEnvironment() string {
 func (x *Runtime) GetTrustDomain() string {
 	if x != nil {
 		return x.TrustDomain
+	}
+	return ""
+}
+
+func (x *Runtime) GetBossOidc() *OIDC {
+	if x != nil {
+		return x.BossOidc
+	}
+	return nil
+}
+
+func (x *Runtime) GetWorkloadRegistryFile() string {
+	if x != nil {
+		return x.WorkloadRegistryFile
+	}
+	return ""
+}
+
+func (x *Runtime) GetWorkloadRegistrySha256() string {
+	if x != nil {
+		return x.WorkloadRegistrySha256
+	}
+	return ""
+}
+
+func (x *Runtime) GetTenantLifecycleFile() string {
+	if x != nil {
+		return x.TenantLifecycleFile
+	}
+	return ""
+}
+
+func (x *Runtime) GetTenantLifecycleSha256() string {
+	if x != nil {
+		return x.TenantLifecycleSha256
 	}
 	return ""
 }
@@ -463,20 +506,26 @@ func (x *AccessToken) GetPrivateKeyFile() string {
 }
 
 type Notification struct {
-	state                protoimpl.MessageState `protogen:"open.v1"`
-	OutboxKeyFile        string                 `protobuf:"bytes,10,opt,name=outbox_key_file,json=outboxKeyFile,proto3" json:"outbox_key_file,omitempty"`
-	ClientDnsName        string                 `protobuf:"bytes,11,opt,name=client_dns_name,json=clientDnsName,proto3" json:"client_dns_name,omitempty"`
-	Address              string                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	CertificateFile      string                 `protobuf:"bytes,2,opt,name=certificate_file,json=certificateFile,proto3" json:"certificate_file,omitempty"`
-	PrivateKeyFile       string                 `protobuf:"bytes,3,opt,name=private_key_file,json=privateKeyFile,proto3" json:"private_key_file,omitempty"`
-	ServerCaFile         string                 `protobuf:"bytes,4,opt,name=server_ca_file,json=serverCaFile,proto3" json:"server_ca_file,omitempty"`
-	ServerDnsName        string                 `protobuf:"bytes,5,opt,name=server_dns_name,json=serverDnsName,proto3" json:"server_dns_name,omitempty"`
-	ConsoleActionUrlBase string                 `protobuf:"bytes,6,opt,name=console_action_url_base,json=consoleActionUrlBase,proto3" json:"console_action_url_base,omitempty"`
-	Locale               string                 `protobuf:"bytes,7,opt,name=locale,proto3" json:"locale,omitempty"`
-	DispatchInterval     *durationpb.Duration   `protobuf:"bytes,8,opt,name=dispatch_interval,json=dispatchInterval,proto3" json:"dispatch_interval,omitempty"`
-	SubmissionTimeout    *durationpb.Duration   `protobuf:"bytes,9,opt,name=submission_timeout,json=submissionTimeout,proto3" json:"submission_timeout,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	TenantInvitationUrlBase   string                 `protobuf:"bytes,13,opt,name=tenant_invitation_url_base,json=tenantInvitationUrlBase,proto3" json:"tenant_invitation_url_base,omitempty"`
+	PlatformInvitationUrlBase string                 `protobuf:"bytes,14,opt,name=platform_invitation_url_base,json=platformInvitationUrlBase,proto3" json:"platform_invitation_url_base,omitempty"`
+	// Explicitly pause only identity delivery for isolated component checks or controlled recovery.
+	// Default false runs Tenant/Platform invitations and invited-account email verification.
+	PauseIdentityDelivery bool                 `protobuf:"varint,15,opt,name=pause_identity_delivery,json=pauseIdentityDelivery,proto3" json:"pause_identity_delivery,omitempty"`
+	BossActionUrlBase     string               `protobuf:"bytes,12,opt,name=boss_action_url_base,json=bossActionUrlBase,proto3" json:"boss_action_url_base,omitempty"`
+	OutboxKeyFile         string               `protobuf:"bytes,10,opt,name=outbox_key_file,json=outboxKeyFile,proto3" json:"outbox_key_file,omitempty"`
+	ClientDnsName         string               `protobuf:"bytes,11,opt,name=client_dns_name,json=clientDnsName,proto3" json:"client_dns_name,omitempty"`
+	Address               string               `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	CertificateFile       string               `protobuf:"bytes,2,opt,name=certificate_file,json=certificateFile,proto3" json:"certificate_file,omitempty"`
+	PrivateKeyFile        string               `protobuf:"bytes,3,opt,name=private_key_file,json=privateKeyFile,proto3" json:"private_key_file,omitempty"`
+	ServerCaFile          string               `protobuf:"bytes,4,opt,name=server_ca_file,json=serverCaFile,proto3" json:"server_ca_file,omitempty"`
+	ServerDnsName         string               `protobuf:"bytes,5,opt,name=server_dns_name,json=serverDnsName,proto3" json:"server_dns_name,omitempty"`
+	ConsoleActionUrlBase  string               `protobuf:"bytes,6,opt,name=console_action_url_base,json=consoleActionUrlBase,proto3" json:"console_action_url_base,omitempty"`
+	Locale                string               `protobuf:"bytes,7,opt,name=locale,proto3" json:"locale,omitempty"`
+	DispatchInterval      *durationpb.Duration `protobuf:"bytes,8,opt,name=dispatch_interval,json=dispatchInterval,proto3" json:"dispatch_interval,omitempty"`
+	SubmissionTimeout     *durationpb.Duration `protobuf:"bytes,9,opt,name=submission_timeout,json=submissionTimeout,proto3" json:"submission_timeout,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *Notification) Reset() {
@@ -507,6 +556,34 @@ func (x *Notification) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Notification.ProtoReflect.Descriptor instead.
 func (*Notification) Descriptor() ([]byte, []int) {
 	return file_conf_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Notification) GetTenantInvitationUrlBase() string {
+	if x != nil {
+		return x.TenantInvitationUrlBase
+	}
+	return ""
+}
+
+func (x *Notification) GetPlatformInvitationUrlBase() string {
+	if x != nil {
+		return x.PlatformInvitationUrlBase
+	}
+	return ""
+}
+
+func (x *Notification) GetPauseIdentityDelivery() bool {
+	if x != nil {
+		return x.PauseIdentityDelivery
+	}
+	return false
+}
+
+func (x *Notification) GetBossActionUrlBase() string {
+	if x != nil {
+		return x.BossActionUrlBase
+	}
+	return ""
 }
 
 func (x *Notification) GetOutboxKeyFile() string {
@@ -909,7 +986,7 @@ const file_conf_proto_rawDesc = "" +
 	"\x05Admin\x12\x18\n" +
 	"\anetwork\x18\x01 \x01(\tR\anetwork\x12\x12\n" +
 	"\x04addr\x18\x02 \x01(\tR\x04addr\x123\n" +
-	"\atimeout\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\x82\x03\n" +
+	"\atimeout\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\x8f\x05\n" +
 	"\aRuntime\x128\n" +
 	"\n" +
 	"postgresql\x18\x01 \x01(\v2\x18.ani.iam.conf.PostgreSQLR\n" +
@@ -920,7 +997,13 @@ const file_conf_proto_rawDesc = "" +
 	"\fnotification\x18\x05 \x01(\v2\x1a.ani.iam.conf.NotificationR\fnotification\x12&\n" +
 	"\x04oidc\x18\x06 \x01(\v2\x12.ani.iam.conf.OIDCR\x04oidc\x12 \n" +
 	"\venvironment\x18\a \x01(\tR\venvironment\x12!\n" +
-	"\ftrust_domain\x18\b \x01(\tR\vtrustDomain\"\x1e\n" +
+	"\ftrust_domain\x18\b \x01(\tR\vtrustDomain\x12/\n" +
+	"\tboss_oidc\x18\t \x01(\v2\x12.ani.iam.conf.OIDCR\bbossOidc\x124\n" +
+	"\x16workload_registry_file\x18\n" +
+	" \x01(\tR\x14workloadRegistryFile\x128\n" +
+	"\x18workload_registry_sha256\x18\v \x01(\tR\x16workloadRegistrySha256\x122\n" +
+	"\x15tenant_lifecycle_file\x18\f \x01(\tR\x13tenantLifecycleFile\x126\n" +
+	"\x17tenant_lifecycle_sha256\x18\r \x01(\tR\x15tenantLifecycleSha256\"\x1e\n" +
 	"\n" +
 	"PostgreSQL\x12\x10\n" +
 	"\x03dsn\x18\x01 \x01(\tR\x03dsn\"\xa8\x03\n" +
@@ -940,8 +1023,12 @@ const file_conf_proto_rawDesc = "" +
 	"\vAccessToken\x12\x16\n" +
 	"\x06issuer\x18\x01 \x01(\tR\x06issuer\x12\"\n" +
 	"\ractive_key_id\x18\x02 \x01(\tR\vactiveKeyId\x12(\n" +
-	"\x10private_key_file\x18\x03 \x01(\tR\x0eprivateKeyFile\"\xfc\x03\n" +
-	"\fNotification\x12&\n" +
+	"\x10private_key_file\x18\x03 \x01(\tR\x0eprivateKeyFile\"\xe3\x05\n" +
+	"\fNotification\x12;\n" +
+	"\x1atenant_invitation_url_base\x18\r \x01(\tR\x17tenantInvitationUrlBase\x12?\n" +
+	"\x1cplatform_invitation_url_base\x18\x0e \x01(\tR\x19platformInvitationUrlBase\x126\n" +
+	"\x17pause_identity_delivery\x18\x0f \x01(\bR\x15pauseIdentityDelivery\x12/\n" +
+	"\x14boss_action_url_base\x18\f \x01(\tR\x11bossActionUrlBase\x12&\n" +
 	"\x0foutbox_key_file\x18\n" +
 	" \x01(\tR\routboxKeyFile\x12&\n" +
 	"\x0fclient_dns_name\x18\v \x01(\tR\rclientDnsName\x12\x18\n" +
@@ -1003,22 +1090,23 @@ var file_conf_proto_depIdxs = []int32{
 	5,  // 7: ani.iam.conf.Runtime.access_token:type_name -> ani.iam.conf.AccessToken
 	6,  // 8: ani.iam.conf.Runtime.notification:type_name -> ani.iam.conf.Notification
 	7,  // 9: ani.iam.conf.Runtime.oidc:type_name -> ani.iam.conf.OIDC
-	11, // 10: ani.iam.conf.Redis.login_window:type_name -> google.protobuf.Duration
-	11, // 11: ani.iam.conf.Redis.dial_timeout:type_name -> google.protobuf.Duration
-	11, // 12: ani.iam.conf.Redis.read_timeout:type_name -> google.protobuf.Duration
-	11, // 13: ani.iam.conf.Redis.write_timeout:type_name -> google.protobuf.Duration
-	11, // 14: ani.iam.conf.Notification.dispatch_interval:type_name -> google.protobuf.Duration
-	11, // 15: ani.iam.conf.Notification.submission_timeout:type_name -> google.protobuf.Duration
-	11, // 16: ani.iam.conf.OIDC.recent_reauthentication:type_name -> google.protobuf.Duration
-	11, // 17: ani.iam.conf.OIDC.http_timeout:type_name -> google.protobuf.Duration
-	11, // 18: ani.iam.conf.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	10, // 19: ani.iam.conf.Server.GRPC.tls:type_name -> ani.iam.conf.Server.GRPC.TLS
-	11, // 20: ani.iam.conf.Server.Admin.timeout:type_name -> google.protobuf.Duration
-	21, // [21:21] is the sub-list for method output_type
-	21, // [21:21] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	7,  // 10: ani.iam.conf.Runtime.boss_oidc:type_name -> ani.iam.conf.OIDC
+	11, // 11: ani.iam.conf.Redis.login_window:type_name -> google.protobuf.Duration
+	11, // 12: ani.iam.conf.Redis.dial_timeout:type_name -> google.protobuf.Duration
+	11, // 13: ani.iam.conf.Redis.read_timeout:type_name -> google.protobuf.Duration
+	11, // 14: ani.iam.conf.Redis.write_timeout:type_name -> google.protobuf.Duration
+	11, // 15: ani.iam.conf.Notification.dispatch_interval:type_name -> google.protobuf.Duration
+	11, // 16: ani.iam.conf.Notification.submission_timeout:type_name -> google.protobuf.Duration
+	11, // 17: ani.iam.conf.OIDC.recent_reauthentication:type_name -> google.protobuf.Duration
+	11, // 18: ani.iam.conf.OIDC.http_timeout:type_name -> google.protobuf.Duration
+	11, // 19: ani.iam.conf.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	10, // 20: ani.iam.conf.Server.GRPC.tls:type_name -> ani.iam.conf.Server.GRPC.TLS
+	11, // 21: ani.iam.conf.Server.Admin.timeout:type_name -> google.protobuf.Duration
+	22, // [22:22] is the sub-list for method output_type
+	22, // [22:22] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_conf_proto_init() }

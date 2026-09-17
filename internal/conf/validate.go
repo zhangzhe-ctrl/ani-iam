@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zhangzhe-ctrl/ani-iam/internal/runtimeendpoint"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -67,8 +68,8 @@ func validateListener(name, network, address string, timeout *durationpb.Duratio
 	if network != "tcp" {
 		return fmt.Errorf("%s network must be tcp", name)
 	}
-	if err := validateLoopbackEndpoint(name, address); err != nil {
-		return err
+	if !runtimeendpoint.ValidListener(address) {
+		return fmt.Errorf("%s listener requires an explicit bind IP and canonical port", name)
 	}
 	return validateDuration(name, timeout, 30*time.Second)
 }
@@ -107,6 +108,19 @@ func validateRuntime(runtime *Runtime) error {
 		runtime.Notification == nil || runtime.Oidc == nil {
 		return fmt.Errorf("PostgreSQL, Redis, access-token, Notification, and OIDC runtime config are required")
 	}
+	if runtime.TenantLifecycleFile != "" || runtime.TenantLifecycleSha256 != "" {
+		digest, e := hex.DecodeString(runtime.TenantLifecycleSha256)
+		if !filepath.IsAbs(runtime.TenantLifecycleFile) || e != nil || len(digest) != 32 || hex.EncodeToString(digest) != runtime.TenantLifecycleSha256 {
+			return fmt.Errorf("Tenant lifecycle requires an absolute configuration file and exact SHA256")
+		}
+	}
+	if !filepath.IsAbs(runtime.WorkloadRegistryFile) {
+		return fmt.Errorf("Workload registry file must be an absolute path")
+	}
+	registryDigest, err := hex.DecodeString(runtime.WorkloadRegistrySha256)
+	if err != nil || len(registryDigest) != 32 || hex.EncodeToString(registryDigest) != runtime.WorkloadRegistrySha256 {
+		return fmt.Errorf("Workload registry SHA256 must be exact lowercase hex")
+	}
 	for name, value := range map[string]string{"environment": runtime.Environment, "trust_domain": runtime.TrustDomain} {
 		if value == "" || value != strings.ToLower(strings.TrimSpace(value)) || strings.ContainsAny(value, " /\t\r\n") {
 			return fmt.Errorf("runtime %s must be an explicit canonical identity domain", name)
@@ -126,6 +140,21 @@ func validateRuntime(runtime *Runtime) error {
 	}
 	if err := validateOIDC(runtime.Oidc); err != nil {
 		return err
+	}
+	if runtime.BossOidc != nil {
+		if err := validateOIDCClient(runtime.BossOidc, "ani-boss"); err != nil {
+			return err
+		}
+		bossLogin, _ := url.Parse(runtime.BossOidc.LoginRedirectUri)
+		bossLink, _ := url.Parse(runtime.BossOidc.IdentityLinkRedirectUri)
+		consoleLogin, _ := url.Parse(runtime.Oidc.LoginRedirectUri)
+		bossAction, err := url.Parse(runtime.Notification.BossActionUrlBase)
+		if err != nil || bossAction.Scheme+"://"+bossAction.Host != bossLogin.Scheme+"://"+bossLogin.Host {
+			return fmt.Errorf("Notification BOSS action URL must use the configured BOSS origin")
+		}
+		if bossLogin.Scheme+"://"+bossLogin.Host != bossLink.Scheme+"://"+bossLink.Host || bossLogin.Scheme+"://"+bossLogin.Host == consoleLogin.Scheme+"://"+consoleLogin.Host || runtime.BossOidc.ClientSecretFile == runtime.Oidc.ClientSecretFile {
+			return fmt.Errorf("BOSS requires a distinct origin and client-secret file")
+		}
 	}
 	revision := strings.TrimSpace(runtime.PolicyRevision)
 	if !strings.HasPrefix(revision, "sha256:") {
@@ -153,7 +182,17 @@ func validatePostgreSQL(postgresql *PostgreSQL) error {
 	if parsed.Path == "" || parsed.Path == "/" {
 		return fmt.Errorf("PostgreSQL DSN must name the isolated database")
 	}
-	return validateLoopbackEndpoint("PostgreSQL", parsed.Host)
+	if !runtimeendpoint.ValidAddress(parsed.Host) {
+		return fmt.Errorf("PostgreSQL requires an explicit deployment endpoint")
+	}
+	ip := net.ParseIP(parsed.Hostname())
+	if ip == nil || !ip.IsLoopback() {
+		q := parsed.Query()
+		if len(q["sslmode"]) != 1 || q.Get("sslmode") != "verify-full" || len(q["sslrootcert"]) != 1 || !filepath.IsAbs(q.Get("sslrootcert")) {
+			return fmt.Errorf("non-loopback PostgreSQL requires verify-full and an explicit CA file")
+		}
+	}
+	return nil
 }
 
 func validateRedis(redis *Redis) error {
@@ -196,8 +235,8 @@ func validateAccessToken(accessToken *AccessToken) error {
 }
 
 func validateNotification(notification *Notification) error {
-	if err := validateLoopbackEndpoint("Notification", notification.Address); err != nil {
-		return err
+	if !runtimeendpoint.ValidAddress(notification.Address) {
+		return fmt.Errorf("Notification requires an explicit deployment endpoint")
 	}
 	for name, path := range map[string]string{
 		"certificate": notification.CertificateFile,
@@ -221,6 +260,12 @@ func validateNotification(notification *Notification) error {
 	if notification.Locale != "en-US" && notification.Locale != "zh-CN" {
 		return fmt.Errorf("Notification locale must be en-US or zh-CN")
 	}
+	if notification.BossActionUrlBase != "" {
+		boss, err := url.Parse(notification.BossActionUrlBase)
+		if err != nil || boss.Scheme != "https" || boss.Host == "" || !boss.IsAbs() || boss.User != nil || boss.RawQuery != "" || boss.Fragment != "" || strings.ToLower(boss.Host) != boss.Host || boss.Host == actionURL.Host {
+			return fmt.Errorf("Notification BOSS action URL requires a distinct canonical HTTPS base")
+		}
+	}
 	if err := validateDuration("Notification dispatch interval", notification.DispatchInterval, time.Minute); err != nil {
 		return err
 	}
@@ -228,14 +273,18 @@ func validateNotification(notification *Notification) error {
 }
 
 func validateOIDC(oidc *OIDC) error {
+	return validateOIDCClient(oidc, "ani-console")
+}
+
+func validateOIDCClient(oidc *OIDC, clientID string) error {
 	if oidc.Provider != "dex" {
 		return fmt.Errorf("OIDC provider must be dex")
 	}
 	if err := validateOIDCIssuer(oidc.IssuerUrl); err != nil {
 		return err
 	}
-	if oidc.ClientId != "ani-console" {
-		return fmt.Errorf("OIDC client ID must be ani-console")
+	if oidc.ClientId != clientID {
+		return fmt.Errorf("OIDC client ID must be %s", clientID)
 	}
 	if strings.TrimSpace(oidc.ClientSecretFile) == "" || !filepath.IsAbs(oidc.ClientSecretFile) {
 		return fmt.Errorf("OIDC client-secret file must be an absolute path")

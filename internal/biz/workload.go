@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 )
 
 var (
@@ -38,9 +39,10 @@ type WorkloadTarget struct {
 // DirectCaller is transport-independent provenance. Subject authority remains
 // a separate IAM evaluation; an ingress Grant never makes the caller an admin.
 type DirectCaller struct {
-	Identity     WorkloadIdentity
-	Target       WorkloadTarget
-	GrantVersion int64
+	Identity       WorkloadIdentity
+	Target         WorkloadTarget
+	GrantVersion   int64
+	TargetRevision string
 }
 
 type WorkloadIdentityReader interface {
@@ -69,21 +71,29 @@ func (a *WorkloadAuthentication) Authenticate(ctx context.Context, peer Verified
 	return a.identities.ResolveWorkloadIdentity(ctx, peer)
 }
 
-type WorkloadAuthorization struct{ grants WorkloadGrantReader }
+type WorkloadAuthorization struct {
+	grants   WorkloadGrantReader
+	registry *workloadregistry.Registry
+}
 
-func NewWorkloadAuthorization(grants WorkloadGrantReader) *WorkloadAuthorization {
-	return &WorkloadAuthorization{grants: grants}
+func NewWorkloadAuthorization(grants WorkloadGrantReader, registry ...*workloadregistry.Registry) *WorkloadAuthorization {
+	var r *workloadregistry.Registry
+	if len(registry) == 1 {
+		r = registry[0]
+	}
+	return &WorkloadAuthorization{grants: grants, registry: r}
 }
 
 func (a *WorkloadAuthorization) Authorize(ctx context.Context, identity WorkloadIdentity, target WorkloadTarget) (DirectCaller, error) {
 	if identity.PrincipalID == uuid.Nil || identity.BindingID == uuid.Nil || identity.BindingVersion <= 0 || identity.PrincipalVersion <= 0 {
 		return DirectCaller{}, ErrWorkloadIdentityInvalid
 	}
-	if (target.Audience != "ani-iam" && target != (WorkloadTarget{Audience: SessionInvocationAudience, Operation: SessionInvocationOperation}) && !notificationTarget(target)) || target.Operation == "" {
-		return DirectCaller{}, ErrWorkloadPermissionDenied
-	}
 	if a == nil || a.grants == nil {
 		return DirectCaller{}, ErrPersistenceUnavailable
+	}
+	registration, ok := a.registry.Lookup(target.Audience, target.Operation)
+	if !ok || !registration.Enabled {
+		return DirectCaller{}, ErrWorkloadPermissionDenied
 	}
 	version, err := a.grants.CheckWorkloadGrant(ctx, identity, target)
 	if err != nil {
@@ -92,7 +102,7 @@ func (a *WorkloadAuthorization) Authorize(ctx context.Context, identity Workload
 	if version <= 0 {
 		return DirectCaller{}, ErrWorkloadPermissionDenied
 	}
-	return DirectCaller{Identity: identity, Target: target, GrantVersion: version}, nil
+	return DirectCaller{Identity: identity, Target: target, GrantVersion: version, TargetRevision: a.registry.Revision(target.Audience, target.Operation)}, nil
 }
 
 type directCallerContextKey struct{}

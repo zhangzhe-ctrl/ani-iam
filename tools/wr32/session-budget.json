@@ -1,0 +1,23 @@
+{
+  "schema": "wr32.session-isolation/v1",
+  "cluster": "<lowercase exact WR32 run id>-session",
+  "exclusive_network": "ani-iam-<exact WR32 run id>",
+  "nodes": 1,
+  "node_memory_bytes": 1342177280,
+  "node_memory_swap_bytes": 2147483648,
+  "node_cpus": 1.5,
+  "node_pids": 1024,
+  "minimum_host_available_before_cluster_kib": 1572864,
+  "minimum_host_available_before_chain_kib": 716800,
+  "minimum_free_disk_kib": 12582912,
+  "kind_version": "v0.33.0",
+  "kind_sha256": "aee6151561422756b764a4ae28e7f44cda5af5a9eead3cc9985112b1de8d8e0d",
+  "node_image": "kindest/node@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed",
+  "kubectl_sha256": "6129359f4e1f3848a5572ccb0b26cf28b8ca08cef38c95a765b2f64a2c961a2f",
+  "shell_image": "docker.changqingyun.cn/mirror/busybox@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d",
+  "chain": "IAM+Gateway+Session; 2 PostgreSQL and 3 Redis, serial test group; existing per-container limits",
+  "credentials": "fresh 3600-second TokenRequest per SA, private files mode 0600",
+  "objects": "session-fixtures.json; test pod names preserve existing scenario identifiers inside this new cluster",
+  "cleanup": "verify exact node ID and unique kind label before deleting own cluster; runner removes exact own network after containers stop",
+  "network_policy_claim": "none; no network-policy engine installed. Tenant authorization and resource labels tested at actual owners."
+}

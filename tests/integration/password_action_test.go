@@ -25,7 +25,7 @@ func TestPostgresPasswordActionRequestIsNonEnumeratingAndReplacesPriorIntent(t *
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e17")
 	seedPasswordActionPrincipal(t, ctx, environment, principalID, uuid.MustParse("0198f062-b76d-7201-9000-000000000071"), "user@example.com", true)
 
-	reader := data.NewPostgresPasswordLoginReader(passwordActionTestData(t, environment.runtimePool))
+	reader := defaultPolicyAuthenticationReader(passwordActionTestData(t, environment.runtimePool))
 	target, found, err := reader.LookupPasswordActionTarget(ctx, "user@example.com", biz.AudienceConsole)
 	if err != nil || !found || target.PrincipalID != principalID || !target.HasPassword || target.VerifiedEmail != "user@example.com" {
 		t.Fatalf("LookupPasswordActionTarget() = %#v, %t, %v", target, found, err)
@@ -383,7 +383,7 @@ func TestPostgresPasswordSetupCreatesIdentityAndCredentialOnce(t *testing.T) {
 	ctx := context.Background()
 	principalID := uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01e19")
 	seedPasswordActionPrincipal(t, ctx, environment, principalID, uuid.Nil, "setup@example.com", false)
-	reader := data.NewPostgresPasswordLoginReader(passwordActionTestData(t, environment.runtimePool))
+	reader := defaultPolicyAuthenticationReader(passwordActionTestData(t, environment.runtimePool))
 	target, found, err := reader.LookupPasswordActionTarget(ctx, "setup@example.com", biz.AudienceConsole)
 	if err != nil || !found || target.PrincipalID != principalID || target.HasPassword {
 		t.Fatalf("LookupPasswordActionTarget(setup) = %#v, %t, %v", target, found, err)

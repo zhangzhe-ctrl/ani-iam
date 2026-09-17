@@ -13,7 +13,7 @@ import (
 
 type workloadInvocationUsecase interface {
 	VerifyContinuation(context.Context, string, biz.InvocationBinding) (biz.VerifiedInvocation, error)
-	IssueWorkloadToken(context.Context, biz.WorkloadTarget) (biz.IssuedWorkloadCredential, error)
+	IssueWorkloadToken(context.Context, biz.WorkloadTarget, ...string) (biz.IssuedWorkloadCredential, error)
 	IssueDelegation(context.Context, string, string, biz.InvocationBinding) (biz.IssuedWorkloadCredential, error)
 	Verify(context.Context, string, string, biz.InvocationBinding, biz.VerifiedWorkloadPeer) (biz.VerifiedInvocation, error)
 }
@@ -36,7 +36,7 @@ func (s *AuthenticationService) IssueWorkloadToken(ctx context.Context, r *iamv1
 	if s.workload == nil {
 		return nil, invocationStatus(biz.ErrPersistenceUnavailable)
 	}
-	issued, err := s.workload.IssueWorkloadToken(ctx, biz.WorkloadTarget{Audience: r.GetAudience(), Operation: r.GetOperationId()})
+	issued, err := s.workload.IssueWorkloadToken(ctx, biz.WorkloadTarget{Audience: r.GetAudience(), Operation: r.GetOperationId()}, r.GetTargetRevision())
 	if err != nil {
 		return nil, invocationStatus(err)
 	}
@@ -86,7 +86,15 @@ func (s *AuthorizationService) VerifyWorkloadInvocation(ctx context.Context, r *
 	}
 	c := result.Caller
 	i := c.Identity
-	return &iamv1.VerifyWorkloadInvocationResponse{Caller: &iamv1.DirectWorkloadCaller{PrincipalId: i.PrincipalID.String(), BindingId: i.BindingID.String(), PrincipalVersion: i.PrincipalVersion, BindingVersion: i.BindingVersion, GrantVersion: c.GrantVersion, Peer: &iamv1.WorkloadPeer{Environment: i.Peer.Environment, TrustDomain: i.Peer.TrustDomain, IdentityKind: i.Peer.IdentityKind, IdentityValue: i.Peer.IdentityValue}}, Subject: trustedPrincipalToProto(result.Subject), Binding: invocationBindingToProto(result.Binding), ExpiresAt: timestamppb.New(result.ExpiresAt), Continuation: result.Continuation, ContinuationExpiresAt: timestamppb.New(result.ContinuationExpiresAt)}, nil
+	keyID := ""
+	if result.APIKeyID != uuid.Nil {
+		keyID = result.APIKeyID.String()
+	}
+	var continuationExpiry *timestamppb.Timestamp
+	if !result.ContinuationExpiresAt.IsZero() {
+		continuationExpiry = timestamppb.New(result.ContinuationExpiresAt)
+	}
+	return &iamv1.VerifyWorkloadInvocationResponse{ApiKeyId: keyID, Caller: &iamv1.DirectWorkloadCaller{PrincipalId: i.PrincipalID.String(), BindingId: i.BindingID.String(), PrincipalVersion: i.PrincipalVersion, BindingVersion: i.BindingVersion, GrantVersion: c.GrantVersion, Peer: &iamv1.WorkloadPeer{Environment: i.Peer.Environment, TrustDomain: i.Peer.TrustDomain, IdentityKind: i.Peer.IdentityKind, IdentityValue: i.Peer.IdentityValue}}, Subject: trustedPrincipalToProto(result.Subject), Binding: invocationBindingToProto(result.Binding), ExpiresAt: timestamppb.New(result.ExpiresAt), Continuation: result.Continuation, ContinuationExpiresAt: continuationExpiry}, nil
 }
 
 func invocationBindingFromProto(r *iamv1.InvocationBinding) (biz.InvocationBinding, error) {
@@ -101,13 +109,13 @@ func invocationBindingFromProto(r *iamv1.InvocationBinding) (biz.InvocationBindi
 	if err != nil || subject.String() != r.GetSubjectId() {
 		return biz.InvocationBinding{}, biz.ErrInvocationInvalid
 	}
-	b := biz.InvocationBinding{Audience: r.GetAudience(), Operation: r.GetOperationId(), RPCMethod: r.GetRpcMethod(), SourceOperation: r.GetSourceOperationId(), TenantID: tenant, SubjectID: subject, ResourceID: r.GetResourceId(), Mode: r.GetMode(), PolicyRevision: r.GetPolicyRevision()}
+	b := biz.InvocationBinding{Audience: r.GetAudience(), Operation: r.GetOperationId(), RPCMethod: r.GetRpcMethod(), SourceOperation: r.GetSourceOperationId(), TenantID: tenant, SubjectID: subject, ResourceID: r.GetResourceId(), Mode: r.GetMode(), PolicyRevision: r.GetPolicyRevision(), TargetRevision: r.GetTargetRevision()}
 	copy(b.RequestSHA256[:], r.GetRequestSha256())
 	return b, b.Validate()
 }
 
 func invocationBindingToProto(b biz.InvocationBinding) *iamv1.InvocationBinding {
-	return &iamv1.InvocationBinding{Audience: b.Audience, OperationId: b.Operation, RpcMethod: b.RPCMethod, SourceOperationId: b.SourceOperation, TenantId: b.TenantID.String(), SubjectId: b.SubjectID.String(), ResourceId: b.ResourceID, Mode: b.Mode, RequestSha256: append([]byte(nil), b.RequestSHA256[:]...), PolicyRevision: b.PolicyRevision}
+	return &iamv1.InvocationBinding{Audience: b.Audience, OperationId: b.Operation, RpcMethod: b.RPCMethod, SourceOperationId: b.SourceOperation, TenantId: b.TenantID.String(), SubjectId: b.SubjectID.String(), ResourceId: b.ResourceID, Mode: b.Mode, RequestSha256: append([]byte(nil), b.RequestSHA256[:]...), PolicyRevision: b.PolicyRevision, TargetRevision: b.TargetRevision}
 }
 
 func invocationStatus(err error) error {
