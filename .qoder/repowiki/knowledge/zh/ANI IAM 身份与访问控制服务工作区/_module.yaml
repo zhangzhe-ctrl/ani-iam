@@ -1,0 +1,17 @@
+schema_version: 1
+module_path: ""
+title: ANI IAM 身份与访问控制服务工作区
+scope:
+    - AGENTS.md
+    - CLAUDE.md
+    - go.mod
+    - go.sum
+    - atlas.hcl
+    - sqlc.yaml
+    - configs/
+    - .scratch/
+    - CONTEXT.md
+    - README.md
+source_files: []
+depends_on: []
+related_to: []

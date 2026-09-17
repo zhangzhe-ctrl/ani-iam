@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: api_proto
+title: IAM gRPC API 契约与代码生成
+scope:
+    - api/
+source_files: []
+depends_on: []
+related_to:
+    - path: internal_core/service
+    - path: sdk
+    - path: tests

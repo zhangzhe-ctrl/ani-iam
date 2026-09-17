@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: deploy
+title: 割接演练环境（Cutover Fitness）Kubernetes 部署清单
+scope:
+    - deploy/
+source_files: []
+depends_on: []
+related_to:
+    - path: server_entrypoint
+    - path: tools

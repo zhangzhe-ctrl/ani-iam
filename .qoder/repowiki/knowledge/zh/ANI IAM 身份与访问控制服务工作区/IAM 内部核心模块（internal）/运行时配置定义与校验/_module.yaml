@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: internal_core/conf
+title: 运行时配置定义与校验
+scope:
+    - internal/conf/
+source_files: []
+depends_on: []
+related_to: []

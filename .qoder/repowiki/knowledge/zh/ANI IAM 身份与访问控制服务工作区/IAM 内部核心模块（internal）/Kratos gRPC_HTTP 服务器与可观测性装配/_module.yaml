@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: internal_core/server
+title: Kratos gRPC/HTTP 服务器与可观测性装配
+scope:
+    - internal/server/
+source_files: []
+depends_on: []
+related_to:
+    - path: internal_core/biz
+    - path: server_entrypoint

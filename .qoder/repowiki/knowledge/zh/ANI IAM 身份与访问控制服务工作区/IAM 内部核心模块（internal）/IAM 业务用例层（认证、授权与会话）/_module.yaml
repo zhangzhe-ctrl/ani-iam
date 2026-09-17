@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: internal_core/biz
+title: IAM 业务用例层（认证、授权与会话）
+scope:
+    - internal/biz/
+source_files: []
+depends_on: []
+related_to:
+    - path: internal_core/data
+    - path: internal_core/server
+    - path: internal_core/service
+    - path: server_entrypoint

@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: internal_core/service
+title: IAM gRPC 服务适配层（认证/授权/租户管理/工作负载调用）
+scope:
+    - internal/service/
+source_files: []
+depends_on: []
+related_to:
+    - path: api_proto
+    - path: internal_core/biz

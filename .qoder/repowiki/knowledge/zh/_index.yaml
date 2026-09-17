@@ -1,0 +1,205 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: main
+nodes_managed: true
+exported_at: "2026-09-17T15:37:10Z"
+modules:
+    "":
+        dir_name: ANI IAM 身份与访问控制服务工作区
+        title: ANI IAM 身份与访问控制服务工作区
+        scope:
+            - AGENTS.md
+            - CLAUDE.md
+            - go.mod
+            - go.sum
+            - atlas.hcl
+            - sqlc.yaml
+            - configs/
+            - .scratch/
+            - CONTEXT.md
+            - README.md
+        source_files: []
+        children:
+            - api_proto
+            - deploy
+            - docs
+            - examples
+            - internal_core
+            - migrations
+            - sdk
+            - server_entrypoint
+            - tests
+            - tools
+        depends_on: []
+        related_to: []
+    api_proto:
+        dir_name: IAM gRPC API 契约与代码生成
+        title: IAM gRPC API 契约与代码生成
+        scope:
+            - api/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: internal_core/service
+            - path: sdk
+            - path: tests
+    deploy:
+        dir_name: 割接演练环境（Cutover Fitness）Kubernetes 部署清单
+        title: 割接演练环境（Cutover Fitness）Kubernetes 部署清单
+        scope:
+            - deploy/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: server_entrypoint
+            - path: tools
+    docs:
+        dir_name: IAM 重构文档与架构决策记录
+        title: IAM 重构文档与架构决策记录
+        scope:
+            - docs/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    examples:
+        dir_name: gRPC Workload 示例（调用方_接收方）
+        title: gRPC Workload 示例（调用方/接收方）
+        scope:
+            - examples/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: sdk
+    internal_core:
+        dir_name: IAM 内部核心模块（internal）
+        title: IAM 内部核心模块（internal）
+        scope:
+            - internal/
+        source_files: []
+        children:
+            - internal_core/biz
+            - internal_core/conf
+            - internal_core/data
+            - internal_core/server
+            - internal_core/service
+        depends_on: []
+        related_to: []
+    internal_core/biz:
+        dir_name: IAM 业务用例层（认证、授权与会话）
+        title: IAM 业务用例层（认证、授权与会话）
+        scope:
+            - internal/biz/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: internal_core/data
+            - path: internal_core/server
+            - path: internal_core/service
+            - path: server_entrypoint
+    internal_core/conf:
+        dir_name: 运行时配置定义与校验
+        title: 运行时配置定义与校验
+        scope:
+            - internal/conf/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    internal_core/data:
+        dir_name: 数据持久化与外部依赖适配器
+        title: 数据持久化与外部依赖适配器
+        scope:
+            - internal/data/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: internal_core/biz
+            - path: migrations
+            - path: server_entrypoint
+    internal_core/server:
+        dir_name: Kratos gRPC_HTTP 服务器与可观测性装配
+        title: Kratos gRPC/HTTP 服务器与可观测性装配
+        scope:
+            - internal/server/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: internal_core/biz
+            - path: server_entrypoint
+    internal_core/service:
+        dir_name: IAM gRPC 服务适配层（认证_授权_租户管理_工作负载调用）
+        title: IAM gRPC 服务适配层（认证/授权/租户管理/工作负载调用）
+        scope:
+            - internal/service/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: api_proto
+            - path: internal_core/biz
+    migrations:
+        dir_name: IAM 数据库迁移脚本集（PostgreSQL）
+        title: IAM 数据库迁移脚本集（PostgreSQL）
+        scope:
+            - migrations/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: internal_core/data
+            - path: tests
+    sdk:
+        dir_name: IAM gRPC Workload SDK
+        title: IAM gRPC Workload SDK
+        scope:
+            - sdk/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: api_proto
+            - path: examples
+    server_entrypoint:
+        dir_name: IAM 服务进程入口与多子命令启动器
+        title: IAM 服务进程入口与多子命令启动器
+        scope:
+            - cmd/server/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: deploy
+            - path: internal_core/biz
+            - path: internal_core/data
+            - path: internal_core/server
+            - path: tests
+    tests:
+        dir_name: IAM 测试套件（契约校验、CP0 运行时与集成测试）
+        title: IAM 测试套件（契约校验、CP0 运行时与集成测试）
+        scope:
+            - tests/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: api_proto
+            - path: migrations
+            - path: server_entrypoint
+    tools:
+        dir_name: 工作区工具集（Cutover Fitness 与 WR17-20 远程执行）
+        title: 工作区工具集（Cutover Fitness 与 WR17-20 远程执行）
+        scope:
+            - tools/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: deploy

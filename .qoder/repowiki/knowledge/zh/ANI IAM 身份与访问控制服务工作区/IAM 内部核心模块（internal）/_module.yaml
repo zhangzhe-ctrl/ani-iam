@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: internal_core
+title: IAM 内部核心模块（internal）
+scope:
+    - internal/
+source_files: []
+depends_on: []
+related_to: []

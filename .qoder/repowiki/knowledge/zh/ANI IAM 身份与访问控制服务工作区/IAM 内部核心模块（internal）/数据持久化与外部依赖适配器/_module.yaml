@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: internal_core/data
+title: 数据持久化与外部依赖适配器
+scope:
+    - internal/data/
+source_files: []
+depends_on: []
+related_to:
+    - path: internal_core/biz
+    - path: migrations
+    - path: server_entrypoint

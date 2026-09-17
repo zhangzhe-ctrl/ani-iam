@@ -1,0 +1,13 @@
+schema_version: 1
+module_path: server_entrypoint
+title: IAM 服务进程入口与多子命令启动器
+scope:
+    - cmd/server/
+source_files: []
+depends_on: []
+related_to:
+    - path: deploy
+    - path: internal_core/biz
+    - path: internal_core/data
+    - path: internal_core/server
+    - path: tests

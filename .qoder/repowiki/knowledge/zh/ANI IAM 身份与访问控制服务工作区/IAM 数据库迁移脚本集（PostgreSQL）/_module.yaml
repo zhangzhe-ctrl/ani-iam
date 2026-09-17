@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: migrations
+title: IAM 数据库迁移脚本集（PostgreSQL）
+scope:
+    - migrations/
+source_files: []
+depends_on: []
+related_to:
+    - path: internal_core/data
+    - path: tests
