@@ -25,6 +25,7 @@ var (
 // The bearer action token is derived from these fields after the claim and is
 // never persisted by the outbox.
 type PasswordActionNotificationClaim struct {
+	Audience         Audience
 	ID               uuid.UUID
 	OperationID      uuid.UUID
 	PrincipalID      uuid.UUID
@@ -129,7 +130,7 @@ func (d *PasswordActionNotificationDispatcher) DispatchNext(ctx context.Context)
 		PrincipalID:      claim.PrincipalID,
 		DestinationEmail: claim.DestinationEmail,
 		Purpose:          claim.Purpose,
-		Audience:         AudienceConsole,
+		Audience:         claim.Audience,
 		ActionToken:      actionToken,
 		OccurredAt:       claim.IssuedAt,
 		DeliverBefore:    claim.ExpiresAt,
@@ -193,6 +194,9 @@ func passwordActionNotificationBackoff(attempt int) time.Duration {
 }
 
 func validatePasswordActionNotificationClaim(claim PasswordActionNotificationClaim, now time.Time) error {
+	if claim.Audience != AudienceConsole && claim.Audience != AudienceBoss {
+		return ErrInvalidPersistenceState
+	}
 	if claim.ID == uuid.Nil || claim.ID.Version() != 7 ||
 		claim.OperationID == uuid.Nil || claim.OperationID.Version() != 7 ||
 		claim.PrincipalID == uuid.Nil || claim.PrincipalID.Version() != 7 ||

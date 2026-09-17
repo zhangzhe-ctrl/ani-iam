@@ -1,0 +1,11 @@
+{
+  "ssh_host": "ani-test-1",
+  "user": "ubuntu",
+  "hostname": "ani-01",
+  "run_root": "/home/ubuntu/workspace/ani-iam-runs",
+  "docker_host": "unix:///run/user/1000/ani-iam-wr23-docker.sock",
+  "docker_bin": "/home/ubuntu/.local/share/ani-iam/wr23-environment/docker",
+  "kubectl": "/home/ubuntu/.local/share/ani-iam/bin/kubectl",
+  "no_swap_ram_reserve": true,
+  "authorization": "new-environment-authorization.json"
+}

@@ -51,9 +51,12 @@ func TestFormalGatewaySessionKubernetesReference(t *testing.T) {
 		t.Skip("dedicated authorized Kubernetes chain gate required")
 	}
 	ctx := context.Background()
-	run, _ := isolatedRun(t)
+	run, goal := isolatedRun(t)
 	accessDir := os.Getenv("WR19_K8S_PRIVATE_DIR")
-	if !strings.HasPrefix(accessDir, "/home/ubuntu/workspace/ani-iam-runs/wr19-") {
+	if goal == "wr32" {
+		accessDir = filepath.Join(run, "private/session-access")
+	}
+	if goal != "wr32" && !strings.HasPrefix(accessDir, "/home/ubuntu/workspace/ani-iam-runs/wr19-") {
 		t.Fatal("task-owned Kubernetes access directory required")
 	}
 	for _, name := range []string{"session.kubeconfig", "gateway.token", "ca.crt", "fixture-public.json"} {
@@ -64,12 +67,32 @@ func TestFormalGatewaySessionKubernetesReference(t *testing.T) {
 	}
 	var fixture struct {
 		ClusterUID string    `json:"cluster_uid"`
+		Server     string    `json:"server"`
 		Proxy      string    `json:"proxy"`
 		ExpiresAt  time.Time `json:"expires_at"`
 	}
 	input, _ := os.ReadFile(filepath.Join(accessDir, "fixture-public.json"))
-	if json.Unmarshal(input, &fixture) != nil || fixture.ClusterUID != "f5cafbf1-5246-4f8f-b9da-742182f37528" || time.Until(fixture.ExpiresAt) < 15*time.Minute {
+	expectedUID := "f5cafbf1-5246-4f8f-b9da-742182f37528"
+	if goal == "wr32" {
+		var record struct {
+			ClusterUID string `json:"cluster_uid"`
+			Prepared   string `json:"prepared"`
+		}
+		raw, err := os.ReadFile(filepath.Join(run, "session-cluster.json"))
+		if err != nil || json.Unmarshal(raw, &record) != nil || record.Prepared != "pass" || record.ClusterUID == "" {
+			t.Fatal("WR32 cluster ownership evidence required")
+		}
+		expectedUID = record.ClusterUID
+	}
+	if json.Unmarshal(input, &fixture) != nil || fixture.ClusterUID != expectedUID || time.Until(fixture.ExpiresAt) < 15*time.Minute {
 		t.Fatal("Kubernetes input identity or lifetime is not current")
+	}
+	if goal == "wr32" {
+		if !strings.HasPrefix(fixture.Server, "https://127.0.0.1:") {
+			t.Fatal("WR32 own loopback Kubernetes API required")
+		}
+	} else {
+		fixture.Server = "https://10.10.1.66:6443"
 	}
 	for _, name := range []string{"ani-gateway", "session-gateway"} {
 		if info, err := os.Stat(filepath.Join(run, "private", name)); err != nil || !info.Mode().IsRegular() {
@@ -106,13 +129,14 @@ func TestFormalGatewaySessionKubernetesReference(t *testing.T) {
 		for _, operation := range []string{"/iam.v1.AuthorizationService/VerifyWorkloadInvocation", biz.VerifySessionContinuationRPC} {
 			receiver.Grants = append(receiver.Grants, biz.BootstrapWorkloadGrant{ID: mustV7(t), Audience: "ani-iam", Operation: operation})
 		}
+		receiver.Grants = append(receiver.Grants, biz.BootstrapWorkloadGrant{ID: mustV7(t), Audience: biz.SessionInvocationAudience, Operation: "session.receive"})
 		manifest.Workloads = []biz.BootstrapWorkload{gateway, receiver}
 		raw, _ := json.Marshal(manifest)
 		digest := sha256.Sum256(raw)
 		manifestFile, dsnFile := filepath.Join(directory, "reference-bootstrap.json"), filepath.Join(directory, "provisioner.secret")
 		writeReferencePrivate(t, manifestFile, raw)
 		writeReferencePrivate(t, dsnFile, []byte(postgresDSN(provisionerRole, iamDB.provisionerPass, iamDB.host, primaryDB, "wr19-reference-bootstrap")))
-		command := exec.Command(binary, "provision-workloads", "--manifest", manifestFile, "--approved-manifest-sha256", hex.EncodeToString(digest[:]), "--environment", setup.Environment, "--trust-domain", setup.TrustDomain, "--ca-file", cfg.Server.Grpc.Tls.ClientCaFile, "--dsn-file", dsnFile)
+		command := exec.Command(binary, "provision-workloads", "--registry-file", wr32RegistryPath(t), "--approved-registry-sha256", wr32Registry(t).Digest(), "--manifest", manifestFile, "--approved-manifest-sha256", hex.EncodeToString(digest[:]), "--environment", setup.Environment, "--trust-domain", setup.TrustDomain, "--ca-file", cfg.Server.Grpc.Tls.ClientCaFile, "--dsn-file", dsnFile)
 		out, err := command.CombinedOutput()
 		if err != nil {
 			t.Fatal("formal reference bootstrap failed; private command output retained in memory only")
@@ -147,7 +171,7 @@ func TestFormalGatewaySessionKubernetesReference(t *testing.T) {
 		"IAM_TARGET_TLS_CA_FILE": iam.config.Server.Grpc.Tls.ClientCaFile, "IAM_TARGET_TLS_CERT_FILE": filepath.Join(iam.directory, "gateway-client.pem"), "IAM_TARGET_TLS_KEY_FILE": filepath.Join(iam.directory, "gateway-client-key.pem"),
 		"SESSION_GATEWAY_GRPC_ADDR": sessionGRPC, "SESSION_GATEWAY_TLS_SERVER_NAME": "session.wr19.test", "GATEWAY_LISTEN_ADDR": gatewayHTTP, "GATEWAY_HEALTH_LISTEN_ADDR": gatewayAdmin,
 		"DATABASE_URL": aniDSN, "GATEWAY_REDIS_URL": referenceRedisURL(gatewayRedis), "WORKLOAD_PROVIDER": "kubernetes_rest", "WORKLOAD_PROVIDER_APPLY_ENABLED": "false", "WORKLOAD_LIFECYCLE_APPLY_ENABLED": "false", "WORKLOAD_OPS_ENABLED": "false",
-		"KUBERNETES_API_HOST": "https://10.10.1.66:6443", "KUBERNETES_SERVICE_ACCOUNT_TOKEN_FILE": filepath.Join(accessDir, "gateway.token"), "KUBERNETES_SERVICE_ACCOUNT_CA_FILE": filepath.Join(accessDir, "ca.crt"),
+		"KUBERNETES_API_HOST": fixture.Server, "KUBERNETES_SERVICE_ACCOUNT_TOKEN_FILE": filepath.Join(accessDir, "gateway.token"), "KUBERNETES_SERVICE_ACCOUNT_CA_FILE": filepath.Join(accessDir, "ca.crt"),
 	}
 	gatewayEnv["HTTPS_PROXY"] = fixture.Proxy
 	gatewayEnv["NO_PROXY"] = "127.0.0.1,localhost"
@@ -382,7 +406,7 @@ func seedReferenceHumans(t *testing.T, pool *pgxpool.Pool, hash string) ([]uuid.
 	return humans, roles
 }
 
-func newReferenceOwnerDatabase(t *testing.T, run string) string {
+func newReferenceOwnerDatabase(t *testing.T, run string, tenants ...uuid.UUID) string {
 	t.Helper()
 	ctx := context.Background()
 	adminPassword := randomPassword(t)
@@ -427,7 +451,13 @@ func newReferenceOwnerDatabase(t *testing.T, run string) string {
 	if _, err = pool.Exec(ctx, "ALTER ROLE ani_app_user PASSWORD '"+runtimePassword+"' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS"); err != nil {
 		t.Fatal("configure restricted ANI database role failed")
 	}
-	for index, tenant := range referenceTenants {
+	if len(tenants) == 0 {
+		tenants = referenceTenants[:]
+	}
+	if len(tenants) != len(referenceInstances) {
+		t.Fatal("exact resource-owner Tenant inventory required")
+	}
+	for index, tenant := range tenants {
 		name := []string{"wr19-exec-a", "wr19-exec-b"}[index]
 		if _, err = pool.Exec(ctx, `INSERT INTO tenants(id,name,display_name) VALUES($1,$2,$2)`, tenant, name); err != nil {
 			t.Fatal("ANI Tenant fixture failed")
@@ -482,9 +512,10 @@ func referenceRedisURL(c *redis.Client) string {
 }
 
 type referenceProcess struct {
-	done chan struct{}
-	err  error
-	stop func()
+	done  chan struct{}
+	err   error
+	stop  func()
+	crash func()
 }
 
 func startReferenceProcess(t *testing.T, run, name string, values map[string]string, executable ...string) *referenceProcess {
@@ -500,7 +531,18 @@ func startReferenceProcess(t *testing.T, run, name string, values map[string]str
 		t.Fatal(err)
 	}
 	command := exec.Command(binary)
-	command.Env = []string{"PATH=" + os.Getenv("PATH"), "HOME=" + os.Getenv("HOME"), "GOMAXPROCS=2"}
+	command.Env = []string{"PATH=" + os.Getenv("PATH"), "HOME=" + os.Getenv("HOME"), "GOMAXPROCS=2", "GOMEMLIMIT=256MiB"}
+	if os.Getenv("WR23_FORMAL_COMBINATION") == "1" {
+		command.Env = append(command.Env, "GOMEMLIMIT=192MiB")
+	}
+	if values == nil {
+		values = map[string]string{}
+	}
+	values["IAM_WORKLOAD_REGISTRY_FILE"] = wr32RegistryPath(t)
+	values["IAM_WORKLOAD_REGISTRY_SHA256"] = wr32Registry(t).Digest()
+	if binaryName == "ani-gateway" {
+		values["IAM_TARGET_POLICY_REVISION"] = data.TargetPolicyRevision
+	}
 	for k, v := range values {
 		command.Env = append(command.Env, k+"="+v)
 	}
@@ -512,6 +554,25 @@ func startReferenceProcess(t *testing.T, run, name string, values map[string]str
 	p := &referenceProcess{done: make(chan struct{})}
 	go func() { p.err = command.Wait(); log.Close(); close(p.done) }()
 	var once sync.Once
+	p.crash = func() {
+		if goalRun, goal := isolatedRun(t); goal != "wr23" || goalRun != run || os.Getenv("WR23_FORMAL_COMBINATION") != "1" {
+			t.Fatal("crash fault requires this run's formal WR23 process")
+		}
+		once.Do(func() {
+			if command.Process.Kill() != nil {
+				t.Fatal("kill own formal process")
+			}
+			select {
+			case <-p.done:
+			case <-time.After(8 * time.Second):
+				t.Fatal("own crash did not exit")
+			}
+			if status, ok := command.ProcessState.Sys().(syscall.WaitStatus); !ok || !status.Signaled() || status.Signal() != syscall.SIGKILL {
+				t.Fatal("formal crash did not report SIGKILL")
+			}
+			recordReference(t, run, map[string]any{"process": name, "pid": command.Process.Pid, "stage": "expected_crash", "signal": "SIGKILL"})
+		})
+	}
 	p.stop = func() {
 		once.Do(func() {
 			_ = command.Process.Signal(syscall.SIGTERM)

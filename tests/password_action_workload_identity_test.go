@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 	"testing"
 	"time"
 
@@ -18,7 +19,11 @@ import (
 )
 
 func TestGatewayWorkloadIdentityAllowsFrozenPasswordActionRPCs(t *testing.T) {
-	authorize, err := server.NewWorkloadIdentityMiddleware("wr17-18-isolated", "iam.wr17-18.test", biz.NewWorkloadAuthentication(passwordActionIdentityFixture{}), biz.NewWorkloadAuthorization(passwordActionIdentityFixture{}))
+	registry, err := workloadregistry.Load("../registrations/workload-targets.v1.json", "8b58983ffe401d91c2b5a1157117ad36cea70c5be9d3bb465ba7c1166b8ba59a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	authorize, err := server.NewWorkloadIdentityMiddleware("wr17-18-isolated", "iam.wr17-18.test", biz.NewWorkloadAuthentication(passwordActionIdentityFixture{}), biz.NewWorkloadAuthorization(passwordActionIdentityFixture{}, registry))
 	if err != nil {
 		t.Fatalf("NewWorkloadIdentityMiddleware() error = %v", err)
 	}

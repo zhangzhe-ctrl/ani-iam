@@ -50,3 +50,7 @@
 - 无法复现生成结果，或实际验证尚未完成却准备写成通过。
 
 如果官方生成器确实不可用，应先把原因、替代方案和迁移成本写入事项，并取得用户明确决定后再采用替代实现。
+
+## WR21 候选生成
+
+`tools/wr21/generate.sh` 在固定远端工具链执行两次生成。已交付 `202609080002_permission_catalog.sql` 保持原字节；registry 的完整目标 SQL 输出只留任务 private 目录作对照。脚本验证新旧 catalog 差集恰为 `tenant / inference-services / invoke`，由新增 `202609110001_inference_workload.sql` 显式插入，不自动授予内置 Role。其余生成步骤沿用上述固定输入/版本。

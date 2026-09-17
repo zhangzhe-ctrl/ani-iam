@@ -16,6 +16,7 @@ type SessionListItem struct {
 	Grants  []SessionListGrant
 }
 type SessionListGrant struct {
+	Boundary AccessBoundary
 	TenantID uuid.UUID
 	Grant    SessionGrant
 }
@@ -60,6 +61,9 @@ func (u *AuthenticationUsecase) ListSessions(ctx context.Context, c ListSessions
 		}
 		return ListSessionsResult{}, errors.Join(ErrInvalidCredential, err)
 	}
+	if claims.Boundary == AccessBoundaryPlatform {
+		return u.listPlatformSessions(ctx, c, claims, after)
+	}
 	now := u.clock.Now().UTC()
 	if claims.Subject == uuid.Nil || claims.SessionID == uuid.Nil || claims.GrantID == uuid.Nil || claims.TenantID == uuid.Nil || claims.GrantVersion <= 0 || !now.Before(claims.ExpiresAt) || !containsHumanAuthenticationMethod(claims.AuthnMethods) {
 		return ListSessionsResult{}, ErrInvalidCredential
@@ -95,7 +99,7 @@ func (u *AuthenticationUsecase) ListSessions(ctx context.Context, c ListSessions
 		}
 		item := SessionListItem{Session: s, Grants: make([]SessionListGrant, 0, len(grants))}
 		for _, g := range grants {
-			item.Grants = append(item.Grants, SessionListGrant{TenantID: claims.TenantID, Grant: g})
+			item.Grants = append(item.Grants, SessionListGrant{Boundary: AccessBoundaryTenant, TenantID: claims.TenantID, Grant: g})
 		}
 		result.Sessions = append(result.Sessions, item)
 	}

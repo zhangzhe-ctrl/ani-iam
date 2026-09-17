@@ -68,3 +68,35 @@ func TestListSessionsDoesNotMisclassifyVerifierOutageAsBadCredential(t *testing.
 		}
 	}
 }
+
+func (r *guardedSessionListReader) ListOwnedPlatformSessionGrants(context.Context, uuid.UUID, uuid.UUID) ([]SessionGrant, error) {
+	r.reads++
+	return nil, nil
+}
+func TestPlatformSessionListRechecksCurrentGraphBeforeOwnedQuery(t *testing.T) {
+	auth, reader, claims, _ := platformAuthTestSetup(t)
+	for _, tc := range []struct {
+		name   string
+		mutate func(*AccessTokenClaims, *PlatformAuthorizationState)
+	}{
+		{"mixed", func(c *AccessTokenClaims, _ *PlatformAuthorizationState) { c.TenantID = uuid.Must(uuid.NewV7()) }},
+		{"wrong audience", func(c *AccessTokenClaims, _ *PlatformAuthorizationState) { c.Audience = AudienceConsole }},
+		{"expired", func(c *AccessTokenClaims, _ *PlatformAuthorizationState) { c.ExpiresAt = auth.clock.Now() }},
+		{"Membership", func(_ *AccessTokenClaims, s *PlatformAuthorizationState) {
+			s.MembershipStatus = MembershipStatusSuspended
+		}},
+		{"Grant", func(_ *AccessTokenClaims, s *PlatformAuthorizationState) { s.GrantVersion++ }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, state := claims, reader.state
+			tc.mutate(&c, &state)
+			owned := &guardedSessionListReader{sessionTestReader: &sessionTestReader{}}
+			current := *auth
+			current.reader = &platformAuthTestReader{state: state}
+			u := &AuthenticationUsecase{reader: owned, tokens: &recordingSessionTokenCodec{verified: c}, clock: auth.clock, platformAuthorization: &current}
+			if _, err := u.ListSessions(context.Background(), ListSessionsCommand{Credential: "unit-signed-token"}); !errors.Is(err, ErrInvalidCredential) || owned.reads != 0 {
+				t.Fatal("invalid Platform authority reached owned Session data")
+			}
+		})
+	}
+}

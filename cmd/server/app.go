@@ -11,6 +11,7 @@ import (
 	"time"
 
 	kratos "github.com/go-kratos/kratos/v3"
+	"github.com/go-kratos/kratos/v3/transport"
 	kratosgrpc "github.com/go-kratos/kratos/v3/transport/grpc"
 	kratoshttp "github.com/go-kratos/kratos/v3/transport/http"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,6 +23,7 @@ import (
 	"github.com/zhangzhe-ctrl/ani-iam/internal/server"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/service"
 	"github.com/zhangzhe-ctrl/ani-iam/sdk/grpcworkload"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 )
 
 const (
@@ -234,7 +236,7 @@ func (w *passwordActionNotificationWorker) Start(context.Context) error {
 		cancel()
 		if err != nil && !errors.Is(err, context.Canceled) {
 			w.logger.Warn(
-				"password-action notification dispatch failed",
+				"identity notification dispatch failed",
 				"retryable", errors.Is(err, biz.ErrPasswordActionNotificationRetryable),
 			)
 		}
@@ -275,6 +277,7 @@ func newPasswordActionNotificationRuntime(
 	tokens biz.PasswordActionTokenCodec,
 	clock biz.Clock,
 	logger *slog.Logger,
+	workloadRegistry *workloadregistry.Registry,
 	sources ...grpcworkload.WorkloadTokenSource,
 ) (*passwordActionNotificationWorker, *data.NotificationGRPCClient, error) {
 	if config == nil {
@@ -285,13 +288,13 @@ func newPasswordActionNotificationRuntime(
 		source = sources[0]
 	}
 	client, err := data.NewNotificationGRPCClient(data.NotificationGRPCClientConfig{
-		CredentialSource: source,
-		ClientDNSName:    config.ClientDnsName,
-		Address:          config.Address,
-		CertificateFile:  config.CertificateFile,
-		PrivateKeyFile:   config.PrivateKeyFile,
-		ServerCAFile:     config.ServerCaFile,
-		ServerDNSName:    config.ServerDnsName,
+		CredentialSource: source, Registry: workloadRegistry,
+		ClientDNSName:   config.ClientDnsName,
+		Address:         config.Address,
+		CertificateFile: config.CertificateFile,
+		PrivateKeyFile:  config.PrivateKeyFile,
+		ServerCAFile:    config.ServerCaFile,
+		ServerDNSName:   config.ServerDnsName,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("configure Notification gRPC client: %w", err)
@@ -303,6 +306,7 @@ func newPasswordActionNotificationRuntime(
 		client,
 		data.PasswordActionNotificationSubmitterConfig{
 			ConsoleActionURLBase: config.ConsoleActionUrlBase,
+			BossActionURLBase:    config.BossActionUrlBase,
 			Locale:               config.Locale,
 		},
 	)
@@ -334,12 +338,14 @@ func newTenantIAMAdminRuntime(
 	ids biz.IDGenerator,
 	clock biz.Clock,
 	apiKeyCreationLimiter biz.APIKeyCreationLimiter,
+	loginPolicy biz.TenantAdminLoginPolicy,
+	workloadRegistry *workloadregistry.Registry,
 	adminAuthorization ...*service.AdminAuthorization,
 ) (*service.IAMAdminService, error) {
 	if apiKeyCreationLimiter == nil {
 		return nil, errors.New("API key creation limiter is required")
 	}
-	permissionCatalog, err := data.NewTargetPermissionCatalog(expectedPolicyRevision)
+	permissionCatalog, err := data.NewTargetPermissionCatalog(expectedPolicyRevision, workloadRegistry)
 	if err != nil {
 		return nil, fmt.Errorf("configure target permission catalog: %w", err)
 	}
@@ -349,12 +355,15 @@ func newTenantIAMAdminRuntime(
 		ids,
 		clock,
 		apiKeyCreationLimiter,
-	)
-	return service.NewTenantIAMAdminService(
+	).WithLoginPolicy(loginPolicy)
+	return service.NewIAMAdministrationService(
 		data.NewPostgresTenantAuthorizationReader(postgresData),
 		mutations,
+		biz.NewTenantRoleUsecase(data.NewPostgresTenantRoleUnitOfWork(postgresData), permissionCatalog, ids, clock),
+		biz.NewPermissionCatalogReader(permissionCatalog, expectedPolicyRevision),
+		biz.NewAuditQueryUsecase(data.NewPostgresTenantAuditReader(postgresData)),
 		adminAuthorization...,
-	), nil
+	).WithTenantInvitations(biz.NewTenantInvitationUsecase(data.NewPostgresTenantInvitationUnitOfWork(postgresData), ids, data.NewSecretGenerator(), clock)), nil
 }
 
 func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
@@ -362,6 +371,14 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		return nil, err
 	}
 	runtime := bc.Runtime
+	coreConfiguration, err := readCoreLifecycleConfiguration(runtime)
+	if err != nil {
+		return nil, err
+	}
+	workloadRegistry, err := workloadregistry.Load(runtime.WorkloadRegistryFile, runtime.WorkloadRegistrySha256)
+	if err != nil {
+		return nil, fmt.Errorf("configure Workload target registry: %w", err)
+	}
 	privateKey, err := data.LoadEd25519PrivateKeyFile(runtime.AccessToken.PrivateKeyFile)
 	if err != nil {
 		return nil, err
@@ -383,7 +400,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("configure access-token codec: %w", err)
 	}
-	registry, err := data.NewTargetOperationRegistry(runtime.PolicyRevision)
+	registry, err := data.NewTargetOperationRegistry(runtime.PolicyRevision, workloadRegistry)
 	if err != nil {
 		return nil, fmt.Errorf("configure target operation registry: %w", err)
 	}
@@ -397,6 +414,9 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	postgresConfig, err := pgxpool.ParseConfig(runtime.Postgresql.Dsn)
 	if err != nil {
 		return nil, fmt.Errorf("parse PostgreSQL runtime DSN")
+	}
+	if coreConfiguration != nil {
+		postgresConfig.ConnConfig.RuntimeParams["ani_iam.tenant_producer"] = coreConfiguration.Broker.Authority.Producer
 	}
 	postgresPool, err := pgxpool.NewWithConfig(startupContext, postgresConfig)
 	if err != nil {
@@ -443,6 +463,9 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		return nil, fmt.Errorf("configure outbox protection: %w", err)
 	}
 	postgresData := data.NewData(postgresPool, outboxProtector)
+	if coreConfiguration != nil && coreConfiguration.ProjectionMode == "shadow" {
+		postgresData = postgresData.WithLifecycleObservation()
+	}
 	if err := data.ValidateRuntimeFoundation(startupContext, postgresData); err != nil {
 		_ = closeRuntime(context.Background())
 		return nil, err
@@ -504,7 +527,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		return nil, fmt.Errorf("configure OIDC use case: %w", err)
 	}
 	authentication := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(postgresData),
+		data.NewPostgresPasswordLoginReader(postgresData, registry),
 		data.NewArgon2idPasswordHasher(),
 		throttle,
 		data.NewPostgresLoginUnitOfWork(postgresData),
@@ -514,6 +537,21 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		clock,
 		apiKeyUsageAggregator,
 	)
+	bossOIDC, platformSessions, err := newBossAuthentication(startupContext, runtime, postgresData, redisClient, throttle, tokenCodec, secrets, ids, clock, workloadRegistry)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, fmt.Errorf("configure BOSS authentication: %w", err)
+	}
+	authentication.WithPlatformSessions(platformSessions)
+	var platformPassword *biz.PlatformPasswordUsecase
+	if runtime.GetBossOidc() != nil {
+		platformPassword, err = biz.NewPlatformPasswordUsecase(runtime.AccessToken.Issuer, data.NewPlatformPasswordReader(postgresData), data.NewPlatformPasswordUnitOfWork(postgresData), data.NewArgon2idPasswordHasher(), throttle, tokenCodec, secrets, ids, clock)
+		if err != nil {
+			_ = closeRuntime(context.Background())
+			return nil, fmt.Errorf("configure BOSS password authentication: %w", err)
+		}
+	}
+	authentication.WithPlatformPassword(platformPassword)
 	authorization := biz.NewAuthorizationUsecase(
 		registry,
 		tokenCodec,
@@ -522,40 +560,127 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		clock,
 		apiKeyUsageAggregator,
 	)
-	adminService, err := newTenantIAMAdminRuntime(postgresData, runtime.PolicyRevision, ids, clock, apiKeyCreationLimiter,
-		service.NewAdminAuthorization(authentication, authorization, runtime.PolicyRevision))
+	platformAuthorization, err := biz.NewPlatformAuthorizationUsecase(registry, tokenCodec, data.NewPlatformAuthorizationReader(postgresData), ids, clock)
 	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
+	authentication.WithPlatformAuthorization(platformAuthorization)
+	authorization.WithPlatformAuthorization(platformAuthorization)
+	adminService, err := newTenantIAMAdminRuntime(postgresData, runtime.PolicyRevision, ids, clock, apiKeyCreationLimiter,
+		biz.TenantAdminLoginPolicy{PasswordEnabled: true, OIDCProvider: runtime.Oidc.Provider, OIDCIssuer: runtime.Oidc.IssuerUrl},
+		workloadRegistry, service.NewAdminAuthorization(authentication, authorization, runtime.PolicyRevision))
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
+	platformCatalog, err := data.NewTargetPermissionCatalog(runtime.PolicyRevision, workloadRegistry)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
+	platformLoginPolicy := biz.PlatformAdminLoginPolicy{PasswordEnabled: platformPassword != nil}
+	if boss := runtime.GetBossOidc(); boss != nil {
+		platformLoginPolicy.OIDCProvider = boss.Provider
+		platformLoginPolicy.OIDCIssuer = boss.IssuerUrl
+	}
+	invitationAcceptance := biz.NewInvitationAcceptanceUsecase(data.NewInvitationAcceptanceUnitOfWork(postgresData), tokenCodec, ids, clock).WithBootstrap(biz.TenantAdminLoginPolicy{PasswordEnabled: true, OIDCProvider: runtime.Oidc.Provider, OIDCIssuer: runtime.Oidc.IssuerUrl}, platformCatalog)
+	adminService.WithInvitationAcceptance(invitationAcceptance)
+	platformUOW := data.NewPlatformAdministrationUnitOfWork(postgresData)
+	var bootstrapAuthority biz.CoreBootstrapAuthorizer
+	if coreConfiguration != nil {
+		platformUOW, err = data.NewCoreBrokerPlatformAdministrationUnitOfWork(postgresData, coreConfiguration.Broker.Authority)
+		if err != nil {
+			_ = closeRuntime(context.Background())
+			return nil, err
+		}
+		bootstrapAuthority, err = data.NewCoreBrokerBootstrapAuthorizer(postgresData, coreConfiguration.Broker.Authority)
+		if err != nil {
+			_ = closeRuntime(context.Background())
+			return nil, err
+		}
+	}
+	platformAdministration := biz.NewPlatformAdministrationUsecase(platformUOW, registry, biz.NewPermissionCatalogReader(platformCatalog, runtime.PolicyRevision), ids, clock).WithLoginPolicy(platformLoginPolicy).WithInvitationSecrets(secrets).WithTenantAdminRecovery(tokenCodec, biz.TenantAdminLoginPolicy{PasswordEnabled: true, OIDCProvider: runtime.Oidc.Provider, OIDCIssuer: runtime.Oidc.IssuerUrl})
+	if coreConfiguration != nil {
+		platformAdministration.WithCoreBootstrapAdministration(coreConfiguration.Broker.Authority.Producer, bootstrapAuthority)
+		dlqFailures, err := data.NewCoreDLQFailureRecorder(postgresData, coreConfiguration.Broker.Authority)
+		if err != nil {
+			_ = closeRuntime(context.Background())
+			return nil, err
+		}
+		platformAdministration.WithCoreDLQAdministration(service.NewGovernanceBrokerDecoder(), dlqFailures)
+	}
+	adminService.WithPlatformAdministration(platformAdministration, platformAuthorization)
+	workloadCodec, err := data.NewJWXWorkloadCredentialCodec(tokenCodec, workloadRegistry)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
+	if err := data.ValidateWorkloadRegistry(startupContext, postgresData, workloadRegistry); err != nil {
 		_ = closeRuntime(context.Background())
 		return nil, err
 	}
 	workloadInvocation := biz.NewWorkloadInvocation(
 		biz.NewWorkloadAuthentication(data.NewWorkloadIdentityReader(postgresData)),
-		biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(postgresData)),
-		authorization, tokenCodec, data.NewWorkloadCredentialAudit(postgresData), ids, clock,
-	)
+		biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(postgresData, workloadRegistry), workloadRegistry),
+		authorization, workloadCodec, data.NewWorkloadCredentialAudit(postgresData), ids, clock,
+	).WithWorkloadAuthorityReader(data.NewWorkloadAuthorityReader(postgresData, workloadRegistry))
 	notificationWorker, notificationClient, err := newPasswordActionNotificationRuntime(
 		runtime.Notification,
 		data.NewPostgresPasswordActionNotificationOutbox(postgresData),
 		tokenCodec,
 		clock,
-		logger,
+		logger, workloadRegistry,
 		data.NotificationWorkloadSource(workloadInvocation, runtime.Environment, runtime.TrustDomain),
 	)
 	if err != nil {
 		_ = closeRuntime(context.Background())
 		return nil, err
 	}
+	if err = attachIdentityNotificationRuntime(notificationWorker, notificationClient, postgresData, runtime.Notification, clock); err != nil {
+		_ = notificationClient.Close()
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
 	closeNotification := func(context.Context) error {
 		return notificationClient.Close()
 	}
-	authenticationService := service.NewAuthenticationServiceWithWorkload(authentication, oidcUsecase, workloadInvocation)
+	invitedAccountLimiter, err := data.NewInvitedAccountLimiter(redisClient, runtime.Redis.Namespace)
+	if err != nil {
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
+	invitedAccount := biz.NewInvitedAccountUsecase(data.NewInvitedAccountUnitOfWork(postgresData), data.NewInvitedAccountCodeGenerator(), data.NewArgon2idPasswordHasher(), invitedAccountLimiter, ids, clock)
+	authenticationService := service.NewAuthenticationServiceWithWorkload(authentication, biz.NewHumanOIDCUsecase(oidcUsecase, bossOIDC), workloadInvocation).WithInvitedAccount(invitedAccount).WithInvitationPassword(biz.NewInvitationPasswordUsecase(invitationAcceptance, data.NewInvitationPasswordRepository(postgresData), data.NewArgon2idPasswordHasher(), throttle))
 	authorizationService := service.NewAuthorizationServiceWithWorkload(authorization, workloadInvocation)
 
+	coreRuntime, err := newCoreLifecycleRuntime(startupContext, coreConfiguration, postgresData, workloadRegistry, runtime.PolicyRevision, ids, secrets, clock, logger)
+	if err != nil {
+		_ = closeNotification(context.Background())
+		_ = closeRuntime(context.Background())
+		return nil, err
+	}
+	coreHandedOff := false
+	defer func() {
+		if coreRuntime != nil && !coreHandedOff {
+			_ = coreRuntime.Stop(context.Background())
+		}
+	}()
+	runtimeServers := []transport.Server{}
+	if coreRuntime != nil {
+		runtimeServers = append(runtimeServers, coreRuntime)
+	}
 	readiness := server.NewDependencyReadiness(func(ctx context.Context) error {
 		if err := data.ValidateRuntimeFoundation(ctx, postgresData); err != nil {
 			return err
 		}
-		return redisClient.Ping(ctx).Err()
+		if err := redisClient.Ping(ctx).Err(); err != nil {
+			return err
+		}
+		if coreRuntime != nil {
+			return coreRuntime.Check(ctx)
+		}
+		return nil
 	})
 	observability, err := server.NewObservability(Name, Version, readiness)
 	if err != nil {
@@ -580,7 +705,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 	}
 	workloadIdentity, err := server.NewWorkloadIdentityMiddleware(runtime.Environment, runtime.TrustDomain,
 		biz.NewWorkloadAuthentication(data.NewWorkloadIdentityReader(postgresData)),
-		biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(postgresData)))
+		biz.NewWorkloadAuthorization(data.NewWorkloadGrantReader(postgresData, workloadRegistry), workloadRegistry))
 	if err != nil {
 		_ = observability.Shutdown(context.Background())
 		_ = closeNotification(context.Background())
@@ -603,7 +728,7 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		return nil, err
 	}
 	adminServer := server.NewAdminServer(bc.Server.Admin, readiness, observability.Gatherer(), middlewares...)
-	return newApp(
+	app := newApp(
 		logger,
 		grpcServer,
 		adminServer,
@@ -613,8 +738,10 @@ func buildApp(bc *conf.Bootstrap, logger *slog.Logger) (*kratos.App, error) {
 		apiKeyMaintenanceWorker,
 		closeNotification,
 		closeRuntime,
-		bc.Server.ShutdownTimeout.AsDuration(),
-	), nil
+		bc.Server.ShutdownTimeout.AsDuration(), runtimeServers...,
+	)
+	coreHandedOff = true
+	return app, nil
 }
 
 func newApp(
@@ -628,14 +755,17 @@ func newApp(
 	closeNotification func(context.Context) error,
 	closeRuntime func(context.Context) error,
 	stopTimeout time.Duration,
+	runtimeServers ...transport.Server,
 ) *kratos.App {
+	servers := []transport.Server{grpcServer, adminServer, notificationWorker, apiKeyMaintenanceWorker, readiness}
+	servers = append(servers, runtimeServers...)
 	return kratos.New(
 		kratos.ID(id),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{"runtime.profile": conf.IsolatedProfile}),
 		kratos.Logger(logger),
-		kratos.Server(grpcServer, adminServer, notificationWorker, apiKeyMaintenanceWorker, readiness),
+		kratos.Server(servers...),
 		kratos.AfterStart(func(context.Context) error {
 			readiness.Set(true)
 			return nil

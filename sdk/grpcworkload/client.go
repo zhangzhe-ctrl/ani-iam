@@ -9,6 +9,7 @@ import (
 	"time"
 
 	iamv1 "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -56,6 +57,16 @@ func (f TLSFiles) config(serverName string, server bool) (*tls.Config, error) {
 
 // ServerCredentials requires a verified client certificate for every receiver
 // connection; a namespace, header, or shared bearer secret cannot substitute.
+// ClientCredentials reuses the same strict identity checks for owner-supplied
+// Workload-only transports. It does not construct or authorize an invocation.
+func (f TLSFiles) ClientCredentials(serverName string) (credentials.TransportCredentials, error) {
+	c, err := f.config(serverName, false)
+	if err != nil {
+		return nil, err
+	}
+	return credentials.NewTLS(c), nil
+}
+
 func (f TLSFiles) ServerCredentials() (credentials.TransportCredentials, error) {
 	cfg, err := f.config("", true)
 	if err != nil {
@@ -65,6 +76,7 @@ func (f TLSFiles) ServerCredentials() (credentials.TransportCredentials, error) 
 }
 
 type ClientConfig struct {
+	Registry                                                      *workloadregistry.Registry
 	Address, ServerName, Environment, TrustDomain, PolicyRevision string
 	TLS                                                           TLSFiles
 	Timeout                                                       time.Duration
@@ -115,6 +127,10 @@ type AuthorizationRequest struct {
 // TenantID is a requested boundary, never trusted authority. If absent, IAM
 // resolves the credential's boundary; this adapter never parses a user token.
 func (c *Client) Authorize(ctx context.Context, r AuthorizationRequest) (Subject, error) {
+	return c.authorize(ctx, r, nil, WorkloadTarget{})
+}
+
+func (c *Client) authorize(ctx context.Context, r AuthorizationRequest, deferred *workloadregistry.Source, receiverTarget WorkloadTarget) (Subject, error) {
 	if strings.TrimSpace(r.Credential) == "" || r.SourceOperation == "" {
 		return Subject{}, status.Error(codes.Unauthenticated, "subject credential is required")
 	}
@@ -141,7 +157,16 @@ func (c *Client) Authorize(ctx context.Context, r AuthorizationRequest) (Subject
 	if !d.GetAllowed() || d.GetPolicyRevision() != c.cfg.PolicyRevision || d.GetPrincipal().GetPrincipalId() == "" || d.GetPrincipal().GetBoundary().GetTenant().GetTenantId() != r.TenantID {
 		return Subject{}, status.Error(codes.PermissionDenied, "subject is not authorized")
 	}
+	if deferred != nil && (!registeredPrincipalAllowed(*deferred, d.GetPrincipal()) || len(d.GetObligations()) != 1) {
+		return Subject{}, status.Error(codes.PermissionDenied, "registered subject and owner obligation are required")
+	}
 	for _, obligation := range d.GetObligations() {
+		if deferred != nil {
+			if obligation.GetType() != iamv1.AuthorizationObligationType_AUTHORIZATION_OBLIGATION_TYPE_RESOURCE_TENANT_MATCH || obligation.GetHandler() != deferred.OwnerHandler || obligation.GetResourceId() != r.ResourceID || obligation.GetExpectedTenantId() != r.TenantID {
+				return Subject{}, status.Error(codes.PermissionDenied, "registered owner obligation does not match")
+			}
+			continue
+		}
 		if obligation.GetType() != iamv1.AuthorizationObligationType_AUTHORIZATION_OBLIGATION_TYPE_RESOURCE_TENANT_MATCH || obligation.GetResourceId() != r.ResourceID || obligation.GetExpectedTenantId() != r.TenantID || r.CheckResource == nil {
 			return Subject{}, status.Error(codes.PermissionDenied, "resource owner check is required")
 		}
@@ -149,7 +174,7 @@ func (c *Client) Authorize(ctx context.Context, r AuthorizationRequest) (Subject
 			return Subject{}, status.Error(codes.PermissionDenied, "resource owner check denied")
 		}
 	}
-	return Subject{principal: proto.Clone(d.GetPrincipal()).(*iamv1.PrincipalContext), credential: r.Credential, sourceOperation: r.SourceOperation, policyRevision: c.cfg.PolicyRevision, resourceID: r.ResourceID, decisionID: d.GetDecisionId()}, nil
+	return Subject{receiverTarget: receiverTarget, principal: proto.Clone(d.GetPrincipal()).(*iamv1.PrincipalContext), credential: r.Credential, sourceOperation: r.SourceOperation, policyRevision: c.cfg.PolicyRevision, resourceID: r.ResourceID, decisionID: d.GetDecisionId()}, nil
 }
 
 func verifiedPeer(ctx context.Context, environment, domain string) (*iamv1.WorkloadPeer, error) {
@@ -161,7 +186,14 @@ func verifiedPeer(ctx context.Context, environment, domain string) (*iamv1.Workl
 	if !ok || len(info.State.VerifiedChains) == 0 || len(info.State.PeerCertificates) == 0 {
 		return nil, status.Error(codes.Unauthenticated, "verified Workload TLS is required")
 	}
-	leaf := info.State.PeerCertificates[0]
+	return verifiedTLSState(&info.State, environment, domain)
+}
+
+func verifiedTLSState(state *tls.ConnectionState, environment, domain string) (*iamv1.WorkloadPeer, error) {
+	if state == nil || len(state.VerifiedChains) == 0 || len(state.PeerCertificates) == 0 {
+		return nil, status.Error(codes.Unauthenticated, "verified Workload TLS is required")
+	}
+	leaf := state.PeerCertificates[0]
 	now := time.Now()
 	if len(leaf.DNSNames) != 1 || len(leaf.IPAddresses) != 0 || len(leaf.URIs) != 0 || len(leaf.EmailAddresses) != 0 {
 		return nil, status.Error(codes.Unauthenticated, "Workload identity is ambiguous")
@@ -173,7 +205,7 @@ func verifiedPeer(ctx context.Context, environment, domain string) (*iamv1.Workl
 		}
 	}
 	validChain := false
-	for _, chain := range info.State.VerifiedChains {
+	for _, chain := range state.VerifiedChains {
 		if len(chain) == 0 || !chain[0].Equal(leaf) {
 			continue
 		}

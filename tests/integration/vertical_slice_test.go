@@ -56,7 +56,7 @@ func TestPostgresFailureMapsToStableIAMUnavailable(t *testing.T) {
 	environment.runtimePool.Close()
 	tenantID := uuid.MustParse("0198f062-b76d-7f2a-b0ad-50a417bf1f70")
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		acceptingIntegrationPasswordVerifier{},
 		allowingIntegrationLoginThrottle{},
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -119,7 +119,7 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 
 	authenticationIDs := append([]uuid.UUID{fixture.failureAuditID}, fixture.loginIDs...)
 	authentication := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		passwordHasher,
 		loginThrottle,
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -263,7 +263,7 @@ func TestPostgresTargetLoginAndAuthorization(t *testing.T) {
 			fixture.loginIDs[5],
 		}
 		usecase := biz.NewAuthenticationUsecase(
-			data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+			defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 			passwordHasher,
 			loginThrottle,
 			data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),

@@ -37,13 +37,13 @@ func (m *mintClient) IssueDelegation(context.Context, *iamv1.IssueDelegationRequ
 	return &iamv1.IssueDelegationResponse{Delegation: "test-delegation", ExpiresAt: timestamppb.New(time.Now().Add(time.Minute))}, nil
 }
 func testSubject() Subject {
-	return Subject{principal: &iamv1.PrincipalContext{PrincipalId: "human", Boundary: &iamv1.Boundary{Boundary: &iamv1.Boundary_Tenant{Tenant: &iamv1.TenantBoundary{TenantId: "tenant"}}}}, credential: "test-user-credential", sourceOperation: "createInstanceExecSession", policyRevision: "revision", resourceID: "resource"}
+	return Subject{principal: &iamv1.PrincipalContext{PrincipalId: "human", PrincipalType: iamv1.PrincipalType_PRINCIPAL_TYPE_HUMAN, Boundary: &iamv1.Boundary{Boundary: &iamv1.Boundary_Tenant{Tenant: &iamv1.TenantBoundary{TenantId: "tenant"}}}}, credential: "test-user-credential", sourceOperation: "createInstanceExecSession", policyRevision: "revision", resourceID: "resource"}
 }
 
 func TestCallerNeverRetriesBusinessAndDoesNotForwardUserBearer(t *testing.T) {
 	target := bindingTarget()
 	mint := &mintClient{}
-	c := &Client{authentication: mint, cfg: ClientConfig{PolicyRevision: "revision", Timeout: time.Second}}
+	c := &Client{authentication: mint, cfg: ClientConfig{Registry: registryFixture(t), PolicyRevision: "revision", Timeout: time.Second}}
 	interceptor := c.callerInterceptor(map[string]Target{target.Method: *target})
 	req, _ := structpb.NewStruct(map[string]any{"command": "test"})
 	calls := 0
@@ -84,13 +84,13 @@ func (v *verifyClient) VerifyWorkloadInvocation(_ context.Context, r *iamv1.Veri
 	if v.fail {
 		return nil, status.Error(codes.Unavailable, "test IAM outage")
 	}
-	return &iamv1.VerifyWorkloadInvocationResponse{Caller: &iamv1.DirectWorkloadCaller{PrincipalId: "gateway", Peer: proto.Clone(r.GetObservedPeer()).(*iamv1.WorkloadPeer)}, Subject: testSubject().Principal(), Binding: proto.Clone(r.GetBinding()).(*iamv1.InvocationBinding), ExpiresAt: timestamppb.New(time.Now().Add(time.Minute))}, nil
+	return &iamv1.VerifyWorkloadInvocationResponse{Caller: &iamv1.DirectWorkloadCaller{PrincipalId: "gateway", Peer: proto.Clone(r.GetObservedPeer()).(*iamv1.WorkloadPeer)}, Subject: testSubject().Principal(), Binding: proto.Clone(r.GetBinding()).(*iamv1.InvocationBinding), Continuation: "test-continuation", ContinuationExpiresAt: timestamppb.New(time.Now().Add(time.Minute)), ExpiresAt: timestamppb.New(time.Now().Add(time.Minute))}, nil
 }
 
 func TestReceiverRequiresTLSAndOnlineIAMAndHidesEvidenceFromHandler(t *testing.T) {
 	target := bindingTarget()
 	verify := &verifyClient{}
-	c := &Client{authorization: verify, cfg: ClientConfig{PolicyRevision: "revision", Environment: "wr19", TrustDomain: "wr19.test", Timeout: time.Second}}
+	c := &Client{authorization: verify, cfg: ClientConfig{Registry: registryFixture(t), PolicyRevision: "revision", Environment: "wr19", TrustDomain: "wr19.test", Timeout: time.Second}}
 	interceptor, err := c.ReceiverInterceptor([]Target{*target})
 	if err != nil {
 		t.Fatal(err)

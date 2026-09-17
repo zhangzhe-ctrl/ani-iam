@@ -191,3 +191,10 @@ func (*recordingTenantAuthorizationMutations) UpdateTenantWorkload(context.Conte
 func (*recordingTenantAuthorizationMutations) RevokeAPIKey(context.Context, biz.TenantScope, biz.RevokeAPIKeyCommand) (biz.RevokeAPIKeyResult, error) {
 	return biz.RevokeAPIKeyResult{}, nil
 }
+
+func TestRemovedMembershipTransitionMapsToInvalidArgument(t *testing.T) {
+	err := mapIAMError(biz.ErrMembershipStatusInvalid, errorContext{OperationID: "updateTenantIAMMember"})
+	if status.Code(err) != codes.InvalidArgument {
+		t.Fatalf("invalid membership transition code=%s", status.Code(err))
+	}
+}

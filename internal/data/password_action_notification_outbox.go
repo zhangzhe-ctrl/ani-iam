@@ -68,6 +68,7 @@ func (o *postgresPasswordActionNotificationOutbox) ClaimPasswordActionNotificati
 		return biz.PasswordActionNotificationClaim{}, false, fmt.Errorf("%w: password-action notification claim version", biz.ErrInvalidPersistenceState)
 	}
 	return biz.PasswordActionNotificationClaim{
+		Audience:         biz.Audience(row.Audience),
 		ID:               row.ID,
 		OperationID:      row.OperationID,
 		PrincipalID:      row.PrincipalID,

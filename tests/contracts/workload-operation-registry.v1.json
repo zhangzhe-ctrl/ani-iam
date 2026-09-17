@@ -20,7 +20,9 @@
         "IDEMPOTENCY_CONFLICT",
         "IDEMPOTENCY_KEY_EXPIRED",
         "ROLE_IN_USE",
-        "VERSION_CONFLICT"
+        "VERSION_CONFLICT",
+        "INVITATION_CONFLICT",
+        "RECOVERY_CONFLICT"
       ],
       "response": "Conflict"
     },
@@ -37,7 +39,8 @@
         "AUTHZ_OPERATION_UNREGISTERED",
         "AUTHZ_POLICY_MISMATCH",
         "IAM_UNAVAILABLE",
-        "TENANT_IAM_NOT_READY"
+        "TENANT_IAM_NOT_READY",
+        "TENANT_LIFECYCLE_STALE"
       ],
       "response": "ServiceUnavailable"
     },
@@ -94,18 +97,37 @@
     "schema_version": "ani.iam-replacement/v1",
     "source_commit": "0cedae825a489d936cf41815dc27f278f6d3213c",
     "source_openapi_sha256": {
-      "core-v1": "b6a2dc1f9c596555fcc164240d7a5533a04a128b8e19a4d7af1c53e41ab9415b",
+      "core-v1": "2db3213c1b0bbe0e2727aade30394b1fd78d82e3364a300c4b018ce2db1c1ae0",
       "services-v1": "43d91489cb851c3e1ac1ffef2ec167391ae210e2da7d794bcb22ffe2d057aad6"
     },
     "source_tree": "552e50bd5bdd49b6abb168b1ef99bfb74dbd1df8"
+  },
+  "iam_workload_refoundation": {
+    "source_commit": "50aa9fe2099b7ff4c276f883939a8d26c9d9eff8",
+    "source_registry_sha256": "27e3637976a824c4efcd4a77ad9491d58f97ceb7c0ba3885e133ad14eebab7f3",
+    "status": "IAM target candidate; external consumers unchanged"
   },
   "obligation_handlers": [
     {
       "name": "core.resource_tenant",
       "owner": "core-control"
+    },
+    {
+      "name": "inference.resource_tenant",
+      "owner": "inference-service"
     }
   ],
   "operations": [
+    {
+      "auth_classification": "public",
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.acceptInvitationWithPassword",
+      "iam_decision": "none",
+      "iam_decision_calls": 0,
+      "method": "POST",
+      "operation_id": "acceptInvitationWithPassword",
+      "path": "/auth/invitation-acceptances"
+    },
     {
       "auth_classification": "authenticated",
       "authn": {
@@ -484,6 +506,16 @@
         "resource": "instances",
         "scope": "tenant"
       }
+    },
+    {
+      "auth_classification": "public",
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.completeInvitedAccount",
+      "iam_decision": "none",
+      "iam_decision_calls": 0,
+      "method": "POST",
+      "operation_id": "completeInvitedAccount",
+      "path": "/auth/invited-accounts"
     },
     {
       "auth_classification": "public",
@@ -1524,32 +1556,6 @@
       "auth_classification": "authorized",
       "authn": {
         "credential_kinds": [
-          "access_token"
-        ],
-        "principal_kinds": [
-          "human"
-        ]
-      },
-      "backend_owner": "iam",
-      "gateway_handler": "gateway.createTenantWorkload",
-      "iam_decision": "check_permission",
-      "iam_decision_calls": 1,
-      "method": "POST",
-      "obligations": [],
-      "operation_id": "createTenantWorkload",
-      "path": "/auth/tenant-workloads",
-      "permission": {
-        "actions": [
-          "create"
-        ],
-        "resource": "iam.tenant-workloads",
-        "scope": "tenant"
-      }
-    },
-    {
-      "auth_classification": "authorized",
-      "authn": {
-        "credential_kinds": [
           "access_token",
           "api_key",
           "workload_token"
@@ -1832,6 +1838,32 @@
         ],
         "resource": "quota",
         "scope": "platform"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.createTenantWorkload",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "POST",
+      "obligations": [],
+      "operation_id": "createTenantWorkload",
+      "path": "/auth/tenant-workloads",
+      "permission": {
+        "actions": [
+          "create"
+        ],
+        "resource": "iam.tenant-workloads",
+        "scope": "tenant"
       }
     },
     {
@@ -3182,6 +3214,32 @@
       "auth_classification": "authorized",
       "authn": {
         "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.getCoreIAMDLQEntry",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "GET",
+      "obligations": [],
+      "operation_id": "getCoreIAMDLQEntry",
+      "path": "/iam/platform/core-dlq/{consumer_id}/entries/{entry_id}",
+      "permission": {
+        "actions": [
+          "read"
+        ],
+        "resource": "iam.dlq",
+        "scope": "platform"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
           "access_token",
           "api_key",
           "workload_token"
@@ -4408,32 +4466,6 @@
       "auth_classification": "authorized",
       "authn": {
         "credential_kinds": [
-          "access_token"
-        ],
-        "principal_kinds": [
-          "human"
-        ]
-      },
-      "backend_owner": "iam",
-      "gateway_handler": "gateway.getTenantWorkload",
-      "iam_decision": "check_permission",
-      "iam_decision_calls": 1,
-      "method": "GET",
-      "obligations": [],
-      "operation_id": "getTenantWorkload",
-      "path": "/auth/tenant-workloads/{principal_id}",
-      "permission": {
-        "actions": [
-          "read"
-        ],
-        "resource": "iam.tenant-workloads",
-        "scope": "tenant"
-      }
-    },
-    {
-      "auth_classification": "authorized",
-      "authn": {
-        "credential_kinds": [
           "access_token",
           "api_key",
           "workload_token"
@@ -4655,6 +4687,32 @@
         ]
       },
       "backend_owner": "iam",
+      "gateway_handler": "gateway.getTenantIAMBootstrap",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "GET",
+      "obligations": [],
+      "operation_id": "getTenantIAMBootstrap",
+      "path": "/iam/platform/tenant-bootstraps/{operation_id}",
+      "permission": {
+        "actions": [
+          "read"
+        ],
+        "resource": "iam.tenant-bootstrap",
+        "scope": "platform"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
       "gateway_handler": "gateway.getTenantIAMInvitation",
       "iam_decision": "check_permission",
       "iam_decision_calls": 1,
@@ -4720,6 +4778,32 @@
         ],
         "resource": "iam.roles",
         "scope": "tenant"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "core-control",
+      "gateway_handler": "gateway.getTenantOutboxDelivery",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "GET",
+      "obligations": [],
+      "operation_id": "getTenantOutboxDelivery",
+      "path": "/admin/tenant-outbox/{source_sequence}",
+      "permission": {
+        "actions": [
+          "read"
+        ],
+        "resource": "tenant-outbox",
+        "scope": "platform"
       }
     },
     {
@@ -4830,6 +4914,32 @@
       "auth_classification": "authorized",
       "authn": {
         "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.getTenantWorkload",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "GET",
+      "obligations": [],
+      "operation_id": "getTenantWorkload",
+      "path": "/auth/tenant-workloads/{principal_id}",
+      "permission": {
+        "actions": [
+          "read"
+        ],
+        "resource": "iam.tenant-workloads",
+        "scope": "tenant"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
           "access_token",
           "api_key",
           "workload_token"
@@ -4925,6 +5035,37 @@
           "create"
         ],
         "resource": "vector-stores",
+        "scope": "tenant"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "api_key"
+        ],
+        "principal_kinds": [
+          "workload"
+        ]
+      },
+      "backend_owner": "inference-service",
+      "gateway_handler": "envoy.checkInferenceChatCompletions",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "POST",
+      "obligations": [
+        {
+          "handler": "inference.resource_tenant",
+          "type": "resource_tenant_match"
+        }
+      ],
+      "operation_id": "invokeInferenceChatCompletions",
+      "path": "/v1/chat/completions",
+      "permission": {
+        "actions": [
+          "invoke"
+        ],
+        "resource": "inference-services",
         "scope": "tenant"
       }
     },
@@ -5041,6 +5182,32 @@
         ],
         "resource": "object-store",
         "scope": "tenant"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.listCoreIAMDLQEntries",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "GET",
+      "obligations": [],
+      "operation_id": "listCoreIAMDLQEntries",
+      "path": "/iam/platform/core-dlq/{consumer_id}/entries",
+      "permission": {
+        "actions": [
+          "read"
+        ],
+        "resource": "iam.dlq",
+        "scope": "platform"
       }
     },
     {
@@ -5951,6 +6118,32 @@
         ]
       },
       "backend_owner": "iam",
+      "gateway_handler": "gateway.listPlatformIAMPermissions",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "GET",
+      "obligations": [],
+      "operation_id": "listPlatformIAMPermissions",
+      "path": "/iam/platform/permissions",
+      "permission": {
+        "actions": [
+          "read"
+        ],
+        "resource": "iam.platform-roles",
+        "scope": "platform"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
       "gateway_handler": "gateway.listPlatformIAMRoles",
       "iam_decision": "check_permission",
       "iam_decision_calls": 1,
@@ -6357,32 +6550,6 @@
       }
     },
     {
-      "auth_classification": "authorized",
-      "authn": {
-        "credential_kinds": [
-          "access_token"
-        ],
-        "principal_kinds": [
-          "human"
-        ]
-      },
-      "backend_owner": "iam",
-      "gateway_handler": "gateway.listTenantWorkloads",
-      "iam_decision": "check_permission",
-      "iam_decision_calls": 1,
-      "method": "GET",
-      "obligations": [],
-      "operation_id": "listTenantWorkloads",
-      "path": "/auth/tenant-workloads",
-      "permission": {
-        "actions": [
-          "read"
-        ],
-        "resource": "iam.tenant-workloads",
-        "scope": "tenant"
-      }
-    },
-    {
       "auth_classification": "authenticated",
       "authn": {
         "credential_kinds": [
@@ -6613,6 +6780,32 @@
         ]
       },
       "backend_owner": "iam",
+      "gateway_handler": "gateway.listTenantIAMPermissions",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "GET",
+      "obligations": [],
+      "operation_id": "listTenantIAMPermissions",
+      "path": "/iam/tenants/{tenant_id}/permissions",
+      "permission": {
+        "actions": [
+          "read"
+        ],
+        "resource": "iam.roles",
+        "scope": "tenant"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
       "gateway_handler": "gateway.listTenantIAMRoles",
       "iam_decision": "check_permission",
       "iam_decision_calls": 1,
@@ -6678,6 +6871,32 @@
         ],
         "resource": "iam.memberships",
         "scope": "platform"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.listTenantWorkloads",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "GET",
+      "obligations": [],
+      "operation_id": "listTenantWorkloads",
+      "path": "/auth/tenant-workloads",
+      "permission": {
+        "actions": [
+          "read"
+        ],
+        "resource": "iam.tenant-workloads",
+        "scope": "tenant"
       }
     },
     {
@@ -7130,6 +7349,32 @@
       }
     },
     {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "core-control",
+      "gateway_handler": "gateway.recoverTenantOutboxDelivery",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "POST",
+      "obligations": [],
+      "operation_id": "recoverTenantOutboxDelivery",
+      "path": "/admin/tenant-outbox/{source_sequence}/recover",
+      "permission": {
+        "actions": [
+          "recover"
+        ],
+        "resource": "tenant-outbox",
+        "scope": "platform"
+      }
+    },
+    {
       "auth_classification": "authenticated",
       "authn": {
         "credential_kinds": [
@@ -7146,6 +7391,32 @@
       "method": "POST",
       "operation_id": "refreshSession",
       "path": "/auth/refresh"
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.reissueTenantIAMBootstrapInvitation",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "POST",
+      "obligations": [],
+      "operation_id": "reissueTenantIAMBootstrapInvitation",
+      "path": "/iam/platform/tenant-bootstraps/{operation_id}/reissue-invitation",
+      "permission": {
+        "actions": [
+          "reissue"
+        ],
+        "resource": "iam.tenant-bootstrap",
+        "scope": "platform"
+      }
     },
     {
       "auth_classification": "authorized",
@@ -7203,6 +7474,32 @@
       "auth_classification": "authorized",
       "authn": {
         "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.replayCoreIAMDLQEntry",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "POST",
+      "obligations": [],
+      "operation_id": "replayCoreIAMDLQEntry",
+      "path": "/iam/platform/core-dlq/{consumer_id}/entries/{entry_id}/replay",
+      "permission": {
+        "actions": [
+          "replay"
+        ],
+        "resource": "iam.dlq",
+        "scope": "platform"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
           "workload_token"
         ],
         "principal_kinds": [
@@ -7224,6 +7521,16 @@
         "resource": "metering",
         "scope": "tenant"
       }
+    },
+    {
+      "auth_classification": "public",
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.requestInvitedAccountVerification",
+      "iam_decision": "none",
+      "iam_decision_calls": 0,
+      "method": "POST",
+      "operation_id": "requestInvitedAccountVerification",
+      "path": "/auth/invited-account-verifications"
     },
     {
       "auth_classification": "public",
@@ -7423,6 +7730,32 @@
         ],
         "resource": "instances",
         "scope": "tenant"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.retryTenantIAMBootstrapJob",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "POST",
+      "obligations": [],
+      "operation_id": "retryTenantIAMBootstrapJob",
+      "path": "/iam/platform/tenant-bootstraps/{operation_id}/retry-job",
+      "permission": {
+        "actions": [
+          "retry"
+        ],
+        "resource": "iam.tenant-bootstrap",
+        "scope": "platform"
       }
     },
     {
@@ -8315,32 +8648,6 @@
           "human"
         ]
       },
-      "backend_owner": "iam",
-      "gateway_handler": "gateway.updateTenantWorkload",
-      "iam_decision": "check_permission",
-      "iam_decision_calls": 1,
-      "method": "PATCH",
-      "obligations": [],
-      "operation_id": "updateTenantWorkload",
-      "path": "/auth/tenant-workloads/{principal_id}",
-      "permission": {
-        "actions": [
-          "update"
-        ],
-        "resource": "iam.tenant-workloads",
-        "scope": "tenant"
-      }
-    },
-    {
-      "auth_classification": "authorized",
-      "authn": {
-        "credential_kinds": [
-          "access_token"
-        ],
-        "principal_kinds": [
-          "human"
-        ]
-      },
       "backend_owner": "core-control",
       "gateway_handler": "gateway.updateTenant",
       "iam_decision": "check_permission",
@@ -8575,6 +8882,32 @@
           "human"
         ]
       },
+      "backend_owner": "iam",
+      "gateway_handler": "gateway.updateTenantWorkload",
+      "iam_decision": "check_permission",
+      "iam_decision_calls": 1,
+      "method": "PATCH",
+      "obligations": [],
+      "operation_id": "updateTenantWorkload",
+      "path": "/auth/tenant-workloads/{principal_id}",
+      "permission": {
+        "actions": [
+          "update"
+        ],
+        "resource": "iam.tenant-workloads",
+        "scope": "tenant"
+      }
+    },
+    {
+      "auth_classification": "authorized",
+      "authn": {
+        "credential_kinds": [
+          "access_token"
+        ],
+        "principal_kinds": [
+          "human"
+        ]
+      },
       "backend_owner": "core-control",
       "gateway_handler": "gateway.upgradeK8sCluster",
       "iam_decision": "check_permission",
@@ -8715,7 +9048,7 @@
       }
     }
   ],
-  "policy_revision": "sha256:655690090ed17bf49e0eab57baad643f90ec69ef3a412aa092fd3a24671a0e62",
+  "policy_revision": "sha256:02af7fa3157d1aa7fb1e10899003bdf33b73108895fcd8109249af4210880968",
   "schema_version": "ani.operation-policy/v1",
   "trusted_context": {
     "inject_headers": [
@@ -8730,9 +9063,17 @@
     ],
     "strip_client_prefix": "x-ani-"
   },
-  "iam_workload_refoundation": {
-    "source_registry_sha256": "27e3637976a824c4efcd4a77ad9491d58f97ceb7c0ba3885e133ad14eebab7f3",
-    "source_commit": "50aa9fe2099b7ff4c276f883939a8d26c9d9eff8",
-    "status": "IAM target candidate; external consumers unchanged"
+  "wr21_sources": {
+    "baseline_registry_sha256": "135196cdc34b858a9236ccb47ec94b918abc9dce8c6c1a1332ff9712da6fc570",
+    "core_owner_sha256": "908657256d32a7ae2b2bc54c10d4f47f43d22980cffc6253a0f0c658b9d93b0b",
+    "inference_owner_sha256": "0a1f4a56244d43e081cd792a64ee9024997e4f4f469a0aa2862d41c221b88065"
+  },
+  "wr22_sources": {
+    "baseline_registry_sha256": "fb0971c5b6f641b5d3b653bd446bbae11926a417c2dcc4f515ea5fd44b4ef2ce",
+    "core_owner_sha256": "789de6ac28206f8c4709413d7772ce598c1fb1cf972a7105022e6ec54acec717"
+  },
+  "wr23_sources": {
+    "baseline_registry_sha256": "c33ef3de198f1a64684804ea57dbbd204c695a8ba4ff5cda17d4e97776364056",
+    "core_owner_sha256": "2db3213c1b0bbe0e2727aade30394b1fd78d82e3364a300c4b018ce2db1c1ae0"
   }
 }

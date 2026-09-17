@@ -386,6 +386,16 @@ func normalizeProcessE2ELoopbackAddress(t *testing.T, address string) string {
 	return net.JoinHostPort(host, port)
 }
 
+func processE2ECertificateLifetime(t *testing.T) time.Duration {
+	if os.Getenv("WR23_RUN_DIR") != "" {
+		if _, goal := isolatedRun(t); goal != "wr23" {
+			t.Fatal("WR23 certificate scope conflict")
+		}
+		return 72 * time.Hour
+	}
+	return time.Hour
+}
+
 func writeProcessE2ECertificateAuthority(t *testing.T, directory string) (*x509.Certificate, ed25519.PrivateKey, string) {
 	t.Helper()
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
@@ -400,7 +410,7 @@ func writeProcessE2ECertificateAuthority(t *testing.T, directory string) (*x509.
 		SerialNumber:          serial,
 		Subject:               pkix.Name{CommonName: "DP2-05 process E2E CA"},
 		NotBefore:             time.Now().Add(-time.Minute),
-		NotAfter:              time.Now().Add(time.Hour),
+		NotAfter:              time.Now().Add(processE2ECertificateLifetime(t)),
 		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature,
 		BasicConstraintsValid: true,
 		IsCA:                  true,
@@ -433,7 +443,7 @@ func writeProcessE2ELeafCertificate(t *testing.T, directory, prefix, commonName 
 		Subject:      pkix.Name{CommonName: commonName},
 		DNSNames:     []string{commonName},
 		NotBefore:    time.Now().Add(-time.Minute),
-		NotAfter:     time.Now().Add(time.Hour),
+		NotAfter:     time.Now().Add(processE2ECertificateLifetime(t)),
 		KeyUsage:     x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:  []x509.ExtKeyUsage{usage},
 	}

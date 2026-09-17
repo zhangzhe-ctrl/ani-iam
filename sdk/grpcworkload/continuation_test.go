@@ -44,6 +44,7 @@ func TestContinuationOpaquePersistenceAndOnlineBinding(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	binding.TargetRevision = registryFixture(t).Revision(binding.Audience, binding.OperationId)
 	verified := Verified{caller: &iamv1.DirectWorkloadCaller{PrincipalId: "gateway"}, subject: testSubject().Principal(), binding: binding, continuation: "private-reference-never-log", continuationExpires: time.Now().Add(time.Minute)}
 	reference, err := verified.Continuation()
 	if err != nil {
@@ -65,7 +66,7 @@ func TestContinuationOpaquePersistenceAndOnlineBinding(t *testing.T) {
 		t.Fatal(err)
 	}
 	remote := &continuationClient{t: t}
-	client := &Client{authorization: remote, cfg: ClientConfig{Timeout: 2 * time.Second}}
+	client := &Client{authorization: remote, cfg: ClientConfig{Registry: registryFixture(t), Timeout: 2 * time.Second}}
 	if _, err := client.Recheck(context.Background(), restored); err != nil {
 		t.Fatal(err)
 	}

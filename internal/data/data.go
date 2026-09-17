@@ -6,8 +6,9 @@ import "github.com/jackc/pgx/v5/pgxpool"
 // Data owns long-lived infrastructure clients shared by repository adapters.
 // It contains no transaction-scoped state.
 type Data struct {
-	pool   *pgxpool.Pool
-	outbox *OutboxProtector
+	pool                 *pgxpool.Pool
+	lifecycleObservation bool
+	outbox               *OutboxProtector
 }
 
 func NewData(pool *pgxpool.Pool, protectors ...*OutboxProtector) *Data {
@@ -16,4 +17,12 @@ func NewData(pool *pgxpool.Pool, protectors ...*OutboxProtector) *Data {
 		p = protectors[0]
 	}
 	return &Data{pool: pool, outbox: p}
+}
+
+// WithLifecycleObservation returns a configuration copy for pre-enforcement
+// resource authorization. Identity lifecycle guards keep their real facts.
+func (d *Data) WithLifecycleObservation() *Data {
+	copy := *d
+	copy.lifecycleObservation = true
+	return &copy
 }

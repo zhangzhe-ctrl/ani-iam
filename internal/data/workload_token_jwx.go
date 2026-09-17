@@ -12,6 +12,7 @@ import (
 	"github.com/lestrrat-go/jwx/v3/jws"
 	"github.com/lestrrat-go/jwx/v3/jwt"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 )
 
 const workloadJWTType = "ANI-WORKLOAD+JWT"
@@ -19,39 +20,52 @@ const delegationJWTType = "ANI-DELEGATION+JWT"
 const continuationJWTType = "ANI-CONTINUATION+JWT"
 const invocationContextClaim = "ani_invocation_v1"
 
-func (c *JWXAccessTokenCodec) IssueWorkload(ctx context.Context, claims biz.WorkloadTokenClaims) (string, error) {
-	if !validWorkloadClaims(claims) {
+// JWXWorkloadCredentialCodec isolates Workload registration from Human token rules.
+type JWXWorkloadCredentialCodec struct {
+	*JWXAccessTokenCodec
+	registry *workloadregistry.Registry
+}
+
+func NewJWXWorkloadCredentialCodec(base *JWXAccessTokenCodec, registry *workloadregistry.Registry) (*JWXWorkloadCredentialCodec, error) {
+	if base == nil || registry == nil {
+		return nil, biz.ErrInvocationInvalid
+	}
+	return &JWXWorkloadCredentialCodec{JWXAccessTokenCodec: base, registry: registry}, nil
+}
+
+func (c *JWXWorkloadCredentialCodec) IssueWorkload(ctx context.Context, claims biz.WorkloadTokenClaims) (string, error) {
+	if !validWorkloadClaims(claims, c.registry) {
 		return "", biz.ErrInvocationCredentialInvalid
 	}
 	return c.signInvocation(ctx, workloadJWTType, claims.ID, claims.Caller.Identity.PrincipalID, claims.IssuedAt, claims.ExpiresAt, claims)
 }
 
-func (c *JWXAccessTokenCodec) VerifyWorkload(ctx context.Context, raw string) (biz.WorkloadTokenClaims, error) {
+func (c *JWXWorkloadCredentialCodec) VerifyWorkload(ctx context.Context, raw string) (biz.WorkloadTokenClaims, error) {
 	var claims biz.WorkloadTokenClaims
 	id, subject, issued, expires, err := c.parseInvocation(ctx, raw, workloadJWTType, biz.WorkloadTokenMaxTTL, &claims)
-	if err != nil || !validWorkloadClaims(claims) || claims.ID != id || claims.Caller.Identity.PrincipalID != subject || !claims.IssuedAt.Equal(issued) || !claims.ExpiresAt.Equal(expires) {
+	if err != nil || !validWorkloadClaims(claims, c.registry) || claims.ID != id || claims.Caller.Identity.PrincipalID != subject || !claims.IssuedAt.Equal(issued) || !claims.ExpiresAt.Equal(expires) {
 		return biz.WorkloadTokenClaims{}, biz.ErrInvocationCredentialInvalid
 	}
 	return claims, nil
 }
 
-func (c *JWXAccessTokenCodec) IssueDelegation(ctx context.Context, claims biz.DelegationClaims) (string, error) {
-	if !validDelegationClaims(claims) {
+func (c *JWXWorkloadCredentialCodec) IssueDelegation(ctx context.Context, claims biz.DelegationClaims) (string, error) {
+	if !validDelegationClaims(claims, c.registry) {
 		return "", biz.ErrInvocationCredentialInvalid
 	}
 	return c.signInvocation(ctx, delegationJWTType, claims.ID, claims.Subject.Principal.ID, claims.IssuedAt, claims.ExpiresAt, claims)
 }
 
-func (c *JWXAccessTokenCodec) VerifyDelegation(ctx context.Context, raw string) (biz.DelegationClaims, error) {
+func (c *JWXWorkloadCredentialCodec) VerifyDelegation(ctx context.Context, raw string) (biz.DelegationClaims, error) {
 	var claims biz.DelegationClaims
 	id, subject, issued, expires, err := c.parseInvocation(ctx, raw, delegationJWTType, biz.DelegationMaxTTL, &claims)
-	if err != nil || !validDelegationClaims(claims) || claims.ID != id || claims.Subject.Principal.ID != subject || !claims.IssuedAt.Equal(issued) || !claims.ExpiresAt.Equal(expires) {
+	if err != nil || !validDelegationClaims(claims, c.registry) || claims.ID != id || claims.Subject.Principal.ID != subject || !claims.IssuedAt.Equal(issued) || !claims.ExpiresAt.Equal(expires) {
 		return biz.DelegationClaims{}, biz.ErrInvocationCredentialInvalid
 	}
 	return claims, nil
 }
 
-func (c *JWXAccessTokenCodec) signInvocation(ctx context.Context, kind string, id, subject uuid.UUID, issued, expires time.Time, payload any) (string, error) {
+func (c *JWXWorkloadCredentialCodec) signInvocation(ctx context.Context, kind string, id, subject uuid.UUID, issued, expires time.Time, payload any) (string, error) {
 	if err := ctx.Err(); err != nil {
 		return "", err
 	}
@@ -61,9 +75,16 @@ func (c *JWXAccessTokenCodec) signInvocation(ctx context.Context, kind string, i
 	if err != nil {
 		return "", biz.ErrInvocationCredentialInvalid
 	}
-	audience := biz.SessionInvocationAudience
-	if wat, ok := payload.(biz.WorkloadTokenClaims); ok {
-		audience = wat.Caller.Target.Audience
+	audience := ""
+	switch claims := payload.(type) {
+	case biz.WorkloadTokenClaims:
+		audience = claims.Caller.Target.Audience
+	case biz.DelegationClaims:
+		audience = claims.Binding.Audience
+	case biz.SessionContinuationClaims:
+		audience = claims.Binding.Audience
+	default:
+		return "", biz.ErrInvocationCredentialInvalid
 	}
 	token, err := jwt.NewBuilder().Issuer(c.issuer).Subject(subject.String()).Audience([]string{audience}).JwtID(id.String()).IssuedAt(issued).Expiration(expires).Claim(invocationContextClaim, string(encoded)).Build()
 	if err != nil {
@@ -80,7 +101,7 @@ func (c *JWXAccessTokenCodec) signInvocation(ctx context.Context, kind string, i
 	return string(signed), nil
 }
 
-func (c *JWXAccessTokenCodec) parseInvocation(ctx context.Context, raw, kind string, ttl time.Duration, payload any) (uuid.UUID, uuid.UUID, time.Time, time.Time, error) {
+func (c *JWXWorkloadCredentialCodec) parseInvocation(ctx context.Context, raw, kind string, ttl time.Duration, payload any) (uuid.UUID, uuid.UUID, time.Time, time.Time, error) {
 	deny := func() (uuid.UUID, uuid.UUID, time.Time, time.Time, error) {
 		return uuid.Nil, uuid.Nil, time.Time{}, time.Time{}, biz.ErrInvocationCredentialInvalid
 	}
@@ -114,7 +135,7 @@ func (c *JWXAccessTokenCodec) parseInvocation(ctx context.Context, raw, kind str
 		return deny()
 	}
 	audiences, _ := token.Audience()
-	if len(audiences) != 1 || (audiences[0] != biz.SessionInvocationAudience && (kind != workloadJWTType || audiences[0] != biz.NotificationAudience)) {
+	if len(audiences) != 1 || audiences[0] == "" {
 		return deny()
 	}
 	idText, _ := token.JwtID()
@@ -149,33 +170,39 @@ func (c *JWXAccessTokenCodec) parseInvocation(ctx context.Context, raw, kind str
 	if wat, ok := payload.(*biz.WorkloadTokenClaims); ok && wat.Caller.Target.Audience != audiences[0] {
 		return deny()
 	}
+	if d, ok := payload.(*biz.DelegationClaims); ok && d.Binding.Audience != audiences[0] {
+		return deny()
+	}
+	if p, ok := payload.(*biz.SessionContinuationClaims); ok && p.Binding.Audience != audiences[0] {
+		return deny()
+	}
 	return id, subject, issued, expires, nil
 }
 
-func validProofCaller(c biz.DirectCaller) bool {
+func validProofCaller(c biz.DirectCaller, r *workloadregistry.Registry) bool {
 	i := c.Identity
-	return i.PrincipalID != uuid.Nil && i.BindingID != uuid.Nil && i.PrincipalVersion > 0 && i.BindingVersion > 0 && c.GrantVersion > 0 &&
-		i.Peer.Environment != "" && i.Peer.TrustDomain != "" && i.Peer.IdentityKind == "x509_dns" && i.Peer.IdentityValue != "" &&
-		c.Target == (biz.WorkloadTarget{Audience: biz.SessionInvocationAudience, Operation: biz.SessionInvocationOperation})
+	target, ok := r.Lookup(c.Target.Audience, c.Target.Operation)
+	return ok && target.Enabled && (target.Mechanism == workloadregistry.Delegated || target.Mechanism == workloadregistry.WorkloadOnly) && c.TargetRevision == r.Revision(c.Target.Audience, c.Target.Operation) &&
+		i.PrincipalID != uuid.Nil && i.BindingID != uuid.Nil && i.PrincipalVersion > 0 && i.BindingVersion > 0 && c.GrantVersion > 0 &&
+		i.Peer.Environment != "" && i.Peer.TrustDomain != "" && i.Peer.IdentityKind == "x509_dns" && i.Peer.IdentityValue != ""
 }
 
 func validProofTime(id uuid.UUID, issued, expires time.Time, ttl time.Duration) bool {
 	return id.Version() == 7 && id.Variant() == uuid.RFC4122 && !issued.IsZero() && expires.After(issued) && expires.Sub(issued) <= ttl && issued.Nanosecond() == 0 && expires.Nanosecond() == 0
 }
 
-func validWorkloadClaims(c biz.WorkloadTokenClaims) bool {
-	shape := c.Caller
-	if shape.Target.Audience == biz.NotificationAudience && (shape.Target.Operation == biz.NotificationSubmitOperation || shape.Target.Operation == biz.NotificationGetOwnOperation) {
-		shape.Target = biz.WorkloadTarget{Audience: biz.SessionInvocationAudience, Operation: biz.SessionInvocationOperation}
-	}
-	return validProofCaller(shape) && validProofTime(c.ID, c.IssuedAt, c.ExpiresAt, biz.WorkloadTokenMaxTTL)
+func validWorkloadClaims(c biz.WorkloadTokenClaims, r *workloadregistry.Registry) bool {
+	return validProofCaller(c.Caller, r) && validProofTime(c.ID, c.IssuedAt, c.ExpiresAt, biz.WorkloadTokenMaxTTL)
 }
-
-func validDelegationClaims(c biz.DelegationClaims) bool {
-	if !validProofCaller(c.Caller) || !validProofTime(c.ID, c.IssuedAt, c.ExpiresAt, biz.DelegationMaxTTL) || c.WorkloadTokenID == uuid.Nil || c.Binding.Validate() != nil || c.Subject.Principal.ID != c.Binding.SubjectID || c.Subject.Principal.TenantID != c.Binding.TenantID {
-		return false
+func validDelegationClaims(c biz.DelegationClaims, r *workloadregistry.Registry) bool {
+	_, source, err := biz.ValidateRegisteredInvocation(r, c.Binding)
+	credential := "api_key"
+	if c.Subject.Principal.Type == biz.PrincipalTypeHuman {
+		credential = "access_token"
 	}
-	return validDelegatedSubject(c.Subject)
+	return err == nil && source.AllowsSubject(string(c.Subject.Principal.Type), credential) && validProofCaller(c.Caller, r) &&
+		validProofTime(c.ID, c.IssuedAt, c.ExpiresAt, biz.DelegationMaxTTL) && c.WorkloadTokenID != uuid.Nil && c.Caller.Target == c.Binding.Target() &&
+		c.Subject.Principal.ID == c.Binding.SubjectID && c.Subject.Principal.TenantID == c.Binding.TenantID && validDelegatedSubject(c.Subject)
 }
 
 func validDelegatedSubject(s biz.DelegatedSubject) bool {
@@ -185,27 +212,38 @@ func validDelegatedSubject(s biz.DelegatedSubject) bool {
 	return s.Principal.Type == biz.PrincipalTypeWorkload && s.Principal.SessionID == uuid.Nil && s.Principal.GrantID == uuid.Nil && s.GrantVersion == 0 && s.APIKeyID != uuid.Nil && s.APIKeyVersion > 0
 }
 
-func (c *JWXAccessTokenCodec) IssueContinuation(ctx context.Context, claims biz.SessionContinuationClaims) (string, error) {
-	if !validContinuationClaims(claims) {
+func (c *JWXWorkloadCredentialCodec) IssueContinuation(ctx context.Context, claims biz.SessionContinuationClaims) (string, error) {
+	if !validContinuationClaims(claims, c.registry) {
 		return "", biz.ErrInvocationCredentialInvalid
 	}
 	return c.signInvocation(ctx, continuationJWTType, claims.ID, claims.Subject.Principal.ID, claims.IssuedAt, claims.ExpiresAt, claims)
 }
-func (c *JWXAccessTokenCodec) VerifyContinuation(ctx context.Context, raw string) (biz.SessionContinuationClaims, error) {
+func (c *JWXWorkloadCredentialCodec) VerifyContinuation(ctx context.Context, raw string) (biz.SessionContinuationClaims, error) {
 	var claims biz.SessionContinuationClaims
 	id, subject, issued, expires, err := c.parseInvocation(ctx, raw, continuationJWTType, biz.SessionContinuationMaxTTL, &claims)
-	if err != nil || !validContinuationClaims(claims) || claims.ID != id || claims.Subject.Principal.ID != subject || !claims.IssuedAt.Equal(issued) || !claims.ExpiresAt.Equal(expires) {
+	if err != nil || !validContinuationClaims(claims, c.registry) || claims.ID != id || claims.Subject.Principal.ID != subject || !claims.IssuedAt.Equal(issued) || !claims.ExpiresAt.Equal(expires) {
 		return biz.SessionContinuationClaims{}, biz.ErrInvocationCredentialInvalid
 	}
 	return claims, nil
 }
-func validContinuationClaims(c biz.SessionContinuationClaims) bool {
+func validContinuationClaims(c biz.SessionContinuationClaims, r *workloadregistry.Registry) bool {
+	target, source, err := biz.ValidateRegisteredInvocation(r, c.Binding)
+	credential := "api_key"
+	if c.Subject.Principal.Type == biz.PrincipalTypeHuman {
+		credential = "access_token"
+	}
 	receiver := c.Receiver
-	// Validate the receiver's identity/version shape independently of its IAM target.
 	shape := receiver
 	shape.Target = c.Caller.Target
-	return validProofCaller(c.Caller) && validProofCaller(shape) && receiver.Target == (biz.WorkloadTarget{Audience: "ani-iam", Operation: "/iam.v1.AuthorizationService/VerifyWorkloadInvocation"}) &&
+	shape.TargetRevision = c.Caller.TargetRevision
+	authority := c.ReceiverAuthority
+	expectedAuthority, ok := r.Lookup(c.Binding.Audience, target.ReceiverOperation)
+	if !ok || !expectedAuthority.Enabled || expectedAuthority.Mechanism != workloadregistry.Receiver || authority.Identity != receiver.Identity || authority.GrantVersion <= 0 || authority.Target != (biz.WorkloadTarget{Audience: c.Binding.Audience, Operation: target.ReceiverOperation}) || authority.TargetRevision != r.Revision(authority.Target.Audience, authority.Target.Operation) {
+		return false
+	}
+	return err == nil && target.Continuation && source.AllowsSubject(string(c.Subject.Principal.Type), credential) && validProofCaller(c.Caller, r) && validProofCaller(shape, r) &&
+		receiver.Target == (biz.WorkloadTarget{Audience: "ani-iam", Operation: "/iam.v1.AuthorizationService/VerifyWorkloadInvocation"}) && receiver.TargetRevision == r.Revision(receiver.Target.Audience, receiver.Target.Operation) &&
 		receiver.Identity.Peer.Environment == c.Caller.Identity.Peer.Environment && receiver.Identity.Peer.TrustDomain == c.Caller.Identity.Peer.TrustDomain &&
-		validProofTime(c.ID, c.IssuedAt, c.ExpiresAt, biz.SessionContinuationMaxTTL) && c.Binding.Validate() == nil && validDelegatedSubject(c.Subject) && c.Subject.Principal.ID == c.Binding.SubjectID && c.Subject.Principal.TenantID == c.Binding.TenantID &&
+		validProofTime(c.ID, c.IssuedAt, c.ExpiresAt, biz.SessionContinuationMaxTTL) && validDelegatedSubject(c.Subject) && c.Caller.Target == c.Binding.Target() && c.Subject.Principal.ID == c.Binding.SubjectID && c.Subject.Principal.TenantID == c.Binding.TenantID &&
 		(c.Subject.CredentialExpiresAt.IsZero() || !c.ExpiresAt.After(c.Subject.CredentialExpiresAt)) && (c.Subject.Principal.Type != biz.PrincipalTypeHuman || !c.Subject.CredentialExpiresAt.IsZero())
 }

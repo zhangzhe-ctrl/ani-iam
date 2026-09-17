@@ -1,7 +1,11 @@
 package biz_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -62,7 +66,7 @@ func TestBootstrapRejectsAuthorityAndIdentityAmbiguity(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			o, m, now := bootstrapManifest(t)
 			change(&o, &m)
-			_, err := biz.ValidateWorkloadBootstrap(o, m, now)
+			_, err := biz.ValidateWorkloadBootstrap(o, m, now, bootstrapTargetRegistry(t))
 			if err == nil {
 				t.Fatal("accepted ambiguous or unauthorized bootstrap")
 			}
@@ -70,27 +74,50 @@ func TestBootstrapRejectsAuthorityAndIdentityAmbiguity(t *testing.T) {
 	}
 }
 
+func TestCoreBrokerIdentityRegistrationWithoutSynchronousGrants(t *testing.T) {
+	o, m, now := bootstrapManifest(t)
+	m.Workloads[0].Grants = nil
+	intent, err := biz.ValidateWorkloadBootstrap(o, m, now, bootstrapTargetRegistry(t))
+	if err != nil || len(intent.Manifest.Workloads[0].Grants) != 0 {
+		t.Fatal("Broker-only registration acquired synchronous authority", err)
+	}
+}
+
 func TestBootstrapIntentCanonicalizationAndReceiptExpiry(t *testing.T) {
 	o, m, now := bootstrapManifest(t)
-	a, err := biz.ValidateWorkloadBootstrap(o, m, now)
+	a, err := biz.ValidateWorkloadBootstrap(o, m, now, bootstrapTargetRegistry(t))
 	if err != nil {
 		t.Fatal(err)
 	}
 	m.Workloads[0].Grants[0], m.Workloads[0].Grants[1] = m.Workloads[0].Grants[1], m.Workloads[0].Grants[0]
 	m.ExpiresAt = m.ExpiresAt.In(time.FixedZone("test", 3600))
-	b, err := biz.ValidateWorkloadBootstrap(o, m, now)
+	b, err := biz.ValidateWorkloadBootstrap(o, m, now, bootstrapTargetRegistry(t))
 	if err != nil || a.Digest != b.Digest {
 		t.Fatal("ordering/timezone changed intent")
 	}
 	// Domain validation preserves the same intent after expiry; only a persisted
 	// receipt can allow its retry. The repository rejects expired new intents.
-	c, err := biz.ValidateWorkloadBootstrap(o, m, now.Add(2*time.Hour))
+	c, err := biz.ValidateWorkloadBootstrap(o, m, now.Add(2*time.Hour), bootstrapTargetRegistry(t))
 	if err != nil || c.Digest != a.Digest {
 		t.Fatal("completed receipt cannot be retried after expiry")
 	}
 	m.Workloads[0].Grants[0].Operation = "/iam.v1.AuthorizationService/CheckPermission"
-	_, err = biz.ValidateWorkloadBootstrap(o, m, now)
+	_, err = biz.ValidateWorkloadBootstrap(o, m, now, bootstrapTargetRegistry(t))
 	if err != nil && !errors.Is(err, biz.ErrWorkloadBootstrapInvalid) {
 		t.Fatal(err)
 	}
+}
+
+func bootstrapTargetRegistry(t *testing.T) *workloadregistry.Registry {
+	t.Helper()
+	raw, err := os.ReadFile("../../registrations/workload-targets.v1.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256(raw)
+	r, err := workloadregistry.Parse(raw, hex.EncodeToString(sum[:]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r
 }

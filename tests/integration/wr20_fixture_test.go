@@ -140,7 +140,7 @@ type wr20ExtraSetup func(*wr20Environment, *biz.WorkloadBootstrapManifest, *conf
 func newWR20Environment(t *testing.T, extras ...wr20ExtraSetup) *wr20Environment {
 	t.Helper()
 	run, goal := isolatedRun(t)
-	if goal != "wr20" {
+	if goal != "wr20" && goal != "wr32" {
 		t.Fatal("WR20 dedicated run required")
 	}
 	e := &wr20Environment{run: run, password: randomPassword(t)}
@@ -217,7 +217,7 @@ func newWR20Environment(t *testing.T, extras ...wr20ExtraSetup) *wr20Environment
 		mf, dsnf := filepath.Join(directory, "wr20-bootstrap.json"), filepath.Join(directory, "provisioner.secret")
 		writeReferencePrivate(t, mf, raw)
 		writeReferencePrivate(t, dsnf, []byte(postgresDSN(provisionerRole, db.provisionerPass, db.host, primaryDB, "wr20-bootstrap")))
-		cmd := exec.Command(binary, "provision-workloads", "--manifest", mf, "--approved-manifest-sha256", hex.EncodeToString(digest[:]), "--environment", setup.Environment, "--trust-domain", setup.TrustDomain, "--ca-file", cfg.Server.Grpc.Tls.ClientCaFile, "--dsn-file", dsnf)
+		cmd := exec.Command(binary, "provision-workloads", "--registry-file", wr32RegistryPath(t), "--approved-registry-sha256", wr32Registry(t).Digest(), "--manifest", mf, "--approved-manifest-sha256", hex.EncodeToString(digest[:]), "--environment", setup.Environment, "--trust-domain", setup.TrustDomain, "--ca-file", cfg.Server.Grpc.Tls.ClientCaFile, "--dsn-file", dsnf)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			_ = os.WriteFile(filepath.Join(directory, "bootstrap.private.log"), output, 0o600)

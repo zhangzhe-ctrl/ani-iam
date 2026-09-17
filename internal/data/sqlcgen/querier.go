@@ -12,21 +12,94 @@ import (
 )
 
 type Querier interface {
+	AbandonCoreSnapshotAuthority(ctx context.Context, arg AbandonCoreSnapshotAuthorityParams) error
+	AbandonTenantSnapshot(ctx context.Context, arg AbandonTenantSnapshotParams) error
+	AbandonUnavailableCoreSnapshots(ctx context.Context, arg AbandonUnavailableCoreSnapshotsParams) error
+	AcceptPlatformInvitation(ctx context.Context, arg AcceptPlatformInvitationParams) (int64, error)
+	AcceptTenantInvitation(ctx context.Context, arg AcceptTenantInvitationParams) (int64, error)
+	ActivateCoreSnapshotShadow(ctx context.Context, arg ActivateCoreSnapshotShadowParams) error
+	ActivateInvitationBootstrapAccess(ctx context.Context, arg ActivateInvitationBootstrapAccessParams) (int64, error)
+	ActivateRecoveryBootstrapAccess(ctx context.Context, arg ActivateRecoveryBootstrapAccessParams) (ActivateRecoveryBootstrapAccessRow, error)
+	ActivateTenantSnapshot(ctx context.Context, arg ActivateTenantSnapshotParams) error
+	AddCustomTenantRolePermission(ctx context.Context, arg AddCustomTenantRolePermissionParams) error
+	AddPlatformInvitationRole(ctx context.Context, arg AddPlatformInvitationRoleParams) error
+	AddTenantInvitationRole(ctx context.Context, arg AddTenantInvitationRoleParams) error
+	AdvanceCoreProjectionPipeline(ctx context.Context, arg AdvanceCoreProjectionPipelineParams) (AdvanceCoreProjectionPipelineRow, error)
+	AdvanceCoreSnapshotPage(ctx context.Context, arg AdvanceCoreSnapshotPageParams) error
+	AdvanceCoreSnapshotReplay(ctx context.Context, arg AdvanceCoreSnapshotReplayParams) error
+	AdvancePlatformMembershipVersion(ctx context.Context, arg AdvancePlatformMembershipVersionParams) (PlatformMembership, error)
+	AdvancePlatformMembershipVersionForUnbind(ctx context.Context, arg AdvancePlatformMembershipVersionForUnbindParams) (PlatformMembership, error)
+	AdvanceTenantLifecyclePipeline(ctx context.Context, arg AdvanceTenantLifecyclePipelineParams) error
+	AdvanceTenantSnapshotPage(ctx context.Context, arg AdvanceTenantSnapshotPageParams) error
+	AdvanceTenantSnapshotReplay(ctx context.Context, arg AdvanceTenantSnapshotReplayParams) error
 	AppendAnonymousPrincipalSecurityAuditEvent(ctx context.Context, arg AppendAnonymousPrincipalSecurityAuditEventParams) error
 	AppendAnonymousTenantSecurityAuditEvent(ctx context.Context, arg AppendAnonymousTenantSecurityAuditEventParams) error
+	AppendCoreBootstrapAttempt(ctx context.Context, arg AppendCoreBootstrapAttemptParams) error
+	AppendCoreBootstrapBrokerApproval(ctx context.Context, arg AppendCoreBootstrapBrokerApprovalParams) error
+	AppendCoreBootstrapJobRecovery(ctx context.Context, arg AppendCoreBootstrapJobRecoveryParams) error
+	AppendCoreBootstrapReceipt(ctx context.Context, arg AppendCoreBootstrapReceiptParams) (pgtype.Timestamptz, error)
+	AppendCoreBrokerAdministrationReceipt(ctx context.Context, arg AppendCoreBrokerAdministrationReceiptParams) error
+	AppendCoreBrokerAuthorityReceipt(ctx context.Context, arg AppendCoreBrokerAuthorityReceiptParams) error
+	AppendCoreBrokerDLQ(ctx context.Context, arg AppendCoreBrokerDLQParams) error
+	AppendCoreDLQAttempt(ctx context.Context, arg AppendCoreDLQAttemptParams) error
+	AppendCoreDLQContext(ctx context.Context, arg AppendCoreDLQContextParams) error
+	AppendCoreIntegrationReceipt(ctx context.Context, arg AppendCoreIntegrationReceiptParams) error
+	AppendInvitationPasswordDenial(ctx context.Context, arg AppendInvitationPasswordDenialParams) error
+	AppendInvitedAccountAudit(ctx context.Context, arg AppendInvitedAccountAuditParams) error
+	AppendPlatformHumanAudit(ctx context.Context, arg AppendPlatformHumanAuditParams) error
 	AppendPrincipalSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSecurityAuditEventParams) error
 	AppendPrincipalSessionSecurityAuditEvent(ctx context.Context, arg AppendPrincipalSessionSecurityAuditEventParams) error
 	AppendSecurityAuditEvent(ctx context.Context, arg AppendSecurityAuditEventParams) error
+	AppendTenantIntegrationReceipt(ctx context.Context, arg AppendTenantIntegrationReceiptParams) error
+	AppendTenantSnapshotPage(ctx context.Context, arg AppendTenantSnapshotPageParams) error
 	AppendWorkloadCredentialSecurityAuditEvent(ctx context.Context, arg AppendWorkloadCredentialSecurityAuditEventParams) error
+	ApproveTenantAdminRecovery(ctx context.Context, arg ApproveTenantAdminRecoveryParams) (int64, error)
+	ApproveTenantBootstrapRecovery(ctx context.Context, arg ApproveTenantBootstrapRecoveryParams) (int64, error)
+	AuthorizeCoreBrokerGrant(ctx context.Context, arg AuthorizeCoreBrokerGrantParams) error
+	BeginCoreSnapshotGeneration(ctx context.Context, arg BeginCoreSnapshotGenerationParams) error
+	BeginCoreSnapshotRebuild(ctx context.Context, arg BeginCoreSnapshotRebuildParams) error
+	BeginTenantSnapshot(ctx context.Context, arg BeginTenantSnapshotParams) error
+	BootstrapRecoveryVerifiedEmail(ctx context.Context, arg BootstrapRecoveryVerifiedEmailParams) (string, error)
 	BumpTenantMembershipVersion(ctx context.Context, arg BumpTenantMembershipVersionParams) (BumpTenantMembershipVersionRow, error)
+	CancelInactiveInvitedAccountDeliveries(ctx context.Context, arg CancelInactiveInvitedAccountDeliveriesParams) error
 	CancelPasswordActionNotification(ctx context.Context, arg CancelPasswordActionNotificationParams) error
+	CancelPlatformInvitationDeliveries(ctx context.Context, arg CancelPlatformInvitationDeliveriesParams) error
 	CancelReplacedPasswordActionNotifications(ctx context.Context, arg CancelReplacedPasswordActionNotificationsParams) error
+	CancelSupersededBootstrapInvitations(ctx context.Context, arg CancelSupersededBootstrapInvitationsParams) ([]CancelSupersededBootstrapInvitationsRow, error)
+	CancelTenantInvitationDeliveries(ctx context.Context, arg CancelTenantInvitationDeliveriesParams) error
+	ChangeCoreBrokerBinding(ctx context.Context, arg ChangeCoreBrokerBindingParams) (int64, error)
+	ChangeCoreBrokerGrant(ctx context.Context, arg ChangeCoreBrokerGrantParams) (int64, error)
 	CheckWorkloadGrant(ctx context.Context, arg CheckWorkloadGrantParams) (int64, error)
+	ClaimAccountVerificationNotification(ctx context.Context, arg ClaimAccountVerificationNotificationParams) (IamInvitedAccountOutbox, error)
+	ClaimCoreBootstrapJob(ctx context.Context, arg ClaimCoreBootstrapJobParams) error
 	ClaimPasswordActionNotification(ctx context.Context, arg ClaimPasswordActionNotificationParams) (ClaimPasswordActionNotificationRow, error)
+	ClaimPlatformInvitationNotification(ctx context.Context, arg ClaimPlatformInvitationNotificationParams) (PlatformInvitationOutbox, error)
+	ClaimTenantInvitationNotification(ctx context.Context, arg ClaimTenantInvitationNotificationParams) (TenantInvitationOutbox, error)
+	ClearCustomTenantRolePermissions(ctx context.Context, arg ClearCustomTenantRolePermissionsParams) error
+	ClearPlatformInvitationRoles(ctx context.Context, arg ClearPlatformInvitationRolesParams) error
+	ClearTenantInvitationRoles(ctx context.Context, arg ClearTenantInvitationRolesParams) error
+	CompleteFirstAdministratorIntent(ctx context.Context, arg CompleteFirstAdministratorIntentParams) error
+	CompleteInvitationBootstrap(ctx context.Context, arg CompleteInvitationBootstrapParams) (int64, error)
+	ConsumeInvitedAccountVerification(ctx context.Context, arg ConsumeInvitedAccountVerificationParams) (int64, error)
 	ConsumePasswordAction(ctx context.Context, arg ConsumePasswordActionParams) (int64, error)
+	ConsumePlatformRefreshToken(ctx context.Context, arg ConsumePlatformRefreshTokenParams) (int64, error)
 	ConsumeRefreshToken(ctx context.Context, arg ConsumeRefreshTokenParams) (uuid.UUID, error)
+	CoreSnapshotCoversCurrent(ctx context.Context, arg CoreSnapshotCoversCurrentParams) (pgtype.Bool, error)
+	CoreSnapshotCursorUnexpired(ctx context.Context, arg CoreSnapshotCursorUnexpiredParams) (bool, error)
+	CoreSnapshotRecoveryNeeded(ctx context.Context, arg CoreSnapshotRecoveryNeededParams) (pgtype.Bool, error)
 	CountActiveHumanTenantAdministrators(ctx context.Context, arg CountActiveHumanTenantAdministratorsParams) (int64, error)
 	CreateAPIKey(ctx context.Context, arg CreateAPIKeyParams) error
+	CreateBootstrapAdministratorRole(ctx context.Context, arg CreateBootstrapAdministratorRoleParams) error
+	CreateBootstrapPendingAccess(ctx context.Context, arg CreateBootstrapPendingAccessParams) error
+	CreateCoreBootstrapJob(ctx context.Context, arg CreateCoreBootstrapJobParams) error
+	CreateCoreBootstrapOperation(ctx context.Context, arg CreateCoreBootstrapOperationParams) (int64, error)
+	CreateCoreBootstrapTenantInvitation(ctx context.Context, arg CreateCoreBootstrapTenantInvitationParams) error
+	CreateCustomPlatformRole(ctx context.Context, arg CreateCustomPlatformRoleParams) error
+	CreateCustomTenantRole(ctx context.Context, arg CreateCustomTenantRoleParams) error
+	CreateInvitedAccountDelivery(ctx context.Context, arg CreateInvitedAccountDeliveryParams) error
+	CreateInvitedAccountVerification(ctx context.Context, arg CreateInvitedAccountVerificationParams) error
+	CreateInvitedHuman(ctx context.Context, arg CreateInvitedHumanParams) error
+	CreateInvitedVerifiedEmail(ctx context.Context, arg CreateInvitedVerifiedEmailParams) error
 	CreateKnownPasswordActionRequest(ctx context.Context, arg CreateKnownPasswordActionRequestParams) error
 	CreateOIDCIdentity(ctx context.Context, arg CreateOIDCIdentityParams) error
 	CreatePasswordAction(ctx context.Context, arg CreatePasswordActionParams) error
@@ -34,27 +107,94 @@ type Querier interface {
 	CreatePasswordActionNotification(ctx context.Context, arg CreatePasswordActionNotificationParams) error
 	CreatePasswordCredential(ctx context.Context, arg CreatePasswordCredentialParams) (int64, error)
 	CreatePasswordIdentity(ctx context.Context, arg CreatePasswordIdentityParams) error
+	CreatePlatformHuman(ctx context.Context, arg CreatePlatformHumanParams) error
+	CreatePlatformInvitation(ctx context.Context, arg CreatePlatformInvitationParams) error
+	CreatePlatformInvitationDelivery(ctx context.Context, arg CreatePlatformInvitationDeliveryParams) error
+	CreatePlatformMembership(ctx context.Context, arg CreatePlatformMembershipParams) error
+	CreatePlatformRefreshFamily(ctx context.Context, arg CreatePlatformRefreshFamilyParams) error
+	CreatePlatformRefreshToken(ctx context.Context, arg CreatePlatformRefreshTokenParams) error
+	CreatePlatformRoleBinding(ctx context.Context, arg CreatePlatformRoleBindingParams) error
+	CreatePlatformSessionGrant(ctx context.Context, arg CreatePlatformSessionGrantParams) error
+	CreatePlatformVerifiedEmail(ctx context.Context, arg CreatePlatformVerifiedEmailParams) error
+	CreateRecoveredTenantBootstrap(ctx context.Context, arg CreateRecoveredTenantBootstrapParams) error
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) error
 	CreateRefreshTokenFamily(ctx context.Context, arg CreateRefreshTokenFamilyParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateSessionGrant(ctx context.Context, arg CreateSessionGrantParams) error
+	CreateTenantAdminRecovery(ctx context.Context, arg CreateTenantAdminRecoveryParams) error
+	CreateTenantBootstrapRecovery(ctx context.Context, arg CreateTenantBootstrapRecoveryParams) error
+	CreateTenantInvitation(ctx context.Context, arg CreateTenantInvitationParams) error
+	CreateTenantInvitationDelivery(ctx context.Context, arg CreateTenantInvitationDeliveryParams) error
+	CreateTenantLifecycleGeneration(ctx context.Context, arg CreateTenantLifecycleGenerationParams) error
 	CreateTenantMembership(ctx context.Context, arg CreateTenantMembershipParams) error
 	CreateTenantRoleBinding(ctx context.Context, arg CreateTenantRoleBindingParams) error
 	CreateTenantWorkloadBase(ctx context.Context, arg CreateTenantWorkloadBaseParams) error
 	CreateTenantWorkloadProfile(ctx context.Context, arg CreateTenantWorkloadProfileParams) error
 	CreateUnknownPasswordActionRequest(ctx context.Context, arg CreateUnknownPasswordActionRequestParams) error
+	CurrentAccountVerificationNotification(ctx context.Context, arg CurrentAccountVerificationNotificationParams) (bool, error)
+	CurrentPlatformInvitationNotification(ctx context.Context, arg CurrentPlatformInvitationNotificationParams) (bool, error)
+	CurrentTenantInvitationNotification(ctx context.Context, arg CurrentTenantInvitationNotificationParams) (bool, error)
+	CustomTenantRoleReferenced(ctx context.Context, arg CustomTenantRoleReferencedParams) (bool, error)
+	DeleteCustomPlatformRole(ctx context.Context, arg DeleteCustomPlatformRoleParams) (int64, error)
+	DeleteCustomPlatformRolePermissions(ctx context.Context, arg DeleteCustomPlatformRolePermissionsParams) error
+	DeleteCustomTenantRole(ctx context.Context, arg DeleteCustomTenantRoleParams) (int64, error)
 	DeleteTenantRoleBinding(ctx context.Context, arg DeleteTenantRoleBindingParams) (DeleteTenantRoleBindingRow, error)
+	// Discovery returns only exact work identifiers. All following locks and writes
+	// carry Tenant/operation/kind and the configured producer.
+	DiscoverCoreBootstrapJobs(ctx context.Context, arg DiscoverCoreBootstrapJobsParams) ([]DiscoverCoreBootstrapJobsRow, error)
+	// Internal queue discovery exposes only Tenant IDs. Every claim/read/write
+	// after discovery carries the exact Tenant boundary.
+	DiscoverIdentityNotificationTenants(ctx context.Context, arg DiscoverIdentityNotificationTenantsParams) ([]uuid.UUID, error)
+	ExecuteTenantAdminRecovery(ctx context.Context, arg ExecuteTenantAdminRecoveryParams) (int64, error)
+	ExecuteTenantBootstrapRecovery(ctx context.Context, arg ExecuteTenantBootstrapRecoveryParams) (int64, error)
+	ExpireInvitedAccountVerification(ctx context.Context, arg ExpireInvitedAccountVerificationParams) (int64, error)
+	FailInvitedAccountVerification(ctx context.Context, arg FailInvitedAccountVerificationParams) (int64, error)
+	FindInvitedAccountRequest(ctx context.Context, arg FindInvitedAccountRequestParams) (IamInvitedAccountVerification, error)
+	FindPendingPlatformInvitation(ctx context.Context, arg FindPendingPlatformInvitationParams) (PlatformInvitation, error)
+	FindPendingTenantInvitation(ctx context.Context, arg FindPendingTenantInvitationParams) (TenantInvitation, error)
+	FindPlatformMutation(ctx context.Context, arg FindPlatformMutationParams) (FindPlatformMutationRow, error)
 	FindTenantMutationResult(ctx context.Context, arg FindTenantMutationResultParams) (FindTenantMutationResultRow, error)
+	FinishAccountVerificationNotification(ctx context.Context, arg FinishAccountVerificationNotificationParams) (int64, error)
+	FinishCoreBootstrapJob(ctx context.Context, arg FinishCoreBootstrapJobParams) error
+	FinishPlatformInvitationNotification(ctx context.Context, arg FinishPlatformInvitationNotificationParams) (int64, error)
+	FinishTenantInvitationNotification(ctx context.Context, arg FinishTenantInvitationNotificationParams) (int64, error)
 	GetAPIKeyBoundary(ctx context.Context, arg GetAPIKeyBoundaryParams) (uuid.UUID, error)
 	GetAPIKeyForUpdate(ctx context.Context, arg GetAPIKeyForUpdateParams) (GetAPIKeyForUpdateRow, error)
 	GetAPIKeyOperationalSignals(ctx context.Context, arg GetAPIKeyOperationalSignalsParams) (GetAPIKeyOperationalSignalsRow, error)
 	GetAPIKeyOperationalSnapshot(ctx context.Context, arg GetAPIKeyOperationalSnapshotParams) (GetAPIKeyOperationalSnapshotRow, error)
+	GetCoreBootstrapOperation(ctx context.Context, arg GetCoreBootstrapOperationParams) (TenantBootstrapOperation, error)
+	GetCoreBootstrapReceipt(ctx context.Context, arg GetCoreBootstrapReceiptParams) (CoreBootstrapReceipt, error)
+	GetCoreBootstrapWorkSource(ctx context.Context, arg GetCoreBootstrapWorkSourceParams) (CoreBootstrapReceipt, error)
+	GetCoreBootstrapWorkerResult(ctx context.Context, arg GetCoreBootstrapWorkerResultParams) (CoreBootstrapWorkerResult, error)
+	GetCoreIntegrationReceipt(ctx context.Context, arg GetCoreIntegrationReceiptParams) (CoreIntegrationReceipt, error)
+	GetCoreProjectionRow(ctx context.Context, arg GetCoreProjectionRowParams) (CoreLifecycleProjectionRow, error)
+	GetCoreSnapshotPageReceipt(ctx context.Context, arg GetCoreSnapshotPageReceiptParams) ([]byte, error)
+	GetCurrentTenantBootstrap(ctx context.Context, arg GetCurrentTenantBootstrapParams) (TenantBootstrapOperation, error)
+	GetFirstAdministratorCompletion(ctx context.Context, arg GetFirstAdministratorCompletionParams) (uuid.UUID, error)
+	GetFirstAdministratorIntent(ctx context.Context, arg GetFirstAdministratorIntentParams) (FirstAdministratorIntent, error)
+	GetFirstAdministratorLeaf(ctx context.Context, arg GetFirstAdministratorLeafParams) (FirstAdministratorIntent, error)
+	GetInvitationBootstrapOperation(ctx context.Context, arg GetInvitationBootstrapOperationParams) (TenantBootstrapOperation, error)
+	GetInvitedAccountVerification(ctx context.Context, arg GetInvitedAccountVerificationParams) (IamInvitedAccountVerification, error)
 	GetPasswordActionCompletionByIdempotencyKey(ctx context.Context, arg GetPasswordActionCompletionByIdempotencyKeyParams) (GetPasswordActionCompletionByIdempotencyKeyRow, error)
 	GetPasswordActionRequestByIdempotencyKey(ctx context.Context, arg GetPasswordActionRequestByIdempotencyKeyParams) (GetPasswordActionRequestByIdempotencyKeyRow, error)
+	GetPlatformAdministratorRole(ctx context.Context) (PlatformRole, error)
+	GetPlatformAuditEvent(ctx context.Context, arg GetPlatformAuditEventParams) (GetPlatformAuditEventRow, error)
+	GetPlatformInvitation(ctx context.Context, arg GetPlatformInvitationParams) (PlatformInvitation, error)
+	GetPlatformInvitationDelivery(ctx context.Context, arg GetPlatformInvitationDeliveryParams) (GetPlatformInvitationDeliveryRow, error)
+	GetPlatformMembership(ctx context.Context, arg GetPlatformMembershipParams) (PlatformMembership, error)
+	GetPlatformMembershipRoles(ctx context.Context, arg GetPlatformMembershipRolesParams) ([]uuid.UUID, error)
+	GetPlatformRole(ctx context.Context, arg GetPlatformRoleParams) (PlatformRole, error)
+	GetPlatformRolePermissionSet(ctx context.Context, arg GetPlatformRolePermissionSetParams) ([]GetPlatformRolePermissionSetRow, error)
+	GetPlatformTargetTenantAccess(ctx context.Context, arg GetPlatformTargetTenantAccessParams) (TenantAccess, error)
 	GetTenantAccessStatusForAuthorization(ctx context.Context, arg GetTenantAccessStatusForAuthorizationParams) (string, error)
+	GetTenantAdminRecovery(ctx context.Context, arg GetTenantAdminRecoveryParams) (TenantAdminRecoveryOperation, error)
+	GetTenantAuditEvent(ctx context.Context, arg GetTenantAuditEventParams) (GetTenantAuditEventRow, error)
 	GetTenantAuthorizationAccess(ctx context.Context, arg GetTenantAuthorizationAccessParams) (GetTenantAuthorizationAccessRow, error)
 	GetTenantAuthorizationMembership(ctx context.Context, arg GetTenantAuthorizationMembershipParams) (GetTenantAuthorizationMembershipRow, error)
 	GetTenantAuthorizationRole(ctx context.Context, arg GetTenantAuthorizationRoleParams) (GetTenantAuthorizationRoleRow, error)
+	GetTenantBootstrapRecovery(ctx context.Context, arg GetTenantBootstrapRecoveryParams) (TenantBootstrapRecoveryOperation, error)
+	GetTenantInvitation(ctx context.Context, arg GetTenantInvitationParams) (TenantInvitation, error)
+	GetTenantInvitationDelivery(ctx context.Context, arg GetTenantInvitationDeliveryParams) (GetTenantInvitationDeliveryRow, error)
 	GetTenantLifecycleFreshnessForAuthorization(ctx context.Context, arg GetTenantLifecycleFreshnessForAuthorizationParams) (bool, error)
 	GetTenantMembership(ctx context.Context, arg GetTenantMembershipParams) (GetTenantMembershipRow, error)
 	GetTenantWorkload(ctx context.Context, arg GetTenantWorkloadParams) (GetTenantWorkloadRow, error)
@@ -64,32 +204,86 @@ type Querier interface {
 	GetVerifiedAccountForPrincipal(ctx context.Context, arg GetVerifiedAccountForPrincipalParams) (string, error)
 	GetWorkloadBootstrapEnvironmentReceipt(ctx context.Context, arg GetWorkloadBootstrapEnvironmentReceiptParams) (uuid.UUID, error)
 	GetWorkloadBootstrapReceipt(ctx context.Context, arg GetWorkloadBootstrapReceiptParams) (GetWorkloadBootstrapReceiptRow, error)
+	// The current work loaded under the Tenant lock supplies kind/generation and
+	// recovery identity; mutable caller input cannot broaden an approval.
+	HasCoreBootstrapBrokerApproval(ctx context.Context, arg HasCoreBootstrapBrokerApprovalParams) (bool, error)
 	IncrementSessionGrantVersionForReuse(ctx context.Context, arg IncrementSessionGrantVersionForReuseParams) (int64, error)
 	IncrementSessionGrantVersionForSwitch(ctx context.Context, arg IncrementSessionGrantVersionForSwitchParams) (int64, error)
+	InitializeCoreProjectionGeneration(ctx context.Context, arg InitializeCoreProjectionGenerationParams) error
+	InitializeCoreProjectionPipeline(ctx context.Context, arg InitializeCoreProjectionPipelineParams) (int64, error)
+	InitializeTenantLifecyclePipeline(ctx context.Context, arg InitializeTenantLifecyclePipelineParams) error
 	InsertBootstrapBinding(ctx context.Context, arg InsertBootstrapBindingParams) error
 	InsertBootstrapGrant(ctx context.Context, arg InsertBootstrapGrantParams) error
 	InsertBootstrapPrincipal(ctx context.Context, arg InsertBootstrapPrincipalParams) error
 	InsertBootstrapProfile(ctx context.Context, arg InsertBootstrapProfileParams) error
+	InsertCoreSnapshotFact(ctx context.Context, arg InsertCoreSnapshotFactParams) error
+	InsertFirstAdministratorIntent(ctx context.Context, arg InsertFirstAdministratorIntentParams) error
+	InsertFirstAdministratorIntentAudit(ctx context.Context, arg InsertFirstAdministratorIntentAuditParams) error
+	InsertPlatformAdministratorRole(ctx context.Context, arg InsertPlatformAdministratorRoleParams) error
+	InsertPlatformRolePermission(ctx context.Context, arg InsertPlatformRolePermissionParams) error
+	InsertTenantSnapshotFact(ctx context.Context, arg InsertTenantSnapshotFactParams) error
 	InsertWorkloadBootstrapAudit(ctx context.Context, arg InsertWorkloadBootstrapAuditParams) error
 	InsertWorkloadBootstrapReceipt(ctx context.Context, arg InsertWorkloadBootstrapReceiptParams) error
+	InsertWorkloadRegistryInstallation(ctx context.Context, arg InsertWorkloadRegistryInstallationParams) error
+	InsertWorkloadRegistryPermission(ctx context.Context, arg InsertWorkloadRegistryPermissionParams) error
+	InvalidatePlatformGrantVersion(ctx context.Context, arg InvalidatePlatformGrantVersionParams) (int64, error)
+	InvitationLatestPlatformMembership(ctx context.Context, arg InvitationLatestPlatformMembershipParams) (PlatformMembership, error)
+	InvitationLatestTenantMembership(ctx context.Context, arg InvitationLatestTenantMembershipParams) (TenantMembership, error)
+	InvitationTargetLifecycle(ctx context.Context, arg InvitationTargetLifecycleParams) (InvitationTargetLifecycleRow, error)
+	InvitedAccountEligibility(ctx context.Context, arg InvitedAccountEligibilityParams) (pgtype.Bool, error)
+	InvitedAccountTenantBoundaries(ctx context.Context, arg InvitedAccountTenantBoundariesParams) ([]uuid.UUID, error)
 	IsActiveHumanTenantAdministrator(ctx context.Context, arg IsActiveHumanTenantAdministratorParams) (bool, error)
+	IsActiveHumanTenantAdministratorPrincipal(ctx context.Context, arg IsActiveHumanTenantAdministratorPrincipalParams) (bool, error)
 	ListAPIKeys(ctx context.Context, arg ListAPIKeysParams) ([]ListAPIKeysRow, error)
+	ListCoreDLQAttempts(ctx context.Context, arg ListCoreDLQAttemptsParams) ([]CoreBrokerDlqAttempt, error)
+	ListCoreDLQEntries(ctx context.Context, arg ListCoreDLQEntriesParams) ([]uuid.UUID, error)
+	ListCoreSnapshotIncrements(ctx context.Context, arg ListCoreSnapshotIncrementsParams) ([]CoreIntegrationReceipt, error)
+	// Current scheduling metadata is bounded to initialize and the current
+	// invitation generation. Older generations remain in immutable history.
+	ListCurrentCoreBootstrapJobs(ctx context.Context, arg ListCurrentCoreBootstrapJobsParams) ([]ListCurrentCoreBootstrapJobsRow, error)
+	ListExpiredPlatformInvitationsForRole(ctx context.Context, arg ListExpiredPlatformInvitationsForRoleParams) ([]PlatformInvitation, error)
+	ListExpiredTenantInvitationsForRole(ctx context.Context, arg ListExpiredTenantInvitationsForRoleParams) ([]TenantInvitation, error)
 	ListOwnedHumanSessions(ctx context.Context, arg ListOwnedHumanSessionsParams) ([]Session, error)
+	ListOwnedPlatformSessionGrants(ctx context.Context, arg ListOwnedPlatformSessionGrantsParams) ([]PlatformSessionGrant, error)
 	ListOwnedSessionGrants(ctx context.Context, arg ListOwnedSessionGrantsParams) ([]SessionGrant, error)
+	ListPlatformAdministratorCandidates(ctx context.Context, arg ListPlatformAdministratorCandidatesParams) ([]ListPlatformAdministratorCandidatesRow, error)
+	ListPlatformAuditEvents(ctx context.Context, arg ListPlatformAuditEventsParams) ([]ListPlatformAuditEventsRow, error)
+	ListPlatformInvitations(ctx context.Context, arg ListPlatformInvitationsParams) ([]PlatformInvitation, error)
+	ListPlatformMemberships(ctx context.Context, arg ListPlatformMembershipsParams) ([]PlatformMembership, error)
+	ListPlatformRoles(ctx context.Context, arg ListPlatformRolesParams) ([]PlatformRole, error)
+	ListTenantAuditEvents(ctx context.Context, arg ListTenantAuditEventsParams) ([]ListTenantAuditEventsRow, error)
 	ListTenantAuthorizationMembershipRoleIDs(ctx context.Context, arg ListTenantAuthorizationMembershipRoleIDsParams) ([]uuid.UUID, error)
 	ListTenantAuthorizationMemberships(ctx context.Context, arg ListTenantAuthorizationMembershipsParams) ([]ListTenantAuthorizationMembershipsRow, error)
 	ListTenantAuthorizationRolePermissions(ctx context.Context, arg ListTenantAuthorizationRolePermissionsParams) ([]ListTenantAuthorizationRolePermissionsRow, error)
 	ListTenantAuthorizationRoles(ctx context.Context, arg ListTenantAuthorizationRolesParams) ([]ListTenantAuthorizationRolesRow, error)
+	ListTenantInvitations(ctx context.Context, arg ListTenantInvitationsParams) ([]TenantInvitation, error)
+	ListTenantSnapshotIncrements(ctx context.Context, arg ListTenantSnapshotIncrementsParams) ([]TenantIntegrationReceipt, error)
 	ListTenantWorkloads(ctx context.Context, arg ListTenantWorkloadsParams) ([]ListTenantWorkloadsRow, error)
+	ListWorkloadTargetRegistrations(ctx context.Context) ([]WorkloadTargetRegistration, error)
 	LockActiveRefreshFamily(ctx context.Context, arg LockActiveRefreshFamilyParams) (LockActiveRefreshFamilyRow, error)
 	LockActiveRefreshToken(ctx context.Context, arg LockActiveRefreshTokenParams) (LockActiveRefreshTokenRow, error)
 	LockActiveTargetGrant(ctx context.Context, arg LockActiveTargetGrantParams) (LockActiveTargetGrantRow, error)
+	LockCoreBootstrapJob(ctx context.Context, arg LockCoreBootstrapJobParams) (LockCoreBootstrapJobRow, error)
+	LockCoreBootstrapWorkerPrincipal(ctx context.Context, arg LockCoreBootstrapWorkerPrincipalParams) (uuid.UUID, error)
+	LockCoreBrokerAdministration(ctx context.Context) error
+	LockCoreBrokerAuthority(ctx context.Context) error
+	LockCoreDLQHumanAuthority(ctx context.Context, arg LockCoreDLQHumanAuthorityParams) (uuid.UUID, error)
+	LockCoreProjectionPipeline(ctx context.Context, arg LockCoreProjectionPipelineParams) (CoreLifecyclePipeline, error)
+	LockCoreSnapshotRebuild(ctx context.Context, arg LockCoreSnapshotRebuildParams) (LockCoreSnapshotRebuildRow, error)
+	LockFirstAdministrator(ctx context.Context, arg LockFirstAdministratorParams) error
+	LockInvitationPassword(ctx context.Context, arg LockInvitationPasswordParams) (LockInvitationPasswordRow, error)
+	LockInvitationPlatformActor(ctx context.Context, arg LockInvitationPlatformActorParams) (LockInvitationPlatformActorRow, error)
+	LockInvitationTenantActor(ctx context.Context, arg LockInvitationTenantActorParams) (LockInvitationTenantActorRow, error)
 	LockLogoutSession(ctx context.Context, arg LockLogoutSessionParams) (LockLogoutSessionRow, error)
 	LockOIDCLinkAuthentication(ctx context.Context, arg LockOIDCLinkAuthenticationParams) (pgtype.Timestamptz, error)
 	LockOIDCLoginAuthentication(ctx context.Context, arg LockOIDCLoginAuthenticationParams) (LockOIDCLoginAuthenticationRow, error)
 	LockPasswordAction(ctx context.Context, arg LockPasswordActionParams) (LockPasswordActionRow, error)
 	LockPasswordActionPrincipal(ctx context.Context, arg LockPasswordActionPrincipalParams) error
 	LockPasswordAuthenticationIdempotencyKey(ctx context.Context, arg LockPasswordAuthenticationIdempotencyKeyParams) error
+	LockPlatformAdministrator(ctx context.Context) error
+	LockPlatformIdentityLinkAuthentication(ctx context.Context, arg LockPlatformIdentityLinkAuthenticationParams) (pgtype.Timestamptz, error)
+	LockPlatformPassword(ctx context.Context, arg LockPlatformPasswordParams) (LockPlatformPasswordRow, error)
+	LockPlatformRefreshSession(ctx context.Context, arg LockPlatformRefreshSessionParams) (LockPlatformRefreshSessionRow, error)
 	// The runtime role intentionally has SELECT-only access to lifecycle projections.
 	// Lock mutable authentication rows while re-reading lifecycle in this transaction;
 	// do not broaden runtime privileges merely to obtain a row lock on the projection.
@@ -97,30 +291,83 @@ type Querier interface {
 	LockSessionContinuity(ctx context.Context, arg LockSessionContinuityParams) error
 	LockTenantAdministrationGuard(ctx context.Context, arg LockTenantAdministrationGuardParams) error
 	LockTenantAuthorizationMembership(ctx context.Context, arg LockTenantAuthorizationMembershipParams) (LockTenantAuthorizationMembershipRow, error)
+	LockTenantLifecyclePipeline(ctx context.Context, arg LockTenantLifecyclePipelineParams) (TenantLifecyclePipeline, error)
 	LockTenantMutationResult(ctx context.Context, arg LockTenantMutationResultParams) error
-	// tenant_lifecycle_projections is a read-only projection for the IAM runtime.
+	LockTenantSnapshot(ctx context.Context, arg LockTenantSnapshotParams) (TenantSnapshotRebuild, error)
+	// current_tenant_lifecycle is a read-only projection for the IAM runtime.
 	LockTenantSwitchBoundary(ctx context.Context, arg LockTenantSwitchBoundaryParams) (LockTenantSwitchBoundaryRow, error)
 	LockWorkloadBootstrap(ctx context.Context, arg LockWorkloadBootstrapParams) error
+	LockWorkloadRegistryInstallation(ctx context.Context) error
 	LookupAPIKeyAuthorization(ctx context.Context, arg LookupAPIKeyAuthorizationParams) (LookupAPIKeyAuthorizationRow, error)
 	LookupAPIKeyCredential(ctx context.Context, arg LookupAPIKeyCredentialParams) (LookupAPIKeyCredentialRow, error)
 	LookupAuthorization(ctx context.Context, arg LookupAuthorizationParams) (LookupAuthorizationRow, error)
+	LookupFirstAdministratorCandidate(ctx context.Context, arg LookupFirstAdministratorCandidateParams) (LookupFirstAdministratorCandidateRow, error)
 	LookupLogoutSession(ctx context.Context, arg LookupLogoutSessionParams) (LookupLogoutSessionRow, error)
 	LookupOIDCIdentityOwner(ctx context.Context, arg LookupOIDCIdentityOwnerParams) (uuid.UUID, error)
 	LookupOIDCLogin(ctx context.Context, arg LookupOIDCLoginParams) (LookupOIDCLoginRow, error)
 	LookupOIDCReauthentication(ctx context.Context, arg LookupOIDCReauthenticationParams) (LookupOIDCReauthenticationRow, error)
 	LookupPasswordActionTarget(ctx context.Context, arg LookupPasswordActionTargetParams) (LookupPasswordActionTargetRow, error)
 	LookupPasswordLogin(ctx context.Context, arg LookupPasswordLoginParams) (LookupPasswordLoginRow, error)
+	LookupPlatformAuthorization(ctx context.Context, arg LookupPlatformAuthorizationParams) (LookupPlatformAuthorizationRow, error)
+	// The global operation identity is used only by the separately authorized
+	// Platform entry. All subsequent locks and relations carry its stored Tenant.
+	LookupPlatformCoreBootstrapTenant(ctx context.Context, arg LookupPlatformCoreBootstrapTenantParams) (uuid.UUID, error)
+	LookupPlatformOIDC(ctx context.Context, arg LookupPlatformOIDCParams) (LookupPlatformOIDCRow, error)
 	LookupRefreshSession(ctx context.Context, arg LookupRefreshSessionParams) (LookupRefreshSessionRow, error)
 	LookupTenantSwitch(ctx context.Context, arg LookupTenantSwitchParams) (LookupTenantSwitchRow, error)
 	LookupVerifiedEmailOwner(ctx context.Context, arg LookupVerifiedEmailOwnerParams) (uuid.UUID, error)
+	MarkCoreBootstrapInvitationAttention(ctx context.Context, arg MarkCoreBootstrapInvitationAttentionParams) (int64, error)
+	MarkCoreBootstrapWaiting(ctx context.Context, arg MarkCoreBootstrapWaitingParams) (int64, error)
+	MarkCoreSnapshotActivated(ctx context.Context, arg MarkCoreSnapshotActivatedParams) error
 	MarkPasswordActionNotificationAttentionRequired(ctx context.Context, arg MarkPasswordActionNotificationAttentionRequiredParams) (int64, error)
 	MarkPasswordActionNotificationDelivered(ctx context.Context, arg MarkPasswordActionNotificationDeliveredParams) (int64, error)
+	MarkTenantSnapshotActivated(ctx context.Context, arg MarkTenantSnapshotActivatedParams) error
+	ObserveCoreBootstrapQueue(ctx context.Context, arg ObserveCoreBootstrapQueueParams) (ObserveCoreBootstrapQueueRow, error)
+	PlatformBootstrapIdentityAvailable(ctx context.Context, arg PlatformBootstrapIdentityAvailableParams) (bool, error)
+	PlatformRoleReferenced(ctx context.Context, arg PlatformRoleReferencedParams) (bool, error)
+	ReadCoreBootstrapBrokerAuthority(ctx context.Context, arg ReadCoreBootstrapBrokerAuthorityParams) (TenantBrokerAuthorityReceipt, error)
+	ReadCoreBootstrapInvitation(ctx context.Context, arg ReadCoreBootstrapInvitationParams) (TenantInvitation, error)
+	ReadCoreBrokerAdministrationReceipt(ctx context.Context, arg ReadCoreBrokerAdministrationReceiptParams) (ReadCoreBrokerAdministrationReceiptRow, error)
+	ReadCoreBrokerAuthorityReceipt(ctx context.Context, arg ReadCoreBrokerAuthorityReceiptParams) (TenantBrokerAuthorityReceipt, error)
+	ReadCoreBrokerDLQPosition(ctx context.Context, arg ReadCoreBrokerDLQPositionParams) (CoreBrokerDlq, error)
+	ReadCoreBrokerEventAuthority(ctx context.Context, arg ReadCoreBrokerEventAuthorityParams) (TenantBrokerAuthorityReceipt, error)
+	ReadCoreBrokerProvisionedPrincipal(ctx context.Context, arg ReadCoreBrokerProvisionedPrincipalParams) (uuid.UUID, error)
+	ReadCoreBrokerRegisteredBinding(ctx context.Context, arg ReadCoreBrokerRegisteredBindingParams) (CoreBrokerBinding, error)
+	ReadCoreBrokerRegisteredRoute(ctx context.Context, arg ReadCoreBrokerRegisteredRouteParams) (CoreBrokerRoute, error)
+	ReadCoreDLQContext(ctx context.Context, arg ReadCoreDLQContextParams) (CoreBrokerDlqContext, error)
+	ReadCoreDLQEntry(ctx context.Context, arg ReadCoreDLQEntryParams) (ReadCoreDLQEntryRow, error)
+	ReadCoreShadowTenant(ctx context.Context, arg ReadCoreShadowTenantParams) (ReadCoreShadowTenantRow, error)
+	ReadCoreSnapshotCut(ctx context.Context, arg ReadCoreSnapshotCutParams) (int64, error)
+	ReadCurrentCoreBrokerGrant(ctx context.Context, arg ReadCurrentCoreBrokerGrantParams) (ReadCurrentCoreBrokerGrantRow, error)
+	ReadInvitationPassword(ctx context.Context, arg ReadInvitationPasswordParams) (ReadInvitationPasswordRow, error)
+	ReadPendingCoreSnapshot(ctx context.Context, arg ReadPendingCoreSnapshotParams) (CoreLifecycleRebuild, error)
+	ReadPendingTenantSnapshot(ctx context.Context, arg ReadPendingTenantSnapshotParams) (TenantSnapshotRebuild, error)
+	ReadPlatformPassword(ctx context.Context, arg ReadPlatformPasswordParams) (ReadPlatformPasswordRow, error)
+	ReadTenantIntegrationReceipt(ctx context.Context, arg ReadTenantIntegrationReceiptParams) (TenantIntegrationReceipt, error)
+	ReadTenantLifecycleClock(ctx context.Context) (pgtype.Timestamptz, error)
+	ReadTenantLifecycleFact(ctx context.Context, arg ReadTenantLifecycleFactParams) (TenantLifecycleFact, error)
+	ReadTenantLifecycleGeneration(ctx context.Context, arg ReadTenantLifecycleGenerationParams) (TenantLifecycleGeneration, error)
+	ReadTenantLifecyclePosition(ctx context.Context, arg ReadTenantLifecyclePositionParams) (TenantIntegrationReceipt, error)
+	ReadTenantLifecycleProjection(ctx context.Context, arg ReadTenantLifecycleProjectionParams) (TenantCurrentLifecycleFact, error)
+	ReadTenantSnapshotPage(ctx context.Context, arg ReadTenantSnapshotPageParams) (TenantSnapshotPage, error)
+	ReadWorkloadAuthorityGrant(ctx context.Context, arg ReadWorkloadAuthorityGrantParams) (ReadWorkloadAuthorityGrantRow, error)
 	RecordAPIKeyUse(ctx context.Context, arg RecordAPIKeyUseParams) (uuid.UUID, error)
+	RecordCoreSnapshotPage(ctx context.Context, arg RecordCoreSnapshotPageParams) error
 	RecordPasswordLoginFailure(ctx context.Context, arg RecordPasswordLoginFailureParams) (RecordPasswordLoginFailureRow, error)
+	RecoveryCancelledBootstrapInvitation(ctx context.Context, arg RecoveryCancelledBootstrapInvitationParams) (bool, error)
+	RegisterCoreBrokerBinding(ctx context.Context, arg RegisterCoreBrokerBindingParams) error
+	RegisterCoreBrokerRoute(ctx context.Context, arg RegisterCoreBrokerRouteParams) error
+	RemovePlatformMembershipRoleBinding(ctx context.Context, arg RemovePlatformMembershipRoleBindingParams) (PlatformRoleBinding, error)
 	ReplaceActivePasswordActions(ctx context.Context, arg ReplaceActivePasswordActionsParams) ([]uuid.UUID, error)
 	ReschedulePasswordActionNotification(ctx context.Context, arg ReschedulePasswordActionNotificationParams) (int64, error)
+	ResendPlatformInvitation(ctx context.Context, arg ResendPlatformInvitationParams) (int64, error)
+	ResendTenantInvitation(ctx context.Context, arg ResendTenantInvitationParams) (int64, error)
+	ReserveBootstrapRecoveryApproval(ctx context.Context, arg ReserveBootstrapRecoveryApprovalParams) error
+	ReserveRestoreRecoveryApproval(ctx context.Context, arg ReserveRestoreRecoveryApprovalParams) error
 	ResetPasswordLoginFailures(ctx context.Context, arg ResetPasswordLoginFailuresParams) (int64, error)
 	ResolveWorkloadIdentity(ctx context.Context, arg ResolveWorkloadIdentityParams) (ResolveWorkloadIdentityRow, error)
+	ResumeReissuedCoreBootstrap(ctx context.Context, arg ResumeReissuedCoreBootstrapParams) (int64, error)
+	RetryCoreBootstrapJob(ctx context.Context, arg RetryCoreBootstrapJobParams) (int64, error)
 	RevokeAPIKey(ctx context.Context, arg RevokeAPIKeyParams) (RevokeAPIKeyRow, error)
 	RevokeActiveAPIKeysForPrincipal(ctx context.Context, arg RevokeActiveAPIKeysForPrincipalParams) ([]uuid.UUID, error)
 	RevokeActiveRefreshTokensForFamily(ctx context.Context, arg RevokeActiveRefreshTokensForFamilyParams) error
@@ -128,18 +375,50 @@ type Querier interface {
 	RevokeCurrentSessionFamilies(ctx context.Context, arg RevokeCurrentSessionFamiliesParams) error
 	RevokeCurrentSessionGrants(ctx context.Context, arg RevokeCurrentSessionGrantsParams) error
 	RevokeCurrentSessionRefreshTokens(ctx context.Context, arg RevokeCurrentSessionRefreshTokensParams) error
+	RevokePlatformFamilyTokens(ctx context.Context, arg RevokePlatformFamilyTokensParams) error
+	RevokePlatformGrantsForPrincipal(ctx context.Context, arg RevokePlatformGrantsForPrincipalParams) error
+	RevokePlatformRefreshFamiliesForPrincipal(ctx context.Context, arg RevokePlatformRefreshFamiliesForPrincipalParams) error
+	RevokePlatformRefreshFamily(ctx context.Context, arg RevokePlatformRefreshFamilyParams) (int64, error)
+	// Password reset is a global Human action. These statements run with the
+	// existing Console revocations and Credential/Audit in one local transaction.
+	// The Platform administrator guard is acquired before any Credential lock,
+	// matching BOSS login, refresh and explicit identity-link transactions.
+	RevokePlatformRefreshTokensForPrincipal(ctx context.Context, arg RevokePlatformRefreshTokensForPrincipalParams) error
+	RevokePlatformSession(ctx context.Context, arg RevokePlatformSessionParams) (int64, error)
+	RevokePlatformSessionFamilies(ctx context.Context, arg RevokePlatformSessionFamiliesParams) error
+	RevokePlatformSessionGrants(ctx context.Context, arg RevokePlatformSessionGrantsParams) error
+	RevokePlatformSessionTokens(ctx context.Context, arg RevokePlatformSessionTokensParams) error
 	RevokeRefreshFamilyForReuse(ctx context.Context, arg RevokeRefreshFamilyForReuseParams) (int64, error)
 	RevokeRefreshTokenFamiliesForPrincipal(ctx context.Context, arg RevokeRefreshTokenFamiliesForPrincipalParams) error
 	RevokeRefreshTokensForPrincipal(ctx context.Context, arg RevokeRefreshTokensForPrincipalParams) error
 	RevokeSessionGrantsForPrincipal(ctx context.Context, arg RevokeSessionGrantsForPrincipalParams) error
 	RevokeSessionsForPrincipal(ctx context.Context, arg RevokeSessionsForPrincipalParams) error
+	SaveCoreBootstrapWorkerResult(ctx context.Context, arg SaveCoreBootstrapWorkerResultParams) error
+	SaveCoreProjectionRow(ctx context.Context, arg SaveCoreProjectionRowParams) error
+	SavePlatformMutation(ctx context.Context, arg SavePlatformMutationParams) error
 	SaveTenantMutationResult(ctx context.Context, arg SaveTenantMutationResultParams) error
+	SupersedeInvitedAccountVerifications(ctx context.Context, arg SupersedeInvitedAccountVerificationsParams) error
+	SupersedeTenantBootstrap(ctx context.Context, arg SupersedeTenantBootstrapParams) (int64, error)
+	TenantAdminRecoveryLoginTarget(ctx context.Context, arg TenantAdminRecoveryLoginTargetParams) (TenantAdminRecoveryLoginTargetRow, error)
+	TenantAdminRecoveryMembership(ctx context.Context, arg TenantAdminRecoveryMembershipParams) (TenantMembership, error)
+	TenantAdminRecoveryRole(ctx context.Context, arg TenantAdminRecoveryRoleParams) (TenantRole, error)
+	TenantSnapshotCoversCurrent(ctx context.Context, arg TenantSnapshotCoversCurrentParams) (pgtype.Bool, error)
+	TenantSnapshotHighest(ctx context.Context, arg TenantSnapshotHighestParams) (int64, error)
+	TouchPlatformSession(ctx context.Context, arg TouchPlatformSessionParams) (int64, error)
+	TransitionPlatformInvitationTerminal(ctx context.Context, arg TransitionPlatformInvitationTerminalParams) (int64, error)
+	TransitionTenantInvitationTerminal(ctx context.Context, arg TransitionTenantInvitationTerminalParams) (int64, error)
+	UpdateCustomPlatformRole(ctx context.Context, arg UpdateCustomPlatformRoleParams) (int64, error)
+	UpdateCustomTenantRole(ctx context.Context, arg UpdateCustomTenantRoleParams) (int64, error)
 	UpdatePasswordCredentialForReset(ctx context.Context, arg UpdatePasswordCredentialForResetParams) (int64, error)
+	UpdatePlatformMembershipStatus(ctx context.Context, arg UpdatePlatformMembershipStatusParams) (PlatformMembership, error)
+	UpdatePlatformTargetTenantAccess(ctx context.Context, arg UpdatePlatformTargetTenantAccessParams) (TenantAccess, error)
 	UpdateSessionIdleExpiry(ctx context.Context, arg UpdateSessionIdleExpiryParams) (int64, error)
 	UpdateTenantAuthorizationAccessStatus(ctx context.Context, arg UpdateTenantAuthorizationAccessStatusParams) (UpdateTenantAuthorizationAccessStatusRow, error)
 	UpdateTenantMembershipStatus(ctx context.Context, arg UpdateTenantMembershipStatusParams) (UpdateTenantMembershipStatusRow, error)
 	UpdateTenantWorkloadBaseStatus(ctx context.Context, arg UpdateTenantWorkloadBaseStatusParams) (int64, error)
 	UpdateTenantWorkloadProfile(ctx context.Context, arg UpdateTenantWorkloadProfileParams) (UpdateTenantWorkloadProfileRow, error)
+	UpsertWorkloadTargetRegistration(ctx context.Context, arg UpsertWorkloadTargetRegistrationParams) error
+	WriteTenantLifecycleFact(ctx context.Context, arg WriteTenantLifecycleFactParams) error
 }
 
 var _ Querier = (*Queries)(nil)

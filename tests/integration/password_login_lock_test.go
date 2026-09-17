@@ -43,7 +43,7 @@ func TestPostgresConcurrentPasswordFailuresProduceOneDurableLock(t *testing.T) {
 		go func(index int, auditID uuid.UUID) {
 			defer waitGroup.Done()
 			usecase := biz.NewAuthenticationUsecase(
-				data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+				defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 				passwordHasher,
 				allowingIntegrationLoginThrottle{},
 				data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -121,7 +121,7 @@ func TestPostgresPasswordFailureAuditConflictRollsBackDurableState(t *testing.T)
 		t.Fatalf("seed conflicting Audit identity: %v", err)
 	}
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		passwordHasher,
 		allowingIntegrationLoginThrottle{},
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -171,7 +171,7 @@ func TestUnknownPasswordAccountUsesDummyArgonAndPersistsRedactedAudit(t *testing
 	now := time.Date(2026, 9, 6, 9, 30, 0, 0, time.UTC)
 	auditID := uuid.MustParse("0198f062-b76d-7301-9000-000000000011")
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		data.NewArgon2idPasswordHasher(),
 		allowingIntegrationLoginThrottle{},
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -223,7 +223,7 @@ func TestPostgresPasswordFailuresLockAfterFiveAttemptsWithAudit(t *testing.T) {
 		uuid.MustParse("0198f062-b76d-7401-9000-000000000005"),
 	}}
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		passwordHasher,
 		allowingIntegrationLoginThrottle{},
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -304,7 +304,7 @@ func TestPostgresPasswordLoginSuccessResetsDurableFailuresAtomically(t *testing.
 		uuid.MustParse("0198f062-b76d-7501-9000-000000000006"),
 	}}
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		passwordHasher,
 		allowingIntegrationLoginThrottle{},
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -392,7 +392,7 @@ func TestPostgresPasswordLoginAuditConflictRollsBackFailureResetAndSession(t *te
 		duplicateAuditID,
 	}}
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		passwordHasher,
 		allowingIntegrationLoginThrottle{},
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -499,7 +499,7 @@ func TestPasswordLoginPostgresFailurePreservesRealRedisThrottleState(t *testing.
 		duplicateAuditID,
 	}}
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		passwordHasher,
 		throttle,
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),
@@ -575,7 +575,7 @@ func TestPasswordLoginMasksDurablePostgresLockAsInvalidCredential(t *testing.T) 
 	auditID := uuid.MustParse("0198f062-b76d-7a01-9000-000000000001")
 	verifier := &recordingIntegrationPasswordVerifier{}
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(data.NewData(environment.runtimePool)),
+		defaultPolicyAuthenticationReader(data.NewData(environment.runtimePool)),
 		verifier,
 		throttle,
 		data.NewPostgresLoginUnitOfWork(data.NewData(environment.runtimePool)),

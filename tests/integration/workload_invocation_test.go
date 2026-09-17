@@ -70,7 +70,7 @@ func TestFormalWorkloadInvocation(t *testing.T) {
 			gateway.Grants = append(gateway.Grants, biz.BootstrapWorkloadGrant{ID: mustV7(t), Audience: "ani-iam", Operation: operation})
 		}
 		gateway.Grants = append(gateway.Grants, biz.BootstrapWorkloadGrant{ID: targetGrant, Audience: biz.SessionInvocationAudience, Operation: biz.SessionInvocationOperation})
-		m.Workloads = []biz.BootstrapWorkload{gateway, {PrincipalID: sessionID, BindingID: sessionBinding, Name: "wr19-session", DNSIdentity: "session.wr19.test", Grants: []biz.BootstrapWorkloadGrant{{ID: continuationGrant, Audience: "ani-iam", Operation: biz.VerifySessionContinuationRPC}, {ID: verifyGrant, Audience: "ani-iam", Operation: "/iam.v1.AuthorizationService/VerifyWorkloadInvocation"}}}}
+		m.Workloads = []biz.BootstrapWorkload{gateway, {PrincipalID: sessionID, BindingID: sessionBinding, Name: "wr19-session", DNSIdentity: "session.wr19.test", Grants: []biz.BootstrapWorkloadGrant{{ID: continuationGrant, Audience: "ani-iam", Operation: biz.VerifySessionContinuationRPC}, {ID: verifyGrant, Audience: "ani-iam", Operation: "/iam.v1.AuthorizationService/VerifyWorkloadInvocation"}, {ID: mustV7(t), Audience: biz.SessionInvocationAudience, Operation: "session.receive"}}}}
 		raw, err := json.Marshal(m)
 		if err != nil {
 			t.Fatal(err)
@@ -83,7 +83,7 @@ func TestFormalWorkloadInvocation(t *testing.T) {
 			t.Fatal(err)
 		}
 		approved := sha256.Sum256(raw)
-		command := exec.Command(binary, "provision-workloads", "--manifest", manifestPath, "--approved-manifest-sha256", hex.EncodeToString(approved[:]), "--environment", m.Environment, "--trust-domain", m.TrustDomain, "--ca-file", cfg.Server.Grpc.Tls.ClientCaFile, "--dsn-file", secretPath)
+		command := exec.Command(binary, "provision-workloads", "--registry-file", wr32RegistryPath(t), "--approved-registry-sha256", wr32Registry(t).Digest(), "--manifest", manifestPath, "--approved-manifest-sha256", hex.EncodeToString(approved[:]), "--environment", m.Environment, "--trust-domain", m.TrustDomain, "--ca-file", cfg.Server.Grpc.Tls.ClientCaFile, "--dsn-file", secretPath)
 		out, err := command.CombinedOutput()
 		if err != nil {
 			t.Fatalf("formal Workload bootstrap failed: %v", err)
@@ -111,10 +111,10 @@ func TestFormalWorkloadInvocation(t *testing.T) {
 	receiver := iamv1.NewAuthorizationServiceClient(receiverConn)
 	login := formalLogin(t, runtime, tenantA, "user@example.com", password)
 	digest := sha256.Sum256([]byte("formal IAM binding fixture; actual owner DTO covered by SDK tests and three-process chain"))
-	binding := &iamv1.InvocationBinding{Audience: biz.SessionInvocationAudience, OperationId: biz.SessionInvocationOperation, RpcMethod: biz.SessionInvocationRPC, SourceOperationId: "createInstanceExecSession", TenantId: tenantA.String(), SubjectId: actorID.String(), ResourceId: "wr19-instance", Mode: "exec", RequestSha256: digest[:], PolicyRevision: data.TargetPolicyRevision}
+	binding := &iamv1.InvocationBinding{TargetRevision: wr32Registry(t).Revision(biz.SessionInvocationAudience, biz.SessionInvocationOperation), Audience: biz.SessionInvocationAudience, OperationId: biz.SessionInvocationOperation, RpcMethod: biz.SessionInvocationRPC, SourceOperationId: "createInstanceExecSession", TenantId: tenantA.String(), SubjectId: actorID.String(), ResourceId: "wr19-instance", Mode: "exec", RequestSha256: digest[:], PolicyRevision: data.TargetPolicyRevision}
 	mintWAT := func() *iamv1.IssueWorkloadTokenResponse {
 		t.Helper()
-		r, err := runtime.auth.IssueWorkloadToken(ctx, &iamv1.IssueWorkloadTokenRequest{Audience: biz.SessionInvocationAudience, OperationId: biz.SessionInvocationOperation})
+		r, err := runtime.auth.IssueWorkloadToken(ctx, &iamv1.IssueWorkloadTokenRequest{TargetRevision: wr32Registry(t).Revision(biz.SessionInvocationAudience, biz.SessionInvocationOperation), Audience: biz.SessionInvocationAudience, OperationId: biz.SessionInvocationOperation})
 		if err != nil || r.GetWorkloadToken() == "" || r.GetPrincipalId() != gatewayID.String() {
 			t.Fatalf("formal WAT mint: %v", err)
 		}
@@ -229,6 +229,7 @@ func TestFormalWorkloadInvocation(t *testing.T) {
 			r.Binding.Mode = "vm_console"
 			r.Binding.SourceOperationId = "createInstanceConsoleSession"
 		},
+		"target revision": func(r *iamv1.VerifyWorkloadInvocationRequest) { r.Binding.TargetRevision = "stale" },
 		"policy revision": func(r *iamv1.VerifyWorkloadInvocationRequest) { r.Binding.PolicyRevision = "other" },
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -306,7 +307,7 @@ func TestFormalWorkloadInvocation(t *testing.T) {
 	t.Run("mint audit failure releases no credential", func(t *testing.T) {
 		execSQL(`CREATE FUNCTION wr19_mint_audit_fault() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action IN ('workload.token.issue','workload.delegation.issue') THEN RAISE EXCEPTION 'WR19 audit fault'; END IF; RETURN NEW; END $$; CREATE TRIGGER wr19_mint_audit_fault BEFORE INSERT ON iam_audit_events FOR EACH ROW EXECUTE FUNCTION wr19_mint_audit_fault()`)
 		defer execSQL(`DROP TRIGGER wr19_mint_audit_fault ON iam_audit_events; DROP FUNCTION wr19_mint_audit_fault()`)
-		r, err := runtime.auth.IssueWorkloadToken(ctx, &iamv1.IssueWorkloadTokenRequest{Audience: biz.SessionInvocationAudience, OperationId: biz.SessionInvocationOperation})
+		r, err := runtime.auth.IssueWorkloadToken(ctx, &iamv1.IssueWorkloadTokenRequest{TargetRevision: wr32Registry(t).Revision(biz.SessionInvocationAudience, biz.SessionInvocationOperation), Audience: biz.SessionInvocationAudience, OperationId: biz.SessionInvocationOperation})
 		if status.Code(err) != codes.Unavailable || r.GetWorkloadToken() != "" {
 			t.Fatal("audit failure released WAT")
 		}
@@ -382,8 +383,8 @@ func runWorkloadExample(t *testing.T, runtime *formalIAM, credential, environmen
 		t.Fatal(err)
 	}
 	address := reserveIAMProcessLoopbackAddress(t)
-	receiverConfig := write("example-receiver.json", map[string]any{"iam": clientConfig("session-client"), "inventory_file": inventory, "listen_address": address, "server_tls": tlsFiles("example-server")})
-	callerConfig := write("example-caller.json", map[string]any{"iam": clientConfig("gateway-client"), "inventory_file": inventory, "target_address": address, "target_server_name": "session.wr19.test", "credential_file": secret, "request_file": request})
+	receiverConfig := write("example-receiver.json", map[string]any{"registry_file": wr32RegistryPath(t), "registry_sha256": wr32Registry(t).Digest(), "iam": clientConfig("session-client"), "inventory_file": inventory, "listen_address": address, "server_tls": tlsFiles("example-server")})
+	callerConfig := write("example-caller.json", map[string]any{"registry_file": wr32RegistryPath(t), "registry_sha256": wr32Registry(t).Digest(), "iam": clientConfig("gateway-client"), "inventory_file": inventory, "target_address": address, "target_server_name": "session.wr19.test", "credential_file": secret, "request_file": request})
 	log, err := os.OpenFile(filepath.Join(directory, "example-receiver.log"), os.O_CREATE|os.O_WRONLY, 0o600)
 	if err != nil {
 		t.Fatal(err)

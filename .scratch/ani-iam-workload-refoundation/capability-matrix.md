@@ -14,7 +14,7 @@
 | C06 | 身份管理 / IAM | TenantAccess、成员状态、Role/Binding、Invitation、Tenant/Platform admin；邀请验证后才建关系；最后管理员保护、已接受 RestoreTenantAdmin 与 Recovery Bootstrap 分别审批/重认证/审计，不把已有 Tenant 的管理员恢复伪装成重新 Bootstrap | WR-22、WR-23 | not_verified |
 | C07 | Tenant Workload/API Key / IAM、Envoy | 不复制 Human 权限；固定 owner Tenant/单一当前 Membership；Key 一次揭示、撤销/过期、权限变更生效、跨 Tenant 拒绝 | WR-21、WR-24 | not_verified |
 | C08 | Platform Workload/S2S / IAM、真实 caller/receiver | 可信初始身份、独立 Binding/Grant、无虚拟 Membership；WAT audience/operation/TTL/peer、撤销轮换；direct caller 与 subject 分开、委托不能扩权；首条 Gateway→Session | WR-19、WR-24 | not_verified |
-| C09 | Tenant 开通与生命周期 / Core、IAM、NATS | Core Tenant/Quota/outbox 本地原子；IAM durable Bootstrap、已验证管理员及未知邮箱邀请；生命周期版本、独立 heartbeat/watermark、gap/Snapshot、重复乱序/重启/DLQ；资源端权威 guard；强制启用投影前满足 ADR-0004 的 24h shadow/p99≤5s/无未解决gap/一致性/full rebuild | WR-23 | not_verified |
+| C09 | Tenant 开通与生命周期 / Governance、IAM、NATS | Governance Tenant/operation/audit/outbox 本地原子，无套餐/Quota/密码前置；IAM durable Bootstrap、独立邀请/邮箱验证激活/接受及管理员关系；生命周期版本、独立 heartbeat/watermark、gap/Snapshot、重复乱序/重启/DLQ；资源端权威 guard；强制启用前真实 24h shadow/p99≤5s/无未解释gap及授权差异/一致性/full rebuild | WR-33；WR-23 为历史固定组合证据 | not_verified |
 | C10 | 通知业务链 / IAM、Notification | PasswordAction/Invitation 与 outbox/Audit 同事务；真实 dispatcher、Notification 持久接受、隔离 SMTP sink；响应丢失重放去重；投递与动作消费分别确认 | WR-20、WR-22、WR-23 | not_verified |
 | C11 | 安全审计 / IAM | 变更与 Audit 原子回滚、append-only/redaction/查询隔离；List/Get 与至少180天已接受语义；不把普通成功资源访问变为 IAM 领域事件 | WR-18、WR-22、WR-24 | not_verified |
 | C12 | 重试、并发与恢复 / 各业务 owner | 每个接口冻结 retry 语义；响应丢失、重复、版本冲突、进程重启、依赖中断；相称的定向 race/并发；无 Secret 重放泄露、无双写或旧 fallback | WR-17–24 | not_verified |
@@ -23,7 +23,7 @@
 
 C09 的投影正确性与强制启用分开记录：保留 ADR-0004 的 10s heartbeat、30s stale 和 24h shadow exit；若尚在已允许的 shadow 模式，投影强制拒绝必须记 not_verified，C09 和 M1 不能因此整体记 pass。WR-17 明确目标测试模式及其必需证据，M1 不用 fixture 或时间归一化冒充真实传播/观察证据。
 
-WR-17 的[逐能力/RPC 冻结结果](evidence/17-freeze-api-replacement-contracts/rpc-matrix.md)细化目标 endpoint/operation 与 source consumer：旧能力 → 目标接口 → 保留/有意改变/退役 → 成功/拒绝/故障/恢复用例。该冻结前产品基线的 69 个声明中有 29 个 handler，其中 11 个被正式入口阻断，管理主体曾信任请求头。WR-18 已修复其有限范围内的入口和管理主体校验，27 个交付 RPC 经正式进程验证可达，42 个后续声明维持明确拒绝。Get/UpdateTenantAccess 所需 Platform Human 权限继续归 WR-22，当前明确拒绝且不算已交付。不得以旧 Auth 的 bug 或旧 Proto 的全量字节兼容作为目标正确性标准；也不得只跑一个成功登录就通过整个矩阵。
+历史基础记录（以下 endpoint 交付状态固定在 WR18 收尾，后续状态查事项图）：WR-17 的[逐能力/RPC 冻结结果](evidence/17-freeze-api-replacement-contracts/rpc-matrix.md)细化目标 endpoint/operation 与 source consumer：旧能力 → 目标接口 → 保留/有意改变/退役 → 成功/拒绝/故障/恢复用例。该冻结前产品基线的 69 个声明中有 29 个 handler，其中 11 个被正式入口阻断，管理主体曾信任请求头。WR-18 已修复其有限范围内的入口和管理主体校验，27 个交付 RPC 经正式进程验证可达，42 个后续声明维持明确拒绝。Get/UpdateTenantAccess 所需 Platform Human 权限继续归 WR-22，当前明确拒绝且不算已交付。不得以旧 Auth 的 bug 或旧 Proto 的全量字节兼容作为目标正确性标准；也不得只跑一个成功登录就通过整个矩阵。
 
 WR-18 [子集验证结果](evidence/18-refound-human-workload-runtime/README.md)：C01/C14 的单服务空库、受限 role、正式配置/mTLS/readiness/关闭与复现基础，C11/C12 的事务 Audit/持久幂等/故障恢复，以及受影响的 Human、OIDC、Session、Tenant 管理与 API Key 回归已有 pass。最后一轮真实依赖集成为 43 个顶层测试、含子用例 67 项通过，三个跨项目测试跳过。上述局部证据不涵盖各能力格的全部 owner、引导、浏览器协议或跨服务业务链，因此保留上表完整 M1 格为 not_verified，不缩减验收分母。
 
@@ -48,3 +48,11 @@ M1 的“无旧依赖”限定目标运行路径，不要求此时 R01 全仓引
 - 生产 HA、全量负载/Fuzz、跨平台管理谱系与完整长期 DR。安全初始化、当前状态机定向并发、已接受业务恢复要求不会因此被豁免。
 
 接口扩展的通过标准：一个新业务资源应主要改 owner 契约/权限声明及对应注册，不能要求各调用方另造 Token/权限模型，不能让 IAM 接管资源执行或复制 Membership。证据等级见 spec；WR-16 文档审查本身不产生功能 pass，WR-18 的实际子集证据见上文，后续完整接口验收仍按对应事项进行。
+
+2026-09-13 D11 将上述要求具体化为 [WR32](issues/32-stabilize-workload-integration.md) 的有限门禁：沿用现有同步安全机制接入一个新名称的正式 caller/receiver，仅更改注册、精确 Grant 与 owner adapter，IAM 手写业务代码、schema 和通用 SDK 均无变化；同时重验既有真实 owner 链。该门禁归 C08/C13/C14 的可复用性，当前 `not_verified`。参考 owner 仅证明接入机制，不替代业务 owner 验收；不将新 Network/Compute 产品实现加入本票。C01–C14 原分母保持，应用/IdP 扩展按 D12 延期。
+
+## API 授权声明与切换核对入口
+
+职责、唯一声明来源和逐接口核对字段遵循 [API 授权声明规范](../../docs/api-authorization-contract.md)。后续负责事项在新的 evidence 中展开旧接口到目标 operation、权限与角色映射、真实 caller/owner、资源条件和验证证据，并从本矩阵链接结果。静态声明字段尽量从固定契约提取；WR17 冻结记录保留原文，不回写历史 evidence。
+
+声明、生成、接入、成功/拒绝/故障/撤权/恢复分别记录证据。新增规范不改变上表 C01–C14 的分母、状态或 WR-21–29 实施范围。

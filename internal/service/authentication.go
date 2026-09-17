@@ -90,9 +90,11 @@ func (s *AuthenticationService) BeginOIDCIdentityLink(ctx context.Context, reque
 
 type AuthenticationService struct {
 	iamv1.UnimplementedAuthenticationServiceServer
-	authentication authenticationUsecase
-	workload       workloadInvocationUsecase
-	oidc           oidcUsecase
+	invitedAccount     *biz.InvitedAccountUsecase
+	invitationPassword *biz.InvitationPasswordUsecase
+	authentication     authenticationUsecase
+	workload           workloadInvocationUsecase
+	oidc               oidcUsecase
 }
 
 func NewAuthenticationService(authentication authenticationUsecase, oidc ...oidcUsecase) *AuthenticationService {
@@ -153,17 +155,16 @@ func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv
 	if err != nil {
 		return nil, err
 	}
+	var tenantID uuid.UUID
 	if audience == biz.AudienceBoss {
 		if request.GetBoundary() == nil || request.GetBoundary().GetPlatform() == nil {
 			return nil, invalidArgumentStatus("boundary", "BOSS audience requires a platform boundary")
 		}
-		return nil, newIAMStatus(codes.Unavailable, "IAM_UNAVAILABLE", "BOSS authentication is unavailable", map[string]string{
-			"dependency": "platform_authentication",
-		})
-	}
-	tenantID, err := tenantIDFromBoundary(request.GetBoundary())
-	if err != nil {
-		return nil, err
+	} else {
+		tenantID, err = tenantIDFromBoundary(request.GetBoundary())
+		if err != nil {
+			return nil, err
+		}
 	}
 	sourceIP, err := netip.ParseAddr(strings.TrimSpace(request.GetSourceIp()))
 	if err != nil {
@@ -185,6 +186,9 @@ func (s *AuthenticationService) PasswordLogin(ctx context.Context, request *iamv
 			CredentialKind: "password",
 			Dependency:     "authentication",
 		})
+	}
+	if audience == biz.AudienceBoss && (result.Boundary != biz.AccessBoundaryPlatform || result.Session.Audience != biz.AudienceBoss || result.TenantID != uuid.Nil) {
+		return nil, mapIAMError(biz.ErrInvalidPersistenceState, errorContext{OperationID: "passwordLogin", Dependency: "authentication"})
 	}
 	return loginResponse(result, tenantID), nil
 }
@@ -262,7 +266,10 @@ func (s *AuthenticationService) CompleteOIDCLogin(ctx context.Context, request *
 	if err != nil {
 		return nil, mapIAMError(err, errorContext{OperationID: "completeOIDCLogin", CredentialKind: "oidc", Dependency: "oidc"})
 	}
-	if result.TenantID == uuid.Nil {
+	tenantResult := result.Session.Audience == biz.AudienceConsole && result.TenantID != uuid.Nil &&
+		(result.Boundary == "" || result.Boundary == biz.AccessBoundaryTenant)
+	platformResult := result.Session.Audience == biz.AudienceBoss && result.Boundary == biz.AccessBoundaryPlatform && result.TenantID == uuid.Nil
+	if !tenantResult && !platformResult {
 		return nil, mapIAMError(biz.ErrOIDCDependency, errorContext{OperationID: "completeOIDCLogin", Dependency: "oidc"})
 	}
 	return &iamv1.CompleteOIDCLoginResponse{
@@ -281,12 +288,21 @@ func (s *AuthenticationService) BeginOIDCLogin(ctx context.Context, request *iam
 	if err != nil {
 		return nil, err
 	}
-	tenantID, err := tenantIDFromBoundary(request.GetBoundary())
-	if err != nil {
-		return nil, err
+	var tenantID uuid.UUID
+	boundary := biz.AccessBoundaryTenant
+	if audience == biz.AudienceBoss {
+		if request.GetBoundary() == nil || request.GetBoundary().GetPlatform() == nil {
+			return nil, invalidArgumentStatus("boundary", "BOSS audience requires a platform boundary")
+		}
+		boundary = biz.AccessBoundaryPlatform
+	} else {
+		tenantID, err = tenantIDFromBoundary(request.GetBoundary())
+		if err != nil {
+			return nil, err
+		}
 	}
 	result, err := s.oidc.BeginLogin(ctx, biz.BeginOIDCLoginCommand{
-		Audience: audience, TenantID: tenantID, RedirectURI: request.GetRedirectUri(), IdempotencyKey: request.GetIdempotencyKey(),
+		Boundary: boundary, Audience: audience, TenantID: tenantID, RedirectURI: request.GetRedirectUri(), IdempotencyKey: request.GetIdempotencyKey(),
 	})
 	if err != nil {
 		return nil, mapIAMError(err, errorContext{
@@ -351,6 +367,9 @@ func (s *AuthenticationService) CompletePasswordAction(ctx context.Context, requ
 
 func loginResponse(result biz.LoginResult, tenantID uuid.UUID) *iamv1.PasswordLoginResponse {
 	boundary := tenantBoundary(tenantID)
+	if result.Boundary == biz.AccessBoundaryPlatform {
+		boundary = &iamv1.Boundary{Boundary: &iamv1.Boundary_Platform{Platform: &iamv1.PlatformBoundary{}}}
+	}
 	authnMethods := authnMethodsToProto(result.Session.AuthnMethods)
 	grant := &iamv1.SessionGrantSummary{
 		GrantId:  result.Grant.ID.String(),
@@ -455,6 +474,41 @@ type errorContext struct {
 }
 
 func mapIAMError(err error, details errorContext) error {
+	if errors.Is(err, biz.ErrCoreDLQAuditUnavailable) {
+		return newIAMStatus(codes.Unavailable, "IAM_DLQ_AUDIT_UNAVAILABLE", "DLQ request outcome evidence is unavailable; inspect before retrying", map[string]string{"operation_id": details.OperationID})
+	}
+	if details.OperationID == "replayCoreIAMDLQEntry" {
+		if errors.Is(err, biz.ErrCoreProjectionInvalid) || errors.Is(err, biz.ErrCoreBootstrapInvalid) {
+			return invalidArgumentStatus("original", "Stored DLQ original is invalid")
+		}
+		if errors.Is(err, biz.ErrCoreProjectionConflict) || errors.Is(err, biz.ErrCoreBootstrapConflict) {
+			return newIAMStatus(codes.Aborted, "IAM_DLQ_EVENT_CONFLICT", "Stored DLQ event conflicts with an existing receipt", map[string]string{"resource_id": details.ResourceID})
+		}
+	}
+	if errors.Is(err, biz.ErrCoreDLQInvalid) {
+		return invalidArgumentStatus("request", "DLQ request is invalid")
+	}
+	if errors.Is(err, biz.ErrCoreDLQNotFound) {
+		return newIAMStatus(codes.NotFound, "IAM_DLQ_ENTRY_NOT_FOUND", "DLQ entry was not found", map[string]string{"resource_id": details.ResourceID})
+	}
+	if errors.Is(err, biz.ErrCoreDLQConflict) {
+		return newIAMStatus(codes.Aborted, "IAM_DLQ_CONFLICT", "DLQ original or attempt precondition does not match", map[string]string{"resource_id": details.ResourceID})
+	}
+	if errors.Is(err, biz.ErrCoreDLQProvenance) {
+		return newIAMStatus(codes.FailedPrecondition, "IAM_DLQ_PROVENANCE_UNAVAILABLE", "DLQ source attribution cannot be verified", map[string]string{"resource_id": details.ResourceID})
+	}
+	if errors.Is(err, biz.ErrCoreBootstrapInvalid) {
+		return invalidArgumentStatus("request", "Bootstrap request is invalid")
+	}
+	if errors.Is(err, biz.ErrCoreBootstrapConflict) {
+		err = biz.ErrInvitationConflict
+	}
+	if errors.Is(err, biz.ErrCoreBootstrapAuthority) || errors.Is(err, biz.ErrCoreBrokerAuthority) {
+		err = biz.ErrAuthenticationDependency
+	}
+	if errors.Is(err, biz.ErrCoreProjectionMissing) {
+		err = biz.ErrTenantLifecycleStale
+	}
 	if errors.Is(err, context.DeadlineExceeded) {
 		return newIAMStatus(codes.DeadlineExceeded, "IAM_TIMEOUT", "IAM operation timed out", map[string]string{
 			"operation_id": details.OperationID,
@@ -506,6 +560,24 @@ func mapIAMError(err error, details errorContext) error {
 			"decision_id":  "not-issued",
 		})
 	}
+	if errors.Is(err, biz.ErrInvitationDenied) || errors.Is(err, biz.ErrTenantAdministratorRequired) || errors.Is(err, biz.ErrPlatformAdministrationDenied) || errors.Is(err, biz.ErrSystemRoleImmutable) {
+		return permissionDeniedStatus(details.OperationID, details.DecisionID)
+	}
+	if errors.Is(err, biz.ErrRecoveryConflict) {
+		return newIAMStatus(codes.AlreadyExists, "RECOVERY_CONFLICT", "recovery conflicts with current approved state", map[string]string{"operation_id": details.OperationID})
+	}
+	if errors.Is(err, biz.ErrCoreBootstrapNotFound) {
+		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{"resource_type": "tenant_bootstrap_operation", "resource_id": details.ResourceID})
+	}
+	if errors.Is(err, biz.ErrRecoveryNotFound) {
+		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{"resource_type": "recovery_operation", "resource_id": details.ResourceID})
+	}
+	if errors.Is(err, biz.ErrInvitationConflict) {
+		return newIAMStatus(codes.AlreadyExists, "INVITATION_CONFLICT", "invitation intent conflicts with current state", map[string]string{"operation_id": details.OperationID})
+	}
+	if errors.Is(err, biz.ErrRoleInUse) {
+		return newIAMStatus(codes.FailedPrecondition, "ROLE_IN_USE", "role is in use", map[string]string{"role_id": details.ResourceID})
+	}
 	if errors.Is(err, biz.ErrTenantWorkloadDisabled) {
 		decisionID := details.DecisionID
 		if decisionID == "" {
@@ -528,6 +600,9 @@ func mapIAMError(err error, details errorContext) error {
 		})
 	}
 	if errors.Is(err, biz.ErrTenantAccessNotFound) {
+		if details.OperationID == "getTenantAccess" || details.OperationID == "updateTenantAccess" {
+			return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{"resource_type": "tenant_access", "resource_id": details.ResourceID})
+		}
 		return newIAMStatus(codes.Unavailable, "TENANT_IAM_NOT_READY", "tenant IAM access is not ready", map[string]string{
 			"tenant_id": details.TenantID,
 		})
@@ -538,25 +613,28 @@ func mapIAMError(err error, details errorContext) error {
 			"resource_id":   details.ResourceID,
 		})
 	}
+	if errors.Is(err, biz.ErrInvitationNotFound) {
+		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{"resource_type": "invitation", "resource_id": details.ResourceID})
+	}
 	if errors.Is(err, biz.ErrAPIKeyNotFound) {
 		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{
 			"resource_type": "api_key",
 			"resource_id":   details.ResourceID,
 		})
 	}
-	if errors.Is(err, biz.ErrMembershipNotFound) || errors.Is(err, biz.ErrRoleNotFound) || errors.Is(err, biz.ErrRoleBindingNotFound) {
+	if errors.Is(err, biz.ErrMembershipNotFound) || errors.Is(err, biz.ErrRoleNotFound) || errors.Is(err, biz.ErrRoleBindingNotFound) || errors.Is(err, biz.ErrAuditEventNotFound) {
 		return newIAMStatus(codes.NotFound, "NOT_FOUND", "IAM resource was not found", map[string]string{
 			"operation_id": details.OperationID,
 		})
 	}
-	if errors.Is(err, biz.ErrVersionConflict) || errors.Is(err, biz.ErrRoleBindingConflict) || errors.Is(err, biz.ErrTenantWorkloadConflict) || errors.Is(err, biz.ErrAPIKeyConflict) {
+	if errors.Is(err, biz.ErrVersionConflict) || errors.Is(err, biz.ErrRoleConflict) || errors.Is(err, biz.ErrRoleBindingConflict) || errors.Is(err, biz.ErrTenantWorkloadConflict) || errors.Is(err, biz.ErrAPIKeyConflict) {
 		return newIAMStatus(codes.Aborted, "VERSION_CONFLICT", "IAM resource version conflicts with current state", map[string]string{
 			"resource_id":      details.ResourceID,
 			"expected_version": "not_available",
 			"actual_version":   "not_available",
 		})
 	}
-	if errors.Is(err, biz.ErrLastTenantAdministrator) {
+	if errors.Is(err, biz.ErrLastTenantAdministrator) || errors.Is(err, biz.ErrLastPlatformAdministrator) {
 		return newIAMStatus(codes.PermissionDenied, "PERMISSION_DENIED", "access is denied", map[string]string{
 			"operation_id": details.OperationID,
 			"decision_id":  details.DecisionID,
@@ -640,6 +718,20 @@ func invalidArgumentField(err error) string {
 		return "name"
 	case errors.Is(err, biz.ErrTenantWorkloadRolesRequired):
 		return "role_ids"
+	case errors.Is(err, biz.ErrMembershipStatusInvalid):
+		return "status"
+	case errors.Is(err, biz.ErrPermissionCatalogPage):
+		return "page"
+	case errors.Is(err, biz.ErrAuditQueryInvalid):
+		return "query"
+	case errors.Is(err, biz.ErrRecoveryInvalid):
+		return "recovery"
+	case errors.Is(err, biz.ErrInvitationInvalid):
+		return "invitation"
+	case errors.Is(err, biz.ErrRoleInvalid):
+		return "role"
+	case errors.Is(err, biz.ErrTenantRoleBoundaryInvalid), errors.Is(err, biz.ErrPermissionUncatalogued):
+		return "permissions"
 	case errors.Is(err, biz.ErrAPIKeyExpiryInvalid):
 		return "expires_at"
 	default:

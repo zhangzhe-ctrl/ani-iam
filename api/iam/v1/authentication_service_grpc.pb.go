@@ -19,22 +19,25 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuthenticationService_PasswordLogin_FullMethodName            = "/iam.v1.AuthenticationService/PasswordLogin"
-	AuthenticationService_BeginOIDCLogin_FullMethodName           = "/iam.v1.AuthenticationService/BeginOIDCLogin"
-	AuthenticationService_CompleteOIDCLogin_FullMethodName        = "/iam.v1.AuthenticationService/CompleteOIDCLogin"
-	AuthenticationService_BeginOIDCIdentityLink_FullMethodName    = "/iam.v1.AuthenticationService/BeginOIDCIdentityLink"
-	AuthenticationService_CompleteOIDCIdentityLink_FullMethodName = "/iam.v1.AuthenticationService/CompleteOIDCIdentityLink"
-	AuthenticationService_RequestPasswordAction_FullMethodName    = "/iam.v1.AuthenticationService/RequestPasswordAction"
-	AuthenticationService_CompletePasswordAction_FullMethodName   = "/iam.v1.AuthenticationService/CompletePasswordAction"
-	AuthenticationService_RefreshSession_FullMethodName           = "/iam.v1.AuthenticationService/RefreshSession"
-	AuthenticationService_LogoutSession_FullMethodName            = "/iam.v1.AuthenticationService/LogoutSession"
-	AuthenticationService_SwitchTenant_FullMethodName             = "/iam.v1.AuthenticationService/SwitchTenant"
-	AuthenticationService_ListSessions_FullMethodName             = "/iam.v1.AuthenticationService/ListSessions"
-	AuthenticationService_RevokeSession_FullMethodName            = "/iam.v1.AuthenticationService/RevokeSession"
-	AuthenticationService_RevokeAllSessions_FullMethodName        = "/iam.v1.AuthenticationService/RevokeAllSessions"
-	AuthenticationService_ValidatePrincipal_FullMethodName        = "/iam.v1.AuthenticationService/ValidatePrincipal"
-	AuthenticationService_IssueWorkloadToken_FullMethodName       = "/iam.v1.AuthenticationService/IssueWorkloadToken"
-	AuthenticationService_IssueDelegation_FullMethodName          = "/iam.v1.AuthenticationService/IssueDelegation"
+	AuthenticationService_AcceptInvitationWithPassword_FullMethodName      = "/iam.v1.AuthenticationService/AcceptInvitationWithPassword"
+	AuthenticationService_RequestInvitedAccountVerification_FullMethodName = "/iam.v1.AuthenticationService/RequestInvitedAccountVerification"
+	AuthenticationService_CompleteInvitedAccount_FullMethodName            = "/iam.v1.AuthenticationService/CompleteInvitedAccount"
+	AuthenticationService_PasswordLogin_FullMethodName                     = "/iam.v1.AuthenticationService/PasswordLogin"
+	AuthenticationService_BeginOIDCLogin_FullMethodName                    = "/iam.v1.AuthenticationService/BeginOIDCLogin"
+	AuthenticationService_CompleteOIDCLogin_FullMethodName                 = "/iam.v1.AuthenticationService/CompleteOIDCLogin"
+	AuthenticationService_BeginOIDCIdentityLink_FullMethodName             = "/iam.v1.AuthenticationService/BeginOIDCIdentityLink"
+	AuthenticationService_CompleteOIDCIdentityLink_FullMethodName          = "/iam.v1.AuthenticationService/CompleteOIDCIdentityLink"
+	AuthenticationService_RequestPasswordAction_FullMethodName             = "/iam.v1.AuthenticationService/RequestPasswordAction"
+	AuthenticationService_CompletePasswordAction_FullMethodName            = "/iam.v1.AuthenticationService/CompletePasswordAction"
+	AuthenticationService_RefreshSession_FullMethodName                    = "/iam.v1.AuthenticationService/RefreshSession"
+	AuthenticationService_LogoutSession_FullMethodName                     = "/iam.v1.AuthenticationService/LogoutSession"
+	AuthenticationService_SwitchTenant_FullMethodName                      = "/iam.v1.AuthenticationService/SwitchTenant"
+	AuthenticationService_ListSessions_FullMethodName                      = "/iam.v1.AuthenticationService/ListSessions"
+	AuthenticationService_RevokeSession_FullMethodName                     = "/iam.v1.AuthenticationService/RevokeSession"
+	AuthenticationService_RevokeAllSessions_FullMethodName                 = "/iam.v1.AuthenticationService/RevokeAllSessions"
+	AuthenticationService_ValidatePrincipal_FullMethodName                 = "/iam.v1.AuthenticationService/ValidatePrincipal"
+	AuthenticationService_IssueWorkloadToken_FullMethodName                = "/iam.v1.AuthenticationService/IssueWorkloadToken"
+	AuthenticationService_IssueDelegation_FullMethodName                   = "/iam.v1.AuthenticationService/IssueDelegation"
 )
 
 // AuthenticationServiceClient is the client API for AuthenticationService service.
@@ -43,6 +46,10 @@ const (
 //
 // AuthenticationService authenticates credentials and owns Session/Grant token continuity.
 type AuthenticationServiceClient interface {
+	// Purpose-only proof returns Membership metadata, never Session or tokens.
+	AcceptInvitationWithPassword(ctx context.Context, in *AcceptInvitationWithPasswordRequest, opts ...grpc.CallOption) (*AcceptInvitationWithPasswordResponse, error)
+	RequestInvitedAccountVerification(ctx context.Context, in *RequestInvitedAccountVerificationRequest, opts ...grpc.CallOption) (*RequestInvitedAccountVerificationResponse, error)
+	CompleteInvitedAccount(ctx context.Context, in *CompleteInvitedAccountRequest, opts ...grpc.CallOption) (*CompleteInvitedAccountResponse, error)
 	PasswordLogin(ctx context.Context, in *PasswordLoginRequest, opts ...grpc.CallOption) (*PasswordLoginResponse, error)
 	BeginOIDCLogin(ctx context.Context, in *BeginOIDCLoginRequest, opts ...grpc.CallOption) (*BeginOIDCLoginResponse, error)
 	CompleteOIDCLogin(ctx context.Context, in *CompleteOIDCLoginRequest, opts ...grpc.CallOption) (*CompleteOIDCLoginResponse, error)
@@ -67,6 +74,36 @@ type authenticationServiceClient struct {
 
 func NewAuthenticationServiceClient(cc grpc.ClientConnInterface) AuthenticationServiceClient {
 	return &authenticationServiceClient{cc}
+}
+
+func (c *authenticationServiceClient) AcceptInvitationWithPassword(ctx context.Context, in *AcceptInvitationWithPasswordRequest, opts ...grpc.CallOption) (*AcceptInvitationWithPasswordResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AcceptInvitationWithPasswordResponse)
+	err := c.cc.Invoke(ctx, AuthenticationService_AcceptInvitationWithPassword_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authenticationServiceClient) RequestInvitedAccountVerification(ctx context.Context, in *RequestInvitedAccountVerificationRequest, opts ...grpc.CallOption) (*RequestInvitedAccountVerificationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RequestInvitedAccountVerificationResponse)
+	err := c.cc.Invoke(ctx, AuthenticationService_RequestInvitedAccountVerification_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authenticationServiceClient) CompleteInvitedAccount(ctx context.Context, in *CompleteInvitedAccountRequest, opts ...grpc.CallOption) (*CompleteInvitedAccountResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CompleteInvitedAccountResponse)
+	err := c.cc.Invoke(ctx, AuthenticationService_CompleteInvitedAccount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *authenticationServiceClient) PasswordLogin(ctx context.Context, in *PasswordLoginRequest, opts ...grpc.CallOption) (*PasswordLoginResponse, error) {
@@ -235,6 +272,10 @@ func (c *authenticationServiceClient) IssueDelegation(ctx context.Context, in *I
 //
 // AuthenticationService authenticates credentials and owns Session/Grant token continuity.
 type AuthenticationServiceServer interface {
+	// Purpose-only proof returns Membership metadata, never Session or tokens.
+	AcceptInvitationWithPassword(context.Context, *AcceptInvitationWithPasswordRequest) (*AcceptInvitationWithPasswordResponse, error)
+	RequestInvitedAccountVerification(context.Context, *RequestInvitedAccountVerificationRequest) (*RequestInvitedAccountVerificationResponse, error)
+	CompleteInvitedAccount(context.Context, *CompleteInvitedAccountRequest) (*CompleteInvitedAccountResponse, error)
 	PasswordLogin(context.Context, *PasswordLoginRequest) (*PasswordLoginResponse, error)
 	BeginOIDCLogin(context.Context, *BeginOIDCLoginRequest) (*BeginOIDCLoginResponse, error)
 	CompleteOIDCLogin(context.Context, *CompleteOIDCLoginRequest) (*CompleteOIDCLoginResponse, error)
@@ -261,6 +302,15 @@ type AuthenticationServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAuthenticationServiceServer struct{}
 
+func (UnimplementedAuthenticationServiceServer) AcceptInvitationWithPassword(context.Context, *AcceptInvitationWithPasswordRequest) (*AcceptInvitationWithPasswordResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AcceptInvitationWithPassword not implemented")
+}
+func (UnimplementedAuthenticationServiceServer) RequestInvitedAccountVerification(context.Context, *RequestInvitedAccountVerificationRequest) (*RequestInvitedAccountVerificationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RequestInvitedAccountVerification not implemented")
+}
+func (UnimplementedAuthenticationServiceServer) CompleteInvitedAccount(context.Context, *CompleteInvitedAccountRequest) (*CompleteInvitedAccountResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CompleteInvitedAccount not implemented")
+}
 func (UnimplementedAuthenticationServiceServer) PasswordLogin(context.Context, *PasswordLoginRequest) (*PasswordLoginResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method PasswordLogin not implemented")
 }
@@ -328,6 +378,60 @@ func RegisterAuthenticationServiceServer(s grpc.ServiceRegistrar, srv Authentica
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AuthenticationService_ServiceDesc, srv)
+}
+
+func _AuthenticationService_AcceptInvitationWithPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptInvitationWithPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationServiceServer).AcceptInvitationWithPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthenticationService_AcceptInvitationWithPassword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationServiceServer).AcceptInvitationWithPassword(ctx, req.(*AcceptInvitationWithPasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthenticationService_RequestInvitedAccountVerification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestInvitedAccountVerificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationServiceServer).RequestInvitedAccountVerification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthenticationService_RequestInvitedAccountVerification_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationServiceServer).RequestInvitedAccountVerification(ctx, req.(*RequestInvitedAccountVerificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthenticationService_CompleteInvitedAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CompleteInvitedAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthenticationServiceServer).CompleteInvitedAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthenticationService_CompleteInvitedAccount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthenticationServiceServer).CompleteInvitedAccount(ctx, req.(*CompleteInvitedAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AuthenticationService_PasswordLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -625,6 +729,18 @@ var AuthenticationService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "iam.v1.AuthenticationService",
 	HandlerType: (*AuthenticationServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "AcceptInvitationWithPassword",
+			Handler:    _AuthenticationService_AcceptInvitationWithPassword_Handler,
+		},
+		{
+			MethodName: "RequestInvitedAccountVerification",
+			Handler:    _AuthenticationService_RequestInvitedAccountVerification_Handler,
+		},
+		{
+			MethodName: "CompleteInvitedAccount",
+			Handler:    _AuthenticationService_CompleteInvitedAccount_Handler,
+		},
 		{
 			MethodName: "PasswordLogin",
 			Handler:    _AuthenticationService_PasswordLogin_Handler,

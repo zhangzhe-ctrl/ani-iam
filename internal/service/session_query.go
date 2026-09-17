@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 
 	iamv1 "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
@@ -41,7 +42,16 @@ func (s *AuthenticationService) ListSessions(ctx context.Context, r *iamv1.ListS
 			}
 		}
 		for _, g := range item.Grants {
-			summary.Grants = append(summary.Grants, &iamv1.SessionGrantSummary{GrantId: g.Grant.ID.String(), Boundary: tenantBoundary(g.TenantID), Version: uint64(g.Grant.Version), Status: grantStatusToProto(g.Grant.Status)})
+			boundary := tenantBoundary(g.TenantID)
+			if g.Boundary == biz.AccessBoundaryPlatform {
+				if g.TenantID != uuid.Nil {
+					return nil, mapIAMError(biz.ErrInvalidPersistenceState, errorContext{OperationID: "listSessions"})
+				}
+				boundary = platformBoundaryDTO()
+			} else if (g.Boundary != "" && g.Boundary != biz.AccessBoundaryTenant) || g.TenantID == uuid.Nil {
+				return nil, mapIAMError(biz.ErrInvalidPersistenceState, errorContext{OperationID: "listSessions"})
+			}
+			summary.Grants = append(summary.Grants, &iamv1.SessionGrantSummary{GrantId: g.Grant.ID.String(), Boundary: boundary, Version: uint64(g.Grant.Version), Status: grantStatusToProto(g.Grant.Status)})
 		}
 		result.Sessions = append(result.Sessions, summary)
 	}

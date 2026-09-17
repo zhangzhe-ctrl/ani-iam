@@ -38,10 +38,17 @@ type tenantAuthorizationMutations interface {
 // the composition-root wiring is explicitly authorized.
 type IAMAdminService struct {
 	iamv1.UnimplementedIAMAdminServiceServer
-	reader          biz.TenantAdminReader
-	mutations       tenantAuthorizationMutations
-	tenantWorkloads biz.TenantWorkloadReader
-	authorization   *AdminAuthorization
+	reader                biz.TenantAdminReader
+	mutations             tenantAuthorizationMutations
+	tenantWorkloads       biz.TenantWorkloadReader
+	authorization         *AdminAuthorization
+	invitations           *biz.TenantInvitationUsecase
+	invitationAcceptance  *biz.InvitationAcceptanceUsecase
+	roles                 tenantRoleMutations
+	catalog               *biz.PermissionCatalogReader
+	audit                 *biz.AuditQueryUsecase
+	platform              *biz.PlatformAdministrationUsecase
+	platformAuthorization *biz.PlatformAuthorizationUsecase
 }
 
 func NewIAMAdminService() *IAMAdminService {
@@ -308,11 +315,11 @@ func (s *IAMAdminService) RevokeAPIKey(ctx context.Context, request *iamv1.Revok
 }
 
 func (s *IAMAdminService) GetTenantAccess(ctx context.Context, request *iamv1.GetTenantAccessRequest) (*iamv1.GetTenantAccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "Platform Human administration requires WR-22")
+	return s.getPlatformTargetTenantAccess(ctx, request)
 }
 
 func (s *IAMAdminService) UpdateTenantAccess(ctx context.Context, request *iamv1.UpdateTenantAccessRequest) (*iamv1.UpdateTenantAccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "Platform Human administration requires WR-22")
+	return s.updatePlatformTenantAccess(ctx, request)
 }
 
 func (s *IAMAdminService) GetTenantMembership(ctx context.Context, request *iamv1.GetTenantMembershipRequest) (*iamv1.GetTenantMembershipResponse, error) {

@@ -50,6 +50,13 @@ func isolatedContainer(t *testing.T, kind, port string, extraPorts ...string) te
 		if req.Reuse || req.Name != "" || req.HostConfigModifier != nil || len(req.Mounts) != 0 {
 			return fmt.Errorf("unexpected shared container configuration")
 		}
+		if goal == "wr32" || goal == "wr21" || goal == "wr22" || goal == "wr23" {
+			networkName := os.Getenv(strings.ToUpper(goal) + "_DOCKER_NETWORK")
+			if networkName != "ani-iam-"+filepath.Base(runDir) {
+				return fmt.Errorf("dedicated task network is required")
+			}
+			req.Networks = []string{networkName}
+		}
 		req.Name = name
 		if req.Labels == nil {
 			req.Labels = map[string]string{}
@@ -58,6 +65,31 @@ func isolatedContainer(t *testing.T, kind, port string, extraPorts ...string) te
 		req.Labels["ani.run_id"] = filepath.Base(runDir)
 		req.HostConfigModifier = func(config *dockercontainer.HostConfig) {
 			config.PublishAllPorts = false
+			if goal == "wr32" {
+				config.Resources.Memory = 512 << 20
+				config.Resources.MemorySwap = 768 << 20
+				config.Resources.NanoCPUs = 1_000_000_000
+				pids := int64(128)
+				config.Resources.PidsLimit = &pids
+			}
+			if goal == "wr23" {
+				config.Resources.Memory = 256 << 20
+				config.Resources.MemorySwap = 384 << 20
+				if os.Getenv("WR23_FORMAL_COMBINATION") == "1" {
+					switch kind {
+					case "redis", "mailpit":
+						config.Resources.Memory = 64 << 20
+					case "wr20-dex", "wr22-boss-dex":
+						config.Resources.Memory = 96 << 20
+					case "nats":
+						config.Resources.Memory = 128 << 20
+					}
+					config.Resources.MemorySwap = config.Resources.Memory + 64<<20
+				}
+				config.Resources.NanoCPUs = 500_000_000
+				pids := int64(128)
+				config.Resources.PidsLimit = &pids
+			}
 			config.PortBindings = network.PortMap{}
 			for _, exposed := range append([]string{port}, extraPorts...) {
 				config.PortBindings[network.MustParsePort(exposed)] = []network.PortBinding{{HostIP: netip.MustParseAddr("127.0.0.1"), HostPort: ""}}
@@ -173,6 +205,10 @@ func recordFixtureSecrets(t *testing.T, values map[string]string) {
 func isolatedRun(t *testing.T) (string, string) {
 	t.Helper()
 	for _, entry := range []struct{ variable, prefix, goal string }{
+		{"WR32_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr32-", "wr32"},
+		{"WR23_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr23-", "wr23"},
+		{"WR22_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr22-", "wr22"},
+		{"WR21_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr21-", "wr21"},
 		{"WR20_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr20-", "wr20"},
 		{"WR19_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr19-", "wr19"},
 		{"WR18_RUN_DIR", "/home/ubuntu/workspace/ani-iam-runs/wr17-18-", "wr17-18"},

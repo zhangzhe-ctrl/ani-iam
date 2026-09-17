@@ -27,7 +27,7 @@
     }
   },
   "artifacts": {
-    "iam_descriptor": "851ca8f0c43b150235db7a75c065756ac03644c5836d1d7fd0e04cf0f7322e0e",
+    "iam_descriptor": "c377dc90dbdf9c49bf34720e0e5013b3cb5b8f30ff6f883b7ce6ea65dc6a5241",
     "core_descriptor": "7dd40f9053b7c1c0c8905decab0f81b07173d0b25651113147bde9a5370d352a"
   },
   "fixtures": {
@@ -37,7 +37,7 @@
     "core_tenant_lifecycle_heartbeat.v1.json": "05b9715e8262d3a547605bce9312bb6e26b4ccc859ed2e0c18158042395acc00",
     "core_tenant_lifecycle_snapshot_page.v1.json": "539a59fcc0691bbdefa13ec5c85081738436b118f6221edd9f026cc816903546",
     "iam_check_permission.v1.json": "92c1d517ff3c49532ca08e0f6b24eace2569a8fdb702af8d1d134bc7e846c4c2",
-    "iam_error_contract.v1.json": "c7a488d5ce5d409d1de25845dd3dc3af7a32c1ce853f81c490d541b8a4448e3c",
+    "iam_error_contract.v1.json": "7f96c9d0e26ac9dd0c437d9ac5c6641ca47c6ea150cc06d9684dda18eeace2b6",
     "iam_password_login.v1.json": "cb4df637172faae8551d42abd55b9167195d9a21693080a06e713ae9c6483cc4"
   },
   "workload_refoundation": {
@@ -60,5 +60,23 @@
   "wr20_delivery": {
     "api_version": "v0.0.0-20260911071802-b9fde01ae781",
     "sdk_version": "v0.0.0-20260911071951-e9f657f20b69"
+  },
+  "wr21": {
+    "iam_baseline": "6e9688bb002d1916bc894fd281ba1974f57b7eaa",
+    "ani_baseline": "a021d987ffacfe7f9d3e065fdad0dc9d795f8bd9",
+    "registry_sha256": "fb0971c5b6f641b5d3b653bd446bbae11926a417c2dcc4f515ea5fd44b4ef2ce",
+    "policy_revision": "sha256:5ac56b8fd830278528aa7f9f6cd62142b50469566049f2787701f716316a2e55"
+  },
+  "wr22": {
+    "source_registry_sha256": "fb0971c5b6f641b5d3b653bd446bbae11926a417c2dcc4f515ea5fd44b4ef2ce",
+    "registry_sha256": "c33ef3de198f1a64684804ea57dbbd204c695a8ba4ff5cda17d4e97776364056",
+    "policy_revision": "sha256:6ff54ec9f59f64b12a235e6415708fd443fa79b1db904dc416eb2e178abe0567"
+  },
+  "wr23": {
+    "registry_sha256": "02b9867b71c4d3157a3811c70d83c8cee329bbebc1d2240beab48b9f58b36f7e",
+    "policy_revision": "sha256:02af7fa3157d1aa7fb1e10899003bdf33b73108895fcd8109249af4210880968",
+    "core_owner_openapi_sha256": "2db3213c1b0bbe0e2727aade30394b1fd78d82e3364a300c4b018ce2db1c1ae0",
+    "wr22_registry_sha256": "c33ef3de198f1a64684804ea57dbbd204c695a8ba4ff5cda17d4e97776364056",
+    "published": false
   }
 }

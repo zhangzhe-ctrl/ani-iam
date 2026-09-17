@@ -18,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/data"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 )
 
 type bootstrapFiles struct {
@@ -34,11 +35,17 @@ func runWorkloadProvisioner(ctx context.Context, args []string, out io.Writer) e
 	env := fs.String("environment", "", "owner-controlled environment")
 	trust := fs.String("trust-domain", "", "owner-controlled trust domain")
 	ca := fs.String("ca-file", "", "owner-controlled trust anchor certificate")
+	registryFile := fs.String("registry-file", "", "reviewed target declarations")
+	registrySHA := fs.String("approved-registry-sha256", "", "independently reviewed target SHA256")
 	dsnFile := fs.String("dsn-file", "", "private provisioner credential file")
 	if fs.Parse(args) != nil || fs.NArg() != 0 {
 		return biz.ErrWorkloadBootstrapInvalid
 	}
-	inputs, err := readBootstrapFiles(*manifest, *approved, *env, *trust, *ca, *dsnFile, time.Now())
+	registry, err := workloadregistry.Load(*registryFile, *registrySHA)
+	if err != nil {
+		return biz.ErrWorkloadBootstrapInvalid
+	}
+	inputs, err := readBootstrapFiles(*manifest, *approved, *env, *trust, *ca, *dsnFile, time.Now(), registry)
 	if err != nil {
 		return err
 	}
@@ -57,7 +64,7 @@ func runWorkloadProvisioner(ctx context.Context, args []string, out io.Writer) e
 	defer pool.Close()
 	operationCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	u := biz.NewWorkloadBootstrap(data.NewWorkloadBootstrapRepository(data.NewData(pool)), data.NewSystemClock())
+	u := biz.NewWorkloadBootstrap(data.NewWorkloadBootstrapRepository(data.NewData(pool), registry), data.NewSystemClock(), registry)
 	receipt, err := u.Provision(operationCtx, inputs.owner, inputs.manifest)
 	if err != nil {
 		return err
@@ -68,7 +75,7 @@ func runWorkloadProvisioner(ctx context.Context, args []string, out io.Writer) e
 	return nil
 }
 
-func readBootstrapFiles(manifestPath, approved, env, trust, caPath, dsnPath string, now time.Time) (bootstrapFiles, error) {
+func readBootstrapFiles(manifestPath, approved, env, trust, caPath, dsnPath string, now time.Time, registries ...*workloadregistry.Registry) (bootstrapFiles, error) {
 	invalid := func() (bootstrapFiles, error) { return bootstrapFiles{}, biz.ErrWorkloadBootstrapInvalid }
 	if len(approved) != 64 || approved != strings.ToLower(approved) {
 		return invalid()
@@ -105,7 +112,7 @@ func readBootstrapFiles(manifestPath, approved, env, trust, caPath, dsnPath stri
 	}
 	caDigest := sha256.Sum256(cert.Raw)
 	owner := biz.WorkloadBootstrapOwner{Environment: env, TrustDomain: trust, CASHA256: hex.EncodeToString(caDigest[:])}
-	if _, err = biz.ValidateWorkloadBootstrap(owner, manifest, now); err != nil {
+	if _, err = biz.ValidateWorkloadBootstrap(owner, manifest, now, registries...); err != nil {
 		return bootstrapFiles{}, err
 	}
 	secret, err := readBootstrapFile(dsnPath, 16<<10, true)

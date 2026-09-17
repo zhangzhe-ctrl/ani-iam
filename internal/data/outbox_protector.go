@@ -15,15 +15,16 @@ import (
 var errOutboxProtection = errors.New("notification outbox protection is unavailable or invalid")
 
 type OutboxProtector struct {
-	active string
-	keys   map[string]cipher.AEAD
+	active           string
+	keys             map[string]cipher.AEAD
+	verificationKeys map[string][]byte
 }
 
 func NewOutboxProtector(active string, keys map[string][]byte) (*OutboxProtector, error) {
 	if active == "" || len(keys) == 0 {
 		return nil, errOutboxProtection
 	}
-	p := &OutboxProtector{active: active, keys: make(map[string]cipher.AEAD, len(keys))}
+	p := &OutboxProtector{active: active, keys: make(map[string]cipher.AEAD, len(keys)), verificationKeys: make(map[string][]byte, len(keys))}
 	for version, key := range keys {
 		if version == "" || len(version) > 64 || strings.ContainsAny(version, "| \r\n\t") || len(key) != 32 {
 			return nil, errOutboxProtection
@@ -37,6 +38,7 @@ func NewOutboxProtector(active string, keys map[string][]byte) (*OutboxProtector
 			return nil, errOutboxProtection
 		}
 		p.keys[version] = aead
+		p.verificationKeys[version] = deriveInvitedAccountKey(key)
 	}
 	if p.keys[active] == nil {
 		return nil, errOutboxProtection

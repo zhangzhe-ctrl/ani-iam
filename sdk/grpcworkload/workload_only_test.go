@@ -28,7 +28,7 @@ func TestWorkloadOnlyCallerRemovesAmbientCredentialsAndNeverRetries(t *testing.T
 			t.Fatal("mint unbounded")
 		}
 		return "only-workload", nil
-	})
+	}, registryFixture(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,8 +69,8 @@ func (f *workloadVerifyFake) VerifyWorkloadCaller(_ context.Context, r *iamv1.Ve
 }
 func TestWorkloadOnlyReceiverRequiresOnlineExactProofAndSanitizesContext(t *testing.T) {
 	fake := &workloadVerifyFake{}
-	c := &WorkloadOnlyClient{client: &Client{authorization: fake, cfg: ClientConfig{Environment: "wr20", TrustDomain: "wr20.test", Timeout: time.Second}}}
-	target, _ := NotificationTarget("/notification.v1.NotificationService/SubmitNotification")
+	c := &WorkloadOnlyClient{client: &Client{authorization: fake, cfg: ClientConfig{Registry: registryFixture(t), Environment: "wr20", TrustDomain: "wr20.test", Timeout: time.Second}}}
+	target, _ := NotificationTarget("/notification.v1.NotificationService/SubmitNotification", registryFixture(t))
 	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(workloadMetadata, "test-wat", "trace-id", "safe"))
 	if _, _, err := c.VerifyCaller(ctx, target); status.Code(err) != codes.Unauthenticated || fake.calls != 0 {
 		t.Fatal("TLS missing admitted")

@@ -2,10 +2,14 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"github.com/google/uuid"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
+	"os"
 	"testing"
 	"time"
 
@@ -17,7 +21,7 @@ import (
 )
 
 func TestGatewayWorkloadIdentityMiddlewareAuthorizesConfiguredDNSNamePerRPC(t *testing.T) {
-	authorize, err := NewWorkloadIdentityMiddleware("test", "iam.test", biz.NewWorkloadAuthentication(workloadTestReader{}), biz.NewWorkloadAuthorization(workloadTestReader{}))
+	authorize, err := NewWorkloadIdentityMiddleware("test", "iam.test", biz.NewWorkloadAuthentication(workloadTestReader{}), biz.NewWorkloadAuthorization(workloadTestReader{}, serverRegistryFixture(t)))
 	if err != nil {
 		t.Fatalf("NewGatewayWorkloadIdentityMiddleware() error = %v", err)
 	}
@@ -74,15 +78,15 @@ func TestGatewayWorkloadIdentityMiddlewareAuthorizesConfiguredDNSNamePerRPC(t *t
 			name:      "gateway can get tenant access",
 			dnsNames:  []string{"ani-gateway"},
 			operation: "/iam.v1.IAMAdminService/GetTenantAccess",
-			wantCode:  codes.PermissionDenied,
-			called:    false,
+			wantCode:  codes.OK,
+			called:    true,
 		},
 		{
 			name:      "gateway can update tenant access",
 			dnsNames:  []string{"ani-gateway"},
 			operation: "/iam.v1.IAMAdminService/UpdateTenantAccess",
-			wantCode:  codes.PermissionDenied,
-			called:    false,
+			wantCode:  codes.OK,
+			called:    true,
 		},
 		{
 			name:      "gateway can get tenant membership",
@@ -141,10 +145,11 @@ func TestGatewayWorkloadIdentityMiddlewareAuthorizesConfiguredDNSNamePerRPC(t *t
 			called:    true,
 		},
 		{
-			name:      "gateway cannot create a custom tenant role in DP2-09",
+			name:      "gateway can create a custom tenant role in WR22",
 			dnsNames:  []string{"ani-gateway"},
 			operation: "/iam.v1.IAMAdminService/CreateTenantRole",
-			wantCode:  codes.PermissionDenied,
+			wantCode:  codes.OK,
+			called:    true,
 		},
 	}
 
@@ -165,7 +170,7 @@ func TestGatewayWorkloadIdentityMiddlewareAuthorizesConfiguredDNSNamePerRPC(t *t
 }
 
 func TestGatewayWorkloadIdentityMiddlewareDoesNotInterceptAdminHTTP(t *testing.T) {
-	authorize, err := NewWorkloadIdentityMiddleware("test", "iam.test", biz.NewWorkloadAuthentication(workloadTestReader{}), biz.NewWorkloadAuthorization(workloadTestReader{}))
+	authorize, err := NewWorkloadIdentityMiddleware("test", "iam.test", biz.NewWorkloadAuthentication(workloadTestReader{}), biz.NewWorkloadAuthorization(workloadTestReader{}, serverRegistryFixture(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -224,4 +229,18 @@ func TestExpiredCertificateIsRejectedOnAnExistingIAMConnection(t *testing.T) {
 	if _, ok := verifiedWorkloadDNS(ctx); ok {
 		t.Fatal("expired certificate on an existing TLS connection was accepted")
 	}
+}
+
+func serverRegistryFixture(t *testing.T) *workloadregistry.Registry {
+	t.Helper()
+	raw, err := os.ReadFile("../../registrations/workload-targets.v1.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256(raw)
+	r, err := workloadregistry.Parse(raw, hex.EncodeToString(sum[:]))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r
 }

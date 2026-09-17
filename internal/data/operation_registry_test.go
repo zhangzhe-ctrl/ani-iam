@@ -1,18 +1,29 @@
 package data
 
 import (
+	"crypto/sha256"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 )
 
 func TestTargetOperationRegistryPinsWorkloadCandidateDerivedFromANI(t *testing.T) {
-	if TargetPolicyRevision != "sha256:655690090ed17bf49e0eab57baad643f90ec69ef3a412aa092fd3a24671a0e62" {
-		t.Fatalf("TargetPolicyRevision = %q", TargetPolicyRevision)
+	raw, err := os.ReadFile("../../tests/contracts/workload-operation-registry.v1.json")
+	if err != nil {
+		t.Fatal(err)
 	}
-	if TargetOperationRegistrySHA256 != "135196cdc34b858a9236ccb47ec94b918abc9dce8c6c1a1332ff9712da6fc570" {
-		t.Fatalf("TargetOperationRegistrySHA256 = %q", TargetOperationRegistrySHA256)
+	var document struct {
+		PolicyRevision string `json:"policy_revision"`
+	}
+	if err := json.Unmarshal(raw, &document); err != nil {
+		t.Fatal(err)
+	}
+	if TargetPolicyRevision != document.PolicyRevision || TargetOperationRegistrySHA256 != fmt.Sprintf("%x", sha256.Sum256(raw)) {
+		t.Fatal("generated registry differs from owner input")
 	}
 	registry, err := NewTargetOperationRegistry(TargetPolicyRevision)
 	if err != nil {

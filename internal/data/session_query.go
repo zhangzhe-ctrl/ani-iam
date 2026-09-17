@@ -40,3 +40,17 @@ func (r *postgresPasswordLoginReader) ListOwnedSessionGrants(ctx context.Context
 }
 
 var _ biz.SessionListReader = (*postgresPasswordLoginReader)(nil)
+
+func (r *postgresPasswordLoginReader) ListOwnedPlatformSessionGrants(ctx context.Context, principal, session uuid.UUID) ([]biz.SessionGrant, error) {
+	rows, err := sqlcgen.New(r.data.pool).ListOwnedPlatformSessionGrants(ctx, sqlcgen.ListOwnedPlatformSessionGrantsParams{PrincipalID: principal, SessionID: session})
+	if err != nil {
+		return nil, platformLoginPersistenceError(err)
+	}
+	result := make([]biz.SessionGrant, 0, len(rows))
+	for _, g := range rows {
+		result = append(result, biz.SessionGrant{ID: g.ID, SessionID: g.SessionID, MembershipID: g.MembershipID, Status: biz.GrantStatus(g.Status), Version: g.Version, CreatedAt: g.CreatedAt.Time, UpdatedAt: g.UpdatedAt.Time})
+	}
+	return result, nil
+}
+
+var _ biz.PlatformSessionListReader = (*postgresPasswordLoginReader)(nil)

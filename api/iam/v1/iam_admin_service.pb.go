@@ -81,6 +81,179 @@ func (RecoveryOperationStatus) EnumDescriptor() ([]byte, []int) {
 	return file_iam_admin_service_proto_rawDescGZIP(), []int{0}
 }
 
+// Catalog values are generated from owner contracts, never caller-defined.
+type PermissionCatalogResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Permissions    []string               `protobuf:"bytes,1,rep,name=permissions,proto3" json:"permissions,omitempty"`
+	NextCursor     string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	PolicyRevision string                 `protobuf:"bytes,3,opt,name=policy_revision,json=policyRevision,proto3" json:"policy_revision,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *PermissionCatalogResponse) Reset() {
+	*x = PermissionCatalogResponse{}
+	mi := &file_iam_admin_service_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PermissionCatalogResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PermissionCatalogResponse) ProtoMessage() {}
+
+func (x *PermissionCatalogResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PermissionCatalogResponse.ProtoReflect.Descriptor instead.
+func (*PermissionCatalogResponse) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *PermissionCatalogResponse) GetPermissions() []string {
+	if x != nil {
+		return x.Permissions
+	}
+	return nil
+}
+
+func (x *PermissionCatalogResponse) GetNextCursor() string {
+	if x != nil {
+		return x.NextCursor
+	}
+	return ""
+}
+
+func (x *PermissionCatalogResponse) GetPolicyRevision() string {
+	if x != nil {
+		return x.PolicyRevision
+	}
+	return ""
+}
+
+type ListTenantPermissionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credential    *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	Page          *CursorPageRequest     `protobuf:"bytes,3,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListTenantPermissionsRequest) Reset() {
+	*x = ListTenantPermissionsRequest{}
+	mi := &file_iam_admin_service_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListTenantPermissionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListTenantPermissionsRequest) ProtoMessage() {}
+
+func (x *ListTenantPermissionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListTenantPermissionsRequest.ProtoReflect.Descriptor instead.
+func (*ListTenantPermissionsRequest) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ListTenantPermissionsRequest) GetCredential() *BearerCredential {
+	if x != nil {
+		return x.Credential
+	}
+	return nil
+}
+
+func (x *ListTenantPermissionsRequest) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *ListTenantPermissionsRequest) GetPage() *CursorPageRequest {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type ListPlatformPermissionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credential    *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	Page          *CursorPageRequest     `protobuf:"bytes,2,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPlatformPermissionsRequest) Reset() {
+	*x = ListPlatformPermissionsRequest{}
+	mi := &file_iam_admin_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPlatformPermissionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPlatformPermissionsRequest) ProtoMessage() {}
+
+func (x *ListPlatformPermissionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPlatformPermissionsRequest.ProtoReflect.Descriptor instead.
+func (*ListPlatformPermissionsRequest) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListPlatformPermissionsRequest) GetCredential() *BearerCredential {
+	if x != nil {
+		return x.Credential
+	}
+	return nil
+}
+
+func (x *ListPlatformPermissionsRequest) GetPage() *CursorPageRequest {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
 // TenantAccess is IAM-owned and distinct from Core-owned Tenant Lifecycle.
 type TenantAccess struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -93,7 +266,7 @@ type TenantAccess struct {
 
 func (x *TenantAccess) Reset() {
 	*x = TenantAccess{}
-	mi := &file_iam_admin_service_proto_msgTypes[0]
+	mi := &file_iam_admin_service_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -105,7 +278,7 @@ func (x *TenantAccess) String() string {
 func (*TenantAccess) ProtoMessage() {}
 
 func (x *TenantAccess) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[0]
+	mi := &file_iam_admin_service_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -118,7 +291,7 @@ func (x *TenantAccess) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TenantAccess.ProtoReflect.Descriptor instead.
 func (*TenantAccess) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{0}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *TenantAccess) GetTenantId() string {
@@ -158,7 +331,7 @@ type Membership struct {
 
 func (x *Membership) Reset() {
 	*x = Membership{}
-	mi := &file_iam_admin_service_proto_msgTypes[1]
+	mi := &file_iam_admin_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -170,7 +343,7 @@ func (x *Membership) String() string {
 func (*Membership) ProtoMessage() {}
 
 func (x *Membership) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[1]
+	mi := &file_iam_admin_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -183,7 +356,7 @@ func (x *Membership) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Membership.ProtoReflect.Descriptor instead.
 func (*Membership) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{1}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Membership) GetMembershipId() string {
@@ -252,7 +425,7 @@ type Role struct {
 
 func (x *Role) Reset() {
 	*x = Role{}
-	mi := &file_iam_admin_service_proto_msgTypes[2]
+	mi := &file_iam_admin_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -264,7 +437,7 @@ func (x *Role) String() string {
 func (*Role) ProtoMessage() {}
 
 func (x *Role) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[2]
+	mi := &file_iam_admin_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -277,7 +450,7 @@ func (x *Role) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Role.ProtoReflect.Descriptor instead.
 func (*Role) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{2}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Role) GetRoleId() string {
@@ -341,19 +514,22 @@ type Invitation struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	InvitationId         string                 `protobuf:"bytes,1,opt,name=invitation_id,json=invitationId,proto3" json:"invitation_id,omitempty"`
 	Boundary             *Boundary              `protobuf:"bytes,2,opt,name=boundary,proto3" json:"boundary,omitempty"`
-	NormalizedEmail      string                 `protobuf:"bytes,3,opt,name=normalized_email,json=normalizedEmail,proto3" json:"normalized_email,omitempty"`
+	NormalizedEmailHint  string                 `protobuf:"bytes,3,opt,name=normalized_email_hint,json=normalizedEmailHint,proto3" json:"normalized_email_hint,omitempty"`
 	RoleIds              []string               `protobuf:"bytes,4,rep,name=role_ids,json=roleIds,proto3" json:"role_ids,omitempty"`
 	Status               InvitationStatus       `protobuf:"varint,5,opt,name=status,proto3,enum=iam.v1.InvitationStatus" json:"status,omitempty"`
 	ExpiresAt            *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	Version              uint64                 `protobuf:"varint,7,opt,name=version,proto3" json:"version,omitempty"`
 	BootstrapOperationId string                 `protobuf:"bytes,8,opt,name=bootstrap_operation_id,json=bootstrapOperationId,proto3" json:"bootstrap_operation_id,omitempty"`
+	DeliveryGeneration   uint64                 `protobuf:"varint,9,opt,name=delivery_generation,json=deliveryGeneration,proto3" json:"delivery_generation,omitempty"`
+	DeliveryStatus       string                 `protobuf:"bytes,10,opt,name=delivery_status,json=deliveryStatus,proto3" json:"delivery_status,omitempty"`
+	DeliveryAttemptCount uint32                 `protobuf:"varint,11,opt,name=delivery_attempt_count,json=deliveryAttemptCount,proto3" json:"delivery_attempt_count,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
 
 func (x *Invitation) Reset() {
 	*x = Invitation{}
-	mi := &file_iam_admin_service_proto_msgTypes[3]
+	mi := &file_iam_admin_service_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -365,7 +541,7 @@ func (x *Invitation) String() string {
 func (*Invitation) ProtoMessage() {}
 
 func (x *Invitation) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[3]
+	mi := &file_iam_admin_service_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -378,7 +554,7 @@ func (x *Invitation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Invitation.ProtoReflect.Descriptor instead.
 func (*Invitation) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{3}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Invitation) GetInvitationId() string {
@@ -395,9 +571,9 @@ func (x *Invitation) GetBoundary() *Boundary {
 	return nil
 }
 
-func (x *Invitation) GetNormalizedEmail() string {
+func (x *Invitation) GetNormalizedEmailHint() string {
 	if x != nil {
-		return x.NormalizedEmail
+		return x.NormalizedEmailHint
 	}
 	return ""
 }
@@ -437,6 +613,27 @@ func (x *Invitation) GetBootstrapOperationId() string {
 	return ""
 }
 
+func (x *Invitation) GetDeliveryGeneration() uint64 {
+	if x != nil {
+		return x.DeliveryGeneration
+	}
+	return 0
+}
+
+func (x *Invitation) GetDeliveryStatus() string {
+	if x != nil {
+		return x.DeliveryStatus
+	}
+	return ""
+}
+
+func (x *Invitation) GetDeliveryAttemptCount() uint32 {
+	if x != nil {
+		return x.DeliveryAttemptCount
+	}
+	return 0
+}
+
 // TenantWorkload is fixed to one Core-owned Tenant ID.
 type TenantWorkload struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -452,7 +649,7 @@ type TenantWorkload struct {
 
 func (x *TenantWorkload) Reset() {
 	*x = TenantWorkload{}
-	mi := &file_iam_admin_service_proto_msgTypes[4]
+	mi := &file_iam_admin_service_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -464,7 +661,7 @@ func (x *TenantWorkload) String() string {
 func (*TenantWorkload) ProtoMessage() {}
 
 func (x *TenantWorkload) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[4]
+	mi := &file_iam_admin_service_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -477,7 +674,7 @@ func (x *TenantWorkload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TenantWorkload.ProtoReflect.Descriptor instead.
 func (*TenantWorkload) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{4}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *TenantWorkload) GetPrincipalId() string {
@@ -539,7 +736,7 @@ type APIKey struct {
 
 func (x *APIKey) Reset() {
 	*x = APIKey{}
-	mi := &file_iam_admin_service_proto_msgTypes[5]
+	mi := &file_iam_admin_service_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -551,7 +748,7 @@ func (x *APIKey) String() string {
 func (*APIKey) ProtoMessage() {}
 
 func (x *APIKey) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[5]
+	mi := &file_iam_admin_service_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -564,7 +761,7 @@ func (x *APIKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use APIKey.ProtoReflect.Descriptor instead.
 func (*APIKey) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{5}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *APIKey) GetKeyId() string {
@@ -623,31 +820,174 @@ func (x *APIKey) GetLastUsedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+// AuditBoundary describes an event context and is never an authorization grant.
+type AuditBoundary struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Boundary:
+	//
+	//	*AuditBoundary_Tenant
+	//	*AuditBoundary_Platform
+	//	*AuditBoundary_Principal
+	Boundary      isAuditBoundary_Boundary `protobuf_oneof:"boundary"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuditBoundary) Reset() {
+	*x = AuditBoundary{}
+	mi := &file_iam_admin_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuditBoundary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuditBoundary) ProtoMessage() {}
+
+func (x *AuditBoundary) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuditBoundary.ProtoReflect.Descriptor instead.
+func (*AuditBoundary) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *AuditBoundary) GetBoundary() isAuditBoundary_Boundary {
+	if x != nil {
+		return x.Boundary
+	}
+	return nil
+}
+
+func (x *AuditBoundary) GetTenant() *TenantBoundary {
+	if x != nil {
+		if x, ok := x.Boundary.(*AuditBoundary_Tenant); ok {
+			return x.Tenant
+		}
+	}
+	return nil
+}
+
+func (x *AuditBoundary) GetPlatform() *PlatformBoundary {
+	if x != nil {
+		if x, ok := x.Boundary.(*AuditBoundary_Platform); ok {
+			return x.Platform
+		}
+	}
+	return nil
+}
+
+func (x *AuditBoundary) GetPrincipal() *PrincipalAuditBoundary {
+	if x != nil {
+		if x, ok := x.Boundary.(*AuditBoundary_Principal); ok {
+			return x.Principal
+		}
+	}
+	return nil
+}
+
+type isAuditBoundary_Boundary interface {
+	isAuditBoundary_Boundary()
+}
+
+type AuditBoundary_Tenant struct {
+	Tenant *TenantBoundary `protobuf:"bytes,1,opt,name=tenant,proto3,oneof"`
+}
+
+type AuditBoundary_Platform struct {
+	Platform *PlatformBoundary `protobuf:"bytes,2,opt,name=platform,proto3,oneof"`
+}
+
+type AuditBoundary_Principal struct {
+	Principal *PrincipalAuditBoundary `protobuf:"bytes,3,opt,name=principal,proto3,oneof"`
+}
+
+func (*AuditBoundary_Tenant) isAuditBoundary_Boundary() {}
+
+func (*AuditBoundary_Platform) isAuditBoundary_Boundary() {}
+
+func (*AuditBoundary_Principal) isAuditBoundary_Boundary() {}
+
+type PrincipalAuditBoundary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PrincipalAuditBoundary) Reset() {
+	*x = PrincipalAuditBoundary{}
+	mi := &file_iam_admin_service_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PrincipalAuditBoundary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PrincipalAuditBoundary) ProtoMessage() {}
+
+func (x *PrincipalAuditBoundary) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PrincipalAuditBoundary.ProtoReflect.Descriptor instead.
+func (*PrincipalAuditBoundary) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{10}
+}
+
 // AuditEvent is an allowlisted, append-only IAM security fact.
 type AuditEvent struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	EventId          string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	OccurredAt       *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	ActorPrincipalId string                 `protobuf:"bytes,3,opt,name=actor_principal_id,json=actorPrincipalId,proto3" json:"actor_principal_id,omitempty"`
-	AuthnMethods     []AuthnMethod          `protobuf:"varint,4,rep,packed,name=authn_methods,json=authnMethods,proto3,enum=iam.v1.AuthnMethod" json:"authn_methods,omitempty"`
-	Boundary         *Boundary              `protobuf:"bytes,5,opt,name=boundary,proto3" json:"boundary,omitempty"`
-	Action           string                 `protobuf:"bytes,6,opt,name=action,proto3" json:"action,omitempty"`
-	TargetType       string                 `protobuf:"bytes,7,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
-	TargetId         string                 `protobuf:"bytes,8,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
-	Result           string                 `protobuf:"bytes,9,opt,name=result,proto3" json:"result,omitempty"`
-	Reason           string                 `protobuf:"bytes,10,opt,name=reason,proto3" json:"reason,omitempty"`
-	RequestId        string                 `protobuf:"bytes,11,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	CorrelationId    string                 `protobuf:"bytes,12,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
-	DecisionId       string                 `protobuf:"bytes,13,opt,name=decision_id,json=decisionId,proto3" json:"decision_id,omitempty"`
-	TargetVersion    uint64                 `protobuf:"varint,14,opt,name=target_version,json=targetVersion,proto3" json:"target_version,omitempty"`
-	Details          map[string]string      `protobuf:"bytes,15,rep,name=details,proto3" json:"details,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	EventId              string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	OccurredAt           *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	ActorPrincipalId     string                 `protobuf:"bytes,3,opt,name=actor_principal_id,json=actorPrincipalId,proto3" json:"actor_principal_id,omitempty"`
+	AuthnMethods         []AuthnMethod          `protobuf:"varint,4,rep,packed,name=authn_methods,json=authnMethods,proto3,enum=iam.v1.AuthnMethod" json:"authn_methods,omitempty"`
+	Boundary             *AuditBoundary         `protobuf:"bytes,5,opt,name=boundary,proto3" json:"boundary,omitempty"`
+	Action               string                 `protobuf:"bytes,6,opt,name=action,proto3" json:"action,omitempty"`
+	TargetType           string                 `protobuf:"bytes,7,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
+	TargetId             string                 `protobuf:"bytes,8,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
+	Result               string                 `protobuf:"bytes,9,opt,name=result,proto3" json:"result,omitempty"`
+	Reason               string                 `protobuf:"bytes,10,opt,name=reason,proto3" json:"reason,omitempty"`
+	RequestId            string                 `protobuf:"bytes,11,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	CorrelationId        string                 `protobuf:"bytes,12,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	DecisionId           string                 `protobuf:"bytes,13,opt,name=decision_id,json=decisionId,proto3" json:"decision_id,omitempty"`
+	TargetVersion        uint64                 `protobuf:"varint,14,opt,name=target_version,json=targetVersion,proto3" json:"target_version,omitempty"`
+	Details              map[string]string      `protobuf:"bytes,15,rep,name=details,proto3" json:"details,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RecordedAt           *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=recorded_at,json=recordedAt,proto3" json:"recorded_at,omitempty"`
+	SourceService        string                 `protobuf:"bytes,17,opt,name=source_service,json=sourceService,proto3" json:"source_service,omitempty"`
+	ActorType            string                 `protobuf:"bytes,18,opt,name=actor_type,json=actorType,proto3" json:"actor_type,omitempty"`
+	AuthenticationMethod string                 `protobuf:"bytes,19,opt,name=authentication_method,json=authenticationMethod,proto3" json:"authentication_method,omitempty"`
+	CallerPrincipalId    string                 `protobuf:"bytes,20,opt,name=caller_principal_id,json=callerPrincipalId,proto3" json:"caller_principal_id,omitempty"`
+	CallerBindingId      string                 `protobuf:"bytes,21,opt,name=caller_binding_id,json=callerBindingId,proto3" json:"caller_binding_id,omitempty"`
+	CallerBindingVersion uint64                 `protobuf:"varint,22,opt,name=caller_binding_version,json=callerBindingVersion,proto3" json:"caller_binding_version,omitempty"`
+	CallerGrantVersion   uint64                 `protobuf:"varint,23,opt,name=caller_grant_version,json=callerGrantVersion,proto3" json:"caller_grant_version,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *AuditEvent) Reset() {
 	*x = AuditEvent{}
-	mi := &file_iam_admin_service_proto_msgTypes[6]
+	mi := &file_iam_admin_service_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -659,7 +999,7 @@ func (x *AuditEvent) String() string {
 func (*AuditEvent) ProtoMessage() {}
 
 func (x *AuditEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[6]
+	mi := &file_iam_admin_service_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -672,7 +1012,7 @@ func (x *AuditEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuditEvent.ProtoReflect.Descriptor instead.
 func (*AuditEvent) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{6}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *AuditEvent) GetEventId() string {
@@ -703,7 +1043,7 @@ func (x *AuditEvent) GetAuthnMethods() []AuthnMethod {
 	return nil
 }
 
-func (x *AuditEvent) GetBoundary() *Boundary {
+func (x *AuditEvent) GetBoundary() *AuditBoundary {
 	if x != nil {
 		return x.Boundary
 	}
@@ -780,6 +1120,62 @@ func (x *AuditEvent) GetDetails() map[string]string {
 	return nil
 }
 
+func (x *AuditEvent) GetRecordedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.RecordedAt
+	}
+	return nil
+}
+
+func (x *AuditEvent) GetSourceService() string {
+	if x != nil {
+		return x.SourceService
+	}
+	return ""
+}
+
+func (x *AuditEvent) GetActorType() string {
+	if x != nil {
+		return x.ActorType
+	}
+	return ""
+}
+
+func (x *AuditEvent) GetAuthenticationMethod() string {
+	if x != nil {
+		return x.AuthenticationMethod
+	}
+	return ""
+}
+
+func (x *AuditEvent) GetCallerPrincipalId() string {
+	if x != nil {
+		return x.CallerPrincipalId
+	}
+	return ""
+}
+
+func (x *AuditEvent) GetCallerBindingId() string {
+	if x != nil {
+		return x.CallerBindingId
+	}
+	return ""
+}
+
+func (x *AuditEvent) GetCallerBindingVersion() uint64 {
+	if x != nil {
+		return x.CallerBindingVersion
+	}
+	return 0
+}
+
+func (x *AuditEvent) GetCallerGrantVersion() uint64 {
+	if x != nil {
+		return x.CallerGrantVersion
+	}
+	return 0
+}
+
 // RecoveryOperation records a dual-control request bound to an immutable payload hash.
 type RecoveryOperation struct {
 	state                protoimpl.MessageState  `protogen:"open.v1"`
@@ -800,7 +1196,7 @@ type RecoveryOperation struct {
 
 func (x *RecoveryOperation) Reset() {
 	*x = RecoveryOperation{}
-	mi := &file_iam_admin_service_proto_msgTypes[7]
+	mi := &file_iam_admin_service_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -812,7 +1208,7 @@ func (x *RecoveryOperation) String() string {
 func (*RecoveryOperation) ProtoMessage() {}
 
 func (x *RecoveryOperation) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[7]
+	mi := &file_iam_admin_service_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -825,7 +1221,7 @@ func (x *RecoveryOperation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecoveryOperation.ProtoReflect.Descriptor instead.
 func (*RecoveryOperation) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{7}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *RecoveryOperation) GetOperationId() string {
@@ -917,7 +1313,7 @@ type AcceptPlatformInvitationRequest struct {
 
 func (x *AcceptPlatformInvitationRequest) Reset() {
 	*x = AcceptPlatformInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[8]
+	mi := &file_iam_admin_service_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -929,7 +1325,7 @@ func (x *AcceptPlatformInvitationRequest) String() string {
 func (*AcceptPlatformInvitationRequest) ProtoMessage() {}
 
 func (x *AcceptPlatformInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[8]
+	mi := &file_iam_admin_service_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -942,7 +1338,7 @@ func (x *AcceptPlatformInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptPlatformInvitationRequest.ProtoReflect.Descriptor instead.
 func (*AcceptPlatformInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{8}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *AcceptPlatformInvitationRequest) GetCredential() *BearerCredential {
@@ -982,7 +1378,7 @@ type AcceptPlatformInvitationResponse struct {
 
 func (x *AcceptPlatformInvitationResponse) Reset() {
 	*x = AcceptPlatformInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[9]
+	mi := &file_iam_admin_service_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -994,7 +1390,7 @@ func (x *AcceptPlatformInvitationResponse) String() string {
 func (*AcceptPlatformInvitationResponse) ProtoMessage() {}
 
 func (x *AcceptPlatformInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[9]
+	mi := &file_iam_admin_service_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1007,7 +1403,7 @@ func (x *AcceptPlatformInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptPlatformInvitationResponse.ProtoReflect.Descriptor instead.
 func (*AcceptPlatformInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{9}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *AcceptPlatformInvitationResponse) GetMembership() *Membership {
@@ -1030,7 +1426,7 @@ type AcceptTenantInvitationRequest struct {
 
 func (x *AcceptTenantInvitationRequest) Reset() {
 	*x = AcceptTenantInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[10]
+	mi := &file_iam_admin_service_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1042,7 +1438,7 @@ func (x *AcceptTenantInvitationRequest) String() string {
 func (*AcceptTenantInvitationRequest) ProtoMessage() {}
 
 func (x *AcceptTenantInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[10]
+	mi := &file_iam_admin_service_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1055,7 +1451,7 @@ func (x *AcceptTenantInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptTenantInvitationRequest.ProtoReflect.Descriptor instead.
 func (*AcceptTenantInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{10}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *AcceptTenantInvitationRequest) GetCredential() *BearerCredential {
@@ -1102,7 +1498,7 @@ type AcceptTenantInvitationResponse struct {
 
 func (x *AcceptTenantInvitationResponse) Reset() {
 	*x = AcceptTenantInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[11]
+	mi := &file_iam_admin_service_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1114,7 +1510,7 @@ func (x *AcceptTenantInvitationResponse) String() string {
 func (*AcceptTenantInvitationResponse) ProtoMessage() {}
 
 func (x *AcceptTenantInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[11]
+	mi := &file_iam_admin_service_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1127,7 +1523,7 @@ func (x *AcceptTenantInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptTenantInvitationResponse.ProtoReflect.Descriptor instead.
 func (*AcceptTenantInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{11}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AcceptTenantInvitationResponse) GetMembership() *Membership {
@@ -1142,9 +1538,7 @@ type ApproveRecoveryBootstrapRequest struct {
 	Credential         *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	OperationId        string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
 	ApprovalReference  string                 `protobuf:"bytes,3,opt,name=approval_reference,json=approvalReference,proto3" json:"approval_reference,omitempty"`
-	Reason             string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
 	PayloadFingerprint string                 `protobuf:"bytes,5,opt,name=payload_fingerprint,json=payloadFingerprint,proto3" json:"payload_fingerprint,omitempty"`
-	ReauthenticatedAt  *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=reauthenticated_at,json=reauthenticatedAt,proto3" json:"reauthenticated_at,omitempty"`
 	IdempotencyKey     string                 `protobuf:"bytes,7,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
@@ -1152,7 +1546,7 @@ type ApproveRecoveryBootstrapRequest struct {
 
 func (x *ApproveRecoveryBootstrapRequest) Reset() {
 	*x = ApproveRecoveryBootstrapRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[12]
+	mi := &file_iam_admin_service_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1164,7 +1558,7 @@ func (x *ApproveRecoveryBootstrapRequest) String() string {
 func (*ApproveRecoveryBootstrapRequest) ProtoMessage() {}
 
 func (x *ApproveRecoveryBootstrapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[12]
+	mi := &file_iam_admin_service_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1177,7 +1571,7 @@ func (x *ApproveRecoveryBootstrapRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApproveRecoveryBootstrapRequest.ProtoReflect.Descriptor instead.
 func (*ApproveRecoveryBootstrapRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{12}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ApproveRecoveryBootstrapRequest) GetCredential() *BearerCredential {
@@ -1201,25 +1595,11 @@ func (x *ApproveRecoveryBootstrapRequest) GetApprovalReference() string {
 	return ""
 }
 
-func (x *ApproveRecoveryBootstrapRequest) GetReason() string {
-	if x != nil {
-		return x.Reason
-	}
-	return ""
-}
-
 func (x *ApproveRecoveryBootstrapRequest) GetPayloadFingerprint() string {
 	if x != nil {
 		return x.PayloadFingerprint
 	}
 	return ""
-}
-
-func (x *ApproveRecoveryBootstrapRequest) GetReauthenticatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ReauthenticatedAt
-	}
-	return nil
 }
 
 func (x *ApproveRecoveryBootstrapRequest) GetIdempotencyKey() string {
@@ -1238,7 +1618,7 @@ type ApproveRecoveryBootstrapResponse struct {
 
 func (x *ApproveRecoveryBootstrapResponse) Reset() {
 	*x = ApproveRecoveryBootstrapResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[13]
+	mi := &file_iam_admin_service_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1250,7 +1630,7 @@ func (x *ApproveRecoveryBootstrapResponse) String() string {
 func (*ApproveRecoveryBootstrapResponse) ProtoMessage() {}
 
 func (x *ApproveRecoveryBootstrapResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[13]
+	mi := &file_iam_admin_service_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1263,7 +1643,7 @@ func (x *ApproveRecoveryBootstrapResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApproveRecoveryBootstrapResponse.ProtoReflect.Descriptor instead.
 func (*ApproveRecoveryBootstrapResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{13}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ApproveRecoveryBootstrapResponse) GetOperation() *RecoveryOperation {
@@ -1278,9 +1658,7 @@ type ApproveRestoreTenantAdminRequest struct {
 	Credential         *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
 	OperationId        string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
 	ApprovalReference  string                 `protobuf:"bytes,3,opt,name=approval_reference,json=approvalReference,proto3" json:"approval_reference,omitempty"`
-	Reason             string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
 	PayloadFingerprint string                 `protobuf:"bytes,5,opt,name=payload_fingerprint,json=payloadFingerprint,proto3" json:"payload_fingerprint,omitempty"`
-	ReauthenticatedAt  *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=reauthenticated_at,json=reauthenticatedAt,proto3" json:"reauthenticated_at,omitempty"`
 	IdempotencyKey     string                 `protobuf:"bytes,7,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
@@ -1288,7 +1666,7 @@ type ApproveRestoreTenantAdminRequest struct {
 
 func (x *ApproveRestoreTenantAdminRequest) Reset() {
 	*x = ApproveRestoreTenantAdminRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[14]
+	mi := &file_iam_admin_service_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1300,7 +1678,7 @@ func (x *ApproveRestoreTenantAdminRequest) String() string {
 func (*ApproveRestoreTenantAdminRequest) ProtoMessage() {}
 
 func (x *ApproveRestoreTenantAdminRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[14]
+	mi := &file_iam_admin_service_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1313,7 +1691,7 @@ func (x *ApproveRestoreTenantAdminRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApproveRestoreTenantAdminRequest.ProtoReflect.Descriptor instead.
 func (*ApproveRestoreTenantAdminRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{14}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ApproveRestoreTenantAdminRequest) GetCredential() *BearerCredential {
@@ -1337,25 +1715,11 @@ func (x *ApproveRestoreTenantAdminRequest) GetApprovalReference() string {
 	return ""
 }
 
-func (x *ApproveRestoreTenantAdminRequest) GetReason() string {
-	if x != nil {
-		return x.Reason
-	}
-	return ""
-}
-
 func (x *ApproveRestoreTenantAdminRequest) GetPayloadFingerprint() string {
 	if x != nil {
 		return x.PayloadFingerprint
 	}
 	return ""
-}
-
-func (x *ApproveRestoreTenantAdminRequest) GetReauthenticatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ReauthenticatedAt
-	}
-	return nil
 }
 
 func (x *ApproveRestoreTenantAdminRequest) GetIdempotencyKey() string {
@@ -1374,7 +1738,7 @@ type ApproveRestoreTenantAdminResponse struct {
 
 func (x *ApproveRestoreTenantAdminResponse) Reset() {
 	*x = ApproveRestoreTenantAdminResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[15]
+	mi := &file_iam_admin_service_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1386,7 +1750,7 @@ func (x *ApproveRestoreTenantAdminResponse) String() string {
 func (*ApproveRestoreTenantAdminResponse) ProtoMessage() {}
 
 func (x *ApproveRestoreTenantAdminResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[15]
+	mi := &file_iam_admin_service_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1399,7 +1763,7 @@ func (x *ApproveRestoreTenantAdminResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use ApproveRestoreTenantAdminResponse.ProtoReflect.Descriptor instead.
 func (*ApproveRestoreTenantAdminResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{15}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ApproveRestoreTenantAdminResponse) GetOperation() *RecoveryOperation {
@@ -1422,7 +1786,7 @@ type BindPlatformRoleRequest struct {
 
 func (x *BindPlatformRoleRequest) Reset() {
 	*x = BindPlatformRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[16]
+	mi := &file_iam_admin_service_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1434,7 +1798,7 @@ func (x *BindPlatformRoleRequest) String() string {
 func (*BindPlatformRoleRequest) ProtoMessage() {}
 
 func (x *BindPlatformRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[16]
+	mi := &file_iam_admin_service_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1447,7 +1811,7 @@ func (x *BindPlatformRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BindPlatformRoleRequest.ProtoReflect.Descriptor instead.
 func (*BindPlatformRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{16}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *BindPlatformRoleRequest) GetCredential() *BearerCredential {
@@ -1494,7 +1858,7 @@ type BindPlatformRoleResponse struct {
 
 func (x *BindPlatformRoleResponse) Reset() {
 	*x = BindPlatformRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[17]
+	mi := &file_iam_admin_service_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1506,7 +1870,7 @@ func (x *BindPlatformRoleResponse) String() string {
 func (*BindPlatformRoleResponse) ProtoMessage() {}
 
 func (x *BindPlatformRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[17]
+	mi := &file_iam_admin_service_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1519,7 +1883,7 @@ func (x *BindPlatformRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BindPlatformRoleResponse.ProtoReflect.Descriptor instead.
 func (*BindPlatformRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{17}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *BindPlatformRoleResponse) GetMembership() *Membership {
@@ -1543,7 +1907,7 @@ type BindTenantRoleRequest struct {
 
 func (x *BindTenantRoleRequest) Reset() {
 	*x = BindTenantRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[18]
+	mi := &file_iam_admin_service_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1555,7 +1919,7 @@ func (x *BindTenantRoleRequest) String() string {
 func (*BindTenantRoleRequest) ProtoMessage() {}
 
 func (x *BindTenantRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[18]
+	mi := &file_iam_admin_service_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1568,7 +1932,7 @@ func (x *BindTenantRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BindTenantRoleRequest.ProtoReflect.Descriptor instead.
 func (*BindTenantRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{18}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *BindTenantRoleRequest) GetCredential() *BearerCredential {
@@ -1622,7 +1986,7 @@ type BindTenantRoleResponse struct {
 
 func (x *BindTenantRoleResponse) Reset() {
 	*x = BindTenantRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[19]
+	mi := &file_iam_admin_service_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1634,7 +1998,7 @@ func (x *BindTenantRoleResponse) String() string {
 func (*BindTenantRoleResponse) ProtoMessage() {}
 
 func (x *BindTenantRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[19]
+	mi := &file_iam_admin_service_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1647,7 +2011,7 @@ func (x *BindTenantRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BindTenantRoleResponse.ProtoReflect.Descriptor instead.
 func (*BindTenantRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{19}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *BindTenantRoleResponse) GetMembership() *Membership {
@@ -1669,7 +2033,7 @@ type CancelPlatformInvitationRequest struct {
 
 func (x *CancelPlatformInvitationRequest) Reset() {
 	*x = CancelPlatformInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[20]
+	mi := &file_iam_admin_service_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1681,7 +2045,7 @@ func (x *CancelPlatformInvitationRequest) String() string {
 func (*CancelPlatformInvitationRequest) ProtoMessage() {}
 
 func (x *CancelPlatformInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[20]
+	mi := &file_iam_admin_service_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1694,7 +2058,7 @@ func (x *CancelPlatformInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelPlatformInvitationRequest.ProtoReflect.Descriptor instead.
 func (*CancelPlatformInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{20}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *CancelPlatformInvitationRequest) GetCredential() *BearerCredential {
@@ -1734,7 +2098,7 @@ type CancelPlatformInvitationResponse struct {
 
 func (x *CancelPlatformInvitationResponse) Reset() {
 	*x = CancelPlatformInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[21]
+	mi := &file_iam_admin_service_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1746,7 +2110,7 @@ func (x *CancelPlatformInvitationResponse) String() string {
 func (*CancelPlatformInvitationResponse) ProtoMessage() {}
 
 func (x *CancelPlatformInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[21]
+	mi := &file_iam_admin_service_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1759,7 +2123,7 @@ func (x *CancelPlatformInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelPlatformInvitationResponse.ProtoReflect.Descriptor instead.
 func (*CancelPlatformInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{21}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *CancelPlatformInvitationResponse) GetInvitation() *Invitation {
@@ -1782,7 +2146,7 @@ type CancelTenantInvitationRequest struct {
 
 func (x *CancelTenantInvitationRequest) Reset() {
 	*x = CancelTenantInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[22]
+	mi := &file_iam_admin_service_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1794,7 +2158,7 @@ func (x *CancelTenantInvitationRequest) String() string {
 func (*CancelTenantInvitationRequest) ProtoMessage() {}
 
 func (x *CancelTenantInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[22]
+	mi := &file_iam_admin_service_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1807,7 +2171,7 @@ func (x *CancelTenantInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelTenantInvitationRequest.ProtoReflect.Descriptor instead.
 func (*CancelTenantInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{22}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *CancelTenantInvitationRequest) GetCredential() *BearerCredential {
@@ -1854,7 +2218,7 @@ type CancelTenantInvitationResponse struct {
 
 func (x *CancelTenantInvitationResponse) Reset() {
 	*x = CancelTenantInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[23]
+	mi := &file_iam_admin_service_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1866,7 +2230,7 @@ func (x *CancelTenantInvitationResponse) String() string {
 func (*CancelTenantInvitationResponse) ProtoMessage() {}
 
 func (x *CancelTenantInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[23]
+	mi := &file_iam_admin_service_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1879,7 +2243,7 @@ func (x *CancelTenantInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelTenantInvitationResponse.ProtoReflect.Descriptor instead.
 func (*CancelTenantInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{23}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *CancelTenantInvitationResponse) GetInvitation() *Invitation {
@@ -1902,7 +2266,7 @@ type CreateAPIKeyRequest struct {
 
 func (x *CreateAPIKeyRequest) Reset() {
 	*x = CreateAPIKeyRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[24]
+	mi := &file_iam_admin_service_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1914,7 +2278,7 @@ func (x *CreateAPIKeyRequest) String() string {
 func (*CreateAPIKeyRequest) ProtoMessage() {}
 
 func (x *CreateAPIKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[24]
+	mi := &file_iam_admin_service_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1927,7 +2291,7 @@ func (x *CreateAPIKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAPIKeyRequest.ProtoReflect.Descriptor instead.
 func (*CreateAPIKeyRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{24}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *CreateAPIKeyRequest) GetCredential() *BearerCredential {
@@ -1977,7 +2341,7 @@ type CreateAPIKeyResponse struct {
 
 func (x *CreateAPIKeyResponse) Reset() {
 	*x = CreateAPIKeyResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[25]
+	mi := &file_iam_admin_service_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1989,7 +2353,7 @@ func (x *CreateAPIKeyResponse) String() string {
 func (*CreateAPIKeyResponse) ProtoMessage() {}
 
 func (x *CreateAPIKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[25]
+	mi := &file_iam_admin_service_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2002,7 +2366,7 @@ func (x *CreateAPIKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAPIKeyResponse.ProtoReflect.Descriptor instead.
 func (*CreateAPIKeyResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{25}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *CreateAPIKeyResponse) GetApiKey() *APIKey {
@@ -2039,7 +2403,7 @@ type CreatePlatformInvitationRequest struct {
 
 func (x *CreatePlatformInvitationRequest) Reset() {
 	*x = CreatePlatformInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[26]
+	mi := &file_iam_admin_service_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2051,7 +2415,7 @@ func (x *CreatePlatformInvitationRequest) String() string {
 func (*CreatePlatformInvitationRequest) ProtoMessage() {}
 
 func (x *CreatePlatformInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[26]
+	mi := &file_iam_admin_service_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2064,7 +2428,7 @@ func (x *CreatePlatformInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlatformInvitationRequest.ProtoReflect.Descriptor instead.
 func (*CreatePlatformInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{26}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *CreatePlatformInvitationRequest) GetCredential() *BearerCredential {
@@ -2103,16 +2467,15 @@ func (x *CreatePlatformInvitationRequest) GetIdempotencyKey() string {
 }
 
 type CreatePlatformInvitationResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Invitation      *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
-	InvitationToken string                 `protobuf:"bytes,2,opt,name=invitation_token,json=invitationToken,proto3" json:"invitation_token,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Invitation    *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreatePlatformInvitationResponse) Reset() {
 	*x = CreatePlatformInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[27]
+	mi := &file_iam_admin_service_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2124,7 +2487,7 @@ func (x *CreatePlatformInvitationResponse) String() string {
 func (*CreatePlatformInvitationResponse) ProtoMessage() {}
 
 func (x *CreatePlatformInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[27]
+	mi := &file_iam_admin_service_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2137,7 +2500,7 @@ func (x *CreatePlatformInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlatformInvitationResponse.ProtoReflect.Descriptor instead.
 func (*CreatePlatformInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{27}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *CreatePlatformInvitationResponse) GetInvitation() *Invitation {
@@ -2145,13 +2508,6 @@ func (x *CreatePlatformInvitationResponse) GetInvitation() *Invitation {
 		return x.Invitation
 	}
 	return nil
-}
-
-func (x *CreatePlatformInvitationResponse) GetInvitationToken() string {
-	if x != nil {
-		return x.InvitationToken
-	}
-	return ""
 }
 
 type CreatePlatformRoleRequest struct {
@@ -2167,7 +2523,7 @@ type CreatePlatformRoleRequest struct {
 
 func (x *CreatePlatformRoleRequest) Reset() {
 	*x = CreatePlatformRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[28]
+	mi := &file_iam_admin_service_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2179,7 +2535,7 @@ func (x *CreatePlatformRoleRequest) String() string {
 func (*CreatePlatformRoleRequest) ProtoMessage() {}
 
 func (x *CreatePlatformRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[28]
+	mi := &file_iam_admin_service_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2192,7 +2548,7 @@ func (x *CreatePlatformRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlatformRoleRequest.ProtoReflect.Descriptor instead.
 func (*CreatePlatformRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{28}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *CreatePlatformRoleRequest) GetCredential() *BearerCredential {
@@ -2239,7 +2595,7 @@ type CreatePlatformRoleResponse struct {
 
 func (x *CreatePlatformRoleResponse) Reset() {
 	*x = CreatePlatformRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[29]
+	mi := &file_iam_admin_service_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2251,7 +2607,7 @@ func (x *CreatePlatformRoleResponse) String() string {
 func (*CreatePlatformRoleResponse) ProtoMessage() {}
 
 func (x *CreatePlatformRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[29]
+	mi := &file_iam_admin_service_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2264,7 +2620,7 @@ func (x *CreatePlatformRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlatformRoleResponse.ProtoReflect.Descriptor instead.
 func (*CreatePlatformRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{29}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *CreatePlatformRoleResponse) GetRole() *Role {
@@ -2287,7 +2643,7 @@ type CreateTenantWorkloadRequest struct {
 
 func (x *CreateTenantWorkloadRequest) Reset() {
 	*x = CreateTenantWorkloadRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[30]
+	mi := &file_iam_admin_service_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2299,7 +2655,7 @@ func (x *CreateTenantWorkloadRequest) String() string {
 func (*CreateTenantWorkloadRequest) ProtoMessage() {}
 
 func (x *CreateTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[30]
+	mi := &file_iam_admin_service_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2312,7 +2668,7 @@ func (x *CreateTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTenantWorkloadRequest.ProtoReflect.Descriptor instead.
 func (*CreateTenantWorkloadRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{30}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *CreateTenantWorkloadRequest) GetCredential() *BearerCredential {
@@ -2360,7 +2716,7 @@ type CreateTenantWorkloadResponse struct {
 
 func (x *CreateTenantWorkloadResponse) Reset() {
 	*x = CreateTenantWorkloadResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[31]
+	mi := &file_iam_admin_service_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2372,7 +2728,7 @@ func (x *CreateTenantWorkloadResponse) String() string {
 func (*CreateTenantWorkloadResponse) ProtoMessage() {}
 
 func (x *CreateTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[31]
+	mi := &file_iam_admin_service_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2385,7 +2741,7 @@ func (x *CreateTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTenantWorkloadResponse.ProtoReflect.Descriptor instead.
 func (*CreateTenantWorkloadResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{31}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *CreateTenantWorkloadResponse) GetPrincipal() *TenantWorkload {
@@ -2416,7 +2772,7 @@ type CreateTenantInvitationRequest struct {
 
 func (x *CreateTenantInvitationRequest) Reset() {
 	*x = CreateTenantInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[32]
+	mi := &file_iam_admin_service_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2428,7 +2784,7 @@ func (x *CreateTenantInvitationRequest) String() string {
 func (*CreateTenantInvitationRequest) ProtoMessage() {}
 
 func (x *CreateTenantInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[32]
+	mi := &file_iam_admin_service_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2441,7 +2797,7 @@ func (x *CreateTenantInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTenantInvitationRequest.ProtoReflect.Descriptor instead.
 func (*CreateTenantInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{32}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *CreateTenantInvitationRequest) GetCredential() *BearerCredential {
@@ -2487,16 +2843,15 @@ func (x *CreateTenantInvitationRequest) GetIdempotencyKey() string {
 }
 
 type CreateTenantInvitationResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Invitation      *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
-	InvitationToken string                 `protobuf:"bytes,2,opt,name=invitation_token,json=invitationToken,proto3" json:"invitation_token,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Invitation    *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateTenantInvitationResponse) Reset() {
 	*x = CreateTenantInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[33]
+	mi := &file_iam_admin_service_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2508,7 +2863,7 @@ func (x *CreateTenantInvitationResponse) String() string {
 func (*CreateTenantInvitationResponse) ProtoMessage() {}
 
 func (x *CreateTenantInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[33]
+	mi := &file_iam_admin_service_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2521,7 +2876,7 @@ func (x *CreateTenantInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTenantInvitationResponse.ProtoReflect.Descriptor instead.
 func (*CreateTenantInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{33}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *CreateTenantInvitationResponse) GetInvitation() *Invitation {
@@ -2529,13 +2884,6 @@ func (x *CreateTenantInvitationResponse) GetInvitation() *Invitation {
 		return x.Invitation
 	}
 	return nil
-}
-
-func (x *CreateTenantInvitationResponse) GetInvitationToken() string {
-	if x != nil {
-		return x.InvitationToken
-	}
-	return ""
 }
 
 type CreateTenantRoleRequest struct {
@@ -2552,7 +2900,7 @@ type CreateTenantRoleRequest struct {
 
 func (x *CreateTenantRoleRequest) Reset() {
 	*x = CreateTenantRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[34]
+	mi := &file_iam_admin_service_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2564,7 +2912,7 @@ func (x *CreateTenantRoleRequest) String() string {
 func (*CreateTenantRoleRequest) ProtoMessage() {}
 
 func (x *CreateTenantRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[34]
+	mi := &file_iam_admin_service_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2577,7 +2925,7 @@ func (x *CreateTenantRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTenantRoleRequest.ProtoReflect.Descriptor instead.
 func (*CreateTenantRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{34}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *CreateTenantRoleRequest) GetCredential() *BearerCredential {
@@ -2631,7 +2979,7 @@ type CreateTenantRoleResponse struct {
 
 func (x *CreateTenantRoleResponse) Reset() {
 	*x = CreateTenantRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[35]
+	mi := &file_iam_admin_service_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2643,7 +2991,7 @@ func (x *CreateTenantRoleResponse) String() string {
 func (*CreateTenantRoleResponse) ProtoMessage() {}
 
 func (x *CreateTenantRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[35]
+	mi := &file_iam_admin_service_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2656,7 +3004,7 @@ func (x *CreateTenantRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTenantRoleResponse.ProtoReflect.Descriptor instead.
 func (*CreateTenantRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{35}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *CreateTenantRoleResponse) GetRole() *Role {
@@ -2678,7 +3026,7 @@ type DeletePlatformRoleRequest struct {
 
 func (x *DeletePlatformRoleRequest) Reset() {
 	*x = DeletePlatformRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[36]
+	mi := &file_iam_admin_service_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2690,7 +3038,7 @@ func (x *DeletePlatformRoleRequest) String() string {
 func (*DeletePlatformRoleRequest) ProtoMessage() {}
 
 func (x *DeletePlatformRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[36]
+	mi := &file_iam_admin_service_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2703,7 +3051,7 @@ func (x *DeletePlatformRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeletePlatformRoleRequest.ProtoReflect.Descriptor instead.
 func (*DeletePlatformRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{36}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *DeletePlatformRoleRequest) GetCredential() *BearerCredential {
@@ -2743,7 +3091,7 @@ type DeletePlatformRoleResponse struct {
 
 func (x *DeletePlatformRoleResponse) Reset() {
 	*x = DeletePlatformRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[37]
+	mi := &file_iam_admin_service_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2755,7 +3103,7 @@ func (x *DeletePlatformRoleResponse) String() string {
 func (*DeletePlatformRoleResponse) ProtoMessage() {}
 
 func (x *DeletePlatformRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[37]
+	mi := &file_iam_admin_service_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2768,7 +3116,7 @@ func (x *DeletePlatformRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeletePlatformRoleResponse.ProtoReflect.Descriptor instead.
 func (*DeletePlatformRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{37}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *DeletePlatformRoleResponse) GetResult() *MutationResult {
@@ -2791,7 +3139,7 @@ type DeleteTenantRoleRequest struct {
 
 func (x *DeleteTenantRoleRequest) Reset() {
 	*x = DeleteTenantRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[38]
+	mi := &file_iam_admin_service_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2803,7 +3151,7 @@ func (x *DeleteTenantRoleRequest) String() string {
 func (*DeleteTenantRoleRequest) ProtoMessage() {}
 
 func (x *DeleteTenantRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[38]
+	mi := &file_iam_admin_service_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2816,7 +3164,7 @@ func (x *DeleteTenantRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTenantRoleRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTenantRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{38}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *DeleteTenantRoleRequest) GetCredential() *BearerCredential {
@@ -2863,7 +3211,7 @@ type DeleteTenantRoleResponse struct {
 
 func (x *DeleteTenantRoleResponse) Reset() {
 	*x = DeleteTenantRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[39]
+	mi := &file_iam_admin_service_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2875,7 +3223,7 @@ func (x *DeleteTenantRoleResponse) String() string {
 func (*DeleteTenantRoleResponse) ProtoMessage() {}
 
 func (x *DeleteTenantRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[39]
+	mi := &file_iam_admin_service_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2888,7 +3236,7 @@ func (x *DeleteTenantRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTenantRoleResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTenantRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{39}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *DeleteTenantRoleResponse) GetResult() *MutationResult {
@@ -2899,20 +3247,20 @@ func (x *DeleteTenantRoleResponse) GetResult() *MutationResult {
 }
 
 type ExecuteRecoveryBootstrapRequest struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	Credential         *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
-	OperationId        string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
-	ApprovalReference  string                 `protobuf:"bytes,3,opt,name=approval_reference,json=approvalReference,proto3" json:"approval_reference,omitempty"`
-	PayloadFingerprint string                 `protobuf:"bytes,4,opt,name=payload_fingerprint,json=payloadFingerprint,proto3" json:"payload_fingerprint,omitempty"`
-	ReauthenticatedAt  *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=reauthenticated_at,json=reauthenticatedAt,proto3" json:"reauthenticated_at,omitempty"`
-	IdempotencyKey     string                 `protobuf:"bytes,6,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Credential            *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	OperationId           string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	ApprovalReference     string                 `protobuf:"bytes,3,opt,name=approval_reference,json=approvalReference,proto3" json:"approval_reference,omitempty"`
+	PayloadFingerprint    string                 `protobuf:"bytes,4,opt,name=payload_fingerprint,json=payloadFingerprint,proto3" json:"payload_fingerprint,omitempty"`
+	ReauthenticationProof string                 `protobuf:"bytes,7,opt,name=reauthentication_proof,json=reauthenticationProof,proto3" json:"reauthentication_proof,omitempty"`
+	IdempotencyKey        string                 `protobuf:"bytes,6,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *ExecuteRecoveryBootstrapRequest) Reset() {
 	*x = ExecuteRecoveryBootstrapRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[40]
+	mi := &file_iam_admin_service_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2924,7 +3272,7 @@ func (x *ExecuteRecoveryBootstrapRequest) String() string {
 func (*ExecuteRecoveryBootstrapRequest) ProtoMessage() {}
 
 func (x *ExecuteRecoveryBootstrapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[40]
+	mi := &file_iam_admin_service_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2937,7 +3285,7 @@ func (x *ExecuteRecoveryBootstrapRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecuteRecoveryBootstrapRequest.ProtoReflect.Descriptor instead.
 func (*ExecuteRecoveryBootstrapRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{40}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *ExecuteRecoveryBootstrapRequest) GetCredential() *BearerCredential {
@@ -2968,11 +3316,11 @@ func (x *ExecuteRecoveryBootstrapRequest) GetPayloadFingerprint() string {
 	return ""
 }
 
-func (x *ExecuteRecoveryBootstrapRequest) GetReauthenticatedAt() *timestamppb.Timestamp {
+func (x *ExecuteRecoveryBootstrapRequest) GetReauthenticationProof() string {
 	if x != nil {
-		return x.ReauthenticatedAt
+		return x.ReauthenticationProof
 	}
-	return nil
+	return ""
 }
 
 func (x *ExecuteRecoveryBootstrapRequest) GetIdempotencyKey() string {
@@ -2992,7 +3340,7 @@ type ExecuteRecoveryBootstrapResponse struct {
 
 func (x *ExecuteRecoveryBootstrapResponse) Reset() {
 	*x = ExecuteRecoveryBootstrapResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[41]
+	mi := &file_iam_admin_service_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3004,7 +3352,7 @@ func (x *ExecuteRecoveryBootstrapResponse) String() string {
 func (*ExecuteRecoveryBootstrapResponse) ProtoMessage() {}
 
 func (x *ExecuteRecoveryBootstrapResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[41]
+	mi := &file_iam_admin_service_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3017,7 +3365,7 @@ func (x *ExecuteRecoveryBootstrapResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecuteRecoveryBootstrapResponse.ProtoReflect.Descriptor instead.
 func (*ExecuteRecoveryBootstrapResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{41}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ExecuteRecoveryBootstrapResponse) GetOperation() *RecoveryOperation {
@@ -3040,15 +3388,16 @@ type ExecuteRestoreTenantAdminRequest struct {
 	OperationId        string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
 	ApprovalReference  string                 `protobuf:"bytes,3,opt,name=approval_reference,json=approvalReference,proto3" json:"approval_reference,omitempty"`
 	PayloadFingerprint string                 `protobuf:"bytes,4,opt,name=payload_fingerprint,json=payloadFingerprint,proto3" json:"payload_fingerprint,omitempty"`
-	ReauthenticatedAt  *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=reauthenticated_at,json=reauthenticatedAt,proto3" json:"reauthenticated_at,omitempty"`
-	IdempotencyKey     string                 `protobuf:"bytes,6,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// Same executing Human, real BOSS authentication; freshness is read from PG.
+	ReauthenticationProof string `protobuf:"bytes,7,opt,name=reauthentication_proof,json=reauthenticationProof,proto3" json:"reauthentication_proof,omitempty"`
+	IdempotencyKey        string `protobuf:"bytes,6,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *ExecuteRestoreTenantAdminRequest) Reset() {
 	*x = ExecuteRestoreTenantAdminRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[42]
+	mi := &file_iam_admin_service_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3060,7 +3409,7 @@ func (x *ExecuteRestoreTenantAdminRequest) String() string {
 func (*ExecuteRestoreTenantAdminRequest) ProtoMessage() {}
 
 func (x *ExecuteRestoreTenantAdminRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[42]
+	mi := &file_iam_admin_service_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3073,7 +3422,7 @@ func (x *ExecuteRestoreTenantAdminRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecuteRestoreTenantAdminRequest.ProtoReflect.Descriptor instead.
 func (*ExecuteRestoreTenantAdminRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{42}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *ExecuteRestoreTenantAdminRequest) GetCredential() *BearerCredential {
@@ -3104,11 +3453,11 @@ func (x *ExecuteRestoreTenantAdminRequest) GetPayloadFingerprint() string {
 	return ""
 }
 
-func (x *ExecuteRestoreTenantAdminRequest) GetReauthenticatedAt() *timestamppb.Timestamp {
+func (x *ExecuteRestoreTenantAdminRequest) GetReauthenticationProof() string {
 	if x != nil {
-		return x.ReauthenticatedAt
+		return x.ReauthenticationProof
 	}
-	return nil
+	return ""
 }
 
 func (x *ExecuteRestoreTenantAdminRequest) GetIdempotencyKey() string {
@@ -3128,7 +3477,7 @@ type ExecuteRestoreTenantAdminResponse struct {
 
 func (x *ExecuteRestoreTenantAdminResponse) Reset() {
 	*x = ExecuteRestoreTenantAdminResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[43]
+	mi := &file_iam_admin_service_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3140,7 +3489,7 @@ func (x *ExecuteRestoreTenantAdminResponse) String() string {
 func (*ExecuteRestoreTenantAdminResponse) ProtoMessage() {}
 
 func (x *ExecuteRestoreTenantAdminResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[43]
+	mi := &file_iam_admin_service_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3153,7 +3502,7 @@ func (x *ExecuteRestoreTenantAdminResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use ExecuteRestoreTenantAdminResponse.ProtoReflect.Descriptor instead.
 func (*ExecuteRestoreTenantAdminResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{43}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *ExecuteRestoreTenantAdminResponse) GetOperation() *RecoveryOperation {
@@ -3181,7 +3530,7 @@ type GetAuditEventRequest struct {
 
 func (x *GetAuditEventRequest) Reset() {
 	*x = GetAuditEventRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[44]
+	mi := &file_iam_admin_service_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3193,7 +3542,7 @@ func (x *GetAuditEventRequest) String() string {
 func (*GetAuditEventRequest) ProtoMessage() {}
 
 func (x *GetAuditEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[44]
+	mi := &file_iam_admin_service_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3206,7 +3555,7 @@ func (x *GetAuditEventRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAuditEventRequest.ProtoReflect.Descriptor instead.
 func (*GetAuditEventRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{44}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *GetAuditEventRequest) GetCredential() *BearerCredential {
@@ -3239,7 +3588,7 @@ type GetAuditEventResponse struct {
 
 func (x *GetAuditEventResponse) Reset() {
 	*x = GetAuditEventResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[45]
+	mi := &file_iam_admin_service_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3251,7 +3600,7 @@ func (x *GetAuditEventResponse) String() string {
 func (*GetAuditEventResponse) ProtoMessage() {}
 
 func (x *GetAuditEventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[45]
+	mi := &file_iam_admin_service_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3264,7 +3613,7 @@ func (x *GetAuditEventResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAuditEventResponse.ProtoReflect.Descriptor instead.
 func (*GetAuditEventResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{45}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *GetAuditEventResponse) GetEvent() *AuditEvent {
@@ -3284,7 +3633,7 @@ type GetPlatformAuditEventRequest struct {
 
 func (x *GetPlatformAuditEventRequest) Reset() {
 	*x = GetPlatformAuditEventRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[46]
+	mi := &file_iam_admin_service_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3296,7 +3645,7 @@ func (x *GetPlatformAuditEventRequest) String() string {
 func (*GetPlatformAuditEventRequest) ProtoMessage() {}
 
 func (x *GetPlatformAuditEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[46]
+	mi := &file_iam_admin_service_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3309,7 +3658,7 @@ func (x *GetPlatformAuditEventRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlatformAuditEventRequest.ProtoReflect.Descriptor instead.
 func (*GetPlatformAuditEventRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{46}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *GetPlatformAuditEventRequest) GetCredential() *BearerCredential {
@@ -3335,7 +3684,7 @@ type GetPlatformAuditEventResponse struct {
 
 func (x *GetPlatformAuditEventResponse) Reset() {
 	*x = GetPlatformAuditEventResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[47]
+	mi := &file_iam_admin_service_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3347,7 +3696,7 @@ func (x *GetPlatformAuditEventResponse) String() string {
 func (*GetPlatformAuditEventResponse) ProtoMessage() {}
 
 func (x *GetPlatformAuditEventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[47]
+	mi := &file_iam_admin_service_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3360,7 +3709,7 @@ func (x *GetPlatformAuditEventResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlatformAuditEventResponse.ProtoReflect.Descriptor instead.
 func (*GetPlatformAuditEventResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{47}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *GetPlatformAuditEventResponse) GetEvent() *AuditEvent {
@@ -3380,7 +3729,7 @@ type GetPlatformInvitationRequest struct {
 
 func (x *GetPlatformInvitationRequest) Reset() {
 	*x = GetPlatformInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[48]
+	mi := &file_iam_admin_service_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3392,7 +3741,7 @@ func (x *GetPlatformInvitationRequest) String() string {
 func (*GetPlatformInvitationRequest) ProtoMessage() {}
 
 func (x *GetPlatformInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[48]
+	mi := &file_iam_admin_service_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3405,7 +3754,7 @@ func (x *GetPlatformInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlatformInvitationRequest.ProtoReflect.Descriptor instead.
 func (*GetPlatformInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{48}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *GetPlatformInvitationRequest) GetCredential() *BearerCredential {
@@ -3431,7 +3780,7 @@ type GetPlatformInvitationResponse struct {
 
 func (x *GetPlatformInvitationResponse) Reset() {
 	*x = GetPlatformInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[49]
+	mi := &file_iam_admin_service_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3443,7 +3792,7 @@ func (x *GetPlatformInvitationResponse) String() string {
 func (*GetPlatformInvitationResponse) ProtoMessage() {}
 
 func (x *GetPlatformInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[49]
+	mi := &file_iam_admin_service_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3456,7 +3805,7 @@ func (x *GetPlatformInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlatformInvitationResponse.ProtoReflect.Descriptor instead.
 func (*GetPlatformInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{49}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *GetPlatformInvitationResponse) GetInvitation() *Invitation {
@@ -3476,7 +3825,7 @@ type GetPlatformMembershipRequest struct {
 
 func (x *GetPlatformMembershipRequest) Reset() {
 	*x = GetPlatformMembershipRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[50]
+	mi := &file_iam_admin_service_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3488,7 +3837,7 @@ func (x *GetPlatformMembershipRequest) String() string {
 func (*GetPlatformMembershipRequest) ProtoMessage() {}
 
 func (x *GetPlatformMembershipRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[50]
+	mi := &file_iam_admin_service_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3501,7 +3850,7 @@ func (x *GetPlatformMembershipRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlatformMembershipRequest.ProtoReflect.Descriptor instead.
 func (*GetPlatformMembershipRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{50}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *GetPlatformMembershipRequest) GetCredential() *BearerCredential {
@@ -3527,7 +3876,7 @@ type GetPlatformMembershipResponse struct {
 
 func (x *GetPlatformMembershipResponse) Reset() {
 	*x = GetPlatformMembershipResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[51]
+	mi := &file_iam_admin_service_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3539,7 +3888,7 @@ func (x *GetPlatformMembershipResponse) String() string {
 func (*GetPlatformMembershipResponse) ProtoMessage() {}
 
 func (x *GetPlatformMembershipResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[51]
+	mi := &file_iam_admin_service_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3552,7 +3901,7 @@ func (x *GetPlatformMembershipResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlatformMembershipResponse.ProtoReflect.Descriptor instead.
 func (*GetPlatformMembershipResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{51}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *GetPlatformMembershipResponse) GetMembership() *Membership {
@@ -3572,7 +3921,7 @@ type GetPlatformRoleRequest struct {
 
 func (x *GetPlatformRoleRequest) Reset() {
 	*x = GetPlatformRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[52]
+	mi := &file_iam_admin_service_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3584,7 +3933,7 @@ func (x *GetPlatformRoleRequest) String() string {
 func (*GetPlatformRoleRequest) ProtoMessage() {}
 
 func (x *GetPlatformRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[52]
+	mi := &file_iam_admin_service_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3597,7 +3946,7 @@ func (x *GetPlatformRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlatformRoleRequest.ProtoReflect.Descriptor instead.
 func (*GetPlatformRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{52}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *GetPlatformRoleRequest) GetCredential() *BearerCredential {
@@ -3623,7 +3972,7 @@ type GetPlatformRoleResponse struct {
 
 func (x *GetPlatformRoleResponse) Reset() {
 	*x = GetPlatformRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[53]
+	mi := &file_iam_admin_service_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3635,7 +3984,7 @@ func (x *GetPlatformRoleResponse) String() string {
 func (*GetPlatformRoleResponse) ProtoMessage() {}
 
 func (x *GetPlatformRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[53]
+	mi := &file_iam_admin_service_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3648,7 +3997,7 @@ func (x *GetPlatformRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlatformRoleResponse.ProtoReflect.Descriptor instead.
 func (*GetPlatformRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{53}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *GetPlatformRoleResponse) GetRole() *Role {
@@ -3668,7 +4017,7 @@ type GetTenantWorkloadRequest struct {
 
 func (x *GetTenantWorkloadRequest) Reset() {
 	*x = GetTenantWorkloadRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[54]
+	mi := &file_iam_admin_service_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3680,7 +4029,7 @@ func (x *GetTenantWorkloadRequest) String() string {
 func (*GetTenantWorkloadRequest) ProtoMessage() {}
 
 func (x *GetTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[54]
+	mi := &file_iam_admin_service_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3693,7 +4042,7 @@ func (x *GetTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantWorkloadRequest.ProtoReflect.Descriptor instead.
 func (*GetTenantWorkloadRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{54}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *GetTenantWorkloadRequest) GetCredential() *BearerCredential {
@@ -3719,7 +4068,7 @@ type GetTenantWorkloadResponse struct {
 
 func (x *GetTenantWorkloadResponse) Reset() {
 	*x = GetTenantWorkloadResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[55]
+	mi := &file_iam_admin_service_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3731,7 +4080,7 @@ func (x *GetTenantWorkloadResponse) String() string {
 func (*GetTenantWorkloadResponse) ProtoMessage() {}
 
 func (x *GetTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[55]
+	mi := &file_iam_admin_service_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3744,7 +4093,7 @@ func (x *GetTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantWorkloadResponse.ProtoReflect.Descriptor instead.
 func (*GetTenantWorkloadResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{55}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *GetTenantWorkloadResponse) GetPrincipal() *TenantWorkload {
@@ -3764,7 +4113,7 @@ type GetTenantAccessRequest struct {
 
 func (x *GetTenantAccessRequest) Reset() {
 	*x = GetTenantAccessRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[56]
+	mi := &file_iam_admin_service_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3776,7 +4125,7 @@ func (x *GetTenantAccessRequest) String() string {
 func (*GetTenantAccessRequest) ProtoMessage() {}
 
 func (x *GetTenantAccessRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[56]
+	mi := &file_iam_admin_service_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3789,7 +4138,7 @@ func (x *GetTenantAccessRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantAccessRequest.ProtoReflect.Descriptor instead.
 func (*GetTenantAccessRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{56}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *GetTenantAccessRequest) GetCredential() *BearerCredential {
@@ -3815,7 +4164,7 @@ type GetTenantAccessResponse struct {
 
 func (x *GetTenantAccessResponse) Reset() {
 	*x = GetTenantAccessResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[57]
+	mi := &file_iam_admin_service_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3827,7 +4176,7 @@ func (x *GetTenantAccessResponse) String() string {
 func (*GetTenantAccessResponse) ProtoMessage() {}
 
 func (x *GetTenantAccessResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[57]
+	mi := &file_iam_admin_service_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3840,7 +4189,7 @@ func (x *GetTenantAccessResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantAccessResponse.ProtoReflect.Descriptor instead.
 func (*GetTenantAccessResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{57}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *GetTenantAccessResponse) GetTenantAccess() *TenantAccess {
@@ -3861,7 +4210,7 @@ type GetTenantInvitationRequest struct {
 
 func (x *GetTenantInvitationRequest) Reset() {
 	*x = GetTenantInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[58]
+	mi := &file_iam_admin_service_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3873,7 +4222,7 @@ func (x *GetTenantInvitationRequest) String() string {
 func (*GetTenantInvitationRequest) ProtoMessage() {}
 
 func (x *GetTenantInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[58]
+	mi := &file_iam_admin_service_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3886,7 +4235,7 @@ func (x *GetTenantInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantInvitationRequest.ProtoReflect.Descriptor instead.
 func (*GetTenantInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{58}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *GetTenantInvitationRequest) GetCredential() *BearerCredential {
@@ -3919,7 +4268,7 @@ type GetTenantInvitationResponse struct {
 
 func (x *GetTenantInvitationResponse) Reset() {
 	*x = GetTenantInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[59]
+	mi := &file_iam_admin_service_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3931,7 +4280,7 @@ func (x *GetTenantInvitationResponse) String() string {
 func (*GetTenantInvitationResponse) ProtoMessage() {}
 
 func (x *GetTenantInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[59]
+	mi := &file_iam_admin_service_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3944,7 +4293,7 @@ func (x *GetTenantInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantInvitationResponse.ProtoReflect.Descriptor instead.
 func (*GetTenantInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{59}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *GetTenantInvitationResponse) GetInvitation() *Invitation {
@@ -3965,7 +4314,7 @@ type GetTenantMembershipRequest struct {
 
 func (x *GetTenantMembershipRequest) Reset() {
 	*x = GetTenantMembershipRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[60]
+	mi := &file_iam_admin_service_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3977,7 +4326,7 @@ func (x *GetTenantMembershipRequest) String() string {
 func (*GetTenantMembershipRequest) ProtoMessage() {}
 
 func (x *GetTenantMembershipRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[60]
+	mi := &file_iam_admin_service_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3990,7 +4339,7 @@ func (x *GetTenantMembershipRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantMembershipRequest.ProtoReflect.Descriptor instead.
 func (*GetTenantMembershipRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{60}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *GetTenantMembershipRequest) GetCredential() *BearerCredential {
@@ -4023,7 +4372,7 @@ type GetTenantMembershipResponse struct {
 
 func (x *GetTenantMembershipResponse) Reset() {
 	*x = GetTenantMembershipResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[61]
+	mi := &file_iam_admin_service_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4035,7 +4384,7 @@ func (x *GetTenantMembershipResponse) String() string {
 func (*GetTenantMembershipResponse) ProtoMessage() {}
 
 func (x *GetTenantMembershipResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[61]
+	mi := &file_iam_admin_service_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4048,7 +4397,7 @@ func (x *GetTenantMembershipResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantMembershipResponse.ProtoReflect.Descriptor instead.
 func (*GetTenantMembershipResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{61}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *GetTenantMembershipResponse) GetMembership() *Membership {
@@ -4069,7 +4418,7 @@ type GetTenantRoleRequest struct {
 
 func (x *GetTenantRoleRequest) Reset() {
 	*x = GetTenantRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[62]
+	mi := &file_iam_admin_service_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4081,7 +4430,7 @@ func (x *GetTenantRoleRequest) String() string {
 func (*GetTenantRoleRequest) ProtoMessage() {}
 
 func (x *GetTenantRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[62]
+	mi := &file_iam_admin_service_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4094,7 +4443,7 @@ func (x *GetTenantRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantRoleRequest.ProtoReflect.Descriptor instead.
 func (*GetTenantRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{62}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *GetTenantRoleRequest) GetCredential() *BearerCredential {
@@ -4127,7 +4476,7 @@ type GetTenantRoleResponse struct {
 
 func (x *GetTenantRoleResponse) Reset() {
 	*x = GetTenantRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[63]
+	mi := &file_iam_admin_service_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4139,7 +4488,7 @@ func (x *GetTenantRoleResponse) String() string {
 func (*GetTenantRoleResponse) ProtoMessage() {}
 
 func (x *GetTenantRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[63]
+	mi := &file_iam_admin_service_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4152,7 +4501,7 @@ func (x *GetTenantRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantRoleResponse.ProtoReflect.Descriptor instead.
 func (*GetTenantRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{63}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *GetTenantRoleResponse) GetRole() *Role {
@@ -4173,7 +4522,7 @@ type ListAPIKeysRequest struct {
 
 func (x *ListAPIKeysRequest) Reset() {
 	*x = ListAPIKeysRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[64]
+	mi := &file_iam_admin_service_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4185,7 +4534,7 @@ func (x *ListAPIKeysRequest) String() string {
 func (*ListAPIKeysRequest) ProtoMessage() {}
 
 func (x *ListAPIKeysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[64]
+	mi := &file_iam_admin_service_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4198,7 +4547,7 @@ func (x *ListAPIKeysRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAPIKeysRequest.ProtoReflect.Descriptor instead.
 func (*ListAPIKeysRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{64}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *ListAPIKeysRequest) GetCredential() *BearerCredential {
@@ -4232,7 +4581,7 @@ type ListAPIKeysResponse struct {
 
 func (x *ListAPIKeysResponse) Reset() {
 	*x = ListAPIKeysResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[65]
+	mi := &file_iam_admin_service_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4244,7 +4593,7 @@ func (x *ListAPIKeysResponse) String() string {
 func (*ListAPIKeysResponse) ProtoMessage() {}
 
 func (x *ListAPIKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[65]
+	mi := &file_iam_admin_service_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4257,7 +4606,7 @@ func (x *ListAPIKeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAPIKeysResponse.ProtoReflect.Descriptor instead.
 func (*ListAPIKeysResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{65}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *ListAPIKeysResponse) GetApiKeys() []*APIKey {
@@ -4287,7 +4636,7 @@ type ListAuditEventsRequest struct {
 
 func (x *ListAuditEventsRequest) Reset() {
 	*x = ListAuditEventsRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[66]
+	mi := &file_iam_admin_service_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4299,7 +4648,7 @@ func (x *ListAuditEventsRequest) String() string {
 func (*ListAuditEventsRequest) ProtoMessage() {}
 
 func (x *ListAuditEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[66]
+	mi := &file_iam_admin_service_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4312,7 +4661,7 @@ func (x *ListAuditEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAuditEventsRequest.ProtoReflect.Descriptor instead.
 func (*ListAuditEventsRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{66}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *ListAuditEventsRequest) GetCredential() *BearerCredential {
@@ -4360,7 +4709,7 @@ type ListAuditEventsResponse struct {
 
 func (x *ListAuditEventsResponse) Reset() {
 	*x = ListAuditEventsResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[67]
+	mi := &file_iam_admin_service_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4372,7 +4721,7 @@ func (x *ListAuditEventsResponse) String() string {
 func (*ListAuditEventsResponse) ProtoMessage() {}
 
 func (x *ListAuditEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[67]
+	mi := &file_iam_admin_service_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4385,7 +4734,7 @@ func (x *ListAuditEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAuditEventsResponse.ProtoReflect.Descriptor instead.
 func (*ListAuditEventsResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{67}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *ListAuditEventsResponse) GetEvents() []*AuditEvent {
@@ -4408,13 +4757,14 @@ type ListPlatformAuditEventsRequest struct {
 	Action        string                 `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
 	Result        string                 `protobuf:"bytes,3,opt,name=result,proto3" json:"result,omitempty"`
 	Page          *CursorPageRequest     `protobuf:"bytes,4,opt,name=page,proto3" json:"page,omitempty"`
+	TenantId      string                 `protobuf:"bytes,5,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ListPlatformAuditEventsRequest) Reset() {
 	*x = ListPlatformAuditEventsRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[68]
+	mi := &file_iam_admin_service_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4426,7 +4776,7 @@ func (x *ListPlatformAuditEventsRequest) String() string {
 func (*ListPlatformAuditEventsRequest) ProtoMessage() {}
 
 func (x *ListPlatformAuditEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[68]
+	mi := &file_iam_admin_service_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4439,7 +4789,7 @@ func (x *ListPlatformAuditEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlatformAuditEventsRequest.ProtoReflect.Descriptor instead.
 func (*ListPlatformAuditEventsRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{68}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *ListPlatformAuditEventsRequest) GetCredential() *BearerCredential {
@@ -4470,6 +4820,13 @@ func (x *ListPlatformAuditEventsRequest) GetPage() *CursorPageRequest {
 	return nil
 }
 
+func (x *ListPlatformAuditEventsRequest) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
 type ListPlatformAuditEventsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Events        []*AuditEvent          `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
@@ -4480,7 +4837,7 @@ type ListPlatformAuditEventsResponse struct {
 
 func (x *ListPlatformAuditEventsResponse) Reset() {
 	*x = ListPlatformAuditEventsResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[69]
+	mi := &file_iam_admin_service_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4492,7 +4849,7 @@ func (x *ListPlatformAuditEventsResponse) String() string {
 func (*ListPlatformAuditEventsResponse) ProtoMessage() {}
 
 func (x *ListPlatformAuditEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[69]
+	mi := &file_iam_admin_service_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4505,7 +4862,7 @@ func (x *ListPlatformAuditEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlatformAuditEventsResponse.ProtoReflect.Descriptor instead.
 func (*ListPlatformAuditEventsResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{69}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *ListPlatformAuditEventsResponse) GetEvents() []*AuditEvent {
@@ -4533,7 +4890,7 @@ type ListPlatformInvitationsRequest struct {
 
 func (x *ListPlatformInvitationsRequest) Reset() {
 	*x = ListPlatformInvitationsRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[70]
+	mi := &file_iam_admin_service_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4545,7 +4902,7 @@ func (x *ListPlatformInvitationsRequest) String() string {
 func (*ListPlatformInvitationsRequest) ProtoMessage() {}
 
 func (x *ListPlatformInvitationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[70]
+	mi := &file_iam_admin_service_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4558,7 +4915,7 @@ func (x *ListPlatformInvitationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlatformInvitationsRequest.ProtoReflect.Descriptor instead.
 func (*ListPlatformInvitationsRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{70}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *ListPlatformInvitationsRequest) GetCredential() *BearerCredential {
@@ -4592,7 +4949,7 @@ type ListPlatformInvitationsResponse struct {
 
 func (x *ListPlatformInvitationsResponse) Reset() {
 	*x = ListPlatformInvitationsResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[71]
+	mi := &file_iam_admin_service_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4604,7 +4961,7 @@ func (x *ListPlatformInvitationsResponse) String() string {
 func (*ListPlatformInvitationsResponse) ProtoMessage() {}
 
 func (x *ListPlatformInvitationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[71]
+	mi := &file_iam_admin_service_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4617,7 +4974,7 @@ func (x *ListPlatformInvitationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlatformInvitationsResponse.ProtoReflect.Descriptor instead.
 func (*ListPlatformInvitationsResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{71}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *ListPlatformInvitationsResponse) GetInvitations() []*Invitation {
@@ -4645,7 +5002,7 @@ type ListPlatformMembershipsRequest struct {
 
 func (x *ListPlatformMembershipsRequest) Reset() {
 	*x = ListPlatformMembershipsRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[72]
+	mi := &file_iam_admin_service_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4657,7 +5014,7 @@ func (x *ListPlatformMembershipsRequest) String() string {
 func (*ListPlatformMembershipsRequest) ProtoMessage() {}
 
 func (x *ListPlatformMembershipsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[72]
+	mi := &file_iam_admin_service_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4670,7 +5027,7 @@ func (x *ListPlatformMembershipsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlatformMembershipsRequest.ProtoReflect.Descriptor instead.
 func (*ListPlatformMembershipsRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{72}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{77}
 }
 
 func (x *ListPlatformMembershipsRequest) GetCredential() *BearerCredential {
@@ -4704,7 +5061,7 @@ type ListPlatformMembershipsResponse struct {
 
 func (x *ListPlatformMembershipsResponse) Reset() {
 	*x = ListPlatformMembershipsResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[73]
+	mi := &file_iam_admin_service_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4716,7 +5073,7 @@ func (x *ListPlatformMembershipsResponse) String() string {
 func (*ListPlatformMembershipsResponse) ProtoMessage() {}
 
 func (x *ListPlatformMembershipsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[73]
+	mi := &file_iam_admin_service_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4729,7 +5086,7 @@ func (x *ListPlatformMembershipsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlatformMembershipsResponse.ProtoReflect.Descriptor instead.
 func (*ListPlatformMembershipsResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{73}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *ListPlatformMembershipsResponse) GetMemberships() []*Membership {
@@ -4756,7 +5113,7 @@ type ListPlatformRolesRequest struct {
 
 func (x *ListPlatformRolesRequest) Reset() {
 	*x = ListPlatformRolesRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[74]
+	mi := &file_iam_admin_service_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4768,7 +5125,7 @@ func (x *ListPlatformRolesRequest) String() string {
 func (*ListPlatformRolesRequest) ProtoMessage() {}
 
 func (x *ListPlatformRolesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[74]
+	mi := &file_iam_admin_service_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4781,7 +5138,7 @@ func (x *ListPlatformRolesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlatformRolesRequest.ProtoReflect.Descriptor instead.
 func (*ListPlatformRolesRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{74}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{79}
 }
 
 func (x *ListPlatformRolesRequest) GetCredential() *BearerCredential {
@@ -4808,7 +5165,7 @@ type ListPlatformRolesResponse struct {
 
 func (x *ListPlatformRolesResponse) Reset() {
 	*x = ListPlatformRolesResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[75]
+	mi := &file_iam_admin_service_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4820,7 +5177,7 @@ func (x *ListPlatformRolesResponse) String() string {
 func (*ListPlatformRolesResponse) ProtoMessage() {}
 
 func (x *ListPlatformRolesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[75]
+	mi := &file_iam_admin_service_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4833,7 +5190,7 @@ func (x *ListPlatformRolesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlatformRolesResponse.ProtoReflect.Descriptor instead.
 func (*ListPlatformRolesResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{75}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *ListPlatformRolesResponse) GetRoles() []*Role {
@@ -4862,7 +5219,7 @@ type ListTenantWorkloadsRequest struct {
 
 func (x *ListTenantWorkloadsRequest) Reset() {
 	*x = ListTenantWorkloadsRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[76]
+	mi := &file_iam_admin_service_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4874,7 +5231,7 @@ func (x *ListTenantWorkloadsRequest) String() string {
 func (*ListTenantWorkloadsRequest) ProtoMessage() {}
 
 func (x *ListTenantWorkloadsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[76]
+	mi := &file_iam_admin_service_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4887,7 +5244,7 @@ func (x *ListTenantWorkloadsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantWorkloadsRequest.ProtoReflect.Descriptor instead.
 func (*ListTenantWorkloadsRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{76}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *ListTenantWorkloadsRequest) GetCredential() *BearerCredential {
@@ -4928,7 +5285,7 @@ type ListTenantWorkloadsResponse struct {
 
 func (x *ListTenantWorkloadsResponse) Reset() {
 	*x = ListTenantWorkloadsResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[77]
+	mi := &file_iam_admin_service_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4940,7 +5297,7 @@ func (x *ListTenantWorkloadsResponse) String() string {
 func (*ListTenantWorkloadsResponse) ProtoMessage() {}
 
 func (x *ListTenantWorkloadsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[77]
+	mi := &file_iam_admin_service_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4953,7 +5310,7 @@ func (x *ListTenantWorkloadsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantWorkloadsResponse.ProtoReflect.Descriptor instead.
 func (*ListTenantWorkloadsResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{77}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *ListTenantWorkloadsResponse) GetPrincipals() []*TenantWorkload {
@@ -4982,7 +5339,7 @@ type ListTenantInvitationsRequest struct {
 
 func (x *ListTenantInvitationsRequest) Reset() {
 	*x = ListTenantInvitationsRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[78]
+	mi := &file_iam_admin_service_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4994,7 +5351,7 @@ func (x *ListTenantInvitationsRequest) String() string {
 func (*ListTenantInvitationsRequest) ProtoMessage() {}
 
 func (x *ListTenantInvitationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[78]
+	mi := &file_iam_admin_service_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5007,7 +5364,7 @@ func (x *ListTenantInvitationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantInvitationsRequest.ProtoReflect.Descriptor instead.
 func (*ListTenantInvitationsRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{78}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *ListTenantInvitationsRequest) GetCredential() *BearerCredential {
@@ -5048,7 +5405,7 @@ type ListTenantInvitationsResponse struct {
 
 func (x *ListTenantInvitationsResponse) Reset() {
 	*x = ListTenantInvitationsResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[79]
+	mi := &file_iam_admin_service_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5060,7 +5417,7 @@ func (x *ListTenantInvitationsResponse) String() string {
 func (*ListTenantInvitationsResponse) ProtoMessage() {}
 
 func (x *ListTenantInvitationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[79]
+	mi := &file_iam_admin_service_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5073,7 +5430,7 @@ func (x *ListTenantInvitationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantInvitationsResponse.ProtoReflect.Descriptor instead.
 func (*ListTenantInvitationsResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{79}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{84}
 }
 
 func (x *ListTenantInvitationsResponse) GetInvitations() []*Invitation {
@@ -5102,7 +5459,7 @@ type ListTenantMembershipsRequest struct {
 
 func (x *ListTenantMembershipsRequest) Reset() {
 	*x = ListTenantMembershipsRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[80]
+	mi := &file_iam_admin_service_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5114,7 +5471,7 @@ func (x *ListTenantMembershipsRequest) String() string {
 func (*ListTenantMembershipsRequest) ProtoMessage() {}
 
 func (x *ListTenantMembershipsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[80]
+	mi := &file_iam_admin_service_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5127,7 +5484,7 @@ func (x *ListTenantMembershipsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantMembershipsRequest.ProtoReflect.Descriptor instead.
 func (*ListTenantMembershipsRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{80}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *ListTenantMembershipsRequest) GetCredential() *BearerCredential {
@@ -5168,7 +5525,7 @@ type ListTenantMembershipsResponse struct {
 
 func (x *ListTenantMembershipsResponse) Reset() {
 	*x = ListTenantMembershipsResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[81]
+	mi := &file_iam_admin_service_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5180,7 +5537,7 @@ func (x *ListTenantMembershipsResponse) String() string {
 func (*ListTenantMembershipsResponse) ProtoMessage() {}
 
 func (x *ListTenantMembershipsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[81]
+	mi := &file_iam_admin_service_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5193,7 +5550,7 @@ func (x *ListTenantMembershipsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantMembershipsResponse.ProtoReflect.Descriptor instead.
 func (*ListTenantMembershipsResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{81}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *ListTenantMembershipsResponse) GetMemberships() []*Membership {
@@ -5221,7 +5578,7 @@ type ListTenantRolesRequest struct {
 
 func (x *ListTenantRolesRequest) Reset() {
 	*x = ListTenantRolesRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[82]
+	mi := &file_iam_admin_service_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5233,7 +5590,7 @@ func (x *ListTenantRolesRequest) String() string {
 func (*ListTenantRolesRequest) ProtoMessage() {}
 
 func (x *ListTenantRolesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[82]
+	mi := &file_iam_admin_service_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5246,7 +5603,7 @@ func (x *ListTenantRolesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantRolesRequest.ProtoReflect.Descriptor instead.
 func (*ListTenantRolesRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{82}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *ListTenantRolesRequest) GetCredential() *BearerCredential {
@@ -5280,7 +5637,7 @@ type ListTenantRolesResponse struct {
 
 func (x *ListTenantRolesResponse) Reset() {
 	*x = ListTenantRolesResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[83]
+	mi := &file_iam_admin_service_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5292,7 +5649,7 @@ func (x *ListTenantRolesResponse) String() string {
 func (*ListTenantRolesResponse) ProtoMessage() {}
 
 func (x *ListTenantRolesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[83]
+	mi := &file_iam_admin_service_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5305,7 +5662,7 @@ func (x *ListTenantRolesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantRolesResponse.ProtoReflect.Descriptor instead.
 func (*ListTenantRolesResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{83}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{88}
 }
 
 func (x *ListTenantRolesResponse) GetRoles() []*Role {
@@ -5334,7 +5691,7 @@ type RemovePlatformMembershipRequest struct {
 
 func (x *RemovePlatformMembershipRequest) Reset() {
 	*x = RemovePlatformMembershipRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[84]
+	mi := &file_iam_admin_service_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5346,7 +5703,7 @@ func (x *RemovePlatformMembershipRequest) String() string {
 func (*RemovePlatformMembershipRequest) ProtoMessage() {}
 
 func (x *RemovePlatformMembershipRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[84]
+	mi := &file_iam_admin_service_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5359,7 +5716,7 @@ func (x *RemovePlatformMembershipRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemovePlatformMembershipRequest.ProtoReflect.Descriptor instead.
 func (*RemovePlatformMembershipRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{84}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{89}
 }
 
 func (x *RemovePlatformMembershipRequest) GetCredential() *BearerCredential {
@@ -5399,7 +5756,7 @@ type RemovePlatformMembershipResponse struct {
 
 func (x *RemovePlatformMembershipResponse) Reset() {
 	*x = RemovePlatformMembershipResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[85]
+	mi := &file_iam_admin_service_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5411,7 +5768,7 @@ func (x *RemovePlatformMembershipResponse) String() string {
 func (*RemovePlatformMembershipResponse) ProtoMessage() {}
 
 func (x *RemovePlatformMembershipResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[85]
+	mi := &file_iam_admin_service_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5424,7 +5781,7 @@ func (x *RemovePlatformMembershipResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemovePlatformMembershipResponse.ProtoReflect.Descriptor instead.
 func (*RemovePlatformMembershipResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{85}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *RemovePlatformMembershipResponse) GetMembership() *Membership {
@@ -5447,7 +5804,7 @@ type RemoveTenantMembershipRequest struct {
 
 func (x *RemoveTenantMembershipRequest) Reset() {
 	*x = RemoveTenantMembershipRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[86]
+	mi := &file_iam_admin_service_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5459,7 +5816,7 @@ func (x *RemoveTenantMembershipRequest) String() string {
 func (*RemoveTenantMembershipRequest) ProtoMessage() {}
 
 func (x *RemoveTenantMembershipRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[86]
+	mi := &file_iam_admin_service_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5472,7 +5829,7 @@ func (x *RemoveTenantMembershipRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveTenantMembershipRequest.ProtoReflect.Descriptor instead.
 func (*RemoveTenantMembershipRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{86}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *RemoveTenantMembershipRequest) GetCredential() *BearerCredential {
@@ -5519,7 +5876,7 @@ type RemoveTenantMembershipResponse struct {
 
 func (x *RemoveTenantMembershipResponse) Reset() {
 	*x = RemoveTenantMembershipResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[87]
+	mi := &file_iam_admin_service_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5531,7 +5888,7 @@ func (x *RemoveTenantMembershipResponse) String() string {
 func (*RemoveTenantMembershipResponse) ProtoMessage() {}
 
 func (x *RemoveTenantMembershipResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[87]
+	mi := &file_iam_admin_service_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5544,7 +5901,7 @@ func (x *RemoveTenantMembershipResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveTenantMembershipResponse.ProtoReflect.Descriptor instead.
 func (*RemoveTenantMembershipResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{87}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{92}
 }
 
 func (x *RemoveTenantMembershipResponse) GetMembership() *Membership {
@@ -5560,9 +5917,7 @@ type RequestRecoveryBootstrapRequest struct {
 	TenantId            string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
 	IntendedPrincipalId string                 `protobuf:"bytes,3,opt,name=intended_principal_id,json=intendedPrincipalId,proto3" json:"intended_principal_id,omitempty"`
 	Reason              string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
-	ApprovalReference   string                 `protobuf:"bytes,5,opt,name=approval_reference,json=approvalReference,proto3" json:"approval_reference,omitempty"`
 	PayloadFingerprint  string                 `protobuf:"bytes,6,opt,name=payload_fingerprint,json=payloadFingerprint,proto3" json:"payload_fingerprint,omitempty"`
-	ReauthenticatedAt   *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=reauthenticated_at,json=reauthenticatedAt,proto3" json:"reauthenticated_at,omitempty"`
 	IdempotencyKey      string                 `protobuf:"bytes,8,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
@@ -5570,7 +5925,7 @@ type RequestRecoveryBootstrapRequest struct {
 
 func (x *RequestRecoveryBootstrapRequest) Reset() {
 	*x = RequestRecoveryBootstrapRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[88]
+	mi := &file_iam_admin_service_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5582,7 +5937,7 @@ func (x *RequestRecoveryBootstrapRequest) String() string {
 func (*RequestRecoveryBootstrapRequest) ProtoMessage() {}
 
 func (x *RequestRecoveryBootstrapRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[88]
+	mi := &file_iam_admin_service_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5595,7 +5950,7 @@ func (x *RequestRecoveryBootstrapRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestRecoveryBootstrapRequest.ProtoReflect.Descriptor instead.
 func (*RequestRecoveryBootstrapRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{88}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{93}
 }
 
 func (x *RequestRecoveryBootstrapRequest) GetCredential() *BearerCredential {
@@ -5626,25 +5981,11 @@ func (x *RequestRecoveryBootstrapRequest) GetReason() string {
 	return ""
 }
 
-func (x *RequestRecoveryBootstrapRequest) GetApprovalReference() string {
-	if x != nil {
-		return x.ApprovalReference
-	}
-	return ""
-}
-
 func (x *RequestRecoveryBootstrapRequest) GetPayloadFingerprint() string {
 	if x != nil {
 		return x.PayloadFingerprint
 	}
 	return ""
-}
-
-func (x *RequestRecoveryBootstrapRequest) GetReauthenticatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ReauthenticatedAt
-	}
-	return nil
 }
 
 func (x *RequestRecoveryBootstrapRequest) GetIdempotencyKey() string {
@@ -5663,7 +6004,7 @@ type RequestRecoveryBootstrapResponse struct {
 
 func (x *RequestRecoveryBootstrapResponse) Reset() {
 	*x = RequestRecoveryBootstrapResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[89]
+	mi := &file_iam_admin_service_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5675,7 +6016,7 @@ func (x *RequestRecoveryBootstrapResponse) String() string {
 func (*RequestRecoveryBootstrapResponse) ProtoMessage() {}
 
 func (x *RequestRecoveryBootstrapResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[89]
+	mi := &file_iam_admin_service_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5688,7 +6029,7 @@ func (x *RequestRecoveryBootstrapResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestRecoveryBootstrapResponse.ProtoReflect.Descriptor instead.
 func (*RequestRecoveryBootstrapResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{89}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{94}
 }
 
 func (x *RequestRecoveryBootstrapResponse) GetOperation() *RecoveryOperation {
@@ -5704,9 +6045,7 @@ type RequestRestoreTenantAdminRequest struct {
 	TenantId            string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
 	IntendedPrincipalId string                 `protobuf:"bytes,3,opt,name=intended_principal_id,json=intendedPrincipalId,proto3" json:"intended_principal_id,omitempty"`
 	Reason              string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
-	ApprovalReference   string                 `protobuf:"bytes,5,opt,name=approval_reference,json=approvalReference,proto3" json:"approval_reference,omitempty"`
 	PayloadFingerprint  string                 `protobuf:"bytes,6,opt,name=payload_fingerprint,json=payloadFingerprint,proto3" json:"payload_fingerprint,omitempty"`
-	ReauthenticatedAt   *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=reauthenticated_at,json=reauthenticatedAt,proto3" json:"reauthenticated_at,omitempty"`
 	IdempotencyKey      string                 `protobuf:"bytes,8,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
@@ -5714,7 +6053,7 @@ type RequestRestoreTenantAdminRequest struct {
 
 func (x *RequestRestoreTenantAdminRequest) Reset() {
 	*x = RequestRestoreTenantAdminRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[90]
+	mi := &file_iam_admin_service_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5726,7 +6065,7 @@ func (x *RequestRestoreTenantAdminRequest) String() string {
 func (*RequestRestoreTenantAdminRequest) ProtoMessage() {}
 
 func (x *RequestRestoreTenantAdminRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[90]
+	mi := &file_iam_admin_service_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5739,7 +6078,7 @@ func (x *RequestRestoreTenantAdminRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RequestRestoreTenantAdminRequest.ProtoReflect.Descriptor instead.
 func (*RequestRestoreTenantAdminRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{90}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{95}
 }
 
 func (x *RequestRestoreTenantAdminRequest) GetCredential() *BearerCredential {
@@ -5770,25 +6109,11 @@ func (x *RequestRestoreTenantAdminRequest) GetReason() string {
 	return ""
 }
 
-func (x *RequestRestoreTenantAdminRequest) GetApprovalReference() string {
-	if x != nil {
-		return x.ApprovalReference
-	}
-	return ""
-}
-
 func (x *RequestRestoreTenantAdminRequest) GetPayloadFingerprint() string {
 	if x != nil {
 		return x.PayloadFingerprint
 	}
 	return ""
-}
-
-func (x *RequestRestoreTenantAdminRequest) GetReauthenticatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ReauthenticatedAt
-	}
-	return nil
 }
 
 func (x *RequestRestoreTenantAdminRequest) GetIdempotencyKey() string {
@@ -5807,7 +6132,7 @@ type RequestRestoreTenantAdminResponse struct {
 
 func (x *RequestRestoreTenantAdminResponse) Reset() {
 	*x = RequestRestoreTenantAdminResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[91]
+	mi := &file_iam_admin_service_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5819,7 +6144,7 @@ func (x *RequestRestoreTenantAdminResponse) String() string {
 func (*RequestRestoreTenantAdminResponse) ProtoMessage() {}
 
 func (x *RequestRestoreTenantAdminResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[91]
+	mi := &file_iam_admin_service_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5832,7 +6157,7 @@ func (x *RequestRestoreTenantAdminResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use RequestRestoreTenantAdminResponse.ProtoReflect.Descriptor instead.
 func (*RequestRestoreTenantAdminResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{91}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{96}
 }
 
 func (x *RequestRestoreTenantAdminResponse) GetOperation() *RecoveryOperation {
@@ -5854,7 +6179,7 @@ type ResendPlatformInvitationRequest struct {
 
 func (x *ResendPlatformInvitationRequest) Reset() {
 	*x = ResendPlatformInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[92]
+	mi := &file_iam_admin_service_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5866,7 +6191,7 @@ func (x *ResendPlatformInvitationRequest) String() string {
 func (*ResendPlatformInvitationRequest) ProtoMessage() {}
 
 func (x *ResendPlatformInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[92]
+	mi := &file_iam_admin_service_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5879,7 +6204,7 @@ func (x *ResendPlatformInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendPlatformInvitationRequest.ProtoReflect.Descriptor instead.
 func (*ResendPlatformInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{92}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{97}
 }
 
 func (x *ResendPlatformInvitationRequest) GetCredential() *BearerCredential {
@@ -5911,16 +6236,15 @@ func (x *ResendPlatformInvitationRequest) GetIdempotencyKey() string {
 }
 
 type ResendPlatformInvitationResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Invitation      *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
-	InvitationToken string                 `protobuf:"bytes,2,opt,name=invitation_token,json=invitationToken,proto3" json:"invitation_token,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Invitation    *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ResendPlatformInvitationResponse) Reset() {
 	*x = ResendPlatformInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[93]
+	mi := &file_iam_admin_service_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5932,7 +6256,7 @@ func (x *ResendPlatformInvitationResponse) String() string {
 func (*ResendPlatformInvitationResponse) ProtoMessage() {}
 
 func (x *ResendPlatformInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[93]
+	mi := &file_iam_admin_service_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5945,7 +6269,7 @@ func (x *ResendPlatformInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendPlatformInvitationResponse.ProtoReflect.Descriptor instead.
 func (*ResendPlatformInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{93}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{98}
 }
 
 func (x *ResendPlatformInvitationResponse) GetInvitation() *Invitation {
@@ -5953,13 +6277,6 @@ func (x *ResendPlatformInvitationResponse) GetInvitation() *Invitation {
 		return x.Invitation
 	}
 	return nil
-}
-
-func (x *ResendPlatformInvitationResponse) GetInvitationToken() string {
-	if x != nil {
-		return x.InvitationToken
-	}
-	return ""
 }
 
 type ResendTenantInvitationRequest struct {
@@ -5975,7 +6292,7 @@ type ResendTenantInvitationRequest struct {
 
 func (x *ResendTenantInvitationRequest) Reset() {
 	*x = ResendTenantInvitationRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[94]
+	mi := &file_iam_admin_service_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5987,7 +6304,7 @@ func (x *ResendTenantInvitationRequest) String() string {
 func (*ResendTenantInvitationRequest) ProtoMessage() {}
 
 func (x *ResendTenantInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[94]
+	mi := &file_iam_admin_service_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6000,7 +6317,7 @@ func (x *ResendTenantInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendTenantInvitationRequest.ProtoReflect.Descriptor instead.
 func (*ResendTenantInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{94}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{99}
 }
 
 func (x *ResendTenantInvitationRequest) GetCredential() *BearerCredential {
@@ -6039,16 +6356,15 @@ func (x *ResendTenantInvitationRequest) GetIdempotencyKey() string {
 }
 
 type ResendTenantInvitationResponse struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Invitation      *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
-	InvitationToken string                 `protobuf:"bytes,2,opt,name=invitation_token,json=invitationToken,proto3" json:"invitation_token,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Invitation    *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ResendTenantInvitationResponse) Reset() {
 	*x = ResendTenantInvitationResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[95]
+	mi := &file_iam_admin_service_proto_msgTypes[100]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6060,7 +6376,7 @@ func (x *ResendTenantInvitationResponse) String() string {
 func (*ResendTenantInvitationResponse) ProtoMessage() {}
 
 func (x *ResendTenantInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[95]
+	mi := &file_iam_admin_service_proto_msgTypes[100]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6073,7 +6389,7 @@ func (x *ResendTenantInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendTenantInvitationResponse.ProtoReflect.Descriptor instead.
 func (*ResendTenantInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{95}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{100}
 }
 
 func (x *ResendTenantInvitationResponse) GetInvitation() *Invitation {
@@ -6081,13 +6397,6 @@ func (x *ResendTenantInvitationResponse) GetInvitation() *Invitation {
 		return x.Invitation
 	}
 	return nil
-}
-
-func (x *ResendTenantInvitationResponse) GetInvitationToken() string {
-	if x != nil {
-		return x.InvitationToken
-	}
-	return ""
 }
 
 type RevokeAPIKeyRequest struct {
@@ -6101,7 +6410,7 @@ type RevokeAPIKeyRequest struct {
 
 func (x *RevokeAPIKeyRequest) Reset() {
 	*x = RevokeAPIKeyRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[96]
+	mi := &file_iam_admin_service_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6113,7 +6422,7 @@ func (x *RevokeAPIKeyRequest) String() string {
 func (*RevokeAPIKeyRequest) ProtoMessage() {}
 
 func (x *RevokeAPIKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[96]
+	mi := &file_iam_admin_service_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6126,7 +6435,7 @@ func (x *RevokeAPIKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeAPIKeyRequest.ProtoReflect.Descriptor instead.
 func (*RevokeAPIKeyRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{96}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{101}
 }
 
 func (x *RevokeAPIKeyRequest) GetCredential() *BearerCredential {
@@ -6159,7 +6468,7 @@ type RevokeAPIKeyResponse struct {
 
 func (x *RevokeAPIKeyResponse) Reset() {
 	*x = RevokeAPIKeyResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[97]
+	mi := &file_iam_admin_service_proto_msgTypes[102]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6171,7 +6480,7 @@ func (x *RevokeAPIKeyResponse) String() string {
 func (*RevokeAPIKeyResponse) ProtoMessage() {}
 
 func (x *RevokeAPIKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[97]
+	mi := &file_iam_admin_service_proto_msgTypes[102]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6184,7 +6493,7 @@ func (x *RevokeAPIKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeAPIKeyResponse.ProtoReflect.Descriptor instead.
 func (*RevokeAPIKeyResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{97}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{102}
 }
 
 func (x *RevokeAPIKeyResponse) GetApiKey() *APIKey {
@@ -6207,7 +6516,7 @@ type UnbindPlatformRoleRequest struct {
 
 func (x *UnbindPlatformRoleRequest) Reset() {
 	*x = UnbindPlatformRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[98]
+	mi := &file_iam_admin_service_proto_msgTypes[103]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6219,7 +6528,7 @@ func (x *UnbindPlatformRoleRequest) String() string {
 func (*UnbindPlatformRoleRequest) ProtoMessage() {}
 
 func (x *UnbindPlatformRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[98]
+	mi := &file_iam_admin_service_proto_msgTypes[103]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6232,7 +6541,7 @@ func (x *UnbindPlatformRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnbindPlatformRoleRequest.ProtoReflect.Descriptor instead.
 func (*UnbindPlatformRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{98}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{103}
 }
 
 func (x *UnbindPlatformRoleRequest) GetCredential() *BearerCredential {
@@ -6279,7 +6588,7 @@ type UnbindPlatformRoleResponse struct {
 
 func (x *UnbindPlatformRoleResponse) Reset() {
 	*x = UnbindPlatformRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[99]
+	mi := &file_iam_admin_service_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6291,7 +6600,7 @@ func (x *UnbindPlatformRoleResponse) String() string {
 func (*UnbindPlatformRoleResponse) ProtoMessage() {}
 
 func (x *UnbindPlatformRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[99]
+	mi := &file_iam_admin_service_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6304,7 +6613,7 @@ func (x *UnbindPlatformRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnbindPlatformRoleResponse.ProtoReflect.Descriptor instead.
 func (*UnbindPlatformRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{99}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{104}
 }
 
 func (x *UnbindPlatformRoleResponse) GetMembership() *Membership {
@@ -6328,7 +6637,7 @@ type UnbindTenantRoleRequest struct {
 
 func (x *UnbindTenantRoleRequest) Reset() {
 	*x = UnbindTenantRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[100]
+	mi := &file_iam_admin_service_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6340,7 +6649,7 @@ func (x *UnbindTenantRoleRequest) String() string {
 func (*UnbindTenantRoleRequest) ProtoMessage() {}
 
 func (x *UnbindTenantRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[100]
+	mi := &file_iam_admin_service_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6353,7 +6662,7 @@ func (x *UnbindTenantRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnbindTenantRoleRequest.ProtoReflect.Descriptor instead.
 func (*UnbindTenantRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{100}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{105}
 }
 
 func (x *UnbindTenantRoleRequest) GetCredential() *BearerCredential {
@@ -6407,7 +6716,7 @@ type UnbindTenantRoleResponse struct {
 
 func (x *UnbindTenantRoleResponse) Reset() {
 	*x = UnbindTenantRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[101]
+	mi := &file_iam_admin_service_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6419,7 +6728,7 @@ func (x *UnbindTenantRoleResponse) String() string {
 func (*UnbindTenantRoleResponse) ProtoMessage() {}
 
 func (x *UnbindTenantRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[101]
+	mi := &file_iam_admin_service_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6432,7 +6741,7 @@ func (x *UnbindTenantRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnbindTenantRoleResponse.ProtoReflect.Descriptor instead.
 func (*UnbindTenantRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{101}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{106}
 }
 
 func (x *UnbindTenantRoleResponse) GetMembership() *Membership {
@@ -6455,7 +6764,7 @@ type UpdatePlatformMembershipRequest struct {
 
 func (x *UpdatePlatformMembershipRequest) Reset() {
 	*x = UpdatePlatformMembershipRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[102]
+	mi := &file_iam_admin_service_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6467,7 +6776,7 @@ func (x *UpdatePlatformMembershipRequest) String() string {
 func (*UpdatePlatformMembershipRequest) ProtoMessage() {}
 
 func (x *UpdatePlatformMembershipRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[102]
+	mi := &file_iam_admin_service_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6480,7 +6789,7 @@ func (x *UpdatePlatformMembershipRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePlatformMembershipRequest.ProtoReflect.Descriptor instead.
 func (*UpdatePlatformMembershipRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{102}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{107}
 }
 
 func (x *UpdatePlatformMembershipRequest) GetCredential() *BearerCredential {
@@ -6527,7 +6836,7 @@ type UpdatePlatformMembershipResponse struct {
 
 func (x *UpdatePlatformMembershipResponse) Reset() {
 	*x = UpdatePlatformMembershipResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[103]
+	mi := &file_iam_admin_service_proto_msgTypes[108]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6539,7 +6848,7 @@ func (x *UpdatePlatformMembershipResponse) String() string {
 func (*UpdatePlatformMembershipResponse) ProtoMessage() {}
 
 func (x *UpdatePlatformMembershipResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[103]
+	mi := &file_iam_admin_service_proto_msgTypes[108]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6552,7 +6861,7 @@ func (x *UpdatePlatformMembershipResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePlatformMembershipResponse.ProtoReflect.Descriptor instead.
 func (*UpdatePlatformMembershipResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{103}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{108}
 }
 
 func (x *UpdatePlatformMembershipResponse) GetMembership() *Membership {
@@ -6576,7 +6885,7 @@ type UpdatePlatformRoleRequest struct {
 
 func (x *UpdatePlatformRoleRequest) Reset() {
 	*x = UpdatePlatformRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[104]
+	mi := &file_iam_admin_service_proto_msgTypes[109]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6588,7 +6897,7 @@ func (x *UpdatePlatformRoleRequest) String() string {
 func (*UpdatePlatformRoleRequest) ProtoMessage() {}
 
 func (x *UpdatePlatformRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[104]
+	mi := &file_iam_admin_service_proto_msgTypes[109]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6601,7 +6910,7 @@ func (x *UpdatePlatformRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePlatformRoleRequest.ProtoReflect.Descriptor instead.
 func (*UpdatePlatformRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{104}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{109}
 }
 
 func (x *UpdatePlatformRoleRequest) GetCredential() *BearerCredential {
@@ -6655,7 +6964,7 @@ type UpdatePlatformRoleResponse struct {
 
 func (x *UpdatePlatformRoleResponse) Reset() {
 	*x = UpdatePlatformRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[105]
+	mi := &file_iam_admin_service_proto_msgTypes[110]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6667,7 +6976,7 @@ func (x *UpdatePlatformRoleResponse) String() string {
 func (*UpdatePlatformRoleResponse) ProtoMessage() {}
 
 func (x *UpdatePlatformRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[105]
+	mi := &file_iam_admin_service_proto_msgTypes[110]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6680,7 +6989,7 @@ func (x *UpdatePlatformRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePlatformRoleResponse.ProtoReflect.Descriptor instead.
 func (*UpdatePlatformRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{105}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{110}
 }
 
 func (x *UpdatePlatformRoleResponse) GetRole() *Role {
@@ -6703,7 +7012,7 @@ type UpdateTenantWorkloadRequest struct {
 
 func (x *UpdateTenantWorkloadRequest) Reset() {
 	*x = UpdateTenantWorkloadRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[106]
+	mi := &file_iam_admin_service_proto_msgTypes[111]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6715,7 +7024,7 @@ func (x *UpdateTenantWorkloadRequest) String() string {
 func (*UpdateTenantWorkloadRequest) ProtoMessage() {}
 
 func (x *UpdateTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[106]
+	mi := &file_iam_admin_service_proto_msgTypes[111]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6728,7 +7037,7 @@ func (x *UpdateTenantWorkloadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTenantWorkloadRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTenantWorkloadRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{106}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{111}
 }
 
 func (x *UpdateTenantWorkloadRequest) GetCredential() *BearerCredential {
@@ -6775,7 +7084,7 @@ type UpdateTenantWorkloadResponse struct {
 
 func (x *UpdateTenantWorkloadResponse) Reset() {
 	*x = UpdateTenantWorkloadResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[107]
+	mi := &file_iam_admin_service_proto_msgTypes[112]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6787,7 +7096,7 @@ func (x *UpdateTenantWorkloadResponse) String() string {
 func (*UpdateTenantWorkloadResponse) ProtoMessage() {}
 
 func (x *UpdateTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[107]
+	mi := &file_iam_admin_service_proto_msgTypes[112]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6800,7 +7109,7 @@ func (x *UpdateTenantWorkloadResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTenantWorkloadResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTenantWorkloadResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{107}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{112}
 }
 
 func (x *UpdateTenantWorkloadResponse) GetPrincipal() *TenantWorkload {
@@ -6823,7 +7132,7 @@ type UpdateTenantAccessRequest struct {
 
 func (x *UpdateTenantAccessRequest) Reset() {
 	*x = UpdateTenantAccessRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[108]
+	mi := &file_iam_admin_service_proto_msgTypes[113]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6835,7 +7144,7 @@ func (x *UpdateTenantAccessRequest) String() string {
 func (*UpdateTenantAccessRequest) ProtoMessage() {}
 
 func (x *UpdateTenantAccessRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[108]
+	mi := &file_iam_admin_service_proto_msgTypes[113]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6848,7 +7157,7 @@ func (x *UpdateTenantAccessRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTenantAccessRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTenantAccessRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{108}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{113}
 }
 
 func (x *UpdateTenantAccessRequest) GetCredential() *BearerCredential {
@@ -6895,7 +7204,7 @@ type UpdateTenantAccessResponse struct {
 
 func (x *UpdateTenantAccessResponse) Reset() {
 	*x = UpdateTenantAccessResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[109]
+	mi := &file_iam_admin_service_proto_msgTypes[114]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6907,7 +7216,7 @@ func (x *UpdateTenantAccessResponse) String() string {
 func (*UpdateTenantAccessResponse) ProtoMessage() {}
 
 func (x *UpdateTenantAccessResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[109]
+	mi := &file_iam_admin_service_proto_msgTypes[114]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6920,7 +7229,7 @@ func (x *UpdateTenantAccessResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTenantAccessResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTenantAccessResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{109}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{114}
 }
 
 func (x *UpdateTenantAccessResponse) GetTenantAccess() *TenantAccess {
@@ -6944,7 +7253,7 @@ type UpdateTenantMembershipRequest struct {
 
 func (x *UpdateTenantMembershipRequest) Reset() {
 	*x = UpdateTenantMembershipRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[110]
+	mi := &file_iam_admin_service_proto_msgTypes[115]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6956,7 +7265,7 @@ func (x *UpdateTenantMembershipRequest) String() string {
 func (*UpdateTenantMembershipRequest) ProtoMessage() {}
 
 func (x *UpdateTenantMembershipRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[110]
+	mi := &file_iam_admin_service_proto_msgTypes[115]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6969,7 +7278,7 @@ func (x *UpdateTenantMembershipRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTenantMembershipRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTenantMembershipRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{110}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{115}
 }
 
 func (x *UpdateTenantMembershipRequest) GetCredential() *BearerCredential {
@@ -7023,7 +7332,7 @@ type UpdateTenantMembershipResponse struct {
 
 func (x *UpdateTenantMembershipResponse) Reset() {
 	*x = UpdateTenantMembershipResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[111]
+	mi := &file_iam_admin_service_proto_msgTypes[116]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7035,7 +7344,7 @@ func (x *UpdateTenantMembershipResponse) String() string {
 func (*UpdateTenantMembershipResponse) ProtoMessage() {}
 
 func (x *UpdateTenantMembershipResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[111]
+	mi := &file_iam_admin_service_proto_msgTypes[116]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7048,7 +7357,7 @@ func (x *UpdateTenantMembershipResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTenantMembershipResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTenantMembershipResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{111}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{116}
 }
 
 func (x *UpdateTenantMembershipResponse) GetMembership() *Membership {
@@ -7073,7 +7382,7 @@ type UpdateTenantRoleRequest struct {
 
 func (x *UpdateTenantRoleRequest) Reset() {
 	*x = UpdateTenantRoleRequest{}
-	mi := &file_iam_admin_service_proto_msgTypes[112]
+	mi := &file_iam_admin_service_proto_msgTypes[117]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7085,7 +7394,7 @@ func (x *UpdateTenantRoleRequest) String() string {
 func (*UpdateTenantRoleRequest) ProtoMessage() {}
 
 func (x *UpdateTenantRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[112]
+	mi := &file_iam_admin_service_proto_msgTypes[117]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7098,7 +7407,7 @@ func (x *UpdateTenantRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTenantRoleRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTenantRoleRequest) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{112}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{117}
 }
 
 func (x *UpdateTenantRoleRequest) GetCredential() *BearerCredential {
@@ -7159,7 +7468,7 @@ type UpdateTenantRoleResponse struct {
 
 func (x *UpdateTenantRoleResponse) Reset() {
 	*x = UpdateTenantRoleResponse{}
-	mi := &file_iam_admin_service_proto_msgTypes[113]
+	mi := &file_iam_admin_service_proto_msgTypes[118]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7171,7 +7480,7 @@ func (x *UpdateTenantRoleResponse) String() string {
 func (*UpdateTenantRoleResponse) ProtoMessage() {}
 
 func (x *UpdateTenantRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_iam_admin_service_proto_msgTypes[113]
+	mi := &file_iam_admin_service_proto_msgTypes[118]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7184,7 +7493,7 @@ func (x *UpdateTenantRoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTenantRoleResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTenantRoleResponse) Descriptor() ([]byte, []int) {
-	return file_iam_admin_service_proto_rawDescGZIP(), []int{113}
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{118}
 }
 
 func (x *UpdateTenantRoleResponse) GetRole() *Role {
@@ -7194,11 +7503,1385 @@ func (x *UpdateTenantRoleResponse) GetRole() *Role {
 	return nil
 }
 
+// Metadata of the original Core-requested IAM operation. Invitation secrets,
+// raw source payloads and membership creation are excluded from these responses.
+type TenantBootstrapJob struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Kind              string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	Generation        uint64                 `protobuf:"varint,2,opt,name=generation,proto3" json:"generation,omitempty"`
+	State             string                 `protobuf:"bytes,3,opt,name=state,proto3" json:"state,omitempty"`
+	AttemptCount      uint32                 `protobuf:"varint,4,opt,name=attempt_count,json=attemptCount,proto3" json:"attempt_count,omitempty"`
+	CycleStartAttempt uint32                 `protobuf:"varint,5,opt,name=cycle_start_attempt,json=cycleStartAttempt,proto3" json:"cycle_start_attempt,omitempty"`
+	LastError         string                 `protobuf:"bytes,6,opt,name=last_error,json=lastError,proto3" json:"last_error,omitempty"`
+	AvailableAt       *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=available_at,json=availableAt,proto3" json:"available_at,omitempty"`
+	RecoveryId        string                 `protobuf:"bytes,8,opt,name=recovery_id,json=recoveryId,proto3" json:"recovery_id,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *TenantBootstrapJob) Reset() {
+	*x = TenantBootstrapJob{}
+	mi := &file_iam_admin_service_proto_msgTypes[119]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TenantBootstrapJob) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TenantBootstrapJob) ProtoMessage() {}
+
+func (x *TenantBootstrapJob) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[119]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TenantBootstrapJob.ProtoReflect.Descriptor instead.
+func (*TenantBootstrapJob) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{119}
+}
+
+func (x *TenantBootstrapJob) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *TenantBootstrapJob) GetGeneration() uint64 {
+	if x != nil {
+		return x.Generation
+	}
+	return 0
+}
+
+func (x *TenantBootstrapJob) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+func (x *TenantBootstrapJob) GetAttemptCount() uint32 {
+	if x != nil {
+		return x.AttemptCount
+	}
+	return 0
+}
+
+func (x *TenantBootstrapJob) GetCycleStartAttempt() uint32 {
+	if x != nil {
+		return x.CycleStartAttempt
+	}
+	return 0
+}
+
+func (x *TenantBootstrapJob) GetLastError() string {
+	if x != nil {
+		return x.LastError
+	}
+	return ""
+}
+
+func (x *TenantBootstrapJob) GetAvailableAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.AvailableAt
+	}
+	return nil
+}
+
+func (x *TenantBootstrapJob) GetRecoveryId() string {
+	if x != nil {
+		return x.RecoveryId
+	}
+	return ""
+}
+
+type TenantBootstrapOperation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OperationId   string                 `protobuf:"bytes,1,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	Version       uint64                 `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
+	Invitation    *Invitation            `protobuf:"bytes,5,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	Jobs          []*TenantBootstrapJob  `protobuf:"bytes,6,rep,name=jobs,proto3" json:"jobs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TenantBootstrapOperation) Reset() {
+	*x = TenantBootstrapOperation{}
+	mi := &file_iam_admin_service_proto_msgTypes[120]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TenantBootstrapOperation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TenantBootstrapOperation) ProtoMessage() {}
+
+func (x *TenantBootstrapOperation) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[120]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TenantBootstrapOperation.ProtoReflect.Descriptor instead.
+func (*TenantBootstrapOperation) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{120}
+}
+
+func (x *TenantBootstrapOperation) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *TenantBootstrapOperation) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *TenantBootstrapOperation) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *TenantBootstrapOperation) GetVersion() uint64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *TenantBootstrapOperation) GetInvitation() *Invitation {
+	if x != nil {
+		return x.Invitation
+	}
+	return nil
+}
+
+func (x *TenantBootstrapOperation) GetJobs() []*TenantBootstrapJob {
+	if x != nil {
+		return x.Jobs
+	}
+	return nil
+}
+
+type GetTenantBootstrapRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credential    *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	OperationId   string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTenantBootstrapRequest) Reset() {
+	*x = GetTenantBootstrapRequest{}
+	mi := &file_iam_admin_service_proto_msgTypes[121]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTenantBootstrapRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTenantBootstrapRequest) ProtoMessage() {}
+
+func (x *GetTenantBootstrapRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[121]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTenantBootstrapRequest.ProtoReflect.Descriptor instead.
+func (*GetTenantBootstrapRequest) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{121}
+}
+
+func (x *GetTenantBootstrapRequest) GetCredential() *BearerCredential {
+	if x != nil {
+		return x.Credential
+	}
+	return nil
+}
+
+func (x *GetTenantBootstrapRequest) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+type GetTenantBootstrapResponse struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	Operation     *TenantBootstrapOperation `protobuf:"bytes,1,opt,name=operation,proto3" json:"operation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTenantBootstrapResponse) Reset() {
+	*x = GetTenantBootstrapResponse{}
+	mi := &file_iam_admin_service_proto_msgTypes[122]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTenantBootstrapResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTenantBootstrapResponse) ProtoMessage() {}
+
+func (x *GetTenantBootstrapResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[122]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTenantBootstrapResponse.ProtoReflect.Descriptor instead.
+func (*GetTenantBootstrapResponse) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{122}
+}
+
+func (x *GetTenantBootstrapResponse) GetOperation() *TenantBootstrapOperation {
+	if x != nil {
+		return x.Operation
+	}
+	return nil
+}
+
+// Retains the stored intended identity, roles, Invitation ID and original
+// Bootstrap operation. Current Platform and source execution authority apply.
+type ReissueTenantBootstrapInvitationRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Credential      *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	OperationId     string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	ExpectedVersion uint64                 `protobuf:"varint,3,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	ReasonCode      string                 `protobuf:"bytes,4,opt,name=reason_code,json=reasonCode,proto3" json:"reason_code,omitempty"`
+	IdempotencyKey  string                 `protobuf:"bytes,5,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ReissueTenantBootstrapInvitationRequest) Reset() {
+	*x = ReissueTenantBootstrapInvitationRequest{}
+	mi := &file_iam_admin_service_proto_msgTypes[123]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReissueTenantBootstrapInvitationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReissueTenantBootstrapInvitationRequest) ProtoMessage() {}
+
+func (x *ReissueTenantBootstrapInvitationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[123]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReissueTenantBootstrapInvitationRequest.ProtoReflect.Descriptor instead.
+func (*ReissueTenantBootstrapInvitationRequest) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{123}
+}
+
+func (x *ReissueTenantBootstrapInvitationRequest) GetCredential() *BearerCredential {
+	if x != nil {
+		return x.Credential
+	}
+	return nil
+}
+
+func (x *ReissueTenantBootstrapInvitationRequest) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *ReissueTenantBootstrapInvitationRequest) GetExpectedVersion() uint64 {
+	if x != nil {
+		return x.ExpectedVersion
+	}
+	return 0
+}
+
+func (x *ReissueTenantBootstrapInvitationRequest) GetReasonCode() string {
+	if x != nil {
+		return x.ReasonCode
+	}
+	return ""
+}
+
+func (x *ReissueTenantBootstrapInvitationRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+type ReissueTenantBootstrapInvitationResponse struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	Operation     *TenantBootstrapOperation `protobuf:"bytes,1,opt,name=operation,proto3" json:"operation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReissueTenantBootstrapInvitationResponse) Reset() {
+	*x = ReissueTenantBootstrapInvitationResponse{}
+	mi := &file_iam_admin_service_proto_msgTypes[124]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReissueTenantBootstrapInvitationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReissueTenantBootstrapInvitationResponse) ProtoMessage() {}
+
+func (x *ReissueTenantBootstrapInvitationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[124]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReissueTenantBootstrapInvitationResponse.ProtoReflect.Descriptor instead.
+func (*ReissueTenantBootstrapInvitationResponse) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{124}
+}
+
+func (x *ReissueTenantBootstrapInvitationResponse) GetOperation() *TenantBootstrapOperation {
+	if x != nil {
+		return x.Operation
+	}
+	return nil
+}
+
+// Technical retry retains the original business operation and intended identity.
+// Current Platform/source authority is mandatory even for cached receipts.
+type RetryTenantBootstrapJobRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Credential      *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	OperationId     string                 `protobuf:"bytes,2,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	Kind            string                 `protobuf:"bytes,3,opt,name=kind,proto3" json:"kind,omitempty"`
+	Generation      uint64                 `protobuf:"varint,4,opt,name=generation,proto3" json:"generation,omitempty"`
+	ExpectedAttempt uint32                 `protobuf:"varint,5,opt,name=expected_attempt,json=expectedAttempt,proto3" json:"expected_attempt,omitempty"`
+	ExpectedVersion uint64                 `protobuf:"varint,6,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	ReasonCode      string                 `protobuf:"bytes,7,opt,name=reason_code,json=reasonCode,proto3" json:"reason_code,omitempty"`
+	IdempotencyKey  string                 `protobuf:"bytes,8,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *RetryTenantBootstrapJobRequest) Reset() {
+	*x = RetryTenantBootstrapJobRequest{}
+	mi := &file_iam_admin_service_proto_msgTypes[125]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetryTenantBootstrapJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetryTenantBootstrapJobRequest) ProtoMessage() {}
+
+func (x *RetryTenantBootstrapJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[125]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetryTenantBootstrapJobRequest.ProtoReflect.Descriptor instead.
+func (*RetryTenantBootstrapJobRequest) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{125}
+}
+
+func (x *RetryTenantBootstrapJobRequest) GetCredential() *BearerCredential {
+	if x != nil {
+		return x.Credential
+	}
+	return nil
+}
+
+func (x *RetryTenantBootstrapJobRequest) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *RetryTenantBootstrapJobRequest) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *RetryTenantBootstrapJobRequest) GetGeneration() uint64 {
+	if x != nil {
+		return x.Generation
+	}
+	return 0
+}
+
+func (x *RetryTenantBootstrapJobRequest) GetExpectedAttempt() uint32 {
+	if x != nil {
+		return x.ExpectedAttempt
+	}
+	return 0
+}
+
+func (x *RetryTenantBootstrapJobRequest) GetExpectedVersion() uint64 {
+	if x != nil {
+		return x.ExpectedVersion
+	}
+	return 0
+}
+
+func (x *RetryTenantBootstrapJobRequest) GetReasonCode() string {
+	if x != nil {
+		return x.ReasonCode
+	}
+	return ""
+}
+
+func (x *RetryTenantBootstrapJobRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+type RetryTenantBootstrapJobResponse struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	Operation     *TenantBootstrapOperation `protobuf:"bytes,1,opt,name=operation,proto3" json:"operation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RetryTenantBootstrapJobResponse) Reset() {
+	*x = RetryTenantBootstrapJobResponse{}
+	mi := &file_iam_admin_service_proto_msgTypes[126]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RetryTenantBootstrapJobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RetryTenantBootstrapJobResponse) ProtoMessage() {}
+
+func (x *RetryTenantBootstrapJobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[126]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RetryTenantBootstrapJobResponse.ProtoReflect.Descriptor instead.
+func (*RetryTenantBootstrapJobResponse) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{126}
+}
+
+func (x *RetryTenantBootstrapJobResponse) GetOperation() *TenantBootstrapOperation {
+	if x != nil {
+		return x.Operation
+	}
+	return nil
+}
+
+// Immutable quarantine metadata; raw payload and headers require Get.
+type CoreDLQEntry struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	EntryId             string                 `protobuf:"bytes,1,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`
+	ConsumerId          string                 `protobuf:"bytes,2,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	BrokerName          string                 `protobuf:"bytes,3,opt,name=broker_name,json=brokerName,proto3" json:"broker_name,omitempty"`
+	Account             string                 `protobuf:"bytes,4,opt,name=account,proto3" json:"account,omitempty"`
+	Stream              string                 `protobuf:"bytes,5,opt,name=stream,proto3" json:"stream,omitempty"`
+	Subject             string                 `protobuf:"bytes,6,opt,name=subject,proto3" json:"subject,omitempty"`
+	BrokerSequence      int64                  `protobuf:"varint,7,opt,name=broker_sequence,json=brokerSequence,proto3" json:"broker_sequence,omitempty"`
+	DeliveryCount       uint64                 `protobuf:"varint,8,opt,name=delivery_count,json=deliveryCount,proto3" json:"delivery_count,omitempty"`
+	PublishedAt         *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=published_at,json=publishedAt,proto3" json:"published_at,omitempty"`
+	QuarantinedAt       *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=quarantined_at,json=quarantinedAt,proto3" json:"quarantined_at,omitempty"`
+	RawSha256           string                 `protobuf:"bytes,11,opt,name=raw_sha256,json=rawSha256,proto3" json:"raw_sha256,omitempty"`
+	LastError           string                 `protobuf:"bytes,12,opt,name=last_error,json=lastError,proto3" json:"last_error,omitempty"`
+	LastAttempt         uint64                 `protobuf:"varint,13,opt,name=last_attempt,json=lastAttempt,proto3" json:"last_attempt,omitempty"`
+	ProvenanceAvailable bool                   `protobuf:"varint,14,opt,name=provenance_available,json=provenanceAvailable,proto3" json:"provenance_available,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *CoreDLQEntry) Reset() {
+	*x = CoreDLQEntry{}
+	mi := &file_iam_admin_service_proto_msgTypes[127]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CoreDLQEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CoreDLQEntry) ProtoMessage() {}
+
+func (x *CoreDLQEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[127]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CoreDLQEntry.ProtoReflect.Descriptor instead.
+func (*CoreDLQEntry) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{127}
+}
+
+func (x *CoreDLQEntry) GetEntryId() string {
+	if x != nil {
+		return x.EntryId
+	}
+	return ""
+}
+
+func (x *CoreDLQEntry) GetConsumerId() string {
+	if x != nil {
+		return x.ConsumerId
+	}
+	return ""
+}
+
+func (x *CoreDLQEntry) GetBrokerName() string {
+	if x != nil {
+		return x.BrokerName
+	}
+	return ""
+}
+
+func (x *CoreDLQEntry) GetAccount() string {
+	if x != nil {
+		return x.Account
+	}
+	return ""
+}
+
+func (x *CoreDLQEntry) GetStream() string {
+	if x != nil {
+		return x.Stream
+	}
+	return ""
+}
+
+func (x *CoreDLQEntry) GetSubject() string {
+	if x != nil {
+		return x.Subject
+	}
+	return ""
+}
+
+func (x *CoreDLQEntry) GetBrokerSequence() int64 {
+	if x != nil {
+		return x.BrokerSequence
+	}
+	return 0
+}
+
+func (x *CoreDLQEntry) GetDeliveryCount() uint64 {
+	if x != nil {
+		return x.DeliveryCount
+	}
+	return 0
+}
+
+func (x *CoreDLQEntry) GetPublishedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PublishedAt
+	}
+	return nil
+}
+
+func (x *CoreDLQEntry) GetQuarantinedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.QuarantinedAt
+	}
+	return nil
+}
+
+func (x *CoreDLQEntry) GetRawSha256() string {
+	if x != nil {
+		return x.RawSha256
+	}
+	return ""
+}
+
+func (x *CoreDLQEntry) GetLastError() string {
+	if x != nil {
+		return x.LastError
+	}
+	return ""
+}
+
+func (x *CoreDLQEntry) GetLastAttempt() uint64 {
+	if x != nil {
+		return x.LastAttempt
+	}
+	return 0
+}
+
+func (x *CoreDLQEntry) GetProvenanceAvailable() bool {
+	if x != nil {
+		return x.ProvenanceAvailable
+	}
+	return false
+}
+
+type CoreDLQHeader struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Values        []string               `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CoreDLQHeader) Reset() {
+	*x = CoreDLQHeader{}
+	mi := &file_iam_admin_service_proto_msgTypes[128]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CoreDLQHeader) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CoreDLQHeader) ProtoMessage() {}
+
+func (x *CoreDLQHeader) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[128]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CoreDLQHeader.ProtoReflect.Descriptor instead.
+func (*CoreDLQHeader) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{128}
+}
+
+func (x *CoreDLQHeader) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CoreDLQHeader) GetValues() []string {
+	if x != nil {
+		return x.Values
+	}
+	return nil
+}
+
+type CoreDLQAttempt struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	AttemptId         string                 `protobuf:"bytes,1,opt,name=attempt_id,json=attemptId,proto3" json:"attempt_id,omitempty"`
+	AuditId           string                 `protobuf:"bytes,2,opt,name=audit_id,json=auditId,proto3" json:"audit_id,omitempty"`
+	AttemptNumber     uint64                 `protobuf:"varint,3,opt,name=attempt_number,json=attemptNumber,proto3" json:"attempt_number,omitempty"`
+	Outcome           string                 `protobuf:"bytes,4,opt,name=outcome,proto3" json:"outcome,omitempty"`
+	ProjectionOutcome string                 `protobuf:"bytes,5,opt,name=projection_outcome,json=projectionOutcome,proto3" json:"projection_outcome,omitempty"`
+	ErrorCode         string                 `protobuf:"bytes,6,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
+	ReasonCode        string                 `protobuf:"bytes,7,opt,name=reason_code,json=reasonCode,proto3" json:"reason_code,omitempty"`
+	AuthoritySha256   string                 `protobuf:"bytes,8,opt,name=authority_sha256,json=authoritySha256,proto3" json:"authority_sha256,omitempty"`
+	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *CoreDLQAttempt) Reset() {
+	*x = CoreDLQAttempt{}
+	mi := &file_iam_admin_service_proto_msgTypes[129]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CoreDLQAttempt) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CoreDLQAttempt) ProtoMessage() {}
+
+func (x *CoreDLQAttempt) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[129]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CoreDLQAttempt.ProtoReflect.Descriptor instead.
+func (*CoreDLQAttempt) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{129}
+}
+
+func (x *CoreDLQAttempt) GetAttemptId() string {
+	if x != nil {
+		return x.AttemptId
+	}
+	return ""
+}
+
+func (x *CoreDLQAttempt) GetAuditId() string {
+	if x != nil {
+		return x.AuditId
+	}
+	return ""
+}
+
+func (x *CoreDLQAttempt) GetAttemptNumber() uint64 {
+	if x != nil {
+		return x.AttemptNumber
+	}
+	return 0
+}
+
+func (x *CoreDLQAttempt) GetOutcome() string {
+	if x != nil {
+		return x.Outcome
+	}
+	return ""
+}
+
+func (x *CoreDLQAttempt) GetProjectionOutcome() string {
+	if x != nil {
+		return x.ProjectionOutcome
+	}
+	return ""
+}
+
+func (x *CoreDLQAttempt) GetErrorCode() string {
+	if x != nil {
+		return x.ErrorCode
+	}
+	return ""
+}
+
+func (x *CoreDLQAttempt) GetReasonCode() string {
+	if x != nil {
+		return x.ReasonCode
+	}
+	return ""
+}
+
+func (x *CoreDLQAttempt) GetAuthoritySha256() string {
+	if x != nil {
+		return x.AuthoritySha256
+	}
+	return ""
+}
+
+func (x *CoreDLQAttempt) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+type ListCoreDLQEntriesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credential    *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	ConsumerId    string                 `protobuf:"bytes,2,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	Page          *CursorPageRequest     `protobuf:"bytes,3,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCoreDLQEntriesRequest) Reset() {
+	*x = ListCoreDLQEntriesRequest{}
+	mi := &file_iam_admin_service_proto_msgTypes[130]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCoreDLQEntriesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCoreDLQEntriesRequest) ProtoMessage() {}
+
+func (x *ListCoreDLQEntriesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[130]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCoreDLQEntriesRequest.ProtoReflect.Descriptor instead.
+func (*ListCoreDLQEntriesRequest) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{130}
+}
+
+func (x *ListCoreDLQEntriesRequest) GetCredential() *BearerCredential {
+	if x != nil {
+		return x.Credential
+	}
+	return nil
+}
+
+func (x *ListCoreDLQEntriesRequest) GetConsumerId() string {
+	if x != nil {
+		return x.ConsumerId
+	}
+	return ""
+}
+
+func (x *ListCoreDLQEntriesRequest) GetPage() *CursorPageRequest {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type ListCoreDLQEntriesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entries       []*CoreDLQEntry        `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	NextCursor    string                 `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCoreDLQEntriesResponse) Reset() {
+	*x = ListCoreDLQEntriesResponse{}
+	mi := &file_iam_admin_service_proto_msgTypes[131]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCoreDLQEntriesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCoreDLQEntriesResponse) ProtoMessage() {}
+
+func (x *ListCoreDLQEntriesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[131]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCoreDLQEntriesResponse.ProtoReflect.Descriptor instead.
+func (*ListCoreDLQEntriesResponse) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{131}
+}
+
+func (x *ListCoreDLQEntriesResponse) GetEntries() []*CoreDLQEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+func (x *ListCoreDLQEntriesResponse) GetNextCursor() string {
+	if x != nil {
+		return x.NextCursor
+	}
+	return ""
+}
+
+type GetCoreDLQEntryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Credential    *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	ConsumerId    string                 `protobuf:"bytes,2,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	EntryId       string                 `protobuf:"bytes,3,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`
+	Page          *CursorPageRequest     `protobuf:"bytes,4,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCoreDLQEntryRequest) Reset() {
+	*x = GetCoreDLQEntryRequest{}
+	mi := &file_iam_admin_service_proto_msgTypes[132]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCoreDLQEntryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCoreDLQEntryRequest) ProtoMessage() {}
+
+func (x *GetCoreDLQEntryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[132]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCoreDLQEntryRequest.ProtoReflect.Descriptor instead.
+func (*GetCoreDLQEntryRequest) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{132}
+}
+
+func (x *GetCoreDLQEntryRequest) GetCredential() *BearerCredential {
+	if x != nil {
+		return x.Credential
+	}
+	return nil
+}
+
+func (x *GetCoreDLQEntryRequest) GetConsumerId() string {
+	if x != nil {
+		return x.ConsumerId
+	}
+	return ""
+}
+
+func (x *GetCoreDLQEntryRequest) GetEntryId() string {
+	if x != nil {
+		return x.EntryId
+	}
+	return ""
+}
+
+func (x *GetCoreDLQEntryRequest) GetPage() *CursorPageRequest {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type GetCoreDLQEntryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Entry         *CoreDLQEntry          `protobuf:"bytes,1,opt,name=entry,proto3" json:"entry,omitempty"`
+	RawPayload    []byte                 `protobuf:"bytes,2,opt,name=raw_payload,json=rawPayload,proto3" json:"raw_payload,omitempty"`
+	Headers       []*CoreDLQHeader       `protobuf:"bytes,3,rep,name=headers,proto3" json:"headers,omitempty"`
+	Attempts      []*CoreDLQAttempt      `protobuf:"bytes,4,rep,name=attempts,proto3" json:"attempts,omitempty"`
+	NextCursor    string                 `protobuf:"bytes,5,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCoreDLQEntryResponse) Reset() {
+	*x = GetCoreDLQEntryResponse{}
+	mi := &file_iam_admin_service_proto_msgTypes[133]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCoreDLQEntryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCoreDLQEntryResponse) ProtoMessage() {}
+
+func (x *GetCoreDLQEntryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[133]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCoreDLQEntryResponse.ProtoReflect.Descriptor instead.
+func (*GetCoreDLQEntryResponse) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{133}
+}
+
+func (x *GetCoreDLQEntryResponse) GetEntry() *CoreDLQEntry {
+	if x != nil {
+		return x.Entry
+	}
+	return nil
+}
+
+func (x *GetCoreDLQEntryResponse) GetRawPayload() []byte {
+	if x != nil {
+		return x.RawPayload
+	}
+	return nil
+}
+
+func (x *GetCoreDLQEntryResponse) GetHeaders() []*CoreDLQHeader {
+	if x != nil {
+		return x.Headers
+	}
+	return nil
+}
+
+func (x *GetCoreDLQEntryResponse) GetAttempts() []*CoreDLQAttempt {
+	if x != nil {
+		return x.Attempts
+	}
+	return nil
+}
+
+func (x *GetCoreDLQEntryResponse) GetNextCursor() string {
+	if x != nil {
+		return x.NextCursor
+	}
+	return ""
+}
+
+// Re-receives the stored original synchronously. No request field can replace
+// payload, headers, identity, source coordinates, Tenant or event time.
+type ReplayCoreDLQEntryRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Credential        *BearerCredential      `protobuf:"bytes,1,opt,name=credential,proto3" json:"credential,omitempty"`
+	ConsumerId        string                 `protobuf:"bytes,2,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	EntryId           string                 `protobuf:"bytes,3,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`
+	ExpectedRawSha256 string                 `protobuf:"bytes,4,opt,name=expected_raw_sha256,json=expectedRawSha256,proto3" json:"expected_raw_sha256,omitempty"`
+	ExpectedAttempt   uint64                 `protobuf:"varint,5,opt,name=expected_attempt,json=expectedAttempt,proto3" json:"expected_attempt,omitempty"`
+	ReasonCode        string                 `protobuf:"bytes,6,opt,name=reason_code,json=reasonCode,proto3" json:"reason_code,omitempty"`
+	IdempotencyKey    string                 `protobuf:"bytes,7,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *ReplayCoreDLQEntryRequest) Reset() {
+	*x = ReplayCoreDLQEntryRequest{}
+	mi := &file_iam_admin_service_proto_msgTypes[134]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReplayCoreDLQEntryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReplayCoreDLQEntryRequest) ProtoMessage() {}
+
+func (x *ReplayCoreDLQEntryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[134]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReplayCoreDLQEntryRequest.ProtoReflect.Descriptor instead.
+func (*ReplayCoreDLQEntryRequest) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{134}
+}
+
+func (x *ReplayCoreDLQEntryRequest) GetCredential() *BearerCredential {
+	if x != nil {
+		return x.Credential
+	}
+	return nil
+}
+
+func (x *ReplayCoreDLQEntryRequest) GetConsumerId() string {
+	if x != nil {
+		return x.ConsumerId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryRequest) GetEntryId() string {
+	if x != nil {
+		return x.EntryId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryRequest) GetExpectedRawSha256() string {
+	if x != nil {
+		return x.ExpectedRawSha256
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryRequest) GetExpectedAttempt() uint64 {
+	if x != nil {
+		return x.ExpectedAttempt
+	}
+	return 0
+}
+
+func (x *ReplayCoreDLQEntryRequest) GetReasonCode() string {
+	if x != nil {
+		return x.ReasonCode
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+// A committed receiver result. Bootstrap operation completion remains separate.
+type ReplayCoreDLQEntryResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	ConsumerId        string                 `protobuf:"bytes,1,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	EntryId           string                 `protobuf:"bytes,2,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`
+	AttemptId         string                 `protobuf:"bytes,3,opt,name=attempt_id,json=attemptId,proto3" json:"attempt_id,omitempty"`
+	AuditId           string                 `protobuf:"bytes,4,opt,name=audit_id,json=auditId,proto3" json:"audit_id,omitempty"`
+	AttemptNumber     uint64                 `protobuf:"varint,5,opt,name=attempt_number,json=attemptNumber,proto3" json:"attempt_number,omitempty"`
+	RawSha256         string                 `protobuf:"bytes,6,opt,name=raw_sha256,json=rawSha256,proto3" json:"raw_sha256,omitempty"`
+	Outcome           string                 `protobuf:"bytes,7,opt,name=outcome,proto3" json:"outcome,omitempty"`
+	ProjectionOutcome string                 `protobuf:"bytes,8,opt,name=projection_outcome,json=projectionOutcome,proto3" json:"projection_outcome,omitempty"`
+	AuthoritySha256   string                 `protobuf:"bytes,9,opt,name=authority_sha256,json=authoritySha256,proto3" json:"authority_sha256,omitempty"`
+	EventId           string                 `protobuf:"bytes,10,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	TenantId          string                 `protobuf:"bytes,11,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	OperationId       string                 `protobuf:"bytes,12,opt,name=operation_id,json=operationId,proto3" json:"operation_id,omitempty"`
+	SourceSequence    int64                  `protobuf:"varint,13,opt,name=source_sequence,json=sourceSequence,proto3" json:"source_sequence,omitempty"`
+	Replayed          bool                   `protobuf:"varint,14,opt,name=replayed,proto3" json:"replayed,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *ReplayCoreDLQEntryResponse) Reset() {
+	*x = ReplayCoreDLQEntryResponse{}
+	mi := &file_iam_admin_service_proto_msgTypes[135]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReplayCoreDLQEntryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReplayCoreDLQEntryResponse) ProtoMessage() {}
+
+func (x *ReplayCoreDLQEntryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_iam_admin_service_proto_msgTypes[135]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReplayCoreDLQEntryResponse.ProtoReflect.Descriptor instead.
+func (*ReplayCoreDLQEntryResponse) Descriptor() ([]byte, []int) {
+	return file_iam_admin_service_proto_rawDescGZIP(), []int{135}
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetConsumerId() string {
+	if x != nil {
+		return x.ConsumerId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetEntryId() string {
+	if x != nil {
+		return x.EntryId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetAttemptId() string {
+	if x != nil {
+		return x.AttemptId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetAuditId() string {
+	if x != nil {
+		return x.AuditId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetAttemptNumber() uint64 {
+	if x != nil {
+		return x.AttemptNumber
+	}
+	return 0
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetRawSha256() string {
+	if x != nil {
+		return x.RawSha256
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetOutcome() string {
+	if x != nil {
+		return x.Outcome
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetProjectionOutcome() string {
+	if x != nil {
+		return x.ProjectionOutcome
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetAuthoritySha256() string {
+	if x != nil {
+		return x.AuthoritySha256
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetEventId() string {
+	if x != nil {
+		return x.EventId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetOperationId() string {
+	if x != nil {
+		return x.OperationId
+	}
+	return ""
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetSourceSequence() int64 {
+	if x != nil {
+		return x.SourceSequence
+	}
+	return 0
+}
+
+func (x *ReplayCoreDLQEntryResponse) GetReplayed() bool {
+	if x != nil {
+		return x.Replayed
+	}
+	return false
+}
+
 var File_iam_admin_service_proto protoreflect.FileDescriptor
 
 const file_iam_admin_service_proto_rawDesc = "" +
 	"\n" +
-	"\x17iam_admin_service.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"y\n" +
+	"\x17iam_admin_service.proto\x12\x06iam.v1\x1a\x0econtract.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x87\x01\n" +
+	"\x19PermissionCatalogResponse\x12 \n" +
+	"\vpermissions\x18\x01 \x03(\tR\vpermissions\x12\x1f\n" +
+	"\vnext_cursor\x18\x02 \x01(\tR\n" +
+	"nextCursor\x12'\n" +
+	"\x0fpolicy_revision\x18\x03 \x01(\tR\x0epolicyRevision\"\xa4\x01\n" +
+	"\x1cListTenantPermissionsRequest\x128\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
+	"credential\x12\x1b\n" +
+	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12-\n" +
+	"\x04page\x18\x03 \x01(\v2\x19.iam.v1.CursorPageRequestR\x04page\"\x89\x01\n" +
+	"\x1eListPlatformPermissionsRequest\x128\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
+	"credential\x12-\n" +
+	"\x04page\x18\x02 \x01(\v2\x19.iam.v1.CursorPageRequestR\x04page\"y\n" +
 	"\fTenantAccess\x12\x1b\n" +
 	"\ttenant_id\x18\x01 \x01(\tR\btenantId\x122\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x1a.iam.v1.TenantAccessStatusR\x06status\x12\x18\n" +
@@ -7220,18 +8903,22 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x06system\x18\x05 \x01(\bR\x06system\x12:\n" +
 	"\x19system_definition_version\x18\x06 \x01(\x04R\x17systemDefinitionVersion\x12 \n" +
 	"\vpermissions\x18\a \x03(\tR\vpermissions\x12\x18\n" +
-	"\aversion\x18\b \x01(\x04R\aversion\"\xe2\x02\n" +
+	"\aversion\x18\b \x01(\x04R\aversion\"\xfb\x03\n" +
 	"\n" +
 	"Invitation\x12#\n" +
 	"\rinvitation_id\x18\x01 \x01(\tR\finvitationId\x12,\n" +
-	"\bboundary\x18\x02 \x01(\v2\x10.iam.v1.BoundaryR\bboundary\x12)\n" +
-	"\x10normalized_email\x18\x03 \x01(\tR\x0fnormalizedEmail\x12\x19\n" +
+	"\bboundary\x18\x02 \x01(\v2\x10.iam.v1.BoundaryR\bboundary\x122\n" +
+	"\x15normalized_email_hint\x18\x03 \x01(\tR\x13normalizedEmailHint\x12\x19\n" +
 	"\brole_ids\x18\x04 \x03(\tR\aroleIds\x120\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x18.iam.v1.InvitationStatusR\x06status\x129\n" +
 	"\n" +
 	"expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x18\n" +
 	"\aversion\x18\a \x01(\x04R\aversion\x124\n" +
-	"\x16bootstrap_operation_id\x18\b \x01(\tR\x14bootstrapOperationId\"\xd4\x01\n" +
+	"\x16bootstrap_operation_id\x18\b \x01(\tR\x14bootstrapOperationId\x12/\n" +
+	"\x13delivery_generation\x18\t \x01(\x04R\x12deliveryGeneration\x12'\n" +
+	"\x0fdelivery_status\x18\n" +
+	" \x01(\tR\x0edeliveryStatus\x124\n" +
+	"\x16delivery_attempt_count\x18\v \x01(\rR\x14deliveryAttemptCount\"\xd4\x01\n" +
 	"\x0eTenantWorkload\x12!\n" +
 	"\fprincipal_id\x18\x01 \x01(\tR\vprincipalId\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x12\n" +
@@ -7250,15 +8937,22 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12<\n" +
 	"\flast_used_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"lastUsedAt\"\x85\x05\n" +
+	"lastUsedAt\"\xc5\x01\n" +
+	"\rAuditBoundary\x120\n" +
+	"\x06tenant\x18\x01 \x01(\v2\x16.iam.v1.TenantBoundaryH\x00R\x06tenant\x126\n" +
+	"\bplatform\x18\x02 \x01(\v2\x18.iam.v1.PlatformBoundaryH\x00R\bplatform\x12>\n" +
+	"\tprincipal\x18\x03 \x01(\v2\x1e.iam.v1.PrincipalAuditBoundaryH\x00R\tprincipalB\n" +
+	"\n" +
+	"\bboundary\"\x18\n" +
+	"\x16PrincipalAuditBoundary\"\x86\b\n" +
 	"\n" +
 	"AuditEvent\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12;\n" +
 	"\voccurred_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"occurredAt\x12,\n" +
 	"\x12actor_principal_id\x18\x03 \x01(\tR\x10actorPrincipalId\x128\n" +
-	"\rauthn_methods\x18\x04 \x03(\x0e2\x13.iam.v1.AuthnMethodR\fauthnMethods\x12,\n" +
-	"\bboundary\x18\x05 \x01(\v2\x10.iam.v1.BoundaryR\bboundary\x12\x16\n" +
+	"\rauthn_methods\x18\x04 \x03(\x0e2\x13.iam.v1.AuthnMethodR\fauthnMethods\x121\n" +
+	"\bboundary\x18\x05 \x01(\v2\x15.iam.v1.AuditBoundaryR\bboundary\x12\x16\n" +
 	"\x06action\x18\x06 \x01(\tR\x06action\x12\x1f\n" +
 	"\vtarget_type\x18\a \x01(\tR\n" +
 	"targetType\x12\x1b\n" +
@@ -7272,7 +8966,17 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\vdecision_id\x18\r \x01(\tR\n" +
 	"decisionId\x12%\n" +
 	"\x0etarget_version\x18\x0e \x01(\x04R\rtargetVersion\x129\n" +
-	"\adetails\x18\x0f \x03(\v2\x1f.iam.v1.AuditEvent.DetailsEntryR\adetails\x1a:\n" +
+	"\adetails\x18\x0f \x03(\v2\x1f.iam.v1.AuditEvent.DetailsEntryR\adetails\x12;\n" +
+	"\vrecorded_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"recordedAt\x12%\n" +
+	"\x0esource_service\x18\x11 \x01(\tR\rsourceService\x12\x1d\n" +
+	"\n" +
+	"actor_type\x18\x12 \x01(\tR\tactorType\x123\n" +
+	"\x15authentication_method\x18\x13 \x01(\tR\x14authenticationMethod\x12.\n" +
+	"\x13caller_principal_id\x18\x14 \x01(\tR\x11callerPrincipalId\x12*\n" +
+	"\x11caller_binding_id\x18\x15 \x01(\tR\x0fcallerBindingId\x124\n" +
+	"\x16caller_binding_version\x18\x16 \x01(\x04R\x14callerBindingVersion\x120\n" +
+	"\x14caller_grant_version\x18\x17 \x01(\x04R\x12callerGrantVersion\x1a:\n" +
 	"\fDetailsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x88\x04\n" +
@@ -7311,29 +9015,25 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x1eAcceptTenantInvitationResponse\x122\n" +
 	"\n" +
 	"membership\x18\x01 \x01(\v2\x12.iam.v1.MembershipR\n" +
-	"membership\"\xea\x02\n" +
+	"membership\"\xaf\x02\n" +
 	"\x1fApproveRecoveryBootstrapRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12!\n" +
 	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12-\n" +
-	"\x12approval_reference\x18\x03 \x01(\tR\x11approvalReference\x12\x16\n" +
-	"\x06reason\x18\x04 \x01(\tR\x06reason\x12/\n" +
-	"\x13payload_fingerprint\x18\x05 \x01(\tR\x12payloadFingerprint\x12I\n" +
-	"\x12reauthenticated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x11reauthenticatedAt\x12'\n" +
-	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKey\"[\n" +
+	"\x12approval_reference\x18\x03 \x01(\tR\x11approvalReference\x12/\n" +
+	"\x13payload_fingerprint\x18\x05 \x01(\tR\x12payloadFingerprint\x12'\n" +
+	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKeyJ\x04\b\x04\x10\x05J\x04\b\x06\x10\aR\x06reasonR\x12reauthenticated_at\"[\n" +
 	" ApproveRecoveryBootstrapResponse\x127\n" +
-	"\toperation\x18\x01 \x01(\v2\x19.iam.v1.RecoveryOperationR\toperation\"\xeb\x02\n" +
+	"\toperation\x18\x01 \x01(\v2\x19.iam.v1.RecoveryOperationR\toperation\"\xb0\x02\n" +
 	" ApproveRestoreTenantAdminRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12!\n" +
 	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12-\n" +
-	"\x12approval_reference\x18\x03 \x01(\tR\x11approvalReference\x12\x16\n" +
-	"\x06reason\x18\x04 \x01(\tR\x06reason\x12/\n" +
-	"\x13payload_fingerprint\x18\x05 \x01(\tR\x12payloadFingerprint\x12I\n" +
-	"\x12reauthenticated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x11reauthenticatedAt\x12'\n" +
-	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKey\"\\\n" +
+	"\x12approval_reference\x18\x03 \x01(\tR\x11approvalReference\x12/\n" +
+	"\x13payload_fingerprint\x18\x05 \x01(\tR\x12payloadFingerprint\x12'\n" +
+	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKeyJ\x04\b\x04\x10\x05J\x04\b\x06\x10\aR\x06reasonR\x12reauthenticated_at\"\\\n" +
 	"!ApproveRestoreTenantAdminResponse\x127\n" +
 	"\toperation\x18\x01 \x01(\v2\x19.iam.v1.RecoveryOperationR\toperation\"\xfa\x01\n" +
 	"\x17BindPlatformRoleRequest\x128\n" +
@@ -7404,12 +9104,11 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x10normalized_email\x18\x02 \x01(\tR\x0fnormalizedEmail\x12\x19\n" +
 	"\brole_ids\x18\x03 \x03(\tR\aroleIds\x12\x16\n" +
 	"\x06locale\x18\x04 \x01(\tR\x06locale\x12'\n" +
-	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"\x81\x01\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"n\n" +
 	" CreatePlatformInvitationResponse\x122\n" +
 	"\n" +
 	"invitation\x18\x01 \x01(\v2\x12.iam.v1.InvitationR\n" +
-	"invitation\x12)\n" +
-	"\x10invitation_token\x18\x02 \x01(\tR\x0finvitationToken\"\xd7\x01\n" +
+	"invitationJ\x04\b\x02\x10\x03R\x10invitation_token\"\xd7\x01\n" +
 	"\x19CreatePlatformRoleRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
@@ -7441,12 +9140,11 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x10normalized_email\x18\x03 \x01(\tR\x0fnormalizedEmail\x12\x19\n" +
 	"\brole_ids\x18\x04 \x03(\tR\aroleIds\x12\x16\n" +
 	"\x06locale\x18\x05 \x01(\tR\x06locale\x12'\n" +
-	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKey\"\x7f\n" +
+	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKey\"l\n" +
 	"\x1eCreateTenantInvitationResponse\x122\n" +
 	"\n" +
 	"invitation\x18\x01 \x01(\v2\x12.iam.v1.InvitationR\n" +
-	"invitation\x12)\n" +
-	"\x10invitation_token\x18\x02 \x01(\tR\x0finvitationToken\"\xf2\x01\n" +
+	"invitationJ\x04\b\x02\x10\x03R\x10invitation_token\"\xf2\x01\n" +
 	"\x17CreateTenantRoleRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
@@ -7476,28 +9174,28 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x10expected_version\x18\x04 \x01(\x04R\x0fexpectedVersion\x12'\n" +
 	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"J\n" +
 	"\x18DeleteTenantRoleResponse\x12.\n" +
-	"\x06result\x18\x01 \x01(\v2\x16.iam.v1.MutationResultR\x06result\"\xd2\x02\n" +
+	"\x06result\x18\x01 \x01(\v2\x16.iam.v1.MutationResultR\x06result\"\xd8\x02\n" +
 	"\x1fExecuteRecoveryBootstrapRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12!\n" +
 	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12-\n" +
 	"\x12approval_reference\x18\x03 \x01(\tR\x11approvalReference\x12/\n" +
-	"\x13payload_fingerprint\x18\x04 \x01(\tR\x12payloadFingerprint\x12I\n" +
-	"\x12reauthenticated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x11reauthenticatedAt\x12'\n" +
-	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKey\"\x96\x01\n" +
+	"\x13payload_fingerprint\x18\x04 \x01(\tR\x12payloadFingerprint\x125\n" +
+	"\x16reauthentication_proof\x18\a \x01(\tR\x15reauthenticationProof\x12'\n" +
+	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKeyJ\x04\b\x05\x10\x06R\x12reauthenticated_at\"\x96\x01\n" +
 	" ExecuteRecoveryBootstrapResponse\x127\n" +
 	"\toperation\x18\x01 \x01(\v2\x19.iam.v1.RecoveryOperationR\toperation\x129\n" +
-	"\rtenant_access\x18\x02 \x01(\v2\x14.iam.v1.TenantAccessR\ftenantAccess\"\xd3\x02\n" +
+	"\rtenant_access\x18\x02 \x01(\v2\x14.iam.v1.TenantAccessR\ftenantAccess\"\xd9\x02\n" +
 	" ExecuteRestoreTenantAdminRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12!\n" +
 	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12-\n" +
 	"\x12approval_reference\x18\x03 \x01(\tR\x11approvalReference\x12/\n" +
-	"\x13payload_fingerprint\x18\x04 \x01(\tR\x12payloadFingerprint\x12I\n" +
-	"\x12reauthenticated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x11reauthenticatedAt\x12'\n" +
-	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKey\"\x90\x01\n" +
+	"\x13payload_fingerprint\x18\x04 \x01(\tR\x12payloadFingerprint\x125\n" +
+	"\x16reauthentication_proof\x18\a \x01(\tR\x15reauthenticationProof\x12'\n" +
+	"\x0fidempotency_key\x18\x06 \x01(\tR\x0eidempotencyKeyJ\x04\b\x05\x10\x06R\x12reauthenticated_at\"\x90\x01\n" +
 	"!ExecuteRestoreTenantAdminResponse\x127\n" +
 	"\toperation\x18\x01 \x01(\v2\x19.iam.v1.RecoveryOperationR\toperation\x122\n" +
 	"\n" +
@@ -7606,14 +9304,15 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x17ListAuditEventsResponse\x12*\n" +
 	"\x06events\x18\x01 \x03(\v2\x12.iam.v1.AuditEventR\x06events\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\"\xb9\x01\n" +
+	"nextCursor\"\xd6\x01\n" +
 	"\x1eListPlatformAuditEventsRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12\x16\n" +
 	"\x06action\x18\x02 \x01(\tR\x06action\x12\x16\n" +
 	"\x06result\x18\x03 \x01(\tR\x06result\x12-\n" +
-	"\x04page\x18\x04 \x01(\v2\x19.iam.v1.CursorPageRequestR\x04page\"n\n" +
+	"\x04page\x18\x04 \x01(\v2\x19.iam.v1.CursorPageRequestR\x04page\x12\x1b\n" +
+	"\ttenant_id\x18\x05 \x01(\tR\btenantId\"n\n" +
 	"\x1fListPlatformAuditEventsResponse\x12*\n" +
 	"\x06events\x18\x01 \x03(\v2\x12.iam.v1.AuditEventR\x06events\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
@@ -7714,31 +9413,27 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x1eRemoveTenantMembershipResponse\x122\n" +
 	"\n" +
 	"membership\x18\x01 \x01(\v2\x12.iam.v1.MembershipR\n" +
-	"membership\"\x98\x03\n" +
+	"membership\"\xd2\x02\n" +
 	"\x1fRequestRecoveryBootstrapRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x122\n" +
 	"\x15intended_principal_id\x18\x03 \x01(\tR\x13intendedPrincipalId\x12\x16\n" +
-	"\x06reason\x18\x04 \x01(\tR\x06reason\x12-\n" +
-	"\x12approval_reference\x18\x05 \x01(\tR\x11approvalReference\x12/\n" +
-	"\x13payload_fingerprint\x18\x06 \x01(\tR\x12payloadFingerprint\x12I\n" +
-	"\x12reauthenticated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x11reauthenticatedAt\x12'\n" +
-	"\x0fidempotency_key\x18\b \x01(\tR\x0eidempotencyKey\"[\n" +
+	"\x06reason\x18\x04 \x01(\tR\x06reason\x12/\n" +
+	"\x13payload_fingerprint\x18\x06 \x01(\tR\x12payloadFingerprint\x12'\n" +
+	"\x0fidempotency_key\x18\b \x01(\tR\x0eidempotencyKeyJ\x04\b\x05\x10\x06J\x04\b\a\x10\bR\x12approval_referenceR\x12reauthenticated_at\"[\n" +
 	" RequestRecoveryBootstrapResponse\x127\n" +
-	"\toperation\x18\x01 \x01(\v2\x19.iam.v1.RecoveryOperationR\toperation\"\x99\x03\n" +
+	"\toperation\x18\x01 \x01(\v2\x19.iam.v1.RecoveryOperationR\toperation\"\xd3\x02\n" +
 	" RequestRestoreTenantAdminRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
 	"credential\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x122\n" +
 	"\x15intended_principal_id\x18\x03 \x01(\tR\x13intendedPrincipalId\x12\x16\n" +
-	"\x06reason\x18\x04 \x01(\tR\x06reason\x12-\n" +
-	"\x12approval_reference\x18\x05 \x01(\tR\x11approvalReference\x12/\n" +
-	"\x13payload_fingerprint\x18\x06 \x01(\tR\x12payloadFingerprint\x12I\n" +
-	"\x12reauthenticated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x11reauthenticatedAt\x12'\n" +
-	"\x0fidempotency_key\x18\b \x01(\tR\x0eidempotencyKey\"\\\n" +
+	"\x06reason\x18\x04 \x01(\tR\x06reason\x12/\n" +
+	"\x13payload_fingerprint\x18\x06 \x01(\tR\x12payloadFingerprint\x12'\n" +
+	"\x0fidempotency_key\x18\b \x01(\tR\x0eidempotencyKeyJ\x04\b\x05\x10\x06J\x04\b\a\x10\bR\x12approval_referenceR\x12reauthenticated_at\"\\\n" +
 	"!RequestRestoreTenantAdminResponse\x127\n" +
 	"\toperation\x18\x01 \x01(\v2\x19.iam.v1.RecoveryOperationR\toperation\"\xd4\x01\n" +
 	"\x1fResendPlatformInvitationRequest\x128\n" +
@@ -7747,12 +9442,11 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"credential\x12#\n" +
 	"\rinvitation_id\x18\x02 \x01(\tR\finvitationId\x12)\n" +
 	"\x10expected_version\x18\x03 \x01(\x04R\x0fexpectedVersion\x12'\n" +
-	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\"\x81\x01\n" +
+	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\"n\n" +
 	" ResendPlatformInvitationResponse\x122\n" +
 	"\n" +
 	"invitation\x18\x01 \x01(\v2\x12.iam.v1.InvitationR\n" +
-	"invitation\x12)\n" +
-	"\x10invitation_token\x18\x02 \x01(\tR\x0finvitationToken\"\xef\x01\n" +
+	"invitationJ\x04\b\x02\x10\x03R\x10invitation_token\"\xef\x01\n" +
 	"\x1dResendTenantInvitationRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
@@ -7760,12 +9454,11 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12#\n" +
 	"\rinvitation_id\x18\x03 \x01(\tR\finvitationId\x12)\n" +
 	"\x10expected_version\x18\x04 \x01(\x04R\x0fexpectedVersion\x12'\n" +
-	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"\x7f\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"l\n" +
 	"\x1eResendTenantInvitationResponse\x122\n" +
 	"\n" +
 	"invitation\x18\x01 \x01(\v2\x12.iam.v1.InvitationR\n" +
-	"invitation\x12)\n" +
-	"\x10invitation_token\x18\x02 \x01(\tR\x0finvitationToken\"\x8f\x01\n" +
+	"invitationJ\x04\b\x02\x10\x03R\x10invitation_token\"\x8f\x01\n" +
 	"\x13RevokeAPIKeyRequest\x128\n" +
 	"\n" +
 	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
@@ -7866,15 +9559,172 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x10expected_version\x18\x06 \x01(\x04R\x0fexpectedVersion\x12'\n" +
 	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKey\"<\n" +
 	"\x18UpdateTenantRoleResponse\x12 \n" +
-	"\x04role\x18\x01 \x01(\v2\f.iam.v1.RoleR\x04role*\x93\x02\n" +
+	"\x04role\x18\x01 \x01(\v2\f.iam.v1.RoleR\x04role\"\xb2\x02\n" +
+	"\x12TenantBootstrapJob\x12\x12\n" +
+	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\x1e\n" +
+	"\n" +
+	"generation\x18\x02 \x01(\x04R\n" +
+	"generation\x12\x14\n" +
+	"\x05state\x18\x03 \x01(\tR\x05state\x12#\n" +
+	"\rattempt_count\x18\x04 \x01(\rR\fattemptCount\x12.\n" +
+	"\x13cycle_start_attempt\x18\x05 \x01(\rR\x11cycleStartAttempt\x12\x1d\n" +
+	"\n" +
+	"last_error\x18\x06 \x01(\tR\tlastError\x12=\n" +
+	"\favailable_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\vavailableAt\x12\x1f\n" +
+	"\vrecovery_id\x18\b \x01(\tR\n" +
+	"recoveryId\"\xf0\x01\n" +
+	"\x18TenantBootstrapOperation\x12!\n" +
+	"\foperation_id\x18\x01 \x01(\tR\voperationId\x12\x1b\n" +
+	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\x04R\aversion\x122\n" +
+	"\n" +
+	"invitation\x18\x05 \x01(\v2\x12.iam.v1.InvitationR\n" +
+	"invitation\x12.\n" +
+	"\x04jobs\x18\x06 \x03(\v2\x1a.iam.v1.TenantBootstrapJobR\x04jobs\"x\n" +
+	"\x19GetTenantBootstrapRequest\x128\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
+	"credential\x12!\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationId\"\\\n" +
+	"\x1aGetTenantBootstrapResponse\x12>\n" +
+	"\toperation\x18\x01 \x01(\v2 .iam.v1.TenantBootstrapOperationR\toperation\"\xfb\x01\n" +
+	"'ReissueTenantBootstrapInvitationRequest\x128\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
+	"credential\x12!\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12)\n" +
+	"\x10expected_version\x18\x03 \x01(\x04R\x0fexpectedVersion\x12\x1f\n" +
+	"\vreason_code\x18\x04 \x01(\tR\n" +
+	"reasonCode\x12'\n" +
+	"\x0fidempotency_key\x18\x05 \x01(\tR\x0eidempotencyKey\"j\n" +
+	"(ReissueTenantBootstrapInvitationResponse\x12>\n" +
+	"\toperation\x18\x01 \x01(\v2 .iam.v1.TenantBootstrapOperationR\toperation\"\xd1\x02\n" +
+	"\x1eRetryTenantBootstrapJobRequest\x128\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
+	"credential\x12!\n" +
+	"\foperation_id\x18\x02 \x01(\tR\voperationId\x12\x12\n" +
+	"\x04kind\x18\x03 \x01(\tR\x04kind\x12\x1e\n" +
+	"\n" +
+	"generation\x18\x04 \x01(\x04R\n" +
+	"generation\x12)\n" +
+	"\x10expected_attempt\x18\x05 \x01(\rR\x0fexpectedAttempt\x12)\n" +
+	"\x10expected_version\x18\x06 \x01(\x04R\x0fexpectedVersion\x12\x1f\n" +
+	"\vreason_code\x18\a \x01(\tR\n" +
+	"reasonCode\x12'\n" +
+	"\x0fidempotency_key\x18\b \x01(\tR\x0eidempotencyKey\"a\n" +
+	"\x1fRetryTenantBootstrapJobResponse\x12>\n" +
+	"\toperation\x18\x01 \x01(\v2 .iam.v1.TenantBootstrapOperationR\toperation\"\x9d\x04\n" +
+	"\fCoreDLQEntry\x12\x19\n" +
+	"\bentry_id\x18\x01 \x01(\tR\aentryId\x12\x1f\n" +
+	"\vconsumer_id\x18\x02 \x01(\tR\n" +
+	"consumerId\x12\x1f\n" +
+	"\vbroker_name\x18\x03 \x01(\tR\n" +
+	"brokerName\x12\x18\n" +
+	"\aaccount\x18\x04 \x01(\tR\aaccount\x12\x16\n" +
+	"\x06stream\x18\x05 \x01(\tR\x06stream\x12\x18\n" +
+	"\asubject\x18\x06 \x01(\tR\asubject\x12'\n" +
+	"\x0fbroker_sequence\x18\a \x01(\x03R\x0ebrokerSequence\x12%\n" +
+	"\x0edelivery_count\x18\b \x01(\x04R\rdeliveryCount\x12=\n" +
+	"\fpublished_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\vpublishedAt\x12A\n" +
+	"\x0equarantined_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\rquarantinedAt\x12\x1d\n" +
+	"\n" +
+	"raw_sha256\x18\v \x01(\tR\trawSha256\x12\x1d\n" +
+	"\n" +
+	"last_error\x18\f \x01(\tR\tlastError\x12!\n" +
+	"\flast_attempt\x18\r \x01(\x04R\vlastAttempt\x121\n" +
+	"\x14provenance_available\x18\x0e \x01(\bR\x13provenanceAvailable\";\n" +
+	"\rCoreDLQHeader\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\x06values\x18\x02 \x03(\tR\x06values\"\xe0\x02\n" +
+	"\x0eCoreDLQAttempt\x12\x1d\n" +
+	"\n" +
+	"attempt_id\x18\x01 \x01(\tR\tattemptId\x12\x19\n" +
+	"\baudit_id\x18\x02 \x01(\tR\aauditId\x12%\n" +
+	"\x0eattempt_number\x18\x03 \x01(\x04R\rattemptNumber\x12\x18\n" +
+	"\aoutcome\x18\x04 \x01(\tR\aoutcome\x12-\n" +
+	"\x12projection_outcome\x18\x05 \x01(\tR\x11projectionOutcome\x12\x1d\n" +
+	"\n" +
+	"error_code\x18\x06 \x01(\tR\terrorCode\x12\x1f\n" +
+	"\vreason_code\x18\a \x01(\tR\n" +
+	"reasonCode\x12)\n" +
+	"\x10authority_sha256\x18\b \x01(\tR\x0fauthoritySha256\x129\n" +
+	"\n" +
+	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xa5\x01\n" +
+	"\x19ListCoreDLQEntriesRequest\x128\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
+	"credential\x12\x1f\n" +
+	"\vconsumer_id\x18\x02 \x01(\tR\n" +
+	"consumerId\x12-\n" +
+	"\x04page\x18\x03 \x01(\v2\x19.iam.v1.CursorPageRequestR\x04page\"m\n" +
+	"\x1aListCoreDLQEntriesResponse\x12.\n" +
+	"\aentries\x18\x01 \x03(\v2\x14.iam.v1.CoreDLQEntryR\aentries\x12\x1f\n" +
+	"\vnext_cursor\x18\x02 \x01(\tR\n" +
+	"nextCursor\"\xbd\x01\n" +
+	"\x16GetCoreDLQEntryRequest\x128\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
+	"credential\x12\x1f\n" +
+	"\vconsumer_id\x18\x02 \x01(\tR\n" +
+	"consumerId\x12\x19\n" +
+	"\bentry_id\x18\x03 \x01(\tR\aentryId\x12-\n" +
+	"\x04page\x18\x04 \x01(\v2\x19.iam.v1.CursorPageRequestR\x04page\"\xec\x01\n" +
+	"\x17GetCoreDLQEntryResponse\x12*\n" +
+	"\x05entry\x18\x01 \x01(\v2\x14.iam.v1.CoreDLQEntryR\x05entry\x12\x1f\n" +
+	"\vraw_payload\x18\x02 \x01(\fR\n" +
+	"rawPayload\x12/\n" +
+	"\aheaders\x18\x03 \x03(\v2\x15.iam.v1.CoreDLQHeaderR\aheaders\x122\n" +
+	"\battempts\x18\x04 \x03(\v2\x16.iam.v1.CoreDLQAttemptR\battempts\x12\x1f\n" +
+	"\vnext_cursor\x18\x05 \x01(\tR\n" +
+	"nextCursor\"\xb6\x02\n" +
+	"\x19ReplayCoreDLQEntryRequest\x128\n" +
+	"\n" +
+	"credential\x18\x01 \x01(\v2\x18.iam.v1.BearerCredentialR\n" +
+	"credential\x12\x1f\n" +
+	"\vconsumer_id\x18\x02 \x01(\tR\n" +
+	"consumerId\x12\x19\n" +
+	"\bentry_id\x18\x03 \x01(\tR\aentryId\x12.\n" +
+	"\x13expected_raw_sha256\x18\x04 \x01(\tR\x11expectedRawSha256\x12)\n" +
+	"\x10expected_attempt\x18\x05 \x01(\x04R\x0fexpectedAttempt\x12\x1f\n" +
+	"\vreason_code\x18\x06 \x01(\tR\n" +
+	"reasonCode\x12'\n" +
+	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKey\"\xec\x03\n" +
+	"\x1aReplayCoreDLQEntryResponse\x12\x1f\n" +
+	"\vconsumer_id\x18\x01 \x01(\tR\n" +
+	"consumerId\x12\x19\n" +
+	"\bentry_id\x18\x02 \x01(\tR\aentryId\x12\x1d\n" +
+	"\n" +
+	"attempt_id\x18\x03 \x01(\tR\tattemptId\x12\x19\n" +
+	"\baudit_id\x18\x04 \x01(\tR\aauditId\x12%\n" +
+	"\x0eattempt_number\x18\x05 \x01(\x04R\rattemptNumber\x12\x1d\n" +
+	"\n" +
+	"raw_sha256\x18\x06 \x01(\tR\trawSha256\x12\x18\n" +
+	"\aoutcome\x18\a \x01(\tR\aoutcome\x12-\n" +
+	"\x12projection_outcome\x18\b \x01(\tR\x11projectionOutcome\x12)\n" +
+	"\x10authority_sha256\x18\t \x01(\tR\x0fauthoritySha256\x12\x19\n" +
+	"\bevent_id\x18\n" +
+	" \x01(\tR\aeventId\x12\x1b\n" +
+	"\ttenant_id\x18\v \x01(\tR\btenantId\x12!\n" +
+	"\foperation_id\x18\f \x01(\tR\voperationId\x12'\n" +
+	"\x0fsource_sequence\x18\r \x01(\x03R\x0esourceSequence\x12\x1a\n" +
+	"\breplayed\x18\x0e \x01(\bR\breplayed*\x93\x02\n" +
 	"\x17RecoveryOperationStatus\x12)\n" +
 	"%RECOVERY_OPERATION_STATUS_UNSPECIFIED\x10\x00\x12.\n" +
 	"*RECOVERY_OPERATION_STATUS_PENDING_APPROVAL\x10\x01\x12&\n" +
 	"\"RECOVERY_OPERATION_STATUS_APPROVED\x10\x02\x12&\n" +
 	"\"RECOVERY_OPERATION_STATUS_EXECUTED\x10\x03\x12%\n" +
 	"!RECOVERY_OPERATION_STATUS_EXPIRED\x10\x04\x12&\n" +
-	"\"RECOVERY_OPERATION_STATUS_REJECTED\x10\x052\xbf(\n" +
-	"\x0fIAMAdminService\x12m\n" +
+	"\"RECOVERY_OPERATION_STATUS_REJECTED\x10\x052\xe6.\n" +
+	"\x0fIAMAdminService\x12[\n" +
+	"\x12ListCoreDLQEntries\x12!.iam.v1.ListCoreDLQEntriesRequest\x1a\".iam.v1.ListCoreDLQEntriesResponse\x12R\n" +
+	"\x0fGetCoreDLQEntry\x12\x1e.iam.v1.GetCoreDLQEntryRequest\x1a\x1f.iam.v1.GetCoreDLQEntryResponse\x12[\n" +
+	"\x12ReplayCoreDLQEntry\x12!.iam.v1.ReplayCoreDLQEntryRequest\x1a\".iam.v1.ReplayCoreDLQEntryResponse\x12[\n" +
+	"\x12GetTenantBootstrap\x12!.iam.v1.GetTenantBootstrapRequest\x1a\".iam.v1.GetTenantBootstrapResponse\x12\x85\x01\n" +
+	" ReissueTenantBootstrapInvitation\x12/.iam.v1.ReissueTenantBootstrapInvitationRequest\x1a0.iam.v1.ReissueTenantBootstrapInvitationResponse\x12j\n" +
+	"\x17RetryTenantBootstrapJob\x12&.iam.v1.RetryTenantBootstrapJobRequest\x1a'.iam.v1.RetryTenantBootstrapJobResponse\x12m\n" +
 	"\x18AcceptPlatformInvitation\x12'.iam.v1.AcceptPlatformInvitationRequest\x1a(.iam.v1.AcceptPlatformInvitationResponse\x12g\n" +
 	"\x16AcceptTenantInvitation\x12%.iam.v1.AcceptTenantInvitationRequest\x1a&.iam.v1.AcceptTenantInvitationResponse\x12m\n" +
 	"\x18ApproveRecoveryBootstrap\x12'.iam.v1.ApproveRecoveryBootstrapRequest\x1a(.iam.v1.ApproveRecoveryBootstrapResponse\x12p\n" +
@@ -7908,11 +9758,13 @@ const file_iam_admin_service_proto_rawDesc = "" +
 	"\x17ListPlatformAuditEvents\x12&.iam.v1.ListPlatformAuditEventsRequest\x1a'.iam.v1.ListPlatformAuditEventsResponse\x12j\n" +
 	"\x17ListPlatformInvitations\x12&.iam.v1.ListPlatformInvitationsRequest\x1a'.iam.v1.ListPlatformInvitationsResponse\x12j\n" +
 	"\x17ListPlatformMemberships\x12&.iam.v1.ListPlatformMembershipsRequest\x1a'.iam.v1.ListPlatformMembershipsResponse\x12X\n" +
-	"\x11ListPlatformRoles\x12 .iam.v1.ListPlatformRolesRequest\x1a!.iam.v1.ListPlatformRolesResponse\x12^\n" +
+	"\x11ListPlatformRoles\x12 .iam.v1.ListPlatformRolesRequest\x1a!.iam.v1.ListPlatformRolesResponse\x12d\n" +
+	"\x17ListPlatformPermissions\x12&.iam.v1.ListPlatformPermissionsRequest\x1a!.iam.v1.PermissionCatalogResponse\x12^\n" +
 	"\x13ListTenantWorkloads\x12\".iam.v1.ListTenantWorkloadsRequest\x1a#.iam.v1.ListTenantWorkloadsResponse\x12d\n" +
 	"\x15ListTenantInvitations\x12$.iam.v1.ListTenantInvitationsRequest\x1a%.iam.v1.ListTenantInvitationsResponse\x12d\n" +
 	"\x15ListTenantMemberships\x12$.iam.v1.ListTenantMembershipsRequest\x1a%.iam.v1.ListTenantMembershipsResponse\x12R\n" +
-	"\x0fListTenantRoles\x12\x1e.iam.v1.ListTenantRolesRequest\x1a\x1f.iam.v1.ListTenantRolesResponse\x12m\n" +
+	"\x0fListTenantRoles\x12\x1e.iam.v1.ListTenantRolesRequest\x1a\x1f.iam.v1.ListTenantRolesResponse\x12`\n" +
+	"\x15ListTenantPermissions\x12$.iam.v1.ListTenantPermissionsRequest\x1a!.iam.v1.PermissionCatalogResponse\x12m\n" +
 	"\x18RemovePlatformMembership\x12'.iam.v1.RemovePlatformMembershipRequest\x1a(.iam.v1.RemovePlatformMembershipResponse\x12g\n" +
 	"\x16RemoveTenantMembership\x12%.iam.v1.RemoveTenantMembershipRequest\x1a&.iam.v1.RemoveTenantMembershipResponse\x12m\n" +
 	"\x18RequestRecoveryBootstrap\x12'.iam.v1.RequestRecoveryBootstrapRequest\x1a(.iam.v1.RequestRecoveryBootstrapResponse\x12p\n" +
@@ -7942,403 +9794,466 @@ func file_iam_admin_service_proto_rawDescGZIP() []byte {
 }
 
 var file_iam_admin_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_iam_admin_service_proto_msgTypes = make([]protoimpl.MessageInfo, 115)
+var file_iam_admin_service_proto_msgTypes = make([]protoimpl.MessageInfo, 137)
 var file_iam_admin_service_proto_goTypes = []any{
-	(RecoveryOperationStatus)(0),              // 0: iam.v1.RecoveryOperationStatus
-	(*TenantAccess)(nil),                      // 1: iam.v1.TenantAccess
-	(*Membership)(nil),                        // 2: iam.v1.Membership
-	(*Role)(nil),                              // 3: iam.v1.Role
-	(*Invitation)(nil),                        // 4: iam.v1.Invitation
-	(*TenantWorkload)(nil),                    // 5: iam.v1.TenantWorkload
-	(*APIKey)(nil),                            // 6: iam.v1.APIKey
-	(*AuditEvent)(nil),                        // 7: iam.v1.AuditEvent
-	(*RecoveryOperation)(nil),                 // 8: iam.v1.RecoveryOperation
-	(*AcceptPlatformInvitationRequest)(nil),   // 9: iam.v1.AcceptPlatformInvitationRequest
-	(*AcceptPlatformInvitationResponse)(nil),  // 10: iam.v1.AcceptPlatformInvitationResponse
-	(*AcceptTenantInvitationRequest)(nil),     // 11: iam.v1.AcceptTenantInvitationRequest
-	(*AcceptTenantInvitationResponse)(nil),    // 12: iam.v1.AcceptTenantInvitationResponse
-	(*ApproveRecoveryBootstrapRequest)(nil),   // 13: iam.v1.ApproveRecoveryBootstrapRequest
-	(*ApproveRecoveryBootstrapResponse)(nil),  // 14: iam.v1.ApproveRecoveryBootstrapResponse
-	(*ApproveRestoreTenantAdminRequest)(nil),  // 15: iam.v1.ApproveRestoreTenantAdminRequest
-	(*ApproveRestoreTenantAdminResponse)(nil), // 16: iam.v1.ApproveRestoreTenantAdminResponse
-	(*BindPlatformRoleRequest)(nil),           // 17: iam.v1.BindPlatformRoleRequest
-	(*BindPlatformRoleResponse)(nil),          // 18: iam.v1.BindPlatformRoleResponse
-	(*BindTenantRoleRequest)(nil),             // 19: iam.v1.BindTenantRoleRequest
-	(*BindTenantRoleResponse)(nil),            // 20: iam.v1.BindTenantRoleResponse
-	(*CancelPlatformInvitationRequest)(nil),   // 21: iam.v1.CancelPlatformInvitationRequest
-	(*CancelPlatformInvitationResponse)(nil),  // 22: iam.v1.CancelPlatformInvitationResponse
-	(*CancelTenantInvitationRequest)(nil),     // 23: iam.v1.CancelTenantInvitationRequest
-	(*CancelTenantInvitationResponse)(nil),    // 24: iam.v1.CancelTenantInvitationResponse
-	(*CreateAPIKeyRequest)(nil),               // 25: iam.v1.CreateAPIKeyRequest
-	(*CreateAPIKeyResponse)(nil),              // 26: iam.v1.CreateAPIKeyResponse
-	(*CreatePlatformInvitationRequest)(nil),   // 27: iam.v1.CreatePlatformInvitationRequest
-	(*CreatePlatformInvitationResponse)(nil),  // 28: iam.v1.CreatePlatformInvitationResponse
-	(*CreatePlatformRoleRequest)(nil),         // 29: iam.v1.CreatePlatformRoleRequest
-	(*CreatePlatformRoleResponse)(nil),        // 30: iam.v1.CreatePlatformRoleResponse
-	(*CreateTenantWorkloadRequest)(nil),       // 31: iam.v1.CreateTenantWorkloadRequest
-	(*CreateTenantWorkloadResponse)(nil),      // 32: iam.v1.CreateTenantWorkloadResponse
-	(*CreateTenantInvitationRequest)(nil),     // 33: iam.v1.CreateTenantInvitationRequest
-	(*CreateTenantInvitationResponse)(nil),    // 34: iam.v1.CreateTenantInvitationResponse
-	(*CreateTenantRoleRequest)(nil),           // 35: iam.v1.CreateTenantRoleRequest
-	(*CreateTenantRoleResponse)(nil),          // 36: iam.v1.CreateTenantRoleResponse
-	(*DeletePlatformRoleRequest)(nil),         // 37: iam.v1.DeletePlatformRoleRequest
-	(*DeletePlatformRoleResponse)(nil),        // 38: iam.v1.DeletePlatformRoleResponse
-	(*DeleteTenantRoleRequest)(nil),           // 39: iam.v1.DeleteTenantRoleRequest
-	(*DeleteTenantRoleResponse)(nil),          // 40: iam.v1.DeleteTenantRoleResponse
-	(*ExecuteRecoveryBootstrapRequest)(nil),   // 41: iam.v1.ExecuteRecoveryBootstrapRequest
-	(*ExecuteRecoveryBootstrapResponse)(nil),  // 42: iam.v1.ExecuteRecoveryBootstrapResponse
-	(*ExecuteRestoreTenantAdminRequest)(nil),  // 43: iam.v1.ExecuteRestoreTenantAdminRequest
-	(*ExecuteRestoreTenantAdminResponse)(nil), // 44: iam.v1.ExecuteRestoreTenantAdminResponse
-	(*GetAuditEventRequest)(nil),              // 45: iam.v1.GetAuditEventRequest
-	(*GetAuditEventResponse)(nil),             // 46: iam.v1.GetAuditEventResponse
-	(*GetPlatformAuditEventRequest)(nil),      // 47: iam.v1.GetPlatformAuditEventRequest
-	(*GetPlatformAuditEventResponse)(nil),     // 48: iam.v1.GetPlatformAuditEventResponse
-	(*GetPlatformInvitationRequest)(nil),      // 49: iam.v1.GetPlatformInvitationRequest
-	(*GetPlatformInvitationResponse)(nil),     // 50: iam.v1.GetPlatformInvitationResponse
-	(*GetPlatformMembershipRequest)(nil),      // 51: iam.v1.GetPlatformMembershipRequest
-	(*GetPlatformMembershipResponse)(nil),     // 52: iam.v1.GetPlatformMembershipResponse
-	(*GetPlatformRoleRequest)(nil),            // 53: iam.v1.GetPlatformRoleRequest
-	(*GetPlatformRoleResponse)(nil),           // 54: iam.v1.GetPlatformRoleResponse
-	(*GetTenantWorkloadRequest)(nil),          // 55: iam.v1.GetTenantWorkloadRequest
-	(*GetTenantWorkloadResponse)(nil),         // 56: iam.v1.GetTenantWorkloadResponse
-	(*GetTenantAccessRequest)(nil),            // 57: iam.v1.GetTenantAccessRequest
-	(*GetTenantAccessResponse)(nil),           // 58: iam.v1.GetTenantAccessResponse
-	(*GetTenantInvitationRequest)(nil),        // 59: iam.v1.GetTenantInvitationRequest
-	(*GetTenantInvitationResponse)(nil),       // 60: iam.v1.GetTenantInvitationResponse
-	(*GetTenantMembershipRequest)(nil),        // 61: iam.v1.GetTenantMembershipRequest
-	(*GetTenantMembershipResponse)(nil),       // 62: iam.v1.GetTenantMembershipResponse
-	(*GetTenantRoleRequest)(nil),              // 63: iam.v1.GetTenantRoleRequest
-	(*GetTenantRoleResponse)(nil),             // 64: iam.v1.GetTenantRoleResponse
-	(*ListAPIKeysRequest)(nil),                // 65: iam.v1.ListAPIKeysRequest
-	(*ListAPIKeysResponse)(nil),               // 66: iam.v1.ListAPIKeysResponse
-	(*ListAuditEventsRequest)(nil),            // 67: iam.v1.ListAuditEventsRequest
-	(*ListAuditEventsResponse)(nil),           // 68: iam.v1.ListAuditEventsResponse
-	(*ListPlatformAuditEventsRequest)(nil),    // 69: iam.v1.ListPlatformAuditEventsRequest
-	(*ListPlatformAuditEventsResponse)(nil),   // 70: iam.v1.ListPlatformAuditEventsResponse
-	(*ListPlatformInvitationsRequest)(nil),    // 71: iam.v1.ListPlatformInvitationsRequest
-	(*ListPlatformInvitationsResponse)(nil),   // 72: iam.v1.ListPlatformInvitationsResponse
-	(*ListPlatformMembershipsRequest)(nil),    // 73: iam.v1.ListPlatformMembershipsRequest
-	(*ListPlatformMembershipsResponse)(nil),   // 74: iam.v1.ListPlatformMembershipsResponse
-	(*ListPlatformRolesRequest)(nil),          // 75: iam.v1.ListPlatformRolesRequest
-	(*ListPlatformRolesResponse)(nil),         // 76: iam.v1.ListPlatformRolesResponse
-	(*ListTenantWorkloadsRequest)(nil),        // 77: iam.v1.ListTenantWorkloadsRequest
-	(*ListTenantWorkloadsResponse)(nil),       // 78: iam.v1.ListTenantWorkloadsResponse
-	(*ListTenantInvitationsRequest)(nil),      // 79: iam.v1.ListTenantInvitationsRequest
-	(*ListTenantInvitationsResponse)(nil),     // 80: iam.v1.ListTenantInvitationsResponse
-	(*ListTenantMembershipsRequest)(nil),      // 81: iam.v1.ListTenantMembershipsRequest
-	(*ListTenantMembershipsResponse)(nil),     // 82: iam.v1.ListTenantMembershipsResponse
-	(*ListTenantRolesRequest)(nil),            // 83: iam.v1.ListTenantRolesRequest
-	(*ListTenantRolesResponse)(nil),           // 84: iam.v1.ListTenantRolesResponse
-	(*RemovePlatformMembershipRequest)(nil),   // 85: iam.v1.RemovePlatformMembershipRequest
-	(*RemovePlatformMembershipResponse)(nil),  // 86: iam.v1.RemovePlatformMembershipResponse
-	(*RemoveTenantMembershipRequest)(nil),     // 87: iam.v1.RemoveTenantMembershipRequest
-	(*RemoveTenantMembershipResponse)(nil),    // 88: iam.v1.RemoveTenantMembershipResponse
-	(*RequestRecoveryBootstrapRequest)(nil),   // 89: iam.v1.RequestRecoveryBootstrapRequest
-	(*RequestRecoveryBootstrapResponse)(nil),  // 90: iam.v1.RequestRecoveryBootstrapResponse
-	(*RequestRestoreTenantAdminRequest)(nil),  // 91: iam.v1.RequestRestoreTenantAdminRequest
-	(*RequestRestoreTenantAdminResponse)(nil), // 92: iam.v1.RequestRestoreTenantAdminResponse
-	(*ResendPlatformInvitationRequest)(nil),   // 93: iam.v1.ResendPlatformInvitationRequest
-	(*ResendPlatformInvitationResponse)(nil),  // 94: iam.v1.ResendPlatformInvitationResponse
-	(*ResendTenantInvitationRequest)(nil),     // 95: iam.v1.ResendTenantInvitationRequest
-	(*ResendTenantInvitationResponse)(nil),    // 96: iam.v1.ResendTenantInvitationResponse
-	(*RevokeAPIKeyRequest)(nil),               // 97: iam.v1.RevokeAPIKeyRequest
-	(*RevokeAPIKeyResponse)(nil),              // 98: iam.v1.RevokeAPIKeyResponse
-	(*UnbindPlatformRoleRequest)(nil),         // 99: iam.v1.UnbindPlatformRoleRequest
-	(*UnbindPlatformRoleResponse)(nil),        // 100: iam.v1.UnbindPlatformRoleResponse
-	(*UnbindTenantRoleRequest)(nil),           // 101: iam.v1.UnbindTenantRoleRequest
-	(*UnbindTenantRoleResponse)(nil),          // 102: iam.v1.UnbindTenantRoleResponse
-	(*UpdatePlatformMembershipRequest)(nil),   // 103: iam.v1.UpdatePlatformMembershipRequest
-	(*UpdatePlatformMembershipResponse)(nil),  // 104: iam.v1.UpdatePlatformMembershipResponse
-	(*UpdatePlatformRoleRequest)(nil),         // 105: iam.v1.UpdatePlatformRoleRequest
-	(*UpdatePlatformRoleResponse)(nil),        // 106: iam.v1.UpdatePlatformRoleResponse
-	(*UpdateTenantWorkloadRequest)(nil),       // 107: iam.v1.UpdateTenantWorkloadRequest
-	(*UpdateTenantWorkloadResponse)(nil),      // 108: iam.v1.UpdateTenantWorkloadResponse
-	(*UpdateTenantAccessRequest)(nil),         // 109: iam.v1.UpdateTenantAccessRequest
-	(*UpdateTenantAccessResponse)(nil),        // 110: iam.v1.UpdateTenantAccessResponse
-	(*UpdateTenantMembershipRequest)(nil),     // 111: iam.v1.UpdateTenantMembershipRequest
-	(*UpdateTenantMembershipResponse)(nil),    // 112: iam.v1.UpdateTenantMembershipResponse
-	(*UpdateTenantRoleRequest)(nil),           // 113: iam.v1.UpdateTenantRoleRequest
-	(*UpdateTenantRoleResponse)(nil),          // 114: iam.v1.UpdateTenantRoleResponse
-	nil,                                       // 115: iam.v1.AuditEvent.DetailsEntry
-	(TenantAccessStatus)(0),                   // 116: iam.v1.TenantAccessStatus
-	(PrincipalType)(0),                        // 117: iam.v1.PrincipalType
-	(*Boundary)(nil),                          // 118: iam.v1.Boundary
-	(MembershipStatus)(0),                     // 119: iam.v1.MembershipStatus
-	(InvitationStatus)(0),                     // 120: iam.v1.InvitationStatus
-	(*timestamppb.Timestamp)(nil),             // 121: google.protobuf.Timestamp
-	(PrincipalStatus)(0),                      // 122: iam.v1.PrincipalStatus
-	(APIKeyStatus)(0),                         // 123: iam.v1.APIKeyStatus
-	(AuthnMethod)(0),                          // 124: iam.v1.AuthnMethod
-	(*BearerCredential)(nil),                  // 125: iam.v1.BearerCredential
-	(*MutationResult)(nil),                    // 126: iam.v1.MutationResult
-	(*CursorPageRequest)(nil),                 // 127: iam.v1.CursorPageRequest
+	(RecoveryOperationStatus)(0),                     // 0: iam.v1.RecoveryOperationStatus
+	(*PermissionCatalogResponse)(nil),                // 1: iam.v1.PermissionCatalogResponse
+	(*ListTenantPermissionsRequest)(nil),             // 2: iam.v1.ListTenantPermissionsRequest
+	(*ListPlatformPermissionsRequest)(nil),           // 3: iam.v1.ListPlatformPermissionsRequest
+	(*TenantAccess)(nil),                             // 4: iam.v1.TenantAccess
+	(*Membership)(nil),                               // 5: iam.v1.Membership
+	(*Role)(nil),                                     // 6: iam.v1.Role
+	(*Invitation)(nil),                               // 7: iam.v1.Invitation
+	(*TenantWorkload)(nil),                           // 8: iam.v1.TenantWorkload
+	(*APIKey)(nil),                                   // 9: iam.v1.APIKey
+	(*AuditBoundary)(nil),                            // 10: iam.v1.AuditBoundary
+	(*PrincipalAuditBoundary)(nil),                   // 11: iam.v1.PrincipalAuditBoundary
+	(*AuditEvent)(nil),                               // 12: iam.v1.AuditEvent
+	(*RecoveryOperation)(nil),                        // 13: iam.v1.RecoveryOperation
+	(*AcceptPlatformInvitationRequest)(nil),          // 14: iam.v1.AcceptPlatformInvitationRequest
+	(*AcceptPlatformInvitationResponse)(nil),         // 15: iam.v1.AcceptPlatformInvitationResponse
+	(*AcceptTenantInvitationRequest)(nil),            // 16: iam.v1.AcceptTenantInvitationRequest
+	(*AcceptTenantInvitationResponse)(nil),           // 17: iam.v1.AcceptTenantInvitationResponse
+	(*ApproveRecoveryBootstrapRequest)(nil),          // 18: iam.v1.ApproveRecoveryBootstrapRequest
+	(*ApproveRecoveryBootstrapResponse)(nil),         // 19: iam.v1.ApproveRecoveryBootstrapResponse
+	(*ApproveRestoreTenantAdminRequest)(nil),         // 20: iam.v1.ApproveRestoreTenantAdminRequest
+	(*ApproveRestoreTenantAdminResponse)(nil),        // 21: iam.v1.ApproveRestoreTenantAdminResponse
+	(*BindPlatformRoleRequest)(nil),                  // 22: iam.v1.BindPlatformRoleRequest
+	(*BindPlatformRoleResponse)(nil),                 // 23: iam.v1.BindPlatformRoleResponse
+	(*BindTenantRoleRequest)(nil),                    // 24: iam.v1.BindTenantRoleRequest
+	(*BindTenantRoleResponse)(nil),                   // 25: iam.v1.BindTenantRoleResponse
+	(*CancelPlatformInvitationRequest)(nil),          // 26: iam.v1.CancelPlatformInvitationRequest
+	(*CancelPlatformInvitationResponse)(nil),         // 27: iam.v1.CancelPlatformInvitationResponse
+	(*CancelTenantInvitationRequest)(nil),            // 28: iam.v1.CancelTenantInvitationRequest
+	(*CancelTenantInvitationResponse)(nil),           // 29: iam.v1.CancelTenantInvitationResponse
+	(*CreateAPIKeyRequest)(nil),                      // 30: iam.v1.CreateAPIKeyRequest
+	(*CreateAPIKeyResponse)(nil),                     // 31: iam.v1.CreateAPIKeyResponse
+	(*CreatePlatformInvitationRequest)(nil),          // 32: iam.v1.CreatePlatformInvitationRequest
+	(*CreatePlatformInvitationResponse)(nil),         // 33: iam.v1.CreatePlatformInvitationResponse
+	(*CreatePlatformRoleRequest)(nil),                // 34: iam.v1.CreatePlatformRoleRequest
+	(*CreatePlatformRoleResponse)(nil),               // 35: iam.v1.CreatePlatformRoleResponse
+	(*CreateTenantWorkloadRequest)(nil),              // 36: iam.v1.CreateTenantWorkloadRequest
+	(*CreateTenantWorkloadResponse)(nil),             // 37: iam.v1.CreateTenantWorkloadResponse
+	(*CreateTenantInvitationRequest)(nil),            // 38: iam.v1.CreateTenantInvitationRequest
+	(*CreateTenantInvitationResponse)(nil),           // 39: iam.v1.CreateTenantInvitationResponse
+	(*CreateTenantRoleRequest)(nil),                  // 40: iam.v1.CreateTenantRoleRequest
+	(*CreateTenantRoleResponse)(nil),                 // 41: iam.v1.CreateTenantRoleResponse
+	(*DeletePlatformRoleRequest)(nil),                // 42: iam.v1.DeletePlatformRoleRequest
+	(*DeletePlatformRoleResponse)(nil),               // 43: iam.v1.DeletePlatformRoleResponse
+	(*DeleteTenantRoleRequest)(nil),                  // 44: iam.v1.DeleteTenantRoleRequest
+	(*DeleteTenantRoleResponse)(nil),                 // 45: iam.v1.DeleteTenantRoleResponse
+	(*ExecuteRecoveryBootstrapRequest)(nil),          // 46: iam.v1.ExecuteRecoveryBootstrapRequest
+	(*ExecuteRecoveryBootstrapResponse)(nil),         // 47: iam.v1.ExecuteRecoveryBootstrapResponse
+	(*ExecuteRestoreTenantAdminRequest)(nil),         // 48: iam.v1.ExecuteRestoreTenantAdminRequest
+	(*ExecuteRestoreTenantAdminResponse)(nil),        // 49: iam.v1.ExecuteRestoreTenantAdminResponse
+	(*GetAuditEventRequest)(nil),                     // 50: iam.v1.GetAuditEventRequest
+	(*GetAuditEventResponse)(nil),                    // 51: iam.v1.GetAuditEventResponse
+	(*GetPlatformAuditEventRequest)(nil),             // 52: iam.v1.GetPlatformAuditEventRequest
+	(*GetPlatformAuditEventResponse)(nil),            // 53: iam.v1.GetPlatformAuditEventResponse
+	(*GetPlatformInvitationRequest)(nil),             // 54: iam.v1.GetPlatformInvitationRequest
+	(*GetPlatformInvitationResponse)(nil),            // 55: iam.v1.GetPlatformInvitationResponse
+	(*GetPlatformMembershipRequest)(nil),             // 56: iam.v1.GetPlatformMembershipRequest
+	(*GetPlatformMembershipResponse)(nil),            // 57: iam.v1.GetPlatformMembershipResponse
+	(*GetPlatformRoleRequest)(nil),                   // 58: iam.v1.GetPlatformRoleRequest
+	(*GetPlatformRoleResponse)(nil),                  // 59: iam.v1.GetPlatformRoleResponse
+	(*GetTenantWorkloadRequest)(nil),                 // 60: iam.v1.GetTenantWorkloadRequest
+	(*GetTenantWorkloadResponse)(nil),                // 61: iam.v1.GetTenantWorkloadResponse
+	(*GetTenantAccessRequest)(nil),                   // 62: iam.v1.GetTenantAccessRequest
+	(*GetTenantAccessResponse)(nil),                  // 63: iam.v1.GetTenantAccessResponse
+	(*GetTenantInvitationRequest)(nil),               // 64: iam.v1.GetTenantInvitationRequest
+	(*GetTenantInvitationResponse)(nil),              // 65: iam.v1.GetTenantInvitationResponse
+	(*GetTenantMembershipRequest)(nil),               // 66: iam.v1.GetTenantMembershipRequest
+	(*GetTenantMembershipResponse)(nil),              // 67: iam.v1.GetTenantMembershipResponse
+	(*GetTenantRoleRequest)(nil),                     // 68: iam.v1.GetTenantRoleRequest
+	(*GetTenantRoleResponse)(nil),                    // 69: iam.v1.GetTenantRoleResponse
+	(*ListAPIKeysRequest)(nil),                       // 70: iam.v1.ListAPIKeysRequest
+	(*ListAPIKeysResponse)(nil),                      // 71: iam.v1.ListAPIKeysResponse
+	(*ListAuditEventsRequest)(nil),                   // 72: iam.v1.ListAuditEventsRequest
+	(*ListAuditEventsResponse)(nil),                  // 73: iam.v1.ListAuditEventsResponse
+	(*ListPlatformAuditEventsRequest)(nil),           // 74: iam.v1.ListPlatformAuditEventsRequest
+	(*ListPlatformAuditEventsResponse)(nil),          // 75: iam.v1.ListPlatformAuditEventsResponse
+	(*ListPlatformInvitationsRequest)(nil),           // 76: iam.v1.ListPlatformInvitationsRequest
+	(*ListPlatformInvitationsResponse)(nil),          // 77: iam.v1.ListPlatformInvitationsResponse
+	(*ListPlatformMembershipsRequest)(nil),           // 78: iam.v1.ListPlatformMembershipsRequest
+	(*ListPlatformMembershipsResponse)(nil),          // 79: iam.v1.ListPlatformMembershipsResponse
+	(*ListPlatformRolesRequest)(nil),                 // 80: iam.v1.ListPlatformRolesRequest
+	(*ListPlatformRolesResponse)(nil),                // 81: iam.v1.ListPlatformRolesResponse
+	(*ListTenantWorkloadsRequest)(nil),               // 82: iam.v1.ListTenantWorkloadsRequest
+	(*ListTenantWorkloadsResponse)(nil),              // 83: iam.v1.ListTenantWorkloadsResponse
+	(*ListTenantInvitationsRequest)(nil),             // 84: iam.v1.ListTenantInvitationsRequest
+	(*ListTenantInvitationsResponse)(nil),            // 85: iam.v1.ListTenantInvitationsResponse
+	(*ListTenantMembershipsRequest)(nil),             // 86: iam.v1.ListTenantMembershipsRequest
+	(*ListTenantMembershipsResponse)(nil),            // 87: iam.v1.ListTenantMembershipsResponse
+	(*ListTenantRolesRequest)(nil),                   // 88: iam.v1.ListTenantRolesRequest
+	(*ListTenantRolesResponse)(nil),                  // 89: iam.v1.ListTenantRolesResponse
+	(*RemovePlatformMembershipRequest)(nil),          // 90: iam.v1.RemovePlatformMembershipRequest
+	(*RemovePlatformMembershipResponse)(nil),         // 91: iam.v1.RemovePlatformMembershipResponse
+	(*RemoveTenantMembershipRequest)(nil),            // 92: iam.v1.RemoveTenantMembershipRequest
+	(*RemoveTenantMembershipResponse)(nil),           // 93: iam.v1.RemoveTenantMembershipResponse
+	(*RequestRecoveryBootstrapRequest)(nil),          // 94: iam.v1.RequestRecoveryBootstrapRequest
+	(*RequestRecoveryBootstrapResponse)(nil),         // 95: iam.v1.RequestRecoveryBootstrapResponse
+	(*RequestRestoreTenantAdminRequest)(nil),         // 96: iam.v1.RequestRestoreTenantAdminRequest
+	(*RequestRestoreTenantAdminResponse)(nil),        // 97: iam.v1.RequestRestoreTenantAdminResponse
+	(*ResendPlatformInvitationRequest)(nil),          // 98: iam.v1.ResendPlatformInvitationRequest
+	(*ResendPlatformInvitationResponse)(nil),         // 99: iam.v1.ResendPlatformInvitationResponse
+	(*ResendTenantInvitationRequest)(nil),            // 100: iam.v1.ResendTenantInvitationRequest
+	(*ResendTenantInvitationResponse)(nil),           // 101: iam.v1.ResendTenantInvitationResponse
+	(*RevokeAPIKeyRequest)(nil),                      // 102: iam.v1.RevokeAPIKeyRequest
+	(*RevokeAPIKeyResponse)(nil),                     // 103: iam.v1.RevokeAPIKeyResponse
+	(*UnbindPlatformRoleRequest)(nil),                // 104: iam.v1.UnbindPlatformRoleRequest
+	(*UnbindPlatformRoleResponse)(nil),               // 105: iam.v1.UnbindPlatformRoleResponse
+	(*UnbindTenantRoleRequest)(nil),                  // 106: iam.v1.UnbindTenantRoleRequest
+	(*UnbindTenantRoleResponse)(nil),                 // 107: iam.v1.UnbindTenantRoleResponse
+	(*UpdatePlatformMembershipRequest)(nil),          // 108: iam.v1.UpdatePlatformMembershipRequest
+	(*UpdatePlatformMembershipResponse)(nil),         // 109: iam.v1.UpdatePlatformMembershipResponse
+	(*UpdatePlatformRoleRequest)(nil),                // 110: iam.v1.UpdatePlatformRoleRequest
+	(*UpdatePlatformRoleResponse)(nil),               // 111: iam.v1.UpdatePlatformRoleResponse
+	(*UpdateTenantWorkloadRequest)(nil),              // 112: iam.v1.UpdateTenantWorkloadRequest
+	(*UpdateTenantWorkloadResponse)(nil),             // 113: iam.v1.UpdateTenantWorkloadResponse
+	(*UpdateTenantAccessRequest)(nil),                // 114: iam.v1.UpdateTenantAccessRequest
+	(*UpdateTenantAccessResponse)(nil),               // 115: iam.v1.UpdateTenantAccessResponse
+	(*UpdateTenantMembershipRequest)(nil),            // 116: iam.v1.UpdateTenantMembershipRequest
+	(*UpdateTenantMembershipResponse)(nil),           // 117: iam.v1.UpdateTenantMembershipResponse
+	(*UpdateTenantRoleRequest)(nil),                  // 118: iam.v1.UpdateTenantRoleRequest
+	(*UpdateTenantRoleResponse)(nil),                 // 119: iam.v1.UpdateTenantRoleResponse
+	(*TenantBootstrapJob)(nil),                       // 120: iam.v1.TenantBootstrapJob
+	(*TenantBootstrapOperation)(nil),                 // 121: iam.v1.TenantBootstrapOperation
+	(*GetTenantBootstrapRequest)(nil),                // 122: iam.v1.GetTenantBootstrapRequest
+	(*GetTenantBootstrapResponse)(nil),               // 123: iam.v1.GetTenantBootstrapResponse
+	(*ReissueTenantBootstrapInvitationRequest)(nil),  // 124: iam.v1.ReissueTenantBootstrapInvitationRequest
+	(*ReissueTenantBootstrapInvitationResponse)(nil), // 125: iam.v1.ReissueTenantBootstrapInvitationResponse
+	(*RetryTenantBootstrapJobRequest)(nil),           // 126: iam.v1.RetryTenantBootstrapJobRequest
+	(*RetryTenantBootstrapJobResponse)(nil),          // 127: iam.v1.RetryTenantBootstrapJobResponse
+	(*CoreDLQEntry)(nil),                             // 128: iam.v1.CoreDLQEntry
+	(*CoreDLQHeader)(nil),                            // 129: iam.v1.CoreDLQHeader
+	(*CoreDLQAttempt)(nil),                           // 130: iam.v1.CoreDLQAttempt
+	(*ListCoreDLQEntriesRequest)(nil),                // 131: iam.v1.ListCoreDLQEntriesRequest
+	(*ListCoreDLQEntriesResponse)(nil),               // 132: iam.v1.ListCoreDLQEntriesResponse
+	(*GetCoreDLQEntryRequest)(nil),                   // 133: iam.v1.GetCoreDLQEntryRequest
+	(*GetCoreDLQEntryResponse)(nil),                  // 134: iam.v1.GetCoreDLQEntryResponse
+	(*ReplayCoreDLQEntryRequest)(nil),                // 135: iam.v1.ReplayCoreDLQEntryRequest
+	(*ReplayCoreDLQEntryResponse)(nil),               // 136: iam.v1.ReplayCoreDLQEntryResponse
+	nil,                                              // 137: iam.v1.AuditEvent.DetailsEntry
+	(*BearerCredential)(nil),                         // 138: iam.v1.BearerCredential
+	(*CursorPageRequest)(nil),                        // 139: iam.v1.CursorPageRequest
+	(TenantAccessStatus)(0),                          // 140: iam.v1.TenantAccessStatus
+	(PrincipalType)(0),                               // 141: iam.v1.PrincipalType
+	(*Boundary)(nil),                                 // 142: iam.v1.Boundary
+	(MembershipStatus)(0),                            // 143: iam.v1.MembershipStatus
+	(InvitationStatus)(0),                            // 144: iam.v1.InvitationStatus
+	(*timestamppb.Timestamp)(nil),                    // 145: google.protobuf.Timestamp
+	(PrincipalStatus)(0),                             // 146: iam.v1.PrincipalStatus
+	(APIKeyStatus)(0),                                // 147: iam.v1.APIKeyStatus
+	(*TenantBoundary)(nil),                           // 148: iam.v1.TenantBoundary
+	(*PlatformBoundary)(nil),                         // 149: iam.v1.PlatformBoundary
+	(AuthnMethod)(0),                                 // 150: iam.v1.AuthnMethod
+	(*MutationResult)(nil),                           // 151: iam.v1.MutationResult
 }
 var file_iam_admin_service_proto_depIdxs = []int32{
-	116, // 0: iam.v1.TenantAccess.status:type_name -> iam.v1.TenantAccessStatus
-	117, // 1: iam.v1.Membership.principal_type:type_name -> iam.v1.PrincipalType
-	118, // 2: iam.v1.Membership.boundary:type_name -> iam.v1.Boundary
-	119, // 3: iam.v1.Membership.status:type_name -> iam.v1.MembershipStatus
-	118, // 4: iam.v1.Role.boundary:type_name -> iam.v1.Boundary
-	118, // 5: iam.v1.Invitation.boundary:type_name -> iam.v1.Boundary
-	120, // 6: iam.v1.Invitation.status:type_name -> iam.v1.InvitationStatus
-	121, // 7: iam.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
-	122, // 8: iam.v1.TenantWorkload.status:type_name -> iam.v1.PrincipalStatus
-	123, // 9: iam.v1.APIKey.status:type_name -> iam.v1.APIKeyStatus
-	121, // 10: iam.v1.APIKey.expires_at:type_name -> google.protobuf.Timestamp
-	121, // 11: iam.v1.APIKey.created_at:type_name -> google.protobuf.Timestamp
-	121, // 12: iam.v1.APIKey.last_used_at:type_name -> google.protobuf.Timestamp
-	121, // 13: iam.v1.AuditEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	124, // 14: iam.v1.AuditEvent.authn_methods:type_name -> iam.v1.AuthnMethod
-	118, // 15: iam.v1.AuditEvent.boundary:type_name -> iam.v1.Boundary
-	115, // 16: iam.v1.AuditEvent.details:type_name -> iam.v1.AuditEvent.DetailsEntry
-	0,   // 17: iam.v1.RecoveryOperation.status:type_name -> iam.v1.RecoveryOperationStatus
-	121, // 18: iam.v1.RecoveryOperation.approval_expires_at:type_name -> google.protobuf.Timestamp
-	125, // 19: iam.v1.AcceptPlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 20: iam.v1.AcceptPlatformInvitationResponse.membership:type_name -> iam.v1.Membership
-	125, // 21: iam.v1.AcceptTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 22: iam.v1.AcceptTenantInvitationResponse.membership:type_name -> iam.v1.Membership
-	125, // 23: iam.v1.ApproveRecoveryBootstrapRequest.credential:type_name -> iam.v1.BearerCredential
-	121, // 24: iam.v1.ApproveRecoveryBootstrapRequest.reauthenticated_at:type_name -> google.protobuf.Timestamp
-	8,   // 25: iam.v1.ApproveRecoveryBootstrapResponse.operation:type_name -> iam.v1.RecoveryOperation
-	125, // 26: iam.v1.ApproveRestoreTenantAdminRequest.credential:type_name -> iam.v1.BearerCredential
-	121, // 27: iam.v1.ApproveRestoreTenantAdminRequest.reauthenticated_at:type_name -> google.protobuf.Timestamp
-	8,   // 28: iam.v1.ApproveRestoreTenantAdminResponse.operation:type_name -> iam.v1.RecoveryOperation
-	125, // 29: iam.v1.BindPlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 30: iam.v1.BindPlatformRoleResponse.membership:type_name -> iam.v1.Membership
-	125, // 31: iam.v1.BindTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 32: iam.v1.BindTenantRoleResponse.membership:type_name -> iam.v1.Membership
-	125, // 33: iam.v1.CancelPlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	4,   // 34: iam.v1.CancelPlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
-	125, // 35: iam.v1.CancelTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	4,   // 36: iam.v1.CancelTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
-	125, // 37: iam.v1.CreateAPIKeyRequest.credential:type_name -> iam.v1.BearerCredential
-	121, // 38: iam.v1.CreateAPIKeyRequest.expires_at:type_name -> google.protobuf.Timestamp
-	6,   // 39: iam.v1.CreateAPIKeyResponse.api_key:type_name -> iam.v1.APIKey
-	125, // 40: iam.v1.CreatePlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	4,   // 41: iam.v1.CreatePlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
-	125, // 42: iam.v1.CreatePlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	3,   // 43: iam.v1.CreatePlatformRoleResponse.role:type_name -> iam.v1.Role
-	125, // 44: iam.v1.CreateTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
-	5,   // 45: iam.v1.CreateTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
-	2,   // 46: iam.v1.CreateTenantWorkloadResponse.membership:type_name -> iam.v1.Membership
-	125, // 47: iam.v1.CreateTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	4,   // 48: iam.v1.CreateTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
-	125, // 49: iam.v1.CreateTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	3,   // 50: iam.v1.CreateTenantRoleResponse.role:type_name -> iam.v1.Role
-	125, // 51: iam.v1.DeletePlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	126, // 52: iam.v1.DeletePlatformRoleResponse.result:type_name -> iam.v1.MutationResult
-	125, // 53: iam.v1.DeleteTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	126, // 54: iam.v1.DeleteTenantRoleResponse.result:type_name -> iam.v1.MutationResult
-	125, // 55: iam.v1.ExecuteRecoveryBootstrapRequest.credential:type_name -> iam.v1.BearerCredential
-	121, // 56: iam.v1.ExecuteRecoveryBootstrapRequest.reauthenticated_at:type_name -> google.protobuf.Timestamp
-	8,   // 57: iam.v1.ExecuteRecoveryBootstrapResponse.operation:type_name -> iam.v1.RecoveryOperation
-	1,   // 58: iam.v1.ExecuteRecoveryBootstrapResponse.tenant_access:type_name -> iam.v1.TenantAccess
-	125, // 59: iam.v1.ExecuteRestoreTenantAdminRequest.credential:type_name -> iam.v1.BearerCredential
-	121, // 60: iam.v1.ExecuteRestoreTenantAdminRequest.reauthenticated_at:type_name -> google.protobuf.Timestamp
-	8,   // 61: iam.v1.ExecuteRestoreTenantAdminResponse.operation:type_name -> iam.v1.RecoveryOperation
-	2,   // 62: iam.v1.ExecuteRestoreTenantAdminResponse.membership:type_name -> iam.v1.Membership
-	125, // 63: iam.v1.GetAuditEventRequest.credential:type_name -> iam.v1.BearerCredential
-	7,   // 64: iam.v1.GetAuditEventResponse.event:type_name -> iam.v1.AuditEvent
-	125, // 65: iam.v1.GetPlatformAuditEventRequest.credential:type_name -> iam.v1.BearerCredential
-	7,   // 66: iam.v1.GetPlatformAuditEventResponse.event:type_name -> iam.v1.AuditEvent
-	125, // 67: iam.v1.GetPlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	4,   // 68: iam.v1.GetPlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
-	125, // 69: iam.v1.GetPlatformMembershipRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 70: iam.v1.GetPlatformMembershipResponse.membership:type_name -> iam.v1.Membership
-	125, // 71: iam.v1.GetPlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	3,   // 72: iam.v1.GetPlatformRoleResponse.role:type_name -> iam.v1.Role
-	125, // 73: iam.v1.GetTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
-	5,   // 74: iam.v1.GetTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
-	125, // 75: iam.v1.GetTenantAccessRequest.credential:type_name -> iam.v1.BearerCredential
-	1,   // 76: iam.v1.GetTenantAccessResponse.tenant_access:type_name -> iam.v1.TenantAccess
-	125, // 77: iam.v1.GetTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	4,   // 78: iam.v1.GetTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
-	125, // 79: iam.v1.GetTenantMembershipRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 80: iam.v1.GetTenantMembershipResponse.membership:type_name -> iam.v1.Membership
-	125, // 81: iam.v1.GetTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	3,   // 82: iam.v1.GetTenantRoleResponse.role:type_name -> iam.v1.Role
-	125, // 83: iam.v1.ListAPIKeysRequest.credential:type_name -> iam.v1.BearerCredential
-	127, // 84: iam.v1.ListAPIKeysRequest.page:type_name -> iam.v1.CursorPageRequest
-	6,   // 85: iam.v1.ListAPIKeysResponse.api_keys:type_name -> iam.v1.APIKey
-	125, // 86: iam.v1.ListAuditEventsRequest.credential:type_name -> iam.v1.BearerCredential
-	127, // 87: iam.v1.ListAuditEventsRequest.page:type_name -> iam.v1.CursorPageRequest
-	7,   // 88: iam.v1.ListAuditEventsResponse.events:type_name -> iam.v1.AuditEvent
-	125, // 89: iam.v1.ListPlatformAuditEventsRequest.credential:type_name -> iam.v1.BearerCredential
-	127, // 90: iam.v1.ListPlatformAuditEventsRequest.page:type_name -> iam.v1.CursorPageRequest
-	7,   // 91: iam.v1.ListPlatformAuditEventsResponse.events:type_name -> iam.v1.AuditEvent
-	125, // 92: iam.v1.ListPlatformInvitationsRequest.credential:type_name -> iam.v1.BearerCredential
-	120, // 93: iam.v1.ListPlatformInvitationsRequest.status:type_name -> iam.v1.InvitationStatus
-	127, // 94: iam.v1.ListPlatformInvitationsRequest.page:type_name -> iam.v1.CursorPageRequest
-	4,   // 95: iam.v1.ListPlatformInvitationsResponse.invitations:type_name -> iam.v1.Invitation
-	125, // 96: iam.v1.ListPlatformMembershipsRequest.credential:type_name -> iam.v1.BearerCredential
-	119, // 97: iam.v1.ListPlatformMembershipsRequest.status:type_name -> iam.v1.MembershipStatus
-	127, // 98: iam.v1.ListPlatformMembershipsRequest.page:type_name -> iam.v1.CursorPageRequest
-	2,   // 99: iam.v1.ListPlatformMembershipsResponse.memberships:type_name -> iam.v1.Membership
-	125, // 100: iam.v1.ListPlatformRolesRequest.credential:type_name -> iam.v1.BearerCredential
-	127, // 101: iam.v1.ListPlatformRolesRequest.page:type_name -> iam.v1.CursorPageRequest
-	3,   // 102: iam.v1.ListPlatformRolesResponse.roles:type_name -> iam.v1.Role
-	125, // 103: iam.v1.ListTenantWorkloadsRequest.credential:type_name -> iam.v1.BearerCredential
-	122, // 104: iam.v1.ListTenantWorkloadsRequest.status:type_name -> iam.v1.PrincipalStatus
-	127, // 105: iam.v1.ListTenantWorkloadsRequest.page:type_name -> iam.v1.CursorPageRequest
-	5,   // 106: iam.v1.ListTenantWorkloadsResponse.principals:type_name -> iam.v1.TenantWorkload
-	125, // 107: iam.v1.ListTenantInvitationsRequest.credential:type_name -> iam.v1.BearerCredential
-	120, // 108: iam.v1.ListTenantInvitationsRequest.status:type_name -> iam.v1.InvitationStatus
-	127, // 109: iam.v1.ListTenantInvitationsRequest.page:type_name -> iam.v1.CursorPageRequest
-	4,   // 110: iam.v1.ListTenantInvitationsResponse.invitations:type_name -> iam.v1.Invitation
-	125, // 111: iam.v1.ListTenantMembershipsRequest.credential:type_name -> iam.v1.BearerCredential
-	119, // 112: iam.v1.ListTenantMembershipsRequest.status:type_name -> iam.v1.MembershipStatus
-	127, // 113: iam.v1.ListTenantMembershipsRequest.page:type_name -> iam.v1.CursorPageRequest
-	2,   // 114: iam.v1.ListTenantMembershipsResponse.memberships:type_name -> iam.v1.Membership
-	125, // 115: iam.v1.ListTenantRolesRequest.credential:type_name -> iam.v1.BearerCredential
-	127, // 116: iam.v1.ListTenantRolesRequest.page:type_name -> iam.v1.CursorPageRequest
-	3,   // 117: iam.v1.ListTenantRolesResponse.roles:type_name -> iam.v1.Role
-	125, // 118: iam.v1.RemovePlatformMembershipRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 119: iam.v1.RemovePlatformMembershipResponse.membership:type_name -> iam.v1.Membership
-	125, // 120: iam.v1.RemoveTenantMembershipRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 121: iam.v1.RemoveTenantMembershipResponse.membership:type_name -> iam.v1.Membership
-	125, // 122: iam.v1.RequestRecoveryBootstrapRequest.credential:type_name -> iam.v1.BearerCredential
-	121, // 123: iam.v1.RequestRecoveryBootstrapRequest.reauthenticated_at:type_name -> google.protobuf.Timestamp
-	8,   // 124: iam.v1.RequestRecoveryBootstrapResponse.operation:type_name -> iam.v1.RecoveryOperation
-	125, // 125: iam.v1.RequestRestoreTenantAdminRequest.credential:type_name -> iam.v1.BearerCredential
-	121, // 126: iam.v1.RequestRestoreTenantAdminRequest.reauthenticated_at:type_name -> google.protobuf.Timestamp
-	8,   // 127: iam.v1.RequestRestoreTenantAdminResponse.operation:type_name -> iam.v1.RecoveryOperation
-	125, // 128: iam.v1.ResendPlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	4,   // 129: iam.v1.ResendPlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
-	125, // 130: iam.v1.ResendTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
-	4,   // 131: iam.v1.ResendTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
-	125, // 132: iam.v1.RevokeAPIKeyRequest.credential:type_name -> iam.v1.BearerCredential
-	6,   // 133: iam.v1.RevokeAPIKeyResponse.api_key:type_name -> iam.v1.APIKey
-	125, // 134: iam.v1.UnbindPlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 135: iam.v1.UnbindPlatformRoleResponse.membership:type_name -> iam.v1.Membership
-	125, // 136: iam.v1.UnbindTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	2,   // 137: iam.v1.UnbindTenantRoleResponse.membership:type_name -> iam.v1.Membership
-	125, // 138: iam.v1.UpdatePlatformMembershipRequest.credential:type_name -> iam.v1.BearerCredential
-	119, // 139: iam.v1.UpdatePlatformMembershipRequest.status:type_name -> iam.v1.MembershipStatus
-	2,   // 140: iam.v1.UpdatePlatformMembershipResponse.membership:type_name -> iam.v1.Membership
-	125, // 141: iam.v1.UpdatePlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	3,   // 142: iam.v1.UpdatePlatformRoleResponse.role:type_name -> iam.v1.Role
-	125, // 143: iam.v1.UpdateTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
-	122, // 144: iam.v1.UpdateTenantWorkloadRequest.status:type_name -> iam.v1.PrincipalStatus
-	5,   // 145: iam.v1.UpdateTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
-	125, // 146: iam.v1.UpdateTenantAccessRequest.credential:type_name -> iam.v1.BearerCredential
-	116, // 147: iam.v1.UpdateTenantAccessRequest.status:type_name -> iam.v1.TenantAccessStatus
-	1,   // 148: iam.v1.UpdateTenantAccessResponse.tenant_access:type_name -> iam.v1.TenantAccess
-	125, // 149: iam.v1.UpdateTenantMembershipRequest.credential:type_name -> iam.v1.BearerCredential
-	119, // 150: iam.v1.UpdateTenantMembershipRequest.status:type_name -> iam.v1.MembershipStatus
-	2,   // 151: iam.v1.UpdateTenantMembershipResponse.membership:type_name -> iam.v1.Membership
-	125, // 152: iam.v1.UpdateTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
-	3,   // 153: iam.v1.UpdateTenantRoleResponse.role:type_name -> iam.v1.Role
-	9,   // 154: iam.v1.IAMAdminService.AcceptPlatformInvitation:input_type -> iam.v1.AcceptPlatformInvitationRequest
-	11,  // 155: iam.v1.IAMAdminService.AcceptTenantInvitation:input_type -> iam.v1.AcceptTenantInvitationRequest
-	13,  // 156: iam.v1.IAMAdminService.ApproveRecoveryBootstrap:input_type -> iam.v1.ApproveRecoveryBootstrapRequest
-	15,  // 157: iam.v1.IAMAdminService.ApproveRestoreTenantAdmin:input_type -> iam.v1.ApproveRestoreTenantAdminRequest
-	17,  // 158: iam.v1.IAMAdminService.BindPlatformRole:input_type -> iam.v1.BindPlatformRoleRequest
-	19,  // 159: iam.v1.IAMAdminService.BindTenantRole:input_type -> iam.v1.BindTenantRoleRequest
-	21,  // 160: iam.v1.IAMAdminService.CancelPlatformInvitation:input_type -> iam.v1.CancelPlatformInvitationRequest
-	23,  // 161: iam.v1.IAMAdminService.CancelTenantInvitation:input_type -> iam.v1.CancelTenantInvitationRequest
-	25,  // 162: iam.v1.IAMAdminService.CreateAPIKey:input_type -> iam.v1.CreateAPIKeyRequest
-	27,  // 163: iam.v1.IAMAdminService.CreatePlatformInvitation:input_type -> iam.v1.CreatePlatformInvitationRequest
-	29,  // 164: iam.v1.IAMAdminService.CreatePlatformRole:input_type -> iam.v1.CreatePlatformRoleRequest
-	31,  // 165: iam.v1.IAMAdminService.CreateTenantWorkload:input_type -> iam.v1.CreateTenantWorkloadRequest
-	33,  // 166: iam.v1.IAMAdminService.CreateTenantInvitation:input_type -> iam.v1.CreateTenantInvitationRequest
-	35,  // 167: iam.v1.IAMAdminService.CreateTenantRole:input_type -> iam.v1.CreateTenantRoleRequest
-	37,  // 168: iam.v1.IAMAdminService.DeletePlatformRole:input_type -> iam.v1.DeletePlatformRoleRequest
-	39,  // 169: iam.v1.IAMAdminService.DeleteTenantRole:input_type -> iam.v1.DeleteTenantRoleRequest
-	41,  // 170: iam.v1.IAMAdminService.ExecuteRecoveryBootstrap:input_type -> iam.v1.ExecuteRecoveryBootstrapRequest
-	43,  // 171: iam.v1.IAMAdminService.ExecuteRestoreTenantAdmin:input_type -> iam.v1.ExecuteRestoreTenantAdminRequest
-	45,  // 172: iam.v1.IAMAdminService.GetAuditEvent:input_type -> iam.v1.GetAuditEventRequest
-	47,  // 173: iam.v1.IAMAdminService.GetPlatformAuditEvent:input_type -> iam.v1.GetPlatformAuditEventRequest
-	49,  // 174: iam.v1.IAMAdminService.GetPlatformInvitation:input_type -> iam.v1.GetPlatformInvitationRequest
-	51,  // 175: iam.v1.IAMAdminService.GetPlatformMembership:input_type -> iam.v1.GetPlatformMembershipRequest
-	53,  // 176: iam.v1.IAMAdminService.GetPlatformRole:input_type -> iam.v1.GetPlatformRoleRequest
-	55,  // 177: iam.v1.IAMAdminService.GetTenantWorkload:input_type -> iam.v1.GetTenantWorkloadRequest
-	57,  // 178: iam.v1.IAMAdminService.GetTenantAccess:input_type -> iam.v1.GetTenantAccessRequest
-	59,  // 179: iam.v1.IAMAdminService.GetTenantInvitation:input_type -> iam.v1.GetTenantInvitationRequest
-	61,  // 180: iam.v1.IAMAdminService.GetTenantMembership:input_type -> iam.v1.GetTenantMembershipRequest
-	63,  // 181: iam.v1.IAMAdminService.GetTenantRole:input_type -> iam.v1.GetTenantRoleRequest
-	65,  // 182: iam.v1.IAMAdminService.ListAPIKeys:input_type -> iam.v1.ListAPIKeysRequest
-	67,  // 183: iam.v1.IAMAdminService.ListAuditEvents:input_type -> iam.v1.ListAuditEventsRequest
-	69,  // 184: iam.v1.IAMAdminService.ListPlatformAuditEvents:input_type -> iam.v1.ListPlatformAuditEventsRequest
-	71,  // 185: iam.v1.IAMAdminService.ListPlatformInvitations:input_type -> iam.v1.ListPlatformInvitationsRequest
-	73,  // 186: iam.v1.IAMAdminService.ListPlatformMemberships:input_type -> iam.v1.ListPlatformMembershipsRequest
-	75,  // 187: iam.v1.IAMAdminService.ListPlatformRoles:input_type -> iam.v1.ListPlatformRolesRequest
-	77,  // 188: iam.v1.IAMAdminService.ListTenantWorkloads:input_type -> iam.v1.ListTenantWorkloadsRequest
-	79,  // 189: iam.v1.IAMAdminService.ListTenantInvitations:input_type -> iam.v1.ListTenantInvitationsRequest
-	81,  // 190: iam.v1.IAMAdminService.ListTenantMemberships:input_type -> iam.v1.ListTenantMembershipsRequest
-	83,  // 191: iam.v1.IAMAdminService.ListTenantRoles:input_type -> iam.v1.ListTenantRolesRequest
-	85,  // 192: iam.v1.IAMAdminService.RemovePlatformMembership:input_type -> iam.v1.RemovePlatformMembershipRequest
-	87,  // 193: iam.v1.IAMAdminService.RemoveTenantMembership:input_type -> iam.v1.RemoveTenantMembershipRequest
-	89,  // 194: iam.v1.IAMAdminService.RequestRecoveryBootstrap:input_type -> iam.v1.RequestRecoveryBootstrapRequest
-	91,  // 195: iam.v1.IAMAdminService.RequestRestoreTenantAdmin:input_type -> iam.v1.RequestRestoreTenantAdminRequest
-	93,  // 196: iam.v1.IAMAdminService.ResendPlatformInvitation:input_type -> iam.v1.ResendPlatformInvitationRequest
-	95,  // 197: iam.v1.IAMAdminService.ResendTenantInvitation:input_type -> iam.v1.ResendTenantInvitationRequest
-	97,  // 198: iam.v1.IAMAdminService.RevokeAPIKey:input_type -> iam.v1.RevokeAPIKeyRequest
-	99,  // 199: iam.v1.IAMAdminService.UnbindPlatformRole:input_type -> iam.v1.UnbindPlatformRoleRequest
-	101, // 200: iam.v1.IAMAdminService.UnbindTenantRole:input_type -> iam.v1.UnbindTenantRoleRequest
-	103, // 201: iam.v1.IAMAdminService.UpdatePlatformMembership:input_type -> iam.v1.UpdatePlatformMembershipRequest
-	105, // 202: iam.v1.IAMAdminService.UpdatePlatformRole:input_type -> iam.v1.UpdatePlatformRoleRequest
-	107, // 203: iam.v1.IAMAdminService.UpdateTenantWorkload:input_type -> iam.v1.UpdateTenantWorkloadRequest
-	109, // 204: iam.v1.IAMAdminService.UpdateTenantAccess:input_type -> iam.v1.UpdateTenantAccessRequest
-	111, // 205: iam.v1.IAMAdminService.UpdateTenantMembership:input_type -> iam.v1.UpdateTenantMembershipRequest
-	113, // 206: iam.v1.IAMAdminService.UpdateTenantRole:input_type -> iam.v1.UpdateTenantRoleRequest
-	10,  // 207: iam.v1.IAMAdminService.AcceptPlatformInvitation:output_type -> iam.v1.AcceptPlatformInvitationResponse
-	12,  // 208: iam.v1.IAMAdminService.AcceptTenantInvitation:output_type -> iam.v1.AcceptTenantInvitationResponse
-	14,  // 209: iam.v1.IAMAdminService.ApproveRecoveryBootstrap:output_type -> iam.v1.ApproveRecoveryBootstrapResponse
-	16,  // 210: iam.v1.IAMAdminService.ApproveRestoreTenantAdmin:output_type -> iam.v1.ApproveRestoreTenantAdminResponse
-	18,  // 211: iam.v1.IAMAdminService.BindPlatformRole:output_type -> iam.v1.BindPlatformRoleResponse
-	20,  // 212: iam.v1.IAMAdminService.BindTenantRole:output_type -> iam.v1.BindTenantRoleResponse
-	22,  // 213: iam.v1.IAMAdminService.CancelPlatformInvitation:output_type -> iam.v1.CancelPlatformInvitationResponse
-	24,  // 214: iam.v1.IAMAdminService.CancelTenantInvitation:output_type -> iam.v1.CancelTenantInvitationResponse
-	26,  // 215: iam.v1.IAMAdminService.CreateAPIKey:output_type -> iam.v1.CreateAPIKeyResponse
-	28,  // 216: iam.v1.IAMAdminService.CreatePlatformInvitation:output_type -> iam.v1.CreatePlatformInvitationResponse
-	30,  // 217: iam.v1.IAMAdminService.CreatePlatformRole:output_type -> iam.v1.CreatePlatformRoleResponse
-	32,  // 218: iam.v1.IAMAdminService.CreateTenantWorkload:output_type -> iam.v1.CreateTenantWorkloadResponse
-	34,  // 219: iam.v1.IAMAdminService.CreateTenantInvitation:output_type -> iam.v1.CreateTenantInvitationResponse
-	36,  // 220: iam.v1.IAMAdminService.CreateTenantRole:output_type -> iam.v1.CreateTenantRoleResponse
-	38,  // 221: iam.v1.IAMAdminService.DeletePlatformRole:output_type -> iam.v1.DeletePlatformRoleResponse
-	40,  // 222: iam.v1.IAMAdminService.DeleteTenantRole:output_type -> iam.v1.DeleteTenantRoleResponse
-	42,  // 223: iam.v1.IAMAdminService.ExecuteRecoveryBootstrap:output_type -> iam.v1.ExecuteRecoveryBootstrapResponse
-	44,  // 224: iam.v1.IAMAdminService.ExecuteRestoreTenantAdmin:output_type -> iam.v1.ExecuteRestoreTenantAdminResponse
-	46,  // 225: iam.v1.IAMAdminService.GetAuditEvent:output_type -> iam.v1.GetAuditEventResponse
-	48,  // 226: iam.v1.IAMAdminService.GetPlatformAuditEvent:output_type -> iam.v1.GetPlatformAuditEventResponse
-	50,  // 227: iam.v1.IAMAdminService.GetPlatformInvitation:output_type -> iam.v1.GetPlatformInvitationResponse
-	52,  // 228: iam.v1.IAMAdminService.GetPlatformMembership:output_type -> iam.v1.GetPlatformMembershipResponse
-	54,  // 229: iam.v1.IAMAdminService.GetPlatformRole:output_type -> iam.v1.GetPlatformRoleResponse
-	56,  // 230: iam.v1.IAMAdminService.GetTenantWorkload:output_type -> iam.v1.GetTenantWorkloadResponse
-	58,  // 231: iam.v1.IAMAdminService.GetTenantAccess:output_type -> iam.v1.GetTenantAccessResponse
-	60,  // 232: iam.v1.IAMAdminService.GetTenantInvitation:output_type -> iam.v1.GetTenantInvitationResponse
-	62,  // 233: iam.v1.IAMAdminService.GetTenantMembership:output_type -> iam.v1.GetTenantMembershipResponse
-	64,  // 234: iam.v1.IAMAdminService.GetTenantRole:output_type -> iam.v1.GetTenantRoleResponse
-	66,  // 235: iam.v1.IAMAdminService.ListAPIKeys:output_type -> iam.v1.ListAPIKeysResponse
-	68,  // 236: iam.v1.IAMAdminService.ListAuditEvents:output_type -> iam.v1.ListAuditEventsResponse
-	70,  // 237: iam.v1.IAMAdminService.ListPlatformAuditEvents:output_type -> iam.v1.ListPlatformAuditEventsResponse
-	72,  // 238: iam.v1.IAMAdminService.ListPlatformInvitations:output_type -> iam.v1.ListPlatformInvitationsResponse
-	74,  // 239: iam.v1.IAMAdminService.ListPlatformMemberships:output_type -> iam.v1.ListPlatformMembershipsResponse
-	76,  // 240: iam.v1.IAMAdminService.ListPlatformRoles:output_type -> iam.v1.ListPlatformRolesResponse
-	78,  // 241: iam.v1.IAMAdminService.ListTenantWorkloads:output_type -> iam.v1.ListTenantWorkloadsResponse
-	80,  // 242: iam.v1.IAMAdminService.ListTenantInvitations:output_type -> iam.v1.ListTenantInvitationsResponse
-	82,  // 243: iam.v1.IAMAdminService.ListTenantMemberships:output_type -> iam.v1.ListTenantMembershipsResponse
-	84,  // 244: iam.v1.IAMAdminService.ListTenantRoles:output_type -> iam.v1.ListTenantRolesResponse
-	86,  // 245: iam.v1.IAMAdminService.RemovePlatformMembership:output_type -> iam.v1.RemovePlatformMembershipResponse
-	88,  // 246: iam.v1.IAMAdminService.RemoveTenantMembership:output_type -> iam.v1.RemoveTenantMembershipResponse
-	90,  // 247: iam.v1.IAMAdminService.RequestRecoveryBootstrap:output_type -> iam.v1.RequestRecoveryBootstrapResponse
-	92,  // 248: iam.v1.IAMAdminService.RequestRestoreTenantAdmin:output_type -> iam.v1.RequestRestoreTenantAdminResponse
-	94,  // 249: iam.v1.IAMAdminService.ResendPlatformInvitation:output_type -> iam.v1.ResendPlatformInvitationResponse
-	96,  // 250: iam.v1.IAMAdminService.ResendTenantInvitation:output_type -> iam.v1.ResendTenantInvitationResponse
-	98,  // 251: iam.v1.IAMAdminService.RevokeAPIKey:output_type -> iam.v1.RevokeAPIKeyResponse
-	100, // 252: iam.v1.IAMAdminService.UnbindPlatformRole:output_type -> iam.v1.UnbindPlatformRoleResponse
-	102, // 253: iam.v1.IAMAdminService.UnbindTenantRole:output_type -> iam.v1.UnbindTenantRoleResponse
-	104, // 254: iam.v1.IAMAdminService.UpdatePlatformMembership:output_type -> iam.v1.UpdatePlatformMembershipResponse
-	106, // 255: iam.v1.IAMAdminService.UpdatePlatformRole:output_type -> iam.v1.UpdatePlatformRoleResponse
-	108, // 256: iam.v1.IAMAdminService.UpdateTenantWorkload:output_type -> iam.v1.UpdateTenantWorkloadResponse
-	110, // 257: iam.v1.IAMAdminService.UpdateTenantAccess:output_type -> iam.v1.UpdateTenantAccessResponse
-	112, // 258: iam.v1.IAMAdminService.UpdateTenantMembership:output_type -> iam.v1.UpdateTenantMembershipResponse
-	114, // 259: iam.v1.IAMAdminService.UpdateTenantRole:output_type -> iam.v1.UpdateTenantRoleResponse
-	207, // [207:260] is the sub-list for method output_type
-	154, // [154:207] is the sub-list for method input_type
-	154, // [154:154] is the sub-list for extension type_name
-	154, // [154:154] is the sub-list for extension extendee
-	0,   // [0:154] is the sub-list for field type_name
+	138, // 0: iam.v1.ListTenantPermissionsRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 1: iam.v1.ListTenantPermissionsRequest.page:type_name -> iam.v1.CursorPageRequest
+	138, // 2: iam.v1.ListPlatformPermissionsRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 3: iam.v1.ListPlatformPermissionsRequest.page:type_name -> iam.v1.CursorPageRequest
+	140, // 4: iam.v1.TenantAccess.status:type_name -> iam.v1.TenantAccessStatus
+	141, // 5: iam.v1.Membership.principal_type:type_name -> iam.v1.PrincipalType
+	142, // 6: iam.v1.Membership.boundary:type_name -> iam.v1.Boundary
+	143, // 7: iam.v1.Membership.status:type_name -> iam.v1.MembershipStatus
+	142, // 8: iam.v1.Role.boundary:type_name -> iam.v1.Boundary
+	142, // 9: iam.v1.Invitation.boundary:type_name -> iam.v1.Boundary
+	144, // 10: iam.v1.Invitation.status:type_name -> iam.v1.InvitationStatus
+	145, // 11: iam.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
+	146, // 12: iam.v1.TenantWorkload.status:type_name -> iam.v1.PrincipalStatus
+	147, // 13: iam.v1.APIKey.status:type_name -> iam.v1.APIKeyStatus
+	145, // 14: iam.v1.APIKey.expires_at:type_name -> google.protobuf.Timestamp
+	145, // 15: iam.v1.APIKey.created_at:type_name -> google.protobuf.Timestamp
+	145, // 16: iam.v1.APIKey.last_used_at:type_name -> google.protobuf.Timestamp
+	148, // 17: iam.v1.AuditBoundary.tenant:type_name -> iam.v1.TenantBoundary
+	149, // 18: iam.v1.AuditBoundary.platform:type_name -> iam.v1.PlatformBoundary
+	11,  // 19: iam.v1.AuditBoundary.principal:type_name -> iam.v1.PrincipalAuditBoundary
+	145, // 20: iam.v1.AuditEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	150, // 21: iam.v1.AuditEvent.authn_methods:type_name -> iam.v1.AuthnMethod
+	10,  // 22: iam.v1.AuditEvent.boundary:type_name -> iam.v1.AuditBoundary
+	137, // 23: iam.v1.AuditEvent.details:type_name -> iam.v1.AuditEvent.DetailsEntry
+	145, // 24: iam.v1.AuditEvent.recorded_at:type_name -> google.protobuf.Timestamp
+	0,   // 25: iam.v1.RecoveryOperation.status:type_name -> iam.v1.RecoveryOperationStatus
+	145, // 26: iam.v1.RecoveryOperation.approval_expires_at:type_name -> google.protobuf.Timestamp
+	138, // 27: iam.v1.AcceptPlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 28: iam.v1.AcceptPlatformInvitationResponse.membership:type_name -> iam.v1.Membership
+	138, // 29: iam.v1.AcceptTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 30: iam.v1.AcceptTenantInvitationResponse.membership:type_name -> iam.v1.Membership
+	138, // 31: iam.v1.ApproveRecoveryBootstrapRequest.credential:type_name -> iam.v1.BearerCredential
+	13,  // 32: iam.v1.ApproveRecoveryBootstrapResponse.operation:type_name -> iam.v1.RecoveryOperation
+	138, // 33: iam.v1.ApproveRestoreTenantAdminRequest.credential:type_name -> iam.v1.BearerCredential
+	13,  // 34: iam.v1.ApproveRestoreTenantAdminResponse.operation:type_name -> iam.v1.RecoveryOperation
+	138, // 35: iam.v1.BindPlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 36: iam.v1.BindPlatformRoleResponse.membership:type_name -> iam.v1.Membership
+	138, // 37: iam.v1.BindTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 38: iam.v1.BindTenantRoleResponse.membership:type_name -> iam.v1.Membership
+	138, // 39: iam.v1.CancelPlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	7,   // 40: iam.v1.CancelPlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
+	138, // 41: iam.v1.CancelTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	7,   // 42: iam.v1.CancelTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
+	138, // 43: iam.v1.CreateAPIKeyRequest.credential:type_name -> iam.v1.BearerCredential
+	145, // 44: iam.v1.CreateAPIKeyRequest.expires_at:type_name -> google.protobuf.Timestamp
+	9,   // 45: iam.v1.CreateAPIKeyResponse.api_key:type_name -> iam.v1.APIKey
+	138, // 46: iam.v1.CreatePlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	7,   // 47: iam.v1.CreatePlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
+	138, // 48: iam.v1.CreatePlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	6,   // 49: iam.v1.CreatePlatformRoleResponse.role:type_name -> iam.v1.Role
+	138, // 50: iam.v1.CreateTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
+	8,   // 51: iam.v1.CreateTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
+	5,   // 52: iam.v1.CreateTenantWorkloadResponse.membership:type_name -> iam.v1.Membership
+	138, // 53: iam.v1.CreateTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	7,   // 54: iam.v1.CreateTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
+	138, // 55: iam.v1.CreateTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	6,   // 56: iam.v1.CreateTenantRoleResponse.role:type_name -> iam.v1.Role
+	138, // 57: iam.v1.DeletePlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	151, // 58: iam.v1.DeletePlatformRoleResponse.result:type_name -> iam.v1.MutationResult
+	138, // 59: iam.v1.DeleteTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	151, // 60: iam.v1.DeleteTenantRoleResponse.result:type_name -> iam.v1.MutationResult
+	138, // 61: iam.v1.ExecuteRecoveryBootstrapRequest.credential:type_name -> iam.v1.BearerCredential
+	13,  // 62: iam.v1.ExecuteRecoveryBootstrapResponse.operation:type_name -> iam.v1.RecoveryOperation
+	4,   // 63: iam.v1.ExecuteRecoveryBootstrapResponse.tenant_access:type_name -> iam.v1.TenantAccess
+	138, // 64: iam.v1.ExecuteRestoreTenantAdminRequest.credential:type_name -> iam.v1.BearerCredential
+	13,  // 65: iam.v1.ExecuteRestoreTenantAdminResponse.operation:type_name -> iam.v1.RecoveryOperation
+	5,   // 66: iam.v1.ExecuteRestoreTenantAdminResponse.membership:type_name -> iam.v1.Membership
+	138, // 67: iam.v1.GetAuditEventRequest.credential:type_name -> iam.v1.BearerCredential
+	12,  // 68: iam.v1.GetAuditEventResponse.event:type_name -> iam.v1.AuditEvent
+	138, // 69: iam.v1.GetPlatformAuditEventRequest.credential:type_name -> iam.v1.BearerCredential
+	12,  // 70: iam.v1.GetPlatformAuditEventResponse.event:type_name -> iam.v1.AuditEvent
+	138, // 71: iam.v1.GetPlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	7,   // 72: iam.v1.GetPlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
+	138, // 73: iam.v1.GetPlatformMembershipRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 74: iam.v1.GetPlatformMembershipResponse.membership:type_name -> iam.v1.Membership
+	138, // 75: iam.v1.GetPlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	6,   // 76: iam.v1.GetPlatformRoleResponse.role:type_name -> iam.v1.Role
+	138, // 77: iam.v1.GetTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
+	8,   // 78: iam.v1.GetTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
+	138, // 79: iam.v1.GetTenantAccessRequest.credential:type_name -> iam.v1.BearerCredential
+	4,   // 80: iam.v1.GetTenantAccessResponse.tenant_access:type_name -> iam.v1.TenantAccess
+	138, // 81: iam.v1.GetTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	7,   // 82: iam.v1.GetTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
+	138, // 83: iam.v1.GetTenantMembershipRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 84: iam.v1.GetTenantMembershipResponse.membership:type_name -> iam.v1.Membership
+	138, // 85: iam.v1.GetTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	6,   // 86: iam.v1.GetTenantRoleResponse.role:type_name -> iam.v1.Role
+	138, // 87: iam.v1.ListAPIKeysRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 88: iam.v1.ListAPIKeysRequest.page:type_name -> iam.v1.CursorPageRequest
+	9,   // 89: iam.v1.ListAPIKeysResponse.api_keys:type_name -> iam.v1.APIKey
+	138, // 90: iam.v1.ListAuditEventsRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 91: iam.v1.ListAuditEventsRequest.page:type_name -> iam.v1.CursorPageRequest
+	12,  // 92: iam.v1.ListAuditEventsResponse.events:type_name -> iam.v1.AuditEvent
+	138, // 93: iam.v1.ListPlatformAuditEventsRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 94: iam.v1.ListPlatformAuditEventsRequest.page:type_name -> iam.v1.CursorPageRequest
+	12,  // 95: iam.v1.ListPlatformAuditEventsResponse.events:type_name -> iam.v1.AuditEvent
+	138, // 96: iam.v1.ListPlatformInvitationsRequest.credential:type_name -> iam.v1.BearerCredential
+	144, // 97: iam.v1.ListPlatformInvitationsRequest.status:type_name -> iam.v1.InvitationStatus
+	139, // 98: iam.v1.ListPlatformInvitationsRequest.page:type_name -> iam.v1.CursorPageRequest
+	7,   // 99: iam.v1.ListPlatformInvitationsResponse.invitations:type_name -> iam.v1.Invitation
+	138, // 100: iam.v1.ListPlatformMembershipsRequest.credential:type_name -> iam.v1.BearerCredential
+	143, // 101: iam.v1.ListPlatformMembershipsRequest.status:type_name -> iam.v1.MembershipStatus
+	139, // 102: iam.v1.ListPlatformMembershipsRequest.page:type_name -> iam.v1.CursorPageRequest
+	5,   // 103: iam.v1.ListPlatformMembershipsResponse.memberships:type_name -> iam.v1.Membership
+	138, // 104: iam.v1.ListPlatformRolesRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 105: iam.v1.ListPlatformRolesRequest.page:type_name -> iam.v1.CursorPageRequest
+	6,   // 106: iam.v1.ListPlatformRolesResponse.roles:type_name -> iam.v1.Role
+	138, // 107: iam.v1.ListTenantWorkloadsRequest.credential:type_name -> iam.v1.BearerCredential
+	146, // 108: iam.v1.ListTenantWorkloadsRequest.status:type_name -> iam.v1.PrincipalStatus
+	139, // 109: iam.v1.ListTenantWorkloadsRequest.page:type_name -> iam.v1.CursorPageRequest
+	8,   // 110: iam.v1.ListTenantWorkloadsResponse.principals:type_name -> iam.v1.TenantWorkload
+	138, // 111: iam.v1.ListTenantInvitationsRequest.credential:type_name -> iam.v1.BearerCredential
+	144, // 112: iam.v1.ListTenantInvitationsRequest.status:type_name -> iam.v1.InvitationStatus
+	139, // 113: iam.v1.ListTenantInvitationsRequest.page:type_name -> iam.v1.CursorPageRequest
+	7,   // 114: iam.v1.ListTenantInvitationsResponse.invitations:type_name -> iam.v1.Invitation
+	138, // 115: iam.v1.ListTenantMembershipsRequest.credential:type_name -> iam.v1.BearerCredential
+	143, // 116: iam.v1.ListTenantMembershipsRequest.status:type_name -> iam.v1.MembershipStatus
+	139, // 117: iam.v1.ListTenantMembershipsRequest.page:type_name -> iam.v1.CursorPageRequest
+	5,   // 118: iam.v1.ListTenantMembershipsResponse.memberships:type_name -> iam.v1.Membership
+	138, // 119: iam.v1.ListTenantRolesRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 120: iam.v1.ListTenantRolesRequest.page:type_name -> iam.v1.CursorPageRequest
+	6,   // 121: iam.v1.ListTenantRolesResponse.roles:type_name -> iam.v1.Role
+	138, // 122: iam.v1.RemovePlatformMembershipRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 123: iam.v1.RemovePlatformMembershipResponse.membership:type_name -> iam.v1.Membership
+	138, // 124: iam.v1.RemoveTenantMembershipRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 125: iam.v1.RemoveTenantMembershipResponse.membership:type_name -> iam.v1.Membership
+	138, // 126: iam.v1.RequestRecoveryBootstrapRequest.credential:type_name -> iam.v1.BearerCredential
+	13,  // 127: iam.v1.RequestRecoveryBootstrapResponse.operation:type_name -> iam.v1.RecoveryOperation
+	138, // 128: iam.v1.RequestRestoreTenantAdminRequest.credential:type_name -> iam.v1.BearerCredential
+	13,  // 129: iam.v1.RequestRestoreTenantAdminResponse.operation:type_name -> iam.v1.RecoveryOperation
+	138, // 130: iam.v1.ResendPlatformInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	7,   // 131: iam.v1.ResendPlatformInvitationResponse.invitation:type_name -> iam.v1.Invitation
+	138, // 132: iam.v1.ResendTenantInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	7,   // 133: iam.v1.ResendTenantInvitationResponse.invitation:type_name -> iam.v1.Invitation
+	138, // 134: iam.v1.RevokeAPIKeyRequest.credential:type_name -> iam.v1.BearerCredential
+	9,   // 135: iam.v1.RevokeAPIKeyResponse.api_key:type_name -> iam.v1.APIKey
+	138, // 136: iam.v1.UnbindPlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 137: iam.v1.UnbindPlatformRoleResponse.membership:type_name -> iam.v1.Membership
+	138, // 138: iam.v1.UnbindTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	5,   // 139: iam.v1.UnbindTenantRoleResponse.membership:type_name -> iam.v1.Membership
+	138, // 140: iam.v1.UpdatePlatformMembershipRequest.credential:type_name -> iam.v1.BearerCredential
+	143, // 141: iam.v1.UpdatePlatformMembershipRequest.status:type_name -> iam.v1.MembershipStatus
+	5,   // 142: iam.v1.UpdatePlatformMembershipResponse.membership:type_name -> iam.v1.Membership
+	138, // 143: iam.v1.UpdatePlatformRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	6,   // 144: iam.v1.UpdatePlatformRoleResponse.role:type_name -> iam.v1.Role
+	138, // 145: iam.v1.UpdateTenantWorkloadRequest.credential:type_name -> iam.v1.BearerCredential
+	146, // 146: iam.v1.UpdateTenantWorkloadRequest.status:type_name -> iam.v1.PrincipalStatus
+	8,   // 147: iam.v1.UpdateTenantWorkloadResponse.principal:type_name -> iam.v1.TenantWorkload
+	138, // 148: iam.v1.UpdateTenantAccessRequest.credential:type_name -> iam.v1.BearerCredential
+	140, // 149: iam.v1.UpdateTenantAccessRequest.status:type_name -> iam.v1.TenantAccessStatus
+	4,   // 150: iam.v1.UpdateTenantAccessResponse.tenant_access:type_name -> iam.v1.TenantAccess
+	138, // 151: iam.v1.UpdateTenantMembershipRequest.credential:type_name -> iam.v1.BearerCredential
+	143, // 152: iam.v1.UpdateTenantMembershipRequest.status:type_name -> iam.v1.MembershipStatus
+	5,   // 153: iam.v1.UpdateTenantMembershipResponse.membership:type_name -> iam.v1.Membership
+	138, // 154: iam.v1.UpdateTenantRoleRequest.credential:type_name -> iam.v1.BearerCredential
+	6,   // 155: iam.v1.UpdateTenantRoleResponse.role:type_name -> iam.v1.Role
+	145, // 156: iam.v1.TenantBootstrapJob.available_at:type_name -> google.protobuf.Timestamp
+	7,   // 157: iam.v1.TenantBootstrapOperation.invitation:type_name -> iam.v1.Invitation
+	120, // 158: iam.v1.TenantBootstrapOperation.jobs:type_name -> iam.v1.TenantBootstrapJob
+	138, // 159: iam.v1.GetTenantBootstrapRequest.credential:type_name -> iam.v1.BearerCredential
+	121, // 160: iam.v1.GetTenantBootstrapResponse.operation:type_name -> iam.v1.TenantBootstrapOperation
+	138, // 161: iam.v1.ReissueTenantBootstrapInvitationRequest.credential:type_name -> iam.v1.BearerCredential
+	121, // 162: iam.v1.ReissueTenantBootstrapInvitationResponse.operation:type_name -> iam.v1.TenantBootstrapOperation
+	138, // 163: iam.v1.RetryTenantBootstrapJobRequest.credential:type_name -> iam.v1.BearerCredential
+	121, // 164: iam.v1.RetryTenantBootstrapJobResponse.operation:type_name -> iam.v1.TenantBootstrapOperation
+	145, // 165: iam.v1.CoreDLQEntry.published_at:type_name -> google.protobuf.Timestamp
+	145, // 166: iam.v1.CoreDLQEntry.quarantined_at:type_name -> google.protobuf.Timestamp
+	145, // 167: iam.v1.CoreDLQAttempt.created_at:type_name -> google.protobuf.Timestamp
+	138, // 168: iam.v1.ListCoreDLQEntriesRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 169: iam.v1.ListCoreDLQEntriesRequest.page:type_name -> iam.v1.CursorPageRequest
+	128, // 170: iam.v1.ListCoreDLQEntriesResponse.entries:type_name -> iam.v1.CoreDLQEntry
+	138, // 171: iam.v1.GetCoreDLQEntryRequest.credential:type_name -> iam.v1.BearerCredential
+	139, // 172: iam.v1.GetCoreDLQEntryRequest.page:type_name -> iam.v1.CursorPageRequest
+	128, // 173: iam.v1.GetCoreDLQEntryResponse.entry:type_name -> iam.v1.CoreDLQEntry
+	129, // 174: iam.v1.GetCoreDLQEntryResponse.headers:type_name -> iam.v1.CoreDLQHeader
+	130, // 175: iam.v1.GetCoreDLQEntryResponse.attempts:type_name -> iam.v1.CoreDLQAttempt
+	138, // 176: iam.v1.ReplayCoreDLQEntryRequest.credential:type_name -> iam.v1.BearerCredential
+	131, // 177: iam.v1.IAMAdminService.ListCoreDLQEntries:input_type -> iam.v1.ListCoreDLQEntriesRequest
+	133, // 178: iam.v1.IAMAdminService.GetCoreDLQEntry:input_type -> iam.v1.GetCoreDLQEntryRequest
+	135, // 179: iam.v1.IAMAdminService.ReplayCoreDLQEntry:input_type -> iam.v1.ReplayCoreDLQEntryRequest
+	122, // 180: iam.v1.IAMAdminService.GetTenantBootstrap:input_type -> iam.v1.GetTenantBootstrapRequest
+	124, // 181: iam.v1.IAMAdminService.ReissueTenantBootstrapInvitation:input_type -> iam.v1.ReissueTenantBootstrapInvitationRequest
+	126, // 182: iam.v1.IAMAdminService.RetryTenantBootstrapJob:input_type -> iam.v1.RetryTenantBootstrapJobRequest
+	14,  // 183: iam.v1.IAMAdminService.AcceptPlatformInvitation:input_type -> iam.v1.AcceptPlatformInvitationRequest
+	16,  // 184: iam.v1.IAMAdminService.AcceptTenantInvitation:input_type -> iam.v1.AcceptTenantInvitationRequest
+	18,  // 185: iam.v1.IAMAdminService.ApproveRecoveryBootstrap:input_type -> iam.v1.ApproveRecoveryBootstrapRequest
+	20,  // 186: iam.v1.IAMAdminService.ApproveRestoreTenantAdmin:input_type -> iam.v1.ApproveRestoreTenantAdminRequest
+	22,  // 187: iam.v1.IAMAdminService.BindPlatformRole:input_type -> iam.v1.BindPlatformRoleRequest
+	24,  // 188: iam.v1.IAMAdminService.BindTenantRole:input_type -> iam.v1.BindTenantRoleRequest
+	26,  // 189: iam.v1.IAMAdminService.CancelPlatformInvitation:input_type -> iam.v1.CancelPlatformInvitationRequest
+	28,  // 190: iam.v1.IAMAdminService.CancelTenantInvitation:input_type -> iam.v1.CancelTenantInvitationRequest
+	30,  // 191: iam.v1.IAMAdminService.CreateAPIKey:input_type -> iam.v1.CreateAPIKeyRequest
+	32,  // 192: iam.v1.IAMAdminService.CreatePlatformInvitation:input_type -> iam.v1.CreatePlatformInvitationRequest
+	34,  // 193: iam.v1.IAMAdminService.CreatePlatformRole:input_type -> iam.v1.CreatePlatformRoleRequest
+	36,  // 194: iam.v1.IAMAdminService.CreateTenantWorkload:input_type -> iam.v1.CreateTenantWorkloadRequest
+	38,  // 195: iam.v1.IAMAdminService.CreateTenantInvitation:input_type -> iam.v1.CreateTenantInvitationRequest
+	40,  // 196: iam.v1.IAMAdminService.CreateTenantRole:input_type -> iam.v1.CreateTenantRoleRequest
+	42,  // 197: iam.v1.IAMAdminService.DeletePlatformRole:input_type -> iam.v1.DeletePlatformRoleRequest
+	44,  // 198: iam.v1.IAMAdminService.DeleteTenantRole:input_type -> iam.v1.DeleteTenantRoleRequest
+	46,  // 199: iam.v1.IAMAdminService.ExecuteRecoveryBootstrap:input_type -> iam.v1.ExecuteRecoveryBootstrapRequest
+	48,  // 200: iam.v1.IAMAdminService.ExecuteRestoreTenantAdmin:input_type -> iam.v1.ExecuteRestoreTenantAdminRequest
+	50,  // 201: iam.v1.IAMAdminService.GetAuditEvent:input_type -> iam.v1.GetAuditEventRequest
+	52,  // 202: iam.v1.IAMAdminService.GetPlatformAuditEvent:input_type -> iam.v1.GetPlatformAuditEventRequest
+	54,  // 203: iam.v1.IAMAdminService.GetPlatformInvitation:input_type -> iam.v1.GetPlatformInvitationRequest
+	56,  // 204: iam.v1.IAMAdminService.GetPlatformMembership:input_type -> iam.v1.GetPlatformMembershipRequest
+	58,  // 205: iam.v1.IAMAdminService.GetPlatformRole:input_type -> iam.v1.GetPlatformRoleRequest
+	60,  // 206: iam.v1.IAMAdminService.GetTenantWorkload:input_type -> iam.v1.GetTenantWorkloadRequest
+	62,  // 207: iam.v1.IAMAdminService.GetTenantAccess:input_type -> iam.v1.GetTenantAccessRequest
+	64,  // 208: iam.v1.IAMAdminService.GetTenantInvitation:input_type -> iam.v1.GetTenantInvitationRequest
+	66,  // 209: iam.v1.IAMAdminService.GetTenantMembership:input_type -> iam.v1.GetTenantMembershipRequest
+	68,  // 210: iam.v1.IAMAdminService.GetTenantRole:input_type -> iam.v1.GetTenantRoleRequest
+	70,  // 211: iam.v1.IAMAdminService.ListAPIKeys:input_type -> iam.v1.ListAPIKeysRequest
+	72,  // 212: iam.v1.IAMAdminService.ListAuditEvents:input_type -> iam.v1.ListAuditEventsRequest
+	74,  // 213: iam.v1.IAMAdminService.ListPlatformAuditEvents:input_type -> iam.v1.ListPlatformAuditEventsRequest
+	76,  // 214: iam.v1.IAMAdminService.ListPlatformInvitations:input_type -> iam.v1.ListPlatformInvitationsRequest
+	78,  // 215: iam.v1.IAMAdminService.ListPlatformMemberships:input_type -> iam.v1.ListPlatformMembershipsRequest
+	80,  // 216: iam.v1.IAMAdminService.ListPlatformRoles:input_type -> iam.v1.ListPlatformRolesRequest
+	3,   // 217: iam.v1.IAMAdminService.ListPlatformPermissions:input_type -> iam.v1.ListPlatformPermissionsRequest
+	82,  // 218: iam.v1.IAMAdminService.ListTenantWorkloads:input_type -> iam.v1.ListTenantWorkloadsRequest
+	84,  // 219: iam.v1.IAMAdminService.ListTenantInvitations:input_type -> iam.v1.ListTenantInvitationsRequest
+	86,  // 220: iam.v1.IAMAdminService.ListTenantMemberships:input_type -> iam.v1.ListTenantMembershipsRequest
+	88,  // 221: iam.v1.IAMAdminService.ListTenantRoles:input_type -> iam.v1.ListTenantRolesRequest
+	2,   // 222: iam.v1.IAMAdminService.ListTenantPermissions:input_type -> iam.v1.ListTenantPermissionsRequest
+	90,  // 223: iam.v1.IAMAdminService.RemovePlatformMembership:input_type -> iam.v1.RemovePlatformMembershipRequest
+	92,  // 224: iam.v1.IAMAdminService.RemoveTenantMembership:input_type -> iam.v1.RemoveTenantMembershipRequest
+	94,  // 225: iam.v1.IAMAdminService.RequestRecoveryBootstrap:input_type -> iam.v1.RequestRecoveryBootstrapRequest
+	96,  // 226: iam.v1.IAMAdminService.RequestRestoreTenantAdmin:input_type -> iam.v1.RequestRestoreTenantAdminRequest
+	98,  // 227: iam.v1.IAMAdminService.ResendPlatformInvitation:input_type -> iam.v1.ResendPlatformInvitationRequest
+	100, // 228: iam.v1.IAMAdminService.ResendTenantInvitation:input_type -> iam.v1.ResendTenantInvitationRequest
+	102, // 229: iam.v1.IAMAdminService.RevokeAPIKey:input_type -> iam.v1.RevokeAPIKeyRequest
+	104, // 230: iam.v1.IAMAdminService.UnbindPlatformRole:input_type -> iam.v1.UnbindPlatformRoleRequest
+	106, // 231: iam.v1.IAMAdminService.UnbindTenantRole:input_type -> iam.v1.UnbindTenantRoleRequest
+	108, // 232: iam.v1.IAMAdminService.UpdatePlatformMembership:input_type -> iam.v1.UpdatePlatformMembershipRequest
+	110, // 233: iam.v1.IAMAdminService.UpdatePlatformRole:input_type -> iam.v1.UpdatePlatformRoleRequest
+	112, // 234: iam.v1.IAMAdminService.UpdateTenantWorkload:input_type -> iam.v1.UpdateTenantWorkloadRequest
+	114, // 235: iam.v1.IAMAdminService.UpdateTenantAccess:input_type -> iam.v1.UpdateTenantAccessRequest
+	116, // 236: iam.v1.IAMAdminService.UpdateTenantMembership:input_type -> iam.v1.UpdateTenantMembershipRequest
+	118, // 237: iam.v1.IAMAdminService.UpdateTenantRole:input_type -> iam.v1.UpdateTenantRoleRequest
+	132, // 238: iam.v1.IAMAdminService.ListCoreDLQEntries:output_type -> iam.v1.ListCoreDLQEntriesResponse
+	134, // 239: iam.v1.IAMAdminService.GetCoreDLQEntry:output_type -> iam.v1.GetCoreDLQEntryResponse
+	136, // 240: iam.v1.IAMAdminService.ReplayCoreDLQEntry:output_type -> iam.v1.ReplayCoreDLQEntryResponse
+	123, // 241: iam.v1.IAMAdminService.GetTenantBootstrap:output_type -> iam.v1.GetTenantBootstrapResponse
+	125, // 242: iam.v1.IAMAdminService.ReissueTenantBootstrapInvitation:output_type -> iam.v1.ReissueTenantBootstrapInvitationResponse
+	127, // 243: iam.v1.IAMAdminService.RetryTenantBootstrapJob:output_type -> iam.v1.RetryTenantBootstrapJobResponse
+	15,  // 244: iam.v1.IAMAdminService.AcceptPlatformInvitation:output_type -> iam.v1.AcceptPlatformInvitationResponse
+	17,  // 245: iam.v1.IAMAdminService.AcceptTenantInvitation:output_type -> iam.v1.AcceptTenantInvitationResponse
+	19,  // 246: iam.v1.IAMAdminService.ApproveRecoveryBootstrap:output_type -> iam.v1.ApproveRecoveryBootstrapResponse
+	21,  // 247: iam.v1.IAMAdminService.ApproveRestoreTenantAdmin:output_type -> iam.v1.ApproveRestoreTenantAdminResponse
+	23,  // 248: iam.v1.IAMAdminService.BindPlatformRole:output_type -> iam.v1.BindPlatformRoleResponse
+	25,  // 249: iam.v1.IAMAdminService.BindTenantRole:output_type -> iam.v1.BindTenantRoleResponse
+	27,  // 250: iam.v1.IAMAdminService.CancelPlatformInvitation:output_type -> iam.v1.CancelPlatformInvitationResponse
+	29,  // 251: iam.v1.IAMAdminService.CancelTenantInvitation:output_type -> iam.v1.CancelTenantInvitationResponse
+	31,  // 252: iam.v1.IAMAdminService.CreateAPIKey:output_type -> iam.v1.CreateAPIKeyResponse
+	33,  // 253: iam.v1.IAMAdminService.CreatePlatformInvitation:output_type -> iam.v1.CreatePlatformInvitationResponse
+	35,  // 254: iam.v1.IAMAdminService.CreatePlatformRole:output_type -> iam.v1.CreatePlatformRoleResponse
+	37,  // 255: iam.v1.IAMAdminService.CreateTenantWorkload:output_type -> iam.v1.CreateTenantWorkloadResponse
+	39,  // 256: iam.v1.IAMAdminService.CreateTenantInvitation:output_type -> iam.v1.CreateTenantInvitationResponse
+	41,  // 257: iam.v1.IAMAdminService.CreateTenantRole:output_type -> iam.v1.CreateTenantRoleResponse
+	43,  // 258: iam.v1.IAMAdminService.DeletePlatformRole:output_type -> iam.v1.DeletePlatformRoleResponse
+	45,  // 259: iam.v1.IAMAdminService.DeleteTenantRole:output_type -> iam.v1.DeleteTenantRoleResponse
+	47,  // 260: iam.v1.IAMAdminService.ExecuteRecoveryBootstrap:output_type -> iam.v1.ExecuteRecoveryBootstrapResponse
+	49,  // 261: iam.v1.IAMAdminService.ExecuteRestoreTenantAdmin:output_type -> iam.v1.ExecuteRestoreTenantAdminResponse
+	51,  // 262: iam.v1.IAMAdminService.GetAuditEvent:output_type -> iam.v1.GetAuditEventResponse
+	53,  // 263: iam.v1.IAMAdminService.GetPlatformAuditEvent:output_type -> iam.v1.GetPlatformAuditEventResponse
+	55,  // 264: iam.v1.IAMAdminService.GetPlatformInvitation:output_type -> iam.v1.GetPlatformInvitationResponse
+	57,  // 265: iam.v1.IAMAdminService.GetPlatformMembership:output_type -> iam.v1.GetPlatformMembershipResponse
+	59,  // 266: iam.v1.IAMAdminService.GetPlatformRole:output_type -> iam.v1.GetPlatformRoleResponse
+	61,  // 267: iam.v1.IAMAdminService.GetTenantWorkload:output_type -> iam.v1.GetTenantWorkloadResponse
+	63,  // 268: iam.v1.IAMAdminService.GetTenantAccess:output_type -> iam.v1.GetTenantAccessResponse
+	65,  // 269: iam.v1.IAMAdminService.GetTenantInvitation:output_type -> iam.v1.GetTenantInvitationResponse
+	67,  // 270: iam.v1.IAMAdminService.GetTenantMembership:output_type -> iam.v1.GetTenantMembershipResponse
+	69,  // 271: iam.v1.IAMAdminService.GetTenantRole:output_type -> iam.v1.GetTenantRoleResponse
+	71,  // 272: iam.v1.IAMAdminService.ListAPIKeys:output_type -> iam.v1.ListAPIKeysResponse
+	73,  // 273: iam.v1.IAMAdminService.ListAuditEvents:output_type -> iam.v1.ListAuditEventsResponse
+	75,  // 274: iam.v1.IAMAdminService.ListPlatformAuditEvents:output_type -> iam.v1.ListPlatformAuditEventsResponse
+	77,  // 275: iam.v1.IAMAdminService.ListPlatformInvitations:output_type -> iam.v1.ListPlatformInvitationsResponse
+	79,  // 276: iam.v1.IAMAdminService.ListPlatformMemberships:output_type -> iam.v1.ListPlatformMembershipsResponse
+	81,  // 277: iam.v1.IAMAdminService.ListPlatformRoles:output_type -> iam.v1.ListPlatformRolesResponse
+	1,   // 278: iam.v1.IAMAdminService.ListPlatformPermissions:output_type -> iam.v1.PermissionCatalogResponse
+	83,  // 279: iam.v1.IAMAdminService.ListTenantWorkloads:output_type -> iam.v1.ListTenantWorkloadsResponse
+	85,  // 280: iam.v1.IAMAdminService.ListTenantInvitations:output_type -> iam.v1.ListTenantInvitationsResponse
+	87,  // 281: iam.v1.IAMAdminService.ListTenantMemberships:output_type -> iam.v1.ListTenantMembershipsResponse
+	89,  // 282: iam.v1.IAMAdminService.ListTenantRoles:output_type -> iam.v1.ListTenantRolesResponse
+	1,   // 283: iam.v1.IAMAdminService.ListTenantPermissions:output_type -> iam.v1.PermissionCatalogResponse
+	91,  // 284: iam.v1.IAMAdminService.RemovePlatformMembership:output_type -> iam.v1.RemovePlatformMembershipResponse
+	93,  // 285: iam.v1.IAMAdminService.RemoveTenantMembership:output_type -> iam.v1.RemoveTenantMembershipResponse
+	95,  // 286: iam.v1.IAMAdminService.RequestRecoveryBootstrap:output_type -> iam.v1.RequestRecoveryBootstrapResponse
+	97,  // 287: iam.v1.IAMAdminService.RequestRestoreTenantAdmin:output_type -> iam.v1.RequestRestoreTenantAdminResponse
+	99,  // 288: iam.v1.IAMAdminService.ResendPlatformInvitation:output_type -> iam.v1.ResendPlatformInvitationResponse
+	101, // 289: iam.v1.IAMAdminService.ResendTenantInvitation:output_type -> iam.v1.ResendTenantInvitationResponse
+	103, // 290: iam.v1.IAMAdminService.RevokeAPIKey:output_type -> iam.v1.RevokeAPIKeyResponse
+	105, // 291: iam.v1.IAMAdminService.UnbindPlatformRole:output_type -> iam.v1.UnbindPlatformRoleResponse
+	107, // 292: iam.v1.IAMAdminService.UnbindTenantRole:output_type -> iam.v1.UnbindTenantRoleResponse
+	109, // 293: iam.v1.IAMAdminService.UpdatePlatformMembership:output_type -> iam.v1.UpdatePlatformMembershipResponse
+	111, // 294: iam.v1.IAMAdminService.UpdatePlatformRole:output_type -> iam.v1.UpdatePlatformRoleResponse
+	113, // 295: iam.v1.IAMAdminService.UpdateTenantWorkload:output_type -> iam.v1.UpdateTenantWorkloadResponse
+	115, // 296: iam.v1.IAMAdminService.UpdateTenantAccess:output_type -> iam.v1.UpdateTenantAccessResponse
+	117, // 297: iam.v1.IAMAdminService.UpdateTenantMembership:output_type -> iam.v1.UpdateTenantMembershipResponse
+	119, // 298: iam.v1.IAMAdminService.UpdateTenantRole:output_type -> iam.v1.UpdateTenantRoleResponse
+	238, // [238:299] is the sub-list for method output_type
+	177, // [177:238] is the sub-list for method input_type
+	177, // [177:177] is the sub-list for extension type_name
+	177, // [177:177] is the sub-list for extension extendee
+	0,   // [0:177] is the sub-list for field type_name
 }
 
 func init() { file_iam_admin_service_proto_init() }
@@ -8347,13 +10262,18 @@ func file_iam_admin_service_proto_init() {
 		return
 	}
 	file_contract_proto_init()
+	file_iam_admin_service_proto_msgTypes[9].OneofWrappers = []any{
+		(*AuditBoundary_Tenant)(nil),
+		(*AuditBoundary_Platform)(nil),
+		(*AuditBoundary_Principal)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_iam_admin_service_proto_rawDesc), len(file_iam_admin_service_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   115,
+			NumMessages:   137,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	iamv1 "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -18,20 +19,15 @@ const NotificationAudience = "ani-notification-service"
 
 type WorkloadTarget struct{ Audience, Operation, RPCMethod string }
 
-func NotificationTarget(method string) (WorkloadTarget, error) {
-	operation := ""
-	switch method {
-	case "/notification.v1.NotificationService/SubmitNotification":
-		operation = "notification.submit"
-	case "/notification.v1.NotificationService/GetSubmissionStatus":
-		operation = "notification.get_own"
-	default:
-		return WorkloadTarget{}, status.Error(codes.PermissionDenied, "Workload method is not registered")
+// NotificationTarget keeps the old caller name while reading only the registry.
+func NotificationTarget(method string, registries ...*workloadregistry.Registry) (WorkloadTarget, error) {
+	if len(registries) != 1 {
+		return WorkloadTarget{}, ErrConfiguration
 	}
-	return WorkloadTarget{Audience: NotificationAudience, Operation: operation, RPCMethod: method}, nil
+	return RegisteredWorkloadTarget(registries[0], method)
 }
-func (t WorkloadTarget) validate() error {
-	expected, err := NotificationTarget(t.RPCMethod)
+func (t WorkloadTarget) validate(registry *workloadregistry.Registry) error {
+	expected, err := RegisteredWorkloadTarget(registry, t.RPCMethod)
 	if err != nil || expected != t {
 		return ErrConfiguration
 	}
@@ -40,13 +36,20 @@ func (t WorkloadTarget) validate() error {
 
 // WorkloadCaller carries no Human, Tenant or credential and has no public
 // constructor. It is produced only by online receiver verification.
-type WorkloadCaller struct{ principalID string }
+type WorkloadCaller struct{ principalID, authorityRevision string }
 
 func (c WorkloadCaller) PrincipalID() string { return c.principalID }
+
+// AuthorityRevision binds a registry-declared pair of current permissions.
+// It is empty for ungrouped targets and is not an offline credential.
+func (c WorkloadCaller) AuthorityRevision() string { return c.authorityRevision }
 
 type WorkloadOnlyClient struct{ client *Client }
 
 func NewWorkloadOnlyClient(cfg ClientConfig) (*WorkloadOnlyClient, error) {
+	if cfg.Registry == nil {
+		return nil, ErrConfiguration
+	}
 	c, err := newClient(cfg, false)
 	if err != nil {
 		return nil, err
@@ -58,7 +61,11 @@ func (c *WorkloadOnlyClient) Close() error { return c.client.Close() }
 // Check probes the receiver's current mTLS identity, health and verification
 // Grants. The empty credential must reach the verifier and be rejected with the
 // exact credential error. This negative probe never authorizes a business call.
-func (c *WorkloadOnlyClient) Check(ctx context.Context) error {
+func (c *WorkloadOnlyClient) Check(ctx context.Context, targets ...WorkloadTarget) error {
+	if len(targets) != 1 || targets[0].validate(c.client.cfg.Registry) != nil {
+		return ErrConfiguration
+	}
+	target := targets[0]
 	call, cancel := c.client.deadline(ctx)
 	defer cancel()
 	reply, err := healthv1.NewHealthClient(c.client.conn).Check(call, &healthv1.HealthCheckRequest{})
@@ -68,9 +75,9 @@ func (c *WorkloadOnlyClient) Check(ctx context.Context) error {
 	if reply.GetStatus() != healthv1.HealthCheckResponse_SERVING {
 		return status.Error(codes.Unavailable, "IAM is not ready")
 	}
-	target, _ := NotificationTarget("/notification.v1.NotificationService/SubmitNotification")
+
 	_, err = c.client.authorization.VerifyWorkloadCaller(call, &iamv1.VerifyWorkloadCallerRequest{
-		Audience: target.Audience, OperationId: target.Operation, RpcMethod: target.RPCMethod,
+		Audience: target.Audience, OperationId: target.Operation, RpcMethod: target.RPCMethod, TargetRevision: c.client.cfg.Registry.Revision(target.Audience, target.Operation),
 		ObservedPeer: &iamv1.WorkloadPeer{Environment: c.client.cfg.Environment, TrustDomain: c.client.cfg.TrustDomain},
 	})
 	if status.Code(err) == codes.Unauthenticated {
@@ -86,7 +93,7 @@ func (c *WorkloadOnlyClient) Check(ctx context.Context) error {
 	return status.Error(codes.Unavailable, "IAM verification probe did not reject its empty credential")
 }
 func (c *WorkloadOnlyClient) VerifyCaller(ctx context.Context, target WorkloadTarget) (context.Context, WorkloadCaller, error) {
-	if err := target.validate(); err != nil {
+	if err := target.validate(c.client.cfg.Registry); err != nil {
 		return ctx, WorkloadCaller{}, err
 	}
 	observed, err := verifiedPeer(ctx, c.client.cfg.Environment, c.client.cfg.TrustDomain)
@@ -100,12 +107,12 @@ func (c *WorkloadOnlyClient) VerifyCaller(ctx context.Context, target WorkloadTa
 	}
 	call, cancel := c.client.deadline(ctx)
 	defer cancel()
-	reply, err := c.client.authorization.VerifyWorkloadCaller(call, &iamv1.VerifyWorkloadCallerRequest{WorkloadToken: wat[0], Audience: target.Audience, OperationId: target.Operation, RpcMethod: target.RPCMethod, ObservedPeer: observed})
+	reply, err := c.client.authorization.VerifyWorkloadCaller(call, &iamv1.VerifyWorkloadCallerRequest{WorkloadToken: wat[0], Audience: target.Audience, OperationId: target.Operation, RpcMethod: target.RPCMethod, TargetRevision: c.client.cfg.Registry.Revision(target.Audience, target.Operation), ObservedPeer: observed})
 	if err != nil {
 		return ctx, WorkloadCaller{}, err
 	}
 	caller := reply.GetCaller()
-	if caller.GetPrincipalId() == "" || caller.GetBindingId() == "" || caller.GetPrincipalVersion() <= 0 || caller.GetBindingVersion() <= 0 || caller.GetGrantVersion() <= 0 || !proto.Equal(caller.GetPeer(), observed) || reply.GetAudience() != target.Audience || reply.GetOperationId() != target.Operation || reply.GetRpcMethod() != target.RPCMethod || reply.GetExpiresAt() == nil || reply.GetExpiresAt().CheckValid() != nil || !time.Now().Before(reply.GetExpiresAt().AsTime()) {
+	if reply.GetAuthorityRevision() != "" || caller.GetPrincipalId() == "" || caller.GetBindingId() == "" || caller.GetPrincipalVersion() <= 0 || caller.GetBindingVersion() <= 0 || caller.GetGrantVersion() <= 0 || !proto.Equal(caller.GetPeer(), observed) || reply.GetAudience() != target.Audience || reply.GetOperationId() != target.Operation || reply.GetRpcMethod() != target.RPCMethod || reply.GetExpiresAt() == nil || reply.GetExpiresAt().CheckValid() != nil || !time.Now().Before(reply.GetExpiresAt().AsTime()) {
 		return ctx, WorkloadCaller{}, status.Error(codes.PermissionDenied, "IAM verification did not match the call")
 	}
 	sanitized := md.Copy()
@@ -119,14 +126,14 @@ func (c *WorkloadOnlyClient) VerifyCaller(ctx context.Context, target WorkloadTa
 // IAM's own dispatcher supplies its local issuer without recursively dialing IAM.
 type WorkloadTokenSource func(context.Context, WorkloadTarget) (string, error)
 
-func WorkloadOnlyCallerInterceptor(source WorkloadTokenSource) (grpc.UnaryClientInterceptor, error) {
-	if source == nil {
+func WorkloadOnlyCallerInterceptor(source WorkloadTokenSource, registries ...*workloadregistry.Registry) (grpc.UnaryClientInterceptor, error) {
+	if source == nil || len(registries) != 1 || registries[0] == nil {
 		return nil, ErrConfiguration
 	}
 	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoke grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		target, err := NotificationTarget(method)
+		target, err := RegisteredWorkloadTarget(registries[0], method)
 		if err != nil {
-			return err
+			return status.Error(codes.PermissionDenied, "target is not registered")
 		}
 		call, cancel := context.WithTimeout(ctx, 2*time.Second)
 		defer cancel()
@@ -147,3 +154,20 @@ func WorkloadOnlyCallerInterceptor(source WorkloadTokenSource) (grpc.UnaryClient
 	}, nil
 }
 func (f TLSFiles) ServerTLSConfig() (*tls.Config, error) { return f.config("", true) }
+
+// WorkloadTokenSource obtains one current, narrowly targeted credential from IAM.
+func (c *WorkloadOnlyClient) TokenSource(ctx context.Context, target WorkloadTarget) (string, error) {
+	if err := target.validate(c.client.cfg.Registry); err != nil {
+		return "", err
+	}
+	call, cancel := c.client.deadline(ctx)
+	defer cancel()
+	issued, err := c.client.authentication.IssueWorkloadToken(call, &iamv1.IssueWorkloadTokenRequest{Audience: target.Audience, OperationId: target.Operation, TargetRevision: c.client.cfg.Registry.Revision(target.Audience, target.Operation)})
+	if err != nil {
+		return "", err
+	}
+	if issued.GetWorkloadToken() == "" || issued.GetExpiresAt() == nil || issued.GetExpiresAt().CheckValid() != nil || !time.Now().Before(issued.GetExpiresAt().AsTime()) {
+		return "", status.Error(codes.Unauthenticated, "IAM returned no current Workload credential")
+	}
+	return issued.GetWorkloadToken(), nil
+}

@@ -236,6 +236,7 @@ func (u *recordingTenantWorkloadUnitOfWork) WithinTenantWorkload(ctx context.Con
 }
 
 type recordingTenantWorkloadTransaction struct {
+	notAdministrator bool
 	memoryMutationResults
 	roles                 map[uuid.UUID]TenantRole
 	principals            map[uuid.UUID]TenantWorkload
@@ -326,4 +327,42 @@ func (t *recordingTenantWorkloadTransaction) CreateCurrentWorkloadMembership(_ c
 	principal.MembershipID = membership.ID
 	t.principals[principal.ID] = principal
 	return nil
+}
+
+func (t *recordingTenantWorkloadTransaction) LockAdministrationGuard(context.Context, TenantScope) error {
+	return nil
+}
+func (t *recordingTenantWorkloadTransaction) IsActiveHumanAdministratorPrincipal(context.Context, TenantScope, uuid.UUID) (bool, error) {
+	return !t.notAdministrator, nil
+}
+
+func TestTenantWorkloadInitialBindingRequiresCurrentBuiltinAdministratorBeforeReplay(t *testing.T) {
+	tenant, _ := uuid.NewV7()
+	role, _ := uuid.NewV7()
+	scope, _ := NewTenantScope(tenant)
+	values := make([]uuid.UUID, 4)
+	for i := range values {
+		values[i], _ = uuid.NewV7()
+	}
+	tx := &recordingTenantWorkloadTransaction{notAdministrator: true, roles: map[uuid.UUID]TenantRole{role: {ID: role}}}
+	u := NewTenantWorkloadUsecase(&recordingTenantWorkloadUnitOfWork{tx: tx}, &fixedIDs{values: values}, fixedAuthClock{now: time.Date(2026, 9, 11, 10, 0, 0, 0, time.UTC)}, allowingAPIKeyCreationLimiter{})
+	command := CreateTenantWorkloadCommand{Name: "wr21-bot", RoleIDs: []uuid.UUID{role}, IdempotencyKey: "same-intent", Actor: validTenantAuthorizationActor()}
+	if _, err := u.CreateTenantWorkload(context.Background(), scope, command); !errors.Is(err, ErrTenantAdministratorRequired) {
+		t.Fatalf("non-admin creation: %v", err)
+	}
+	if tx.mutation.Principal.ID != uuid.Nil {
+		t.Fatal("denied creation reached persistence")
+	}
+	tx.notAdministrator = false
+	first, err := u.CreateTenantWorkload(context.Background(), scope, command)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tx.notAdministrator = true
+	if _, err = u.CreateTenantWorkload(context.Background(), scope, command); !errors.Is(err, ErrTenantAdministratorRequired) {
+		t.Fatalf("revoked administrator replay: %v", err)
+	}
+	if tx.mutation.Principal.ID != first.Principal.ID {
+		t.Fatal("replay altered original principal")
+	}
 }

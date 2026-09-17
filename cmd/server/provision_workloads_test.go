@@ -52,7 +52,7 @@ func TestProvisionerFileBoundary(t *testing.T) {
 		if approved == "" {
 			approved = hex.EncodeToString(digest[:])
 		}
-		_, err := readBootstrapFiles(manifestPath, approved, env, m.TrustDomain, caPath, dsnPath, now)
+		_, err := readBootstrapFiles(manifestPath, approved, env, m.TrustDomain, caPath, dsnPath, now, serverRegistryFixture(t))
 		return err
 	}
 	if err := read(raw, "wr19", ""); err != nil {

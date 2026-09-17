@@ -96,7 +96,7 @@ func TestNotificationGRPCClientUsesMutualTLSAndVerifiesServerIdentity(t *testing
 func TestNotificationGRPCClientFailsClosedOnInvalidConfiguration(t *testing.T) {
 	tests := []NotificationGRPCClientConfig{
 		{},
-		{Address: "notification.example.test:443", CertificateFile: "/missing/client.crt", PrivateKeyFile: "/missing/client.key", ServerCAFile: "/missing/ca.crt", ServerDNSName: "ani-notification"},
+		{Address: "dns:///notification.example.test:443", CertificateFile: "/missing/client.crt", PrivateKeyFile: "/missing/client.key", ServerCAFile: "/missing/ca.crt", ServerDNSName: "ani-notification"},
 		{Address: "127.0.0.1:443", CertificateFile: "relative/client.crt", PrivateKeyFile: "/missing/client.key", ServerCAFile: "/missing/ca.crt", ServerDNSName: "ani-notification"},
 		{Address: "127.0.0.1:443", CertificateFile: "/missing/client.crt", PrivateKeyFile: "/missing/client.key", ServerCAFile: "/missing/ca.crt", ServerDNSName: "ani notification"},
 		{Address: "127.0.0.1:443", CertificateFile: "/missing/client.crt", PrivateKeyFile: "/missing/client.key", ServerCAFile: "/missing/ca.crt", ServerDNSName: "ANI-Notification"},

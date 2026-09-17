@@ -32,14 +32,15 @@ const (
 
 var iamServices = map[string][]string{
 	"iam.v1.AuthenticationService": {
-		"BeginOIDCIdentityLink", "BeginOIDCLogin", "CompleteOIDCIdentityLink",
+		"AcceptInvitationWithPassword", "BeginOIDCIdentityLink", "BeginOIDCLogin", "CompleteInvitedAccount", "CompleteOIDCIdentityLink",
 		"CompleteOIDCLogin", "CompletePasswordAction", "IssueDelegation", "IssueWorkloadToken",
 		"ListSessions", "LogoutSession", "PasswordLogin", "RefreshSession",
-		"RequestPasswordAction", "RevokeAllSessions", "RevokeSession",
+		"RequestInvitedAccountVerification", "RequestPasswordAction", "RevokeAllSessions", "RevokeSession",
 		"SwitchTenant", "ValidatePrincipal",
 	},
 	"iam.v1.AuthorizationService": {"CheckPermission", "VerifyWorkloadInvocation", "VerifySessionContinuation", "VerifyWorkloadCaller"},
 	"iam.v1.IAMAdminService": {
+		"ListCoreDLQEntries", "GetCoreDLQEntry", "ReplayCoreDLQEntry",
 		"AcceptPlatformInvitation", "AcceptTenantInvitation", "ApproveRecoveryBootstrap",
 		"ApproveRestoreTenantAdmin", "BindPlatformRole", "BindTenantRole",
 		"CancelPlatformInvitation", "CancelTenantInvitation", "CreateAPIKey",
@@ -48,13 +49,13 @@ var iamServices = map[string][]string{
 		"DeleteTenantRole", "ExecuteRecoveryBootstrap", "ExecuteRestoreTenantAdmin",
 		"GetAuditEvent", "GetPlatformAuditEvent", "GetPlatformInvitation",
 		"GetPlatformMembership", "GetPlatformRole", "GetTenantWorkload",
-		"GetTenantAccess", "GetTenantInvitation", "GetTenantMembership", "GetTenantRole",
+		"GetTenantAccess", "GetTenantBootstrap", "GetTenantInvitation", "GetTenantMembership", "GetTenantRole",
 		"ListAPIKeys", "ListAuditEvents", "ListPlatformAuditEvents",
-		"ListPlatformInvitations", "ListPlatformMemberships", "ListPlatformRoles",
+		"ListPlatformInvitations", "ListPlatformMemberships", "ListPlatformPermissions", "ListPlatformRoles",
 		"ListTenantWorkloads", "ListTenantInvitations", "ListTenantMemberships",
-		"ListTenantRoles", "RemovePlatformMembership", "RemoveTenantMembership",
+		"ListTenantPermissions", "ListTenantRoles", "RemovePlatformMembership", "RemoveTenantMembership",
 		"RequestRecoveryBootstrap", "RequestRestoreTenantAdmin", "ResendPlatformInvitation",
-		"ResendTenantInvitation", "RevokeAPIKey", "UnbindPlatformRole", "UnbindTenantRole",
+		"ResendTenantInvitation", "ReissueTenantBootstrapInvitation", "RetryTenantBootstrapJob", "RevokeAPIKey", "UnbindPlatformRole", "UnbindTenantRole",
 		"UpdatePlatformMembership", "UpdatePlatformRole", "UpdateTenantWorkload",
 		"UpdateTenantAccess", "UpdateTenantMembership", "UpdateTenantRole",
 	},
@@ -97,6 +98,24 @@ type workloadRefoundationPin struct {
 }
 
 type contractPins struct {
+	WR23 struct {
+		RegistrySHA256         string `json:"registry_sha256"`
+		PolicyRevision         string `json:"policy_revision"`
+		CoreOwnerOpenAPISHA256 string `json:"core_owner_openapi_sha256"`
+		WR22RegistrySHA256     string `json:"wr22_registry_sha256"`
+		Published              bool   `json:"published"`
+	} `json:"wr23"`
+	WR22 struct {
+		SourceRegistrySHA256 string `json:"source_registry_sha256"`
+		RegistrySHA256       string `json:"registry_sha256"`
+		PolicyRevision       string `json:"policy_revision"`
+	} `json:"wr22"`
+	WR21 struct {
+		IAMBaseline    string `json:"iam_baseline"`
+		ANIBaseline    string `json:"ani_baseline"`
+		RegistrySHA256 string `json:"registry_sha256"`
+		PolicyRevision string `json:"policy_revision"`
+	} `json:"wr21"`
 	Delivery             deliveryPin             `json:"wr20_delivery"`
 	Invocation           invocationPin           `json:"wr19_invocation"`
 	WorkloadRefoundation workloadRefoundationPin `json:"workload_refoundation"`
@@ -356,8 +375,29 @@ func TestImmutableContractPins(t *testing.T) {
 	if w.IAMBaselineCommit != "cd38cd90bca3e9d83af09a381051b895d82ae94f" || w.SourceRegistrySHA256 != "27e3637976a824c4efcd4a77ad9491d58f97ceb7c0ba3885e133ad14eebab7f3" || w.CandidateRegistrySHA256 != "135196cdc34b858a9236ccb47ec94b918abc9dce8c6c1a1332ff9712da6fc570" || w.CandidatePolicyRevision != "sha256:655690090ed17bf49e0eab57baad643f90ec69ef3a412aa092fd3a24671a0e62" {
 		t.Fatalf("Workload frozen candidate pins differ: %#v", w)
 	}
-	if sha256Hex(readFile(t, "tests/contracts/inputs/ani-operation-registry.v1.json")) != w.SourceRegistrySHA256 || sha256Hex(readFile(t, "tests/contracts/workload-operation-registry.v1.json")) != w.CandidateRegistrySHA256 {
+	if sha256Hex(readFile(t, "tests/contracts/inputs/ani-operation-registry.v1.json")) != w.SourceRegistrySHA256 || sha256Hex(readFile(t, "tests/contracts/inputs/wr21-workload-operation-registry.v1.json")) != pins.WR21.RegistrySHA256 {
 		t.Fatal("Workload source or candidate registry differs from pin")
+	}
+	if pins.WR21.IAMBaseline != "6e9688bb002d1916bc894fd281ba1974f57b7eaa" || pins.WR21.ANIBaseline != "a021d987ffacfe7f9d3e065fdad0dc9d795f8bd9" || pins.WR21.PolicyRevision == w.CandidatePolicyRevision {
+		t.Fatal("WR21 successor identity is invalid")
+	}
+	if pins.WR22.SourceRegistrySHA256 != pins.WR21.RegistrySHA256 || sha256Hex(readFile(t, "tests/contracts/inputs/wr22-workload-operation-registry.v1.json")) != pins.WR22.RegistrySHA256 || pins.WR22.PolicyRevision == pins.WR21.PolicyRevision {
+		t.Fatal("WR22 successor registry identity differs")
+	}
+	var current struct {
+		PolicyRevision string `json:"policy_revision"`
+	}
+	if err := json.Unmarshal(readFile(t, "tests/contracts/workload-operation-registry.v1.json"), &current); err != nil {
+		t.Fatal(err)
+	}
+	if pins.WR23.WR22RegistrySHA256 != pins.WR22.RegistrySHA256 || pins.WR23.RegistrySHA256 != sha256Hex(readFile(t, "tests/contracts/workload-operation-registry.v1.json")) || current.PolicyRevision != pins.WR23.PolicyRevision || pins.WR23.PolicyRevision == pins.WR22.PolicyRevision || pins.WR23.Published {
+		t.Fatal("WR23 successor registry identity differs from the frozen WR22 input")
+	}
+	// The owner generator checks the external OpenAPI bytes. This standalone
+	// suite validates its pinned reference while checking the local registry bytes.
+	digest, err := hex.DecodeString(pins.WR23.CoreOwnerOpenAPISHA256)
+	if err != nil || len(digest) != sha256.Size || hex.EncodeToString(digest) != pins.WR23.CoreOwnerOpenAPISHA256 {
+		t.Fatal("WR23 Core owner OpenAPI reference is not a SHA256 digest")
 	}
 	wantNotification := notificationPin{
 		Repository:       "github.com/zhangzhe-ctrl/ani-notification-service",

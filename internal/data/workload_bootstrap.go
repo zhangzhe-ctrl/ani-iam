@@ -14,12 +14,20 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/biz"
 	"github.com/zhangzhe-ctrl/ani-iam/internal/data/sqlcgen"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 )
 
-type workloadBootstrapRepository struct{ data *Data }
+type workloadBootstrapRepository struct {
+	data     *Data
+	registry *workloadregistry.Registry
+}
 
-func NewWorkloadBootstrapRepository(data *Data) biz.WorkloadBootstrapRepository {
-	return &workloadBootstrapRepository{data: data}
+func NewWorkloadBootstrapRepository(data *Data, registries ...*workloadregistry.Registry) biz.WorkloadBootstrapRepository {
+	var registry *workloadregistry.Registry
+	if len(registries) == 1 {
+		registry = registries[0]
+	}
+	return &workloadBootstrapRepository{data: data, registry: registry}
 }
 
 func (r *workloadBootstrapRepository) Provision(ctx context.Context, intent biz.WorkloadBootstrapIntent) (biz.WorkloadBootstrapReceipt, error) {
@@ -35,27 +43,17 @@ func (r *workloadBootstrapRepository) Provision(ctx context.Context, intent biz.
 		defer cancel()
 		_ = tx.Rollback(rollbackCtx)
 	}()
-	// This metadata gate is deliberately independent of caller-supplied names.
-	// Only the separately authenticated, restricted provisioner role can enter.
-	var permitted bool
-	err = tx.QueryRow(ctx, `SELECT current_user='ani_iam_provisioner'
-        AND NOT (rolsuper OR rolcreaterole OR rolcreatedb OR rolbypassrls OR rolreplication)
-        AND NOT EXISTS(SELECT 1 FROM pg_auth_members WHERE member=r.oid)
-        AND NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relowner=r.oid)
-        AND NOT has_schema_privilege(current_user,'public','CREATE')
-        AND NOT has_database_privilege(current_user,current_database(),'TEMPORARY')
-        AND NOT has_parameter_privilege(current_user,'session_replication_role','SET')
-        AND NOT EXISTS(SELECT 1 FROM information_schema.role_table_grants WHERE grantee=current_user AND table_schema='public' AND privilege_type NOT IN ('SELECT','INSERT'))
-        AND NOT has_table_privilege(current_user,'password_credentials','SELECT')
-        AND NOT has_table_privilege(current_user,'tenant_memberships','INSERT')
-        FROM pg_roles r WHERE rolname=current_user`).Scan(&permitted)
-	if err != nil {
-		return biz.WorkloadBootstrapReceipt{}, bootstrapPersistenceError(err)
-	}
-	if !permitted {
-		return biz.WorkloadBootstrapReceipt{}, biz.ErrWorkloadBootstrapDenied
+	if err = requireRestrictedProvisioner(ctx, tx); err != nil {
+		return biz.WorkloadBootstrapReceipt{}, err
 	}
 	q := sqlcgen.New(tx)
+	if q.LockWorkloadRegistryInstallation(ctx) != nil {
+		return biz.WorkloadBootstrapReceipt{}, biz.ErrPersistenceUnavailable
+	}
+	if err := validateWorkloadRegistry(ctx, q, r.registry); err != nil {
+		return biz.WorkloadBootstrapReceipt{}, err
+	}
+
 	m := intent.Manifest
 	if err = q.LockWorkloadBootstrap(ctx, sqlcgen.LockWorkloadBootstrapParams{Environment: m.Environment}); err != nil {
 		return biz.WorkloadBootstrapReceipt{}, bootstrapPersistenceError(err)
@@ -95,13 +93,11 @@ func (r *workloadBootstrapRepository) Provision(ctx context.Context, intent biz.
 			return biz.WorkloadBootstrapReceipt{}, bootstrapPersistenceError(err)
 		}
 		for _, g := range w.Grants {
-			scope := "iam_ingress"
-			if g.Audience == biz.NotificationAudience {
-				scope = "workload_notification"
+			registration, ok := r.registry.Lookup(g.Audience, g.Operation)
+			if !ok {
+				return biz.WorkloadBootstrapReceipt{}, biz.ErrWorkloadBootstrapInvalid
 			}
-			if g.Audience == "ani-session-gateway" {
-				scope = "delegated_session"
-			}
+			scope := registration.GrantScope
 			if err = q.InsertBootstrapGrant(ctx, sqlcgen.InsertBootstrapGrantParams{GrantID: g.ID, PrincipalID: w.PrincipalID, Environment: m.Environment, TrustDomain: m.TrustDomain, Audience: g.Audience, Operation: g.Operation, Scope: scope, Now: now}); err != nil {
 				return biz.WorkloadBootstrapReceipt{}, bootstrapPersistenceError(err)
 			}
@@ -142,4 +138,27 @@ func bootstrapPersistenceError(err error) error {
 	// Raw driver details may contain values from a rejected statement. Keep
 	// owner-facing errors stable and non-sensitive, including uncertain commit.
 	return biz.ErrPersistenceUnavailable
+}
+
+// Both offline owner commands share this database-authenticated metadata gate.
+func requireRestrictedProvisioner(ctx context.Context, tx pgx.Tx) error {
+	var permitted bool
+	err := tx.QueryRow(ctx, `SELECT current_user='ani_iam_provisioner'
+        AND NOT (rolsuper OR rolcreaterole OR rolcreatedb OR rolbypassrls OR rolreplication)
+        AND NOT EXISTS(SELECT 1 FROM pg_auth_members WHERE member=r.oid)
+        AND NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relowner=r.oid)
+        AND NOT has_schema_privilege(current_user,'public','CREATE')
+        AND NOT has_database_privilege(current_user,current_database(),'TEMPORARY')
+        AND NOT has_parameter_privilege(current_user,'session_replication_role','SET')
+        AND NOT EXISTS(SELECT 1 FROM information_schema.role_table_grants WHERE grantee=current_user AND table_schema='public' AND privilege_type NOT IN ('SELECT','INSERT'))
+        AND NOT has_table_privilege(current_user,'password_credentials','SELECT')
+        AND NOT has_table_privilege(current_user,'tenant_memberships','INSERT')
+        FROM pg_roles r WHERE rolname=current_user`).Scan(&permitted)
+	if err != nil {
+		return bootstrapPersistenceError(err)
+	}
+	if !permitted {
+		return biz.ErrWorkloadBootstrapDenied
+	}
+	return nil
 }

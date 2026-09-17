@@ -68,6 +68,7 @@ type formalIAM struct {
 	readinessURL  string
 	livenessURL   string
 	stop          func()
+	crash         func()
 	binary        string
 	config        *conf.Bootstrap
 	directory     string
@@ -79,6 +80,8 @@ type formalCredentialKey struct{}
 type formalIAMSetup struct {
 	Environment, TrustDomain, GatewayDNS string
 	BeforeStart                          func(string, string, *x509.Certificate, ed25519.PrivateKey, *conf.Bootstrap)
+	AfterProcessStart                    func(*formalIAM)
+	PrebuiltBinary                       string
 }
 
 func startFormalIAM(t *testing.T, environment *postgresEnvironment, redisClient *redis.Client, options ...formalIAMSetup) *formalIAM {
@@ -110,7 +113,7 @@ func startFormalIAM(t *testing.T, environment *postgresEnvironment, redisClient 
 	cfg := &conf.Bootstrap{Profile: conf.IsolatedProfile, Server: &conf.Server{
 		Grpc:  &conf.Server_GRPC{Network: "tcp", Addr: grpcAddress, Timeout: durationpb.New(2 * time.Second), Tls: &conf.Server_GRPC_TLS{CertificateFile: serverCert, PrivateKeyFile: serverKey, ClientCaFile: caFile, GatewayClientDnsName: setup.GatewayDNS}},
 		Admin: &conf.Server_Admin{Network: "tcp", Addr: adminAddress, Timeout: durationpb.New(time.Second)}, ShutdownTimeout: durationpb.New(5 * time.Second),
-	}, Runtime: &conf.Runtime{
+	}, Runtime: &conf.Runtime{WorkloadRegistryFile: wr32RegistryPath(t), WorkloadRegistrySha256: wr32Registry(t).Digest(),
 		Environment: setup.Environment, TrustDomain: setup.TrustDomain, PolicyRevision: data.TargetPolicyRevision,
 		Postgresql:   &conf.PostgreSQL{Dsn: environment.runtimeDSN(primaryDB, "ani-iam-wr18-formal")},
 		Redis:        &conf.Redis{Addr: redisClient.Options().Addr, Password: redisClient.Options().Password, Namespace: "ani-iam:wr18:" + uuid.NewString(), LoginLimit: 5, LoginWindow: durationpb.New(15 * time.Minute), DialTimeout: durationpb.New(500 * time.Millisecond), ReadTimeout: durationpb.New(500 * time.Millisecond), WriteTimeout: durationpb.New(500 * time.Millisecond)},
@@ -129,11 +132,22 @@ func startFormalIAM(t *testing.T, environment *postgresEnvironment, redisClient 
 		t.Fatal(err)
 	}
 	binary := filepath.Join(directory, "ani-iam-server")
-	build := exec.Command("go", "build", "-o", binary, "./cmd/server")
-	build.Dir = findRepositoryRoot(t)
-	build.Env = append(os.Environ(), "GOPROXY=off")
-	if output, err := build.CombinedOutput(); err != nil {
-		t.Fatalf("build formal cmd/server: %v\n%s", err, output)
+	if setup.PrebuiltBinary != "" {
+		if setup.PrebuiltBinary != filepath.Join(runDir, "private", "ani-iam-server") {
+			t.Fatal("prebuilt IAM must belong to this run")
+		}
+		info, err := os.Lstat(setup.PrebuiltBinary)
+		if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 {
+			t.Fatal("own prebuilt IAM unavailable")
+		}
+		binary = setup.PrebuiltBinary
+	} else {
+		build := exec.Command("go", "build", "-o", binary, "./cmd/server")
+		build.Dir = findRepositoryRoot(t)
+		build.Env = append(os.Environ(), "GOPROXY=off")
+		if output, err := build.CombinedOutput(); err != nil {
+			t.Fatalf("build formal cmd/server: %v\n%s", err, output)
+		}
 	}
 	cfg.Runtime.Notification.ClientDnsName = "ani-iam." + setup.TrustDomain
 	cfg.Runtime.Notification.OutboxKeyFile = filepath.Join(directory, "outbox-key.json")
@@ -155,6 +169,9 @@ func startFormalIAM(t *testing.T, environment *postgresEnvironment, redisClient 
 		t.Fatal(err)
 	}
 	command := exec.Command(binary, "-conf", configFile)
+	if setup.PrebuiltBinary != "" {
+		command.Env = append(os.Environ(), "GOMEMLIMIT=192MiB")
+	}
 	command.Dir = findRepositoryRoot(t)
 	command.Stdout = log
 	command.Stderr = log
@@ -197,7 +214,30 @@ func startFormalIAM(t *testing.T, environment *postgresEnvironment, redisClient 
 	if err != nil {
 		t.Fatal(err)
 	}
-	runtime := &formalIAM{process: command.Process, readinessURL: "http://" + adminAddress + "/readyz", livenessURL: "http://" + adminAddress + "/healthz", stop: stop, binary: binary, config: cfg, directory: directory}
+	crash := func() {
+		if goalRun, goal := isolatedRun(t); goal != "wr23" || goalRun != runDir || os.Getenv("WR23_FORMAL_COMBINATION") != "1" {
+			t.Fatal("crash requires this run's formal WR23 IAM")
+		}
+		stopOnce.Do(func() {
+			if command.Process.Kill() != nil {
+				t.Fatal("kill own formal IAM")
+			}
+			select {
+			case <-done:
+			case <-time.After(8 * time.Second):
+				t.Fatal("own IAM crash did not exit")
+			}
+			if status, ok := command.ProcessState.Sys().(syscall.WaitStatus); !ok || !status.Signaled() || status.Signal() != syscall.SIGKILL {
+				t.Fatal("formal IAM crash did not report SIGKILL")
+			}
+			_ = log.Close()
+			recordReference(t, runDir, map[string]any{"process": "ani-iam-server", "pid": command.Process.Pid, "stage": "expected_crash", "signal": "SIGKILL"})
+		})
+	}
+	runtime := &formalIAM{process: command.Process, readinessURL: "http://" + adminAddress + "/readyz", livenessURL: "http://" + adminAddress + "/healthz", stop: stop, crash: crash, binary: binary, config: cfg, directory: directory}
+	if setup.AfterProcessStart != nil {
+		setup.AfterProcessStart(runtime)
+	}
 	waitFormalHTTP(t, runtime.readinessURL, http.StatusOK)
 	roots := x509.NewCertPool()
 	caPEM, err := os.ReadFile(caFile)

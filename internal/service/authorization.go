@@ -28,9 +28,13 @@ func (s *AuthorizationService) CheckPermission(ctx context.Context, request *iam
 	if request == nil || request.GetTarget() == nil {
 		return nil, invalidArgumentStatus("target", "authorization target is required")
 	}
-	tenantID, err := uuid.Parse(request.GetTarget().GetTenantId())
-	if err != nil || tenantID == uuid.Nil {
-		return nil, invalidArgumentStatus("target.tenant_id", "authorization target tenant is invalid")
+	tenantID := uuid.Nil
+	if raw := request.GetTarget().GetTenantId(); raw != "" {
+		var err error
+		tenantID, err = uuid.Parse(raw)
+		if err != nil || tenantID == uuid.Nil {
+			return nil, invalidArgumentStatus("target.tenant_id", "authorization target tenant is invalid")
+		}
 	}
 	credential := ""
 	if request.GetCredential() != nil {
@@ -92,6 +96,10 @@ func authorizationObligationsToProto(values []biz.AuthorizationObligation) []*ia
 }
 
 func trustedPrincipalToProto(principal biz.TrustedPrincipalContext) *iamv1.PrincipalContext {
+	boundary := tenantBoundary(principal.TenantID)
+	if principal.Boundary == biz.AccessBoundaryPlatform && principal.TenantID == uuid.Nil {
+		boundary = &iamv1.Boundary{Boundary: &iamv1.Boundary_Platform{Platform: &iamv1.PlatformBoundary{}}}
+	}
 	authnMethods := authnMethodsToProto(principal.AuthnMethods)
 	sessionID := ""
 	if principal.SessionID != uuid.Nil {
@@ -105,7 +113,7 @@ func trustedPrincipalToProto(principal biz.TrustedPrincipalContext) *iamv1.Princ
 		PrincipalId:     principal.ID.String(),
 		PrincipalType:   principalTypeDTO(principal.Type),
 		PrincipalStatus: principalStatusToProto(principal.Status),
-		Boundary:        tenantBoundary(principal.TenantID),
+		Boundary:        boundary,
 		SessionId:       sessionID,
 		GrantId:         grantID,
 		AuthnMethods:    authnMethods,

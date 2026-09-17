@@ -61,7 +61,7 @@ func TestSessionContinuityWithRealPostgresAndRedis(t *testing.T) {
 	}
 	postgresData := data.NewData(environment.runtimePool)
 	usecase := biz.NewAuthenticationUsecase(
-		data.NewPostgresPasswordLoginReader(postgresData), acceptingIntegrationPasswordVerifier{}, throttle,
+		defaultPolicyAuthenticationReader(postgresData), acceptingIntegrationPasswordVerifier{}, throttle,
 		data.NewPostgresLoginUnitOfWork(postgresData), tokens, data.NewSecretGenerator(),
 		data.NewUUIDv7Generator(), clock, allowingAPIKeyUsageObserver{})
 
@@ -156,7 +156,7 @@ func TestSessionContinuityWithRealPostgresAndRedis(t *testing.T) {
 		}
 		replacementID := uuid.MustParse("0199c71e-e000-7002-9000-000000000001")
 		rollbackUsecase := biz.NewAuthenticationUsecase(
-			data.NewPostgresPasswordLoginReader(postgresData), acceptingIntegrationPasswordVerifier{}, throttle,
+			defaultPolicyAuthenticationReader(postgresData), acceptingIntegrationPasswordVerifier{}, throttle,
 			data.NewPostgresLoginUnitOfWork(postgresData), tokens,
 			staticIntegrationSecretGenerator{secret: "rollback-refresh-replacement"},
 			&fixedIDGenerator{ids: []uuid.UUID{
@@ -238,7 +238,7 @@ func TestSessionContinuityWithRealPostgresAndRedis(t *testing.T) {
 	t.Run("stale refresh after same-boundary switch resolves as reuse", func(t *testing.T) {
 		initial := login(t, "dp2-08-switch-refresh-race-login")
 		digest := sha256.Sum256([]byte(initial.RefreshToken))
-		reader := data.NewPostgresPasswordLoginReader(postgresData)
+		reader := defaultPolicyAuthenticationReader(postgresData)
 		stale, err := reader.LookupRefreshSession(ctx, digest)
 		if err != nil {
 			t.Fatalf("LookupRefreshSession(before switch) error = %v", err)

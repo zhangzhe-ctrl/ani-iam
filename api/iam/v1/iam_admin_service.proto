@@ -9,6 +9,12 @@ option go_package = "github.com/zhangzhe-ctrl/ani-iam/api/iam/v1;iamv1";
 
 // IAMAdminService owns IAM administration. It never owns or mutates Core Tenant Lifecycle.
 service IAMAdminService {
+  rpc ListCoreDLQEntries(ListCoreDLQEntriesRequest) returns (ListCoreDLQEntriesResponse);
+  rpc GetCoreDLQEntry(GetCoreDLQEntryRequest) returns (GetCoreDLQEntryResponse);
+  rpc ReplayCoreDLQEntry(ReplayCoreDLQEntryRequest) returns (ReplayCoreDLQEntryResponse);
+  rpc GetTenantBootstrap(GetTenantBootstrapRequest) returns (GetTenantBootstrapResponse);
+  rpc ReissueTenantBootstrapInvitation(ReissueTenantBootstrapInvitationRequest) returns (ReissueTenantBootstrapInvitationResponse);
+  rpc RetryTenantBootstrapJob(RetryTenantBootstrapJobRequest) returns (RetryTenantBootstrapJobResponse);
   rpc AcceptPlatformInvitation(AcceptPlatformInvitationRequest) returns (AcceptPlatformInvitationResponse);
   rpc AcceptTenantInvitation(AcceptTenantInvitationRequest) returns (AcceptTenantInvitationResponse);
   rpc ApproveRecoveryBootstrap(ApproveRecoveryBootstrapRequest) returns (ApproveRecoveryBootstrapResponse);
@@ -43,10 +49,12 @@ service IAMAdminService {
   rpc ListPlatformInvitations(ListPlatformInvitationsRequest) returns (ListPlatformInvitationsResponse);
   rpc ListPlatformMemberships(ListPlatformMembershipsRequest) returns (ListPlatformMembershipsResponse);
   rpc ListPlatformRoles(ListPlatformRolesRequest) returns (ListPlatformRolesResponse);
+  rpc ListPlatformPermissions(ListPlatformPermissionsRequest) returns (PermissionCatalogResponse);
   rpc ListTenantWorkloads(ListTenantWorkloadsRequest) returns (ListTenantWorkloadsResponse);
   rpc ListTenantInvitations(ListTenantInvitationsRequest) returns (ListTenantInvitationsResponse);
   rpc ListTenantMemberships(ListTenantMembershipsRequest) returns (ListTenantMembershipsResponse);
   rpc ListTenantRoles(ListTenantRolesRequest) returns (ListTenantRolesResponse);
+  rpc ListTenantPermissions(ListTenantPermissionsRequest) returns (PermissionCatalogResponse);
   rpc RemovePlatformMembership(RemovePlatformMembershipRequest) returns (RemovePlatformMembershipResponse);
   rpc RemoveTenantMembership(RemoveTenantMembershipRequest) returns (RemoveTenantMembershipResponse);
   rpc RequestRecoveryBootstrap(RequestRecoveryBootstrapRequest) returns (RequestRecoveryBootstrapResponse);
@@ -62,6 +70,24 @@ service IAMAdminService {
   rpc UpdateTenantAccess(UpdateTenantAccessRequest) returns (UpdateTenantAccessResponse);
   rpc UpdateTenantMembership(UpdateTenantMembershipRequest) returns (UpdateTenantMembershipResponse);
   rpc UpdateTenantRole(UpdateTenantRoleRequest) returns (UpdateTenantRoleResponse);
+}
+
+// Catalog values are generated from owner contracts, never caller-defined.
+message PermissionCatalogResponse {
+  repeated string permissions = 1;
+  string next_cursor = 2;
+  string policy_revision = 3;
+}
+
+message ListTenantPermissionsRequest {
+  BearerCredential credential = 1;
+  string tenant_id = 2;
+  CursorPageRequest page = 3;
+}
+
+message ListPlatformPermissionsRequest {
+  BearerCredential credential = 1;
+  CursorPageRequest page = 2;
 }
 
 // RecoveryOperationStatus is the explicit lifecycle for dual-control recovery.
@@ -108,12 +134,15 @@ message Role {
 message Invitation {
   string invitation_id = 1;
   Boundary boundary = 2;
-  string normalized_email = 3;
+  string normalized_email_hint = 3;
   repeated string role_ids = 4;
   InvitationStatus status = 5;
   google.protobuf.Timestamp expires_at = 6;
   uint64 version = 7;
   string bootstrap_operation_id = 8;
+  uint64 delivery_generation = 9;
+  string delivery_status = 10;
+  uint32 delivery_attempt_count = 11;
 }
 
 // TenantWorkload is fixed to one Core-owned Tenant ID.
@@ -138,13 +167,23 @@ message APIKey {
   google.protobuf.Timestamp last_used_at = 8;
 }
 
+// AuditBoundary describes an event context and is never an authorization grant.
+message AuditBoundary {
+  oneof boundary {
+    TenantBoundary tenant = 1;
+    PlatformBoundary platform = 2;
+    PrincipalAuditBoundary principal = 3;
+  }
+}
+message PrincipalAuditBoundary {}
+
 // AuditEvent is an allowlisted, append-only IAM security fact.
 message AuditEvent {
   string event_id = 1;
   google.protobuf.Timestamp occurred_at = 2;
   string actor_principal_id = 3;
   repeated AuthnMethod authn_methods = 4;
-  Boundary boundary = 5;
+  AuditBoundary boundary = 5;
   string action = 6;
   string target_type = 7;
   string target_id = 8;
@@ -155,6 +194,14 @@ message AuditEvent {
   string decision_id = 13;
   uint64 target_version = 14;
   map<string, string> details = 15;
+  google.protobuf.Timestamp recorded_at = 16;
+  string source_service = 17;
+  string actor_type = 18;
+  string authentication_method = 19;
+  string caller_principal_id = 20;
+  string caller_binding_id = 21;
+  uint64 caller_binding_version = 22;
+  uint64 caller_grant_version = 23;
 }
 
 // RecoveryOperation records a dual-control request bound to an immutable payload hash.
@@ -199,9 +246,11 @@ message ApproveRecoveryBootstrapRequest {
   BearerCredential credential = 1;
   string operation_id = 2;
   string approval_reference = 3;
-  string reason = 4;
+  reserved 4;
+  reserved "reason";
   string payload_fingerprint = 5;
-  google.protobuf.Timestamp reauthenticated_at = 6;
+  reserved 6;
+  reserved "reauthenticated_at";
   string idempotency_key = 7;
 }
 
@@ -213,9 +262,11 @@ message ApproveRestoreTenantAdminRequest {
   BearerCredential credential = 1;
   string operation_id = 2;
   string approval_reference = 3;
-  string reason = 4;
+  reserved 4;
+  reserved "reason";
   string payload_fingerprint = 5;
-  google.protobuf.Timestamp reauthenticated_at = 6;
+  reserved 6;
+  reserved "reauthenticated_at";
   string idempotency_key = 7;
 }
 
@@ -296,7 +347,8 @@ message CreatePlatformInvitationRequest {
 
 message CreatePlatformInvitationResponse {
   Invitation invitation = 1;
-  string invitation_token = 2;
+  reserved 2;
+  reserved "invitation_token";
 }
 
 message CreatePlatformRoleRequest {
@@ -335,7 +387,8 @@ message CreateTenantInvitationRequest {
 
 message CreateTenantInvitationResponse {
   Invitation invitation = 1;
-  string invitation_token = 2;
+  reserved 2;
+  reserved "invitation_token";
 }
 
 message CreateTenantRoleRequest {
@@ -379,7 +432,9 @@ message ExecuteRecoveryBootstrapRequest {
   string operation_id = 2;
   string approval_reference = 3;
   string payload_fingerprint = 4;
-  google.protobuf.Timestamp reauthenticated_at = 5;
+  reserved 5;
+  reserved "reauthenticated_at";
+  string reauthentication_proof = 7;
   string idempotency_key = 6;
 }
 
@@ -393,7 +448,10 @@ message ExecuteRestoreTenantAdminRequest {
   string operation_id = 2;
   string approval_reference = 3;
   string payload_fingerprint = 4;
-  google.protobuf.Timestamp reauthenticated_at = 5;
+  reserved 5;
+  reserved "reauthenticated_at";
+  // Same executing Human, real BOSS authentication; freshness is read from PG.
+  string reauthentication_proof = 7;
   string idempotency_key = 6;
 }
 
@@ -525,6 +583,7 @@ message ListPlatformAuditEventsRequest {
   string action = 2;
   string result = 3;
   CursorPageRequest page = 4;
+  string tenant_id = 5;
 }
 
 message ListPlatformAuditEventsResponse {
@@ -639,9 +698,11 @@ message RequestRecoveryBootstrapRequest {
   string tenant_id = 2;
   string intended_principal_id = 3;
   string reason = 4;
-  string approval_reference = 5;
+  reserved 5;
+  reserved "approval_reference";
   string payload_fingerprint = 6;
-  google.protobuf.Timestamp reauthenticated_at = 7;
+  reserved 7;
+  reserved "reauthenticated_at";
   string idempotency_key = 8;
 }
 
@@ -654,9 +715,11 @@ message RequestRestoreTenantAdminRequest {
   string tenant_id = 2;
   string intended_principal_id = 3;
   string reason = 4;
-  string approval_reference = 5;
+  reserved 5;
+  reserved "approval_reference";
   string payload_fingerprint = 6;
-  google.protobuf.Timestamp reauthenticated_at = 7;
+  reserved 7;
+  reserved "reauthenticated_at";
   string idempotency_key = 8;
 }
 
@@ -673,7 +736,8 @@ message ResendPlatformInvitationRequest {
 
 message ResendPlatformInvitationResponse {
   Invitation invitation = 1;
-  string invitation_token = 2;
+  reserved 2;
+  reserved "invitation_token";
 }
 
 message ResendTenantInvitationRequest {
@@ -686,7 +750,8 @@ message ResendTenantInvitationRequest {
 
 message ResendTenantInvitationResponse {
   Invitation invitation = 1;
-  string invitation_token = 2;
+  reserved 2;
+  reserved "invitation_token";
 }
 
 message RevokeAPIKeyRequest {
@@ -800,4 +865,131 @@ message UpdateTenantRoleRequest {
 
 message UpdateTenantRoleResponse {
   Role role = 1;
+}
+
+// Metadata of the original Core-requested IAM operation. Invitation secrets,
+// raw source payloads and membership creation are excluded from these responses.
+message TenantBootstrapJob {
+  string kind = 1;
+  uint64 generation = 2;
+  string state = 3;
+  uint32 attempt_count = 4;
+  uint32 cycle_start_attempt = 5;
+  string last_error = 6;
+  google.protobuf.Timestamp available_at = 7;
+  string recovery_id = 8;
+}
+message TenantBootstrapOperation {
+  string operation_id = 1;
+  string tenant_id = 2;
+  string status = 3;
+  uint64 version = 4;
+  Invitation invitation = 5;
+  repeated TenantBootstrapJob jobs = 6;
+}
+message GetTenantBootstrapRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+}
+message GetTenantBootstrapResponse { TenantBootstrapOperation operation = 1; }
+// Retains the stored intended identity, roles, Invitation ID and original
+// Bootstrap operation. Current Platform and source execution authority apply.
+message ReissueTenantBootstrapInvitationRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+  uint64 expected_version = 3;
+  string reason_code = 4;
+  string idempotency_key = 5;
+}
+message ReissueTenantBootstrapInvitationResponse { TenantBootstrapOperation operation = 1; }
+
+// Technical retry retains the original business operation and intended identity.
+// Current Platform/source authority is mandatory even for cached receipts.
+message RetryTenantBootstrapJobRequest {
+  BearerCredential credential = 1;
+  string operation_id = 2;
+  string kind = 3;
+  uint64 generation = 4;
+  uint32 expected_attempt = 5;
+  uint64 expected_version = 6;
+  string reason_code = 7;
+  string idempotency_key = 8;
+}
+message RetryTenantBootstrapJobResponse { TenantBootstrapOperation operation = 1; }
+
+// Immutable quarantine metadata; raw payload and headers require Get.
+message CoreDLQEntry {
+  string entry_id = 1;
+  string consumer_id = 2;
+  string broker_name = 3;
+  string account = 4;
+  string stream = 5;
+  string subject = 6;
+  int64 broker_sequence = 7;
+  uint64 delivery_count = 8;
+  google.protobuf.Timestamp published_at = 9;
+  google.protobuf.Timestamp quarantined_at = 10;
+  string raw_sha256 = 11;
+  string last_error = 12;
+  uint64 last_attempt = 13;
+  bool provenance_available = 14;
+}
+message CoreDLQHeader { string name = 1; repeated string values = 2; }
+message CoreDLQAttempt {
+  string attempt_id = 1;
+  string audit_id = 2;
+  uint64 attempt_number = 3;
+  string outcome = 4;
+  string projection_outcome = 5;
+  string error_code = 6;
+  string reason_code = 7;
+  string authority_sha256 = 8;
+  google.protobuf.Timestamp created_at = 9;
+}
+message ListCoreDLQEntriesRequest {
+  BearerCredential credential = 1;
+  string consumer_id = 2;
+  CursorPageRequest page = 3;
+}
+message ListCoreDLQEntriesResponse { repeated CoreDLQEntry entries = 1; string next_cursor = 2; }
+message GetCoreDLQEntryRequest {
+  BearerCredential credential = 1;
+  string consumer_id = 2;
+  string entry_id = 3;
+  CursorPageRequest page = 4;
+}
+message GetCoreDLQEntryResponse {
+  CoreDLQEntry entry = 1;
+  bytes raw_payload = 2;
+  repeated CoreDLQHeader headers = 3;
+  repeated CoreDLQAttempt attempts = 4;
+  string next_cursor = 5;
+}
+// Re-receives the stored original synchronously. No request field can replace
+// payload, headers, identity, source coordinates, Tenant or event time.
+message ReplayCoreDLQEntryRequest {
+  BearerCredential credential = 1;
+  string consumer_id = 2;
+  string entry_id = 3;
+  string expected_raw_sha256 = 4;
+  uint64 expected_attempt = 5;
+  string reason_code = 6;
+  string idempotency_key = 7;
+}
+// A committed receiver result. Bootstrap operation completion remains separate.
+message ReplayCoreDLQEntryResponse {
+  string consumer_id = 1;
+  string entry_id = 2;
+  string attempt_id = 3;
+  string audit_id = 4;
+  uint64 attempt_number = 5;
+  string raw_sha256 = 6;
+  string outcome = 7;
+  string projection_outcome = 8;
+  string authority_sha256 = 9;
+  string event_id = 10;
+  string tenant_id = 11;
+  string operation_id = 12;
+  int64 source_sequence = 13;
+  bool replayed = 14;
 }

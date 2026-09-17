@@ -57,6 +57,30 @@ func TestPasswordActionNotificationDispatcherSubmitsAndMarksDelivered(t *testing
 	}
 }
 
+func TestPasswordActionNotificationDispatcherPreservesDurableAudience(t *testing.T) {
+	for _, audience := range []Audience{AudienceBoss, "", "foreign"} {
+		t.Run(string(audience), func(t *testing.T) {
+			now := time.Date(2026, 9, 13, 0, 0, 0, 0, time.UTC)
+			claim := passwordActionNotificationTestClaim(now, 1, 2)
+			claim.Audience = audience
+			outbox := &passwordActionNotificationTestOutbox{claims: []PasswordActionNotificationClaim{claim}}
+			submitter := &passwordActionNotificationTestSubmitter{notificationID: "unit-receipt"}
+			d, err := NewPasswordActionNotificationDispatcher(outbox, &passwordActionNotificationTestTokens{token: "unit-action-token"}, submitter, fixedNotificationClock{now: now})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = d.DispatchNext(context.Background())
+			if audience == AudienceBoss {
+				if err != nil || len(submitter.submissions) != 1 || submitter.submissions[0].Audience != AudienceBoss {
+					t.Fatal("durable BOSS audience was lost")
+				}
+			} else if !errors.Is(err, ErrPasswordActionNotificationPermanent) || len(submitter.submissions) != 0 {
+				t.Fatal("ambiguous audience reached transport")
+			}
+		})
+	}
+}
+
 func TestPasswordActionNotificationDispatcherRetriesIdenticalSubmissionAfterAmbiguousFailure(t *testing.T) {
 	now := time.Date(2026, 9, 7, 5, 15, 0, 0, time.UTC)
 	first := passwordActionNotificationTestClaim(now, 1, 2)
@@ -154,6 +178,7 @@ func TestPasswordActionNotificationDispatcherRejectsNonV7DurableIdentityBeforeSu
 
 func passwordActionNotificationTestClaim(now time.Time, attempts int, version int64) PasswordActionNotificationClaim {
 	return PasswordActionNotificationClaim{
+		Audience:         AudienceConsole,
 		ID:               uuid.MustParse("0198f062-b76d-7001-9000-000000000301"),
 		OperationID:      uuid.MustParse("0198f062-b76d-7001-9000-000000000302"),
 		PrincipalID:      uuid.MustParse("0198f062-b76d-77da-98fa-65f26fc01303"),

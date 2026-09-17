@@ -78,9 +78,12 @@ type PrincipalValidationAuditWriter interface {
 }
 
 func (u *AuthenticationUsecase) ValidatePrincipal(ctx context.Context, command ValidatePrincipalCommand) (ValidatePrincipalResult, error) {
-	policy, err := validatePrincipalPolicy(u.reader, command)
+	policy, err := validatePrincipalPolicy(u.reader, command, u.platformAuthorization != nil)
 	if err != nil {
 		return ValidatePrincipalResult{}, err
+	}
+	if policy.Scope == PermissionScopePlatform {
+		return u.platformAuthorization.ValidatePrincipal(ctx, command)
 	}
 	rawCredential := strings.TrimSpace(command.RawCredential)
 	if rawCredential == "" {
@@ -95,7 +98,7 @@ func (u *AuthenticationUsecase) ValidatePrincipal(ctx context.Context, command V
 	return u.validateAccessTokenPrincipal(ctx, u.reader, policy, rawCredential, command)
 }
 
-func validatePrincipalPolicy(reader PrincipalValidationReader, command ValidatePrincipalCommand) (AuthorizationPolicy, error) {
+func validatePrincipalPolicy(reader PrincipalValidationReader, command ValidatePrincipalCommand, platformEnabled bool) (AuthorizationPolicy, error) {
 	policyRevision := strings.TrimSpace(command.PolicyRevision)
 	if policyRevision == "" {
 		return AuthorizationPolicy{}, ErrAuthorizationPolicyRevisionRequired
@@ -108,7 +111,7 @@ func validatePrincipalPolicy(reader PrincipalValidationReader, command ValidateP
 		return AuthorizationPolicy{}, ErrAuthorizationOperationRequired
 	}
 	policy, ok := reader.Lookup(operationID)
-	if !ok || policy.OperationID != operationID || strings.TrimSpace(policy.Resource) == "" || len(policy.Actions) == 0 || policy.Scope != PermissionScopeTenant {
+	if !ok || policy.OperationID != operationID || strings.TrimSpace(policy.Resource) == "" || len(policy.Actions) == 0 || (policy.Scope != PermissionScopeTenant && !(platformEnabled && policy.Scope == PermissionScopePlatform)) {
 		return AuthorizationPolicy{}, ErrAuthorizationOperationUnregistered
 	}
 	return policy, nil
@@ -226,10 +229,10 @@ func validateAPIKeyPrincipalState(state APIKeyAuthorizationState) error {
 	if state.TenantAccess != TenantAccessStatusActive {
 		return ErrTenantAccessInactive
 	}
-	if !state.LifecycleFresh {
+	if !state.LifecycleObservationOnly && !state.LifecycleFresh {
 		return ErrTenantLifecycleStale
 	}
-	if state.Lifecycle != TenantLifecycleStatusActive {
+	if !state.LifecycleObservationOnly && state.Lifecycle != TenantLifecycleStatusActive {
 		return ErrTenantLifecycleBlocked
 	}
 	return nil
@@ -313,10 +316,10 @@ func validateAccessTokenPrincipalState(state AuthorizationState, expectedGrantVe
 	if state.TenantAccess != TenantAccessStatusActive {
 		return ErrTenantAccessInactive
 	}
-	if !state.LifecycleFresh {
+	if !state.LifecycleObservationOnly && !state.LifecycleFresh {
 		return ErrTenantLifecycleStale
 	}
-	if state.Lifecycle != TenantLifecycleStatusActive {
+	if !state.LifecycleObservationOnly && state.Lifecycle != TenantLifecycleStatusActive {
 		return ErrTenantLifecycleBlocked
 	}
 	if state.SessionStatus != SessionStatusActive || state.GrantStatus != GrantStatusActive || state.GrantVersion != expectedGrantVersion {

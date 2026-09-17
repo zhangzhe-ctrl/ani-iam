@@ -24,30 +24,424 @@ type ApiKey struct {
 	Version       int64
 }
 
-type IamAuditEvent struct {
-	TenantID             pgtype.UUID
+type CoreBootstrapAttempt struct {
+	TenantID      uuid.UUID
+	OperationID   uuid.UUID
+	Kind          string
+	AttemptNumber int32
+	LeaseID       uuid.UUID
+	Outcome       string
+	ErrorCode     string
+	StartedAt     pgtype.Timestamptz
+	FinishedAt    pgtype.Timestamptz
+	Generation    int64
+	RecoveryID    pgtype.UUID
+}
+
+type CoreBootstrapBrokerApproval struct {
+	TenantID        uuid.UUID
+	ID              uuid.UUID
+	ConsumerID      uuid.UUID
+	BrokerSequence  int64
+	SourceEventID   uuid.UUID
+	OperationID     uuid.UUID
+	Kind            string
+	Generation      int64
+	AuthoritySha256 string
+	RecoveryID      pgtype.UUID
+	EffectAuditID   pgtype.UUID
+	ActorID         uuid.UUID
+	ReasonCode      string
+	CreatedAt       pgtype.Timestamptz
+}
+
+type CoreBootstrapJob struct {
+	TenantID          uuid.UUID
+	OperationID       uuid.UUID
+	Kind              string
+	Producer          string
+	SourceEventID     uuid.UUID
+	State             string
+	AttemptCount      int32
+	LeaseID           pgtype.UUID
+	LeaseStartedAt    pgtype.Timestamptz
+	LeaseUntil        pgtype.Timestamptz
+	AvailableAt       pgtype.Timestamptz
+	LastError         string
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+	Generation        int64
+	CycleStartAttempt int32
+	RecoveryID        pgtype.UUID
+}
+
+type CoreBootstrapJobRecovery struct {
+	TenantID           uuid.UUID
+	ID                 uuid.UUID
+	OperationID        uuid.UUID
+	Kind               string
+	Generation         int64
+	SourceEventID      uuid.UUID
+	Producer           string
+	PayloadFingerprint string
+	PreviousAttempt    int32
+	PreviousRecoveryID pgtype.UUID
+	ActorID            uuid.UUID
+	ReasonCode         string
+	CreatedAt          pgtype.Timestamptz
+}
+
+type CoreBootstrapReceipt struct {
+	TenantID           uuid.UUID
+	EventID            uuid.UUID
+	OperationID        uuid.UUID
+	Producer           string
+	SourceSequence     int64
+	PayloadFingerprint string
+	RawPayload         []byte
+	RawSha256          []byte
+	OccurredAt         pgtype.Timestamptz
+	ReceivedAt         pgtype.Timestamptz
+	SourceEpoch        pgtype.UUID
+}
+
+type CoreBootstrapWorkerResult struct {
+	TenantID            uuid.UUID
+	OperationID         uuid.UUID
+	SourceEventID       uuid.UUID
+	ProducerPrincipalID uuid.UUID
+	ExecutorPrincipalID uuid.UUID
+	ProducerVersion     int64
+	ExecutorVersion     int64
+	DecisionID          uuid.UUID
+	RoleID              uuid.UUID
+	InvitationID        uuid.UUID
+	DeliveryID          uuid.UUID
+	AuditID             uuid.UUID
+	CreatedAt           pgtype.Timestamptz
+}
+
+type CoreBrokerAdministrationReceipt struct {
+	ID              uuid.UUID
+	ManifestSha256  []byte
+	Manifest        []byte
+	Mode            string
+	Reason          string
+	ProvisionerRole string
+	CompletedAt     pgtype.Timestamptz
+}
+
+type CoreBrokerAuthorityReceipt struct {
+	ConsumerID               uuid.UUID
+	BrokerSequence           int64
+	RouteID                  uuid.UUID
+	RouteVersion             int64
+	Producer                 string
+	SourceSequence           int64
+	EventID                  uuid.UUID
+	TenantID                 pgtype.UUID
+	RawSha256                []byte
+	ProducerPrincipalID      uuid.UUID
+	ProducerBindingID        uuid.UUID
+	ProducerPrincipalVersion int64
+	ProducerBindingVersion   int64
+	ProducerGrantID          uuid.UUID
+	ProducerGrantVersion     int64
+	ExecutorPrincipalID      uuid.UUID
+	ExecutorBindingID        uuid.UUID
+	ExecutorPrincipalVersion int64
+	ExecutorBindingVersion   int64
+	ExecutorGrantID          uuid.UUID
+	ExecutorGrantVersion     int64
+	ExecutionGrantID         pgtype.UUID
+	ExecutionGrantVersion    pgtype.Int8
+	ReceivedAt               pgtype.Timestamptz
+}
+
+type CoreBrokerBinding struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	Environment string
+	TrustDomain string
+	BrokerName  string
+	AccountName string
+	NkeyPublic  string
+	Status      string
+	Version     int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type CoreBrokerDlq struct {
+	ConsumerID     uuid.UUID
+	ID             uuid.UUID
+	BrokerSequence int64
+	BrokerName     string
+	AccountName    string
+	StreamName     string
+	Subject        string
+	RawPayload     []byte
+	RawSha256      []byte
+	Headers        []byte
+	DeliveryCount  int64
+	PublishedAt    pgtype.Timestamptz
+	LastError      string
+	QuarantinedAt  pgtype.Timestamptz
+}
+
+type CoreBrokerDlqAttempt struct {
+	ConsumerID        uuid.UUID
+	EntryID           uuid.UUID
+	ID                uuid.UUID
+	AttemptNumber     int64
+	RawSha256         []byte
+	RequestHash       []byte
+	ActorID           uuid.UUID
+	ReasonCode        string
+	Outcome           string
+	ProjectionOutcome string
+	ErrorCode         string
+	AuthoritySha256   string
+	AuditEventID      uuid.UUID
+	CreatedAt         pgtype.Timestamptz
+}
+
+type CoreBrokerDlqContext struct {
+	ConsumerID          uuid.UUID
+	EntryID             uuid.UUID
+	Configuration       []byte
+	ConfigurationSha256 []byte
+	CreatedAt           pgtype.Timestamptz
+}
+
+type CoreBrokerGrant struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	BindingID   uuid.UUID
+	RouteID     uuid.UUID
+	Action      string
+	Status      string
+	Version     int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type CoreBrokerRoute struct {
+	ID                uuid.UUID
+	BrokerName        string
+	AccountName       string
+	StreamName        string
+	Subject           string
+	SchemaMajor       int32
+	Producer          string
+	ProducerBindingID uuid.UUID
+	TargetSha256      string
+	Status            string
+	Version           int64
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+}
+
+type CoreCurrentLifecycleFact struct {
+	Producer           string
+	GenerationID       uuid.UUID
+	TenantID           uuid.UUID
+	LifecycleVersion   int64
+	RequiredVersion    int64
+	Status             string
+	Reason             string
+	EffectiveAt        pgtype.Timestamptz
+	RepairRequired     bool
+	SnapshotBase       bool
+	Version            int64
+	ContiguousSequence int64
+	HighestSequence    int64
+	FreshUntil         pgtype.Timestamptz
+}
+
+type CoreIntegrationReceipt struct {
+	Producer             string
 	EventID              uuid.UUID
-	ActorID              pgtype.UUID
-	AuthenticationMethod string
-	Boundary             string
-	Action               string
-	TargetType           string
-	TargetID             uuid.UUID
-	TargetVersion        int64
-	Result               string
-	Reason               string
-	RequestID            string
-	CorrelationID        string
-	DecisionID           string
-	SourceService        string
+	SourceSequence       int64
+	Kind                 string
+	TenantID             pgtype.UUID
+	RawPayload           []byte
+	RawSha256            []byte
+	DomainFingerprint    []byte
 	OccurredAt           pgtype.Timestamptz
-	RecordedAt           pgtype.Timestamptz
-	CallerPrincipalID    pgtype.UUID
-	CallerBindingID      pgtype.UUID
-	CallerBindingVersion pgtype.Int8
-	CallerGrantVersion   pgtype.Int8
-	ProvisionerRole      pgtype.Text
-	BootstrapManifestID  pgtype.UUID
+	ReceivedAt           pgtype.Timestamptz
+	Outcome              string
+	LifecycleVersion     pgtype.Int8
+	LifecycleStatus      pgtype.Text
+	LifecycleReason      pgtype.Text
+	LifecycleEffectiveAt pgtype.Timestamptz
+}
+
+type CoreLifecycleGeneration struct {
+	Producer          string
+	ID                uuid.UUID
+	SnapshotSourceCut int64
+	CreatedAt         pgtype.Timestamptz
+}
+
+type CoreLifecyclePipeline struct {
+	Producer           string
+	GenerationID       uuid.UUID
+	ContiguousSequence int64
+	HighestSequence    int64
+	ProgressAt         pgtype.Timestamptz
+	CreatedAt          pgtype.Timestamptz
+}
+
+type CoreLifecycleProjectionRow struct {
+	Producer         string
+	GenerationID     uuid.UUID
+	TenantID         uuid.UUID
+	LifecycleVersion int64
+	RequiredVersion  int64
+	Status           string
+	Reason           string
+	EffectiveAt      pgtype.Timestamptz
+	RepairRequired   bool
+	SnapshotBase     bool
+}
+
+type CoreLifecycleRebuild struct {
+	Producer              string
+	SnapshotID            uuid.UUID
+	GenerationID          uuid.UUID
+	BaseGenerationID      uuid.UUID
+	ConsumerID            uuid.UUID
+	SourceCut             int64
+	BrokerAfter           int64
+	PageSize              int32
+	ExpiresAt             pgtype.Timestamptz
+	NextToken             string
+	LastTenantID          pgtype.UUID
+	LoadedItems           int64
+	AppliedThrough        int64
+	State                 string
+	CreatedAt             pgtype.Timestamptz
+	AbandonedReason       string
+	BrokerAuthoritySha256 string
+}
+
+type CoreLifecycleRebuildPage struct {
+	Producer        string
+	SnapshotID      uuid.UUID
+	RequestToken    string
+	PageFingerprint []byte
+	NextToken       string
+	ItemCount       int32
+	CreatedAt       pgtype.Timestamptz
+}
+
+type CurrentTenantLifecycle struct {
+	Producer           string
+	GenerationID       uuid.UUID
+	TenantID           uuid.UUID
+	LifecycleVersion   int64
+	RequiredVersion    int64
+	Status             string
+	Reason             string
+	EffectiveAt        pgtype.Timestamptz
+	RepairRequired     bool
+	SnapshotBase       bool
+	Version            int64
+	ContiguousSequence int64
+	HighestSequence    int64
+	FreshUntil         pgtype.Timestamptz
+}
+
+type FirstAdministratorCompletion struct {
+	Environment  string
+	IntentID     uuid.UUID
+	PrincipalID  uuid.UUID
+	AuditEventID uuid.UUID
+	CompletedAt  pgtype.Timestamptz
+}
+
+type FirstAdministratorIntent struct {
+	IntentID        uuid.UUID
+	Environment     string
+	NormalizedEmail string
+	Issuer          string
+	Subject         string
+	IntentSha256    []byte
+	Supersedes      pgtype.UUID
+	RegisteredAt    pgtype.Timestamptz
+	ExpiresAt       pgtype.Timestamptz
+	AuditEventID    uuid.UUID
+}
+
+type IamAuditEvent struct {
+	TenantID                   pgtype.UUID
+	EventID                    uuid.UUID
+	ActorID                    pgtype.UUID
+	AuthenticationMethod       string
+	Boundary                   string
+	Action                     string
+	TargetType                 string
+	TargetID                   uuid.UUID
+	TargetVersion              int64
+	Result                     string
+	Reason                     string
+	RequestID                  string
+	CorrelationID              string
+	DecisionID                 string
+	SourceService              string
+	OccurredAt                 pgtype.Timestamptz
+	RecordedAt                 pgtype.Timestamptz
+	CallerPrincipalID          pgtype.UUID
+	CallerBindingID            pgtype.UUID
+	CallerBindingVersion       pgtype.Int8
+	CallerGrantVersion         pgtype.Int8
+	ProvisionerRole            pgtype.Text
+	BootstrapManifestID        pgtype.UUID
+	FirstAdministratorIntentID pgtype.UUID
+}
+
+type IamInvitedAccountOutbox struct {
+	ID                uuid.UUID
+	ChallengeID       uuid.UUID
+	PayloadKeyVersion pgtype.Text
+	PayloadCiphertext []byte
+	Status            string
+	AttemptCount      int32
+	AvailableAt       pgtype.Timestamptz
+	ClaimedAt         pgtype.Timestamptz
+	DeliveredAt       pgtype.Timestamptz
+	NotificationID    pgtype.Text
+	Version           int64
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+}
+
+type IamInvitedAccountVerification struct {
+	ID                    uuid.UUID
+	AccountDigest         []byte
+	NormalizedEmail       pgtype.Text
+	CodeKeyVersion        pgtype.Text
+	CodeDigest            []byte
+	CallerPrincipalID     uuid.UUID
+	RequestIdempotencyKey string
+	Status                string
+	FailedAttempts        int32
+	Version               int64
+	CreatedAt             pgtype.Timestamptz
+	UpdatedAt             pgtype.Timestamptz
+	ExpiresAt             pgtype.Timestamptz
+	PrincipalID           pgtype.UUID
+	CompletionKey         pgtype.Text
+	CompletionIntent      []byte
+}
+
+type IamRecoveryApprovalReference struct {
+	ApprovalReference    string
+	TenantID             uuid.UUID
+	RestoreOperationID   pgtype.UUID
+	BootstrapOperationID pgtype.UUID
+	CreatedAt            pgtype.Timestamptz
 }
 
 type IamSchemaRevision struct {
@@ -136,6 +530,129 @@ type PermissionCatalog struct {
 	Action   string
 }
 
+type PlatformAdministratorGuard struct {
+	Singleton bool
+	Version   int64
+}
+
+type PlatformInvitation struct {
+	ID                   uuid.UUID
+	NormalizedEmail      string
+	RoleIds              []uuid.UUID
+	Locale               string
+	Status               string
+	TokenDigest          []byte
+	DeliveryGeneration   int64
+	ExpiresAt            pgtype.Timestamptz
+	Version              int64
+	CreatedBy            uuid.UUID
+	CreatedAt            pgtype.Timestamptz
+	UpdatedAt            pgtype.Timestamptz
+	AcceptedMembershipID pgtype.UUID
+	AcceptedPrincipalID  pgtype.UUID
+}
+
+type PlatformInvitationOutbox struct {
+	ID                 uuid.UUID
+	InvitationID       uuid.UUID
+	DeliveryGeneration int64
+	PayloadKeyVersion  pgtype.Text
+	PayloadCiphertext  []byte
+	Status             string
+	AttemptCount       int32
+	AvailableAt        pgtype.Timestamptz
+	ClaimedAt          pgtype.Timestamptz
+	DeliveredAt        pgtype.Timestamptz
+	NotificationID     pgtype.Text
+	Version            int64
+	CreatedAt          pgtype.Timestamptz
+	UpdatedAt          pgtype.Timestamptz
+}
+
+type PlatformInvitationRole struct {
+	InvitationID uuid.UUID
+	RoleID       uuid.UUID
+}
+
+type PlatformMembership struct {
+	ID          uuid.UUID
+	PrincipalID uuid.UUID
+	Status      string
+	Version     int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type PlatformMutationResult struct {
+	ActorPrincipalID uuid.UUID
+	Operation        string
+	IdempotencyKey   string
+	RequestHash      []byte
+	Result           []byte
+	CreatedAt        pgtype.Timestamptz
+	ExpiresAt        pgtype.Timestamptz
+}
+
+type PlatformRefreshToken struct {
+	ID         uuid.UUID
+	FamilyID   uuid.UUID
+	Digest     []byte
+	Status     string
+	IssuedAt   pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
+	ConsumedAt pgtype.Timestamptz
+	ReplacedBy pgtype.UUID
+}
+
+type PlatformRefreshTokenFamily struct {
+	ID        uuid.UUID
+	GrantID   uuid.UUID
+	Status    string
+	Version   int64
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+}
+
+type PlatformRole struct {
+	ID                      uuid.UUID
+	Code                    string
+	DisplayName             string
+	SystemRole              bool
+	SystemDefinitionVersion int64
+	Version                 int64
+	CreatedAt               pgtype.Timestamptz
+	UpdatedAt               pgtype.Timestamptz
+}
+
+type PlatformRoleBinding struct {
+	ID           uuid.UUID
+	MembershipID uuid.UUID
+	RoleID       uuid.UUID
+	Version      int64
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type PlatformRolePermission struct {
+	RoleID    uuid.UUID
+	Scope     string
+	Resource  string
+	Action    string
+	CreatedAt pgtype.Timestamptz
+}
+
+type PlatformSessionGrant struct {
+	ID           uuid.UUID
+	SessionID    uuid.UUID
+	PrincipalID  uuid.UUID
+	Audience     string
+	MembershipID uuid.UUID
+	Status       string
+	Version      int64
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
 type Principal struct {
 	ID            uuid.UUID
 	PrincipalType string
@@ -201,6 +718,226 @@ type TenantAccess struct {
 	UpdatedAt pgtype.Timestamptz
 }
 
+type TenantAdminRecoveryOperation struct {
+	TenantID             uuid.UUID
+	ID                   uuid.UUID
+	TargetPrincipalID    uuid.UUID
+	RequesterPrincipalID uuid.UUID
+	ApproverPrincipalID  pgtype.UUID
+	ApprovalReference    pgtype.Text
+	ReasonCode           string
+	PayloadFingerprint   string
+	Status               string
+	Version              int64
+	CreatedAt            pgtype.Timestamptz
+	UpdatedAt            pgtype.Timestamptz
+	ExpiresAt            pgtype.Timestamptz
+	ApprovedAt           pgtype.Timestamptz
+	ExecutedAt           pgtype.Timestamptz
+	MembershipID         pgtype.UUID
+}
+
+type TenantBootstrapBrokerApproval struct {
+	TenantID        uuid.UUID
+	ID              uuid.UUID
+	ConsumerID      uuid.UUID
+	BrokerSequence  int64
+	SourceEventID   uuid.UUID
+	OperationID     uuid.UUID
+	Kind            string
+	Generation      int64
+	AuthoritySha256 string
+	RecoveryID      pgtype.UUID
+	EffectAuditID   pgtype.UUID
+	ActorID         uuid.UUID
+	ReasonCode      string
+	CreatedAt       pgtype.Timestamptz
+}
+
+type TenantBootstrapOperation struct {
+	TenantID            uuid.UUID
+	ID                  uuid.UUID
+	SourceKind          string
+	IntendedEmail       string
+	IntendedPrincipalID pgtype.UUID
+	PayloadFingerprint  string
+	Payload             []byte
+	Status              string
+	Version             int64
+	RecoveryRequestID   pgtype.UUID
+	Supersedes          pgtype.UUID
+	SupersededBy        pgtype.UUID
+	MembershipID        pgtype.UUID
+	PrincipalID         pgtype.UUID
+	CreatedAt           pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
+}
+
+type TenantBootstrapRecoveryOperation struct {
+	TenantID             uuid.UUID
+	ID                   uuid.UUID
+	TargetPrincipalID    uuid.UUID
+	RequesterPrincipalID uuid.UUID
+	ApproverPrincipalID  pgtype.UUID
+	ApprovalReference    pgtype.Text
+	ReasonCode           string
+	PayloadFingerprint   string
+	Status               string
+	Version              int64
+	CreatedAt            pgtype.Timestamptz
+	UpdatedAt            pgtype.Timestamptz
+	ExpiresAt            pgtype.Timestamptz
+	ApprovedAt           pgtype.Timestamptz
+	ExecutedAt           pgtype.Timestamptz
+	MembershipID         pgtype.UUID
+}
+
+type TenantBrokerAuthorityReceipt struct {
+	ConsumerID               uuid.UUID
+	BrokerSequence           int64
+	RouteID                  uuid.UUID
+	RouteVersion             int64
+	Producer                 string
+	SourceSequence           int64
+	Epoch                    uuid.UUID
+	EventID                  uuid.UUID
+	TenantID                 pgtype.UUID
+	RawSha256                []byte
+	ProducerPrincipalID      uuid.UUID
+	ProducerBindingID        uuid.UUID
+	ProducerPrincipalVersion int64
+	ProducerBindingVersion   int64
+	ProducerGrantID          uuid.UUID
+	ProducerGrantVersion     int64
+	ExecutorPrincipalID      uuid.UUID
+	ExecutorBindingID        uuid.UUID
+	ExecutorPrincipalVersion int64
+	ExecutorBindingVersion   int64
+	ExecutorGrantID          uuid.UUID
+	ExecutorGrantVersion     int64
+	ExecutionGrantID         pgtype.UUID
+	ExecutionGrantVersion    pgtype.Int8
+	ReceivedAt               pgtype.Timestamptz
+}
+
+type TenantCurrentLifecycleFact struct {
+	Producer         string
+	GenerationID     uuid.UUID
+	TenantID         uuid.UUID
+	TenantVersion    int64
+	BusinessStatus   string
+	Reason           string
+	EffectiveAt      pgtype.Timestamptz
+	SnapshotBase     bool
+	Epoch            pgtype.UUID
+	AppliedSequence  int64
+	HighestSequence  int64
+	SnapshotRequired bool
+	FreshUntil       pgtype.Timestamptz
+}
+
+type TenantIntegrationReceipt struct {
+	Producer             string
+	EventID              uuid.UUID
+	Epoch                uuid.UUID
+	Kind                 string
+	SourceSequence       int64
+	TenantID             pgtype.UUID
+	RawPayload           []byte
+	RawSha256            []byte
+	DomainSha256         []byte
+	OccurredAt           pgtype.Timestamptz
+	ReceivedAt           pgtype.Timestamptz
+	Outcome              string
+	TenantVersion        pgtype.Int8
+	BusinessStatus       pgtype.Text
+	Reason               pgtype.Text
+	EffectiveAt          pgtype.Timestamptz
+	CommittedSequence    pgtype.Int8
+	PublishedSequence    pgtype.Int8
+	BootstrapOperationID pgtype.UUID
+}
+
+type TenantInvitation struct {
+	TenantID             uuid.UUID
+	ID                   uuid.UUID
+	NormalizedEmail      string
+	RoleIds              []uuid.UUID
+	Locale               string
+	Status               string
+	TokenDigest          []byte
+	DeliveryGeneration   int64
+	ExpiresAt            pgtype.Timestamptz
+	Version              int64
+	CreatedBy            uuid.UUID
+	CreatedAt            pgtype.Timestamptz
+	UpdatedAt            pgtype.Timestamptz
+	AcceptedMembershipID pgtype.UUID
+	AcceptedPrincipalID  pgtype.UUID
+	BootstrapOperationID pgtype.UUID
+}
+
+type TenantInvitationOutbox struct {
+	TenantID           uuid.UUID
+	ID                 uuid.UUID
+	InvitationID       uuid.UUID
+	DeliveryGeneration int64
+	PayloadKeyVersion  pgtype.Text
+	PayloadCiphertext  []byte
+	Status             string
+	AttemptCount       int32
+	AvailableAt        pgtype.Timestamptz
+	ClaimedAt          pgtype.Timestamptz
+	DeliveredAt        pgtype.Timestamptz
+	NotificationID     pgtype.Text
+	Version            int64
+	CreatedAt          pgtype.Timestamptz
+	UpdatedAt          pgtype.Timestamptz
+}
+
+type TenantInvitationRole struct {
+	TenantID     uuid.UUID
+	InvitationID uuid.UUID
+	RoleID       uuid.UUID
+}
+
+type TenantLifecycleFact struct {
+	Producer       string
+	GenerationID   uuid.UUID
+	TenantID       uuid.UUID
+	TenantVersion  int64
+	BusinessStatus string
+	Reason         string
+	EffectiveAt    pgtype.Timestamptz
+	SnapshotBase   bool
+}
+
+type TenantLifecycleGeneration struct {
+	Producer          string
+	ID                uuid.UUID
+	Epoch             uuid.UUID
+	SnapshotWatermark int64
+	SnapshotID        uuid.UUID
+	CapturedAt        pgtype.Timestamptz
+	CreatedAt         pgtype.Timestamptz
+}
+
+type TenantLifecyclePipeline struct {
+	Producer            string
+	GenerationID        pgtype.UUID
+	Epoch               pgtype.UUID
+	AppliedSequence     int64
+	HighestSequence     int64
+	SnapshotRequired    bool
+	HeartbeatID         pgtype.UUID
+	HeartbeatEpoch      pgtype.UUID
+	CommittedSequence   int64
+	PublishedSequence   int64
+	HeartbeatObservedAt pgtype.Timestamptz
+	HeartbeatReceivedAt pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
+}
+
 type TenantLifecycleProjection struct {
 	TenantID         uuid.UUID
 	Status           string
@@ -241,6 +978,7 @@ type TenantRole struct {
 	Version                 int64
 	CreatedAt               pgtype.Timestamptz
 	UpdatedAt               pgtype.Timestamptz
+	DisplayName             string
 }
 
 type TenantRoleBinding struct {
@@ -260,6 +998,42 @@ type TenantRolePermission struct {
 	Action    string
 	CreatedAt pgtype.Timestamptz
 	Scope     string
+}
+
+type TenantSnapshotPage struct {
+	Producer     string
+	SnapshotID   uuid.UUID
+	RequestToken string
+	PageSha256   []byte
+	PagePayload  []byte
+	NextToken    string
+	ItemCount    int32
+	ReceivedAt   pgtype.Timestamptz
+}
+
+type TenantSnapshotRebuild struct {
+	Producer         string
+	SnapshotID       uuid.UUID
+	GenerationID     uuid.UUID
+	BaseGenerationID pgtype.UUID
+	Epoch            uuid.UUID
+	ReaderID         uuid.UUID
+	ReaderBindingID  uuid.UUID
+	Watermark        int64
+	TotalCount       int64
+	PageSize         int32
+	CapturedAt       pgtype.Timestamptz
+	ExpiresAt        pgtype.Timestamptz
+	FirstToken       string
+	NextToken        string
+	LastTenantID     pgtype.UUID
+	LoadedItems      int64
+	AppliedThrough   int64
+	State            string
+	AuthoritySha256  string
+	AbandonedReason  string
+	CreatedAt        pgtype.Timestamptz
+	UpdatedAt        pgtype.Timestamptz
 }
 
 type VerifiedEmail struct {
@@ -320,4 +1094,21 @@ type WorkloadPrincipal struct {
 	Version        int64
 	CreatedAt      pgtype.Timestamptz
 	UpdatedAt      pgtype.Timestamptz
+}
+
+type WorkloadRegistryInstallation struct {
+	ID              uuid.UUID
+	PreviousSha256  []byte
+	InstalledSha256 []byte
+	InstalledBy     string
+	InstalledAt     pgtype.Timestamptz
+}
+
+type WorkloadTargetRegistration struct {
+	Audience     string
+	Operation    string
+	Scope        string
+	TargetSha256 []byte
+	BundleSha256 []byte
+	Enabled      bool
 }

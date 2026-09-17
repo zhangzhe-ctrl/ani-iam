@@ -146,7 +146,7 @@ func (u *AuthenticationUsecase) RequestPasswordAction(ctx context.Context, comma
 	if command.Audience == "" {
 		return RequestPasswordActionResult{}, ErrAudienceRequired
 	}
-	if command.Audience != AudienceConsole {
+	if command.Audience != AudienceConsole && (command.Audience != AudienceBoss || u.platformPassword == nil) {
 		return RequestPasswordActionResult{}, ErrAuthenticationDependency
 	}
 	if strings.TrimSpace(command.IdempotencyKey) == "" {

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/zhangzhe-ctrl/ani-iam/workloadregistry"
 )
 
 var (
@@ -73,12 +74,17 @@ type WorkloadBootstrapRepository interface {
 }
 
 type WorkloadBootstrap struct {
-	repo  WorkloadBootstrapRepository
-	clock Clock
+	repo     WorkloadBootstrapRepository
+	clock    Clock
+	registry *workloadregistry.Registry
 }
 
-func NewWorkloadBootstrap(repo WorkloadBootstrapRepository, clock Clock) *WorkloadBootstrap {
-	return &WorkloadBootstrap{repo: repo, clock: clock}
+func NewWorkloadBootstrap(repo WorkloadBootstrapRepository, clock Clock, registries ...*workloadregistry.Registry) *WorkloadBootstrap {
+	var registry *workloadregistry.Registry
+	if len(registries) == 1 {
+		registry = registries[0]
+	}
+	return &WorkloadBootstrap{repo: repo, clock: clock, registry: registry}
 }
 
 var bootstrapName = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,62}$`)
@@ -88,7 +94,7 @@ func (u *WorkloadBootstrap) Provision(ctx context.Context, owner WorkloadBootstr
 	if u == nil || u.repo == nil || u.clock == nil {
 		return WorkloadBootstrapReceipt{}, ErrPersistenceUnavailable
 	}
-	intent, err := ValidateWorkloadBootstrap(owner, manifest, u.clock.Now())
+	intent, err := ValidateWorkloadBootstrap(owner, manifest, u.clock.Now(), u.registry)
 	if err != nil {
 		return WorkloadBootstrapReceipt{}, err
 	}
@@ -97,7 +103,11 @@ func (u *WorkloadBootstrap) Provision(ctx context.Context, owner WorkloadBootstr
 
 // Validation canonicalizes only ordering and UTC time. Names, identities and
 // targets must already be canonical, avoiding ambiguous grants or aliases.
-func ValidateWorkloadBootstrap(owner WorkloadBootstrapOwner, m WorkloadBootstrapManifest, now time.Time) (WorkloadBootstrapIntent, error) {
+func ValidateWorkloadBootstrap(owner WorkloadBootstrapOwner, m WorkloadBootstrapManifest, now time.Time, registries ...*workloadregistry.Registry) (WorkloadBootstrapIntent, error) {
+	var registry *workloadregistry.Registry
+	if len(registries) == 1 {
+		registry = registries[0]
+	}
 	invalid := func() (WorkloadBootstrapIntent, error) { return WorkloadBootstrapIntent{}, ErrWorkloadBootstrapInvalid }
 	if m.Version != 1 || m.ManifestID.Version() != 7 || m.ManifestID.Variant() != uuid.RFC4122 ||
 		!bootstrapName.MatchString(m.Environment) || !bootstrapDNS.MatchString(m.TrustDomain) || len(m.TrustDomain) > 253 ||
@@ -129,7 +139,7 @@ func ValidateWorkloadBootstrap(owner WorkloadBootstrapOwner, m WorkloadBootstrap
 	for i := range m.Workloads {
 		w := &m.Workloads[i]
 		if !uniqueID(w.PrincipalID) || !uniqueID(w.BindingID) || !bootstrapName.MatchString(w.Name) || names[w.Name] ||
-			!bootstrapDNS.MatchString(w.DNSIdentity) || len(w.DNSIdentity) > 253 || !strings.HasSuffix(w.DNSIdentity, "."+m.TrustDomain) || dns[w.DNSIdentity] || len(w.Grants) < 1 || len(w.Grants) > 32 {
+			!bootstrapDNS.MatchString(w.DNSIdentity) || len(w.DNSIdentity) > 253 || !strings.HasSuffix(w.DNSIdentity, "."+m.TrustDomain) || dns[w.DNSIdentity] || len(w.Grants) > 128 {
 			return invalid()
 		}
 		names[w.Name] = true
@@ -138,7 +148,7 @@ func ValidateWorkloadBootstrap(owner WorkloadBootstrapOwner, m WorkloadBootstrap
 		w.Grants = slices.Clone(w.Grants)
 		for _, g := range w.Grants {
 			key := g.Audience + "\x00" + g.Operation
-			if !uniqueID(g.ID) || !bootstrapGrantAllowed(g) || targets[key] {
+			if !uniqueID(g.ID) || !bootstrapGrantAllowed(registry, g) || targets[key] {
 				return invalid()
 			}
 			targets[key] = true
@@ -156,25 +166,7 @@ func ValidateWorkloadBootstrap(owner WorkloadBootstrapOwner, m WorkloadBootstrap
 	return WorkloadBootstrapIntent{Manifest: m, Digest: sha256.Sum256(encoded), Now: now.UTC()}, nil
 }
 
-func bootstrapGrantAllowed(g BootstrapWorkloadGrant) bool {
-	if notificationTarget(WorkloadTarget{Audience: g.Audience, Operation: g.Operation}) {
-		return true
-	}
-	if g.Audience == "ani-session-gateway" {
-		return g.Operation == "session.create"
-	}
-	if g.Audience != "ani-iam" {
-		return false
-	}
-	switch g.Operation {
-	case "/iam.v1.AuthenticationService/ListSessions", "/iam.v1.AuthenticationService/RefreshSession", "/iam.v1.AuthenticationService/LogoutSession", "/iam.v1.AuthenticationService/SwitchTenant",
-		"/iam.v1.AuthenticationService/BeginOIDCLogin", "/iam.v1.AuthenticationService/CompleteOIDCLogin", "/iam.v1.AuthenticationService/BeginOIDCIdentityLink", "/iam.v1.AuthenticationService/CompleteOIDCIdentityLink",
-		"/iam.v1.AuthenticationService/RequestPasswordAction", "/iam.v1.AuthenticationService/CompletePasswordAction",
-		"/iam.v1.AuthenticationService/ValidatePrincipal", "/iam.v1.AuthenticationService/PasswordLogin", "/iam.v1.AuthenticationService/IssueWorkloadToken",
-		"/iam.v1.AuthenticationService/IssueDelegation", "/iam.v1.AuthorizationService/CheckPermission",
-		"/iam.v1.AuthorizationService/VerifyWorkloadInvocation", VerifySessionContinuationRPC, VerifyWorkloadCallerRPC,
-		"/grpc.health.v1.Health/Check":
-		return true
-	}
-	return false
+func bootstrapGrantAllowed(registry *workloadregistry.Registry, g BootstrapWorkloadGrant) bool {
+	_, ok := registry.Lookup(g.Audience, g.Operation)
+	return ok
 }

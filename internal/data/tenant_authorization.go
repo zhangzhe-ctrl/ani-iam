@@ -298,30 +298,37 @@ func (tx postgresTenantAuthorizationTransaction) GetRole(ctx context.Context, sc
 		permissions = append(permissions, biz.Permission{Scope: biz.PermissionScopeTenant, Resource: permission.Resource, Action: permission.Action})
 	}
 	return biz.TenantRole{
-		ID: row.ID, Code: row.Code, DisplayName: row.Code, System: row.SystemRole,
+		ID: row.ID, Code: row.Code, DisplayName: roleDisplayName(row.DisplayName, row.Code), System: row.SystemRole,
 		SystemDefinitionVersion: row.SystemDefinitionVersion, Permissions: permissions,
 		Version: row.Version, CreatedAt: row.CreatedAt.Time.UTC(), UpdatedAt: row.UpdatedAt.Time.UTC(),
 	}, nil
 }
 
-func (tx postgresTenantAuthorizationTransaction) ActiveHumanAdministratorCount(ctx context.Context, scope biz.TenantScope) (int64, error) {
+func roleDisplayName(name, code string) string {
+	if name == "" {
+		return code
+	}
+	return name
+}
+
+func (tx postgresTenantAuthorizationTransaction) ActiveHumanAdministratorCount(ctx context.Context, scope biz.TenantScope, policy biz.TenantAdminLoginPolicy) (int64, error) {
 	tenantID, err := tenantIDForScope(tx.tenantID, scope)
 	if err != nil {
 		return 0, err
 	}
-	count, err := tx.queries.CountActiveHumanTenantAdministrators(ctx, sqlcgen.CountActiveHumanTenantAdministratorsParams{TenantID: tenantID})
+	count, err := tx.queries.CountActiveHumanTenantAdministrators(ctx, sqlcgen.CountActiveHumanTenantAdministratorsParams{TenantID: tenantID, OidcProvider: policy.OIDCProvider, OidcIssuer: policy.OIDCIssuer, PasswordEnabled: policy.PasswordEnabled})
 	if err != nil {
 		return 0, mapPostgresError("count active human tenant administrators", err, nil)
 	}
 	return count, nil
 }
 
-func (tx postgresTenantAuthorizationTransaction) IsActiveHumanAdministrator(ctx context.Context, scope biz.TenantScope, membershipID uuid.UUID) (bool, error) {
+func (tx postgresTenantAuthorizationTransaction) IsActiveHumanAdministrator(ctx context.Context, scope biz.TenantScope, membershipID uuid.UUID, policy biz.TenantAdminLoginPolicy) (bool, error) {
 	tenantID, err := tenantIDForScope(tx.tenantID, scope)
 	if err != nil {
 		return false, err
 	}
-	active, err := tx.queries.IsActiveHumanTenantAdministrator(ctx, sqlcgen.IsActiveHumanTenantAdministratorParams{TenantID: tenantID, MembershipID: membershipID})
+	active, err := tx.queries.IsActiveHumanTenantAdministrator(ctx, sqlcgen.IsActiveHumanTenantAdministratorParams{TenantID: tenantID, MembershipID: membershipID, OidcProvider: policy.OIDCProvider, OidcIssuer: policy.OIDCIssuer, PasswordEnabled: policy.PasswordEnabled})
 	if err != nil {
 		return false, mapPostgresError("check active human tenant administrator", err, nil)
 	}
@@ -423,3 +430,15 @@ var (
 	_ biz.TenantAuthorizationTransaction = postgresTenantAuthorizationTransaction{}
 	_ biz.TenantAuthorizationReader      = (*postgresTenantAuthorizationReader)(nil)
 )
+
+func (tx postgresTenantAuthorizationTransaction) IsActiveHumanAdministratorPrincipal(ctx context.Context, scope biz.TenantScope, principalID uuid.UUID) (bool, error) {
+	tenantID, err := tenantIDForScope(tx.tenantID, scope)
+	if err != nil {
+		return false, err
+	}
+	allowed, err := tx.queries.IsActiveHumanTenantAdministratorPrincipal(ctx, sqlcgen.IsActiveHumanTenantAdministratorPrincipalParams{TenantID: tenantID, PrincipalID: principalID})
+	if err != nil {
+		return false, mapPostgresError("check role administration actor", err, nil)
+	}
+	return allowed, nil
+}
